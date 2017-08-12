@@ -2,6 +2,8 @@
 
 A quick-and-dirty extension for VS Code that provides auto-complete when editing `<PackageReference />` elements MSBuild project files.
 
+_This is a work-in-progress._
+
 ## Usage
 
 When you're editing your project file, type `pr` then press `tab` to insert a `PackageReference` element. Move to the `Include` or `Version` attribute of your `PackageReference` element and press `ctrl+space` to bring up a list of package Ids / versions.

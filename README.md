@@ -2,8 +2,6 @@
 
 An extension for VS Code that provides auto-complete when editing `<PackageReference />` elements MSBuild project files.
 
-_This is a work-in-progress._
-
 ## Usage
 
 * When you're editing your project file, type `pr` then press `tab` to insert a `PackageReference` element.
@@ -16,6 +14,8 @@ Since this extension is not yet available from the VS marketplace, simply [downl
 ## Notes
 
 This extension uses the NuGet v3 API to resolve package names and versions. The API is pretty slow, unfortunately; I'll try to improve performance / result caching in the next release. For now, it only searches the [nuget.org](https://nuget.org) package feed but in a future release it will respect package sources defined in `NuGet.config`.
+
+The parsing of project XML occurs on a line-by-line basis, so if your `PackageReference` element spans more than one line, auto-complete will not be available.
 
 ## Questions / bug reports
 

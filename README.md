@@ -11,7 +11,7 @@ _This is a work-in-progress._
 
 ## Installation
 
-Since this extension is not yet available from the VS marketplace, simply [download](https://github.com/tintoy/msbuild-project-tools/releases/latest) the VSIX package for the latest release and install it by choosing "Install from VSIX" from the menu on the top right of the extensions panel.
+Since this extension is not yet available from the VS marketplace, simply [download](https://github.com/tintoy/msbuild-project-tools-vscode/releases/latest) the VSIX package for the latest release and install it by choosing "Install from VSIX" from the menu on the top right of the extensions panel.
 
 ## Notes
 

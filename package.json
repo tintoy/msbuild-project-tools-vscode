@@ -7,7 +7,7 @@
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "https://github.com/tintoy/msbuild-project-tools.git"
+        "url": "https://github.com/tintoy/msbuild-project-tools-vscode.git"
     },
     "icon": "images/icon.png",
     "engines": {

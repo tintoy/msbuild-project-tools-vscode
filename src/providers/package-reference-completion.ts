@@ -2,6 +2,8 @@ import { NuGetClient } from 'nuget-client';
 import * as vscode from 'vscode';
 import * as xmldom from 'xmldom';
 
+import { default as axios } from 'axios';
+
 /**
  * Completion provider for PackageReference elements.
  */
@@ -49,7 +51,7 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
      * 
      * @returns A promise that resolves to the completion items.
      */
-    public provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): vscode.ProviderResult<vscode.CompletionItem[]> {
+    public provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): vscode.ProviderResult<vscode.CompletionList> {
         return this.provideCompletionItemsCore(document, position, token);
     }
 
@@ -60,21 +62,22 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
      * @param position The position within the target document.
      * @param token A vscode.CancellationToken that can be used to cancel completion.
      * 
-     * @returns {Promise<vscode.CompletionItem[]>} A promise that resolves to the completion items.
+     * @returns {Promise<vscode.CompletionList>} A promise that resolves to the completion item list.
      */
-    private async provideCompletionItemsCore(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<vscode.CompletionItem[]> {
+    private async provideCompletionItemsCore(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<vscode.CompletionList> {
         const completionItems: vscode.CompletionItem[] = [];
         
         // To keep things simple, we only parse one line at a time (if your PackageReference element spans more than one line, too bad).
         const line = document.lineAt(position);
         const xml = this.parser.parseFromString(line.text);
         const elements = xml.getElementsByTagName('PackageReference');
-        
+
+        const pageSize = 10;
+
         let packageId: string;
         let packageVersion: string;
         let wantPackageId = false;
         let wantPackageVersion = false;
-        let replacementRange: vscode.Range;
         for (let i = 0; i < elements.length; i++) {
             const element = elements[i];
 
@@ -82,16 +85,12 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
             if (includeAttribute) {
                 packageId = includeAttribute.value;
                 wantPackageId = this.isPositionInAttributeValue(position, includeAttribute);
-                if (wantPackageId)
-                    replacementRange = this.getValueRange(includeAttribute, line);
             }
 
             const versionAttribute = element.attributes.getNamedItem('Version');
             if (versionAttribute) {
                 packageVersion = versionAttribute.value;
                 wantPackageVersion = this.isPositionInAttributeValue(position, versionAttribute);
-                if (wantPackageVersion)
-                    replacementRange = this.getValueRange(versionAttribute, line);
             }
 
             if (wantPackageId || wantPackageVersion)
@@ -99,24 +98,39 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
         }
         
         if (wantPackageId) {
-            const availablePackageIds = await this.nugetClient.suggestPackageIds(packageId);
+            // TODO: Use nuget-client.
+            const response = await axios.get(
+                `https://api-v2v3search-0.nuget.org/autocomplete?q=${encodeURIComponent(packageId)}&take=${pageSize}&prerelease=true`
+            );
+            const availablePackageIds = response.data.data as string[];
+            availablePackageIds.sort();
             for (const availablePackageId of availablePackageIds) {
+                if (packageId && !availablePackageId.startsWith(packageId))
+                    continue;
+
                 const completionItem = new vscode.CompletionItem(availablePackageId, vscode.CompletionItemKind.Module);
-                completionItem.range = replacementRange;
                 completionItems.push(completionItem);  
             }
+
+            console.log(`Package Id completions for "${packageId}":`, completionItems);
         } else if (packageId && wantPackageVersion) {
-            const availablePackageVersions = await this.nugetClient.getAvailablePackageVersions(packageId);
+            // TODO: Use nuget-client.
+            const response = await axios.get(
+                `https://api-v2v3search-0.nuget.org/autocomplete?id=${encodeURIComponent(packageId)}&take=${pageSize}&prerelease=true`
+            );
+            const availablePackageVersions = response.data.data as string[];
+            availablePackageVersions.sort();
             if (availablePackageVersions) {
                 for (const availablePackageVersion of availablePackageVersions) {
-                    const completionItem = new vscode.CompletionItem(availablePackageVersion, vscode.CompletionItemKind.Module);
-                    completionItem.range = replacementRange;
+                    const completionItem = new vscode.CompletionItem(availablePackageVersion, vscode.CompletionItemKind.Value);
                     completionItems.push(completionItem);  
                 }
             }
         }
+
+        const isIncomplete = completionItems.length >= pageSize; // Max page size.
         
-        return completionItems;
+        return new vscode.CompletionList(completionItems, isIncomplete);
     }
 
     /**
@@ -168,6 +182,8 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
         
         const valueStart: number = (<any>attribute).columnNumber + 1;
         const valueEnd: number = valueStart + attribute.value.length;
+
+        console.log(`${attribute.name}(${position.character}/${valueStart}-${valueEnd})`);
         
         return (position.character >= valueStart && position.character <= valueEnd);
     }
@@ -182,6 +198,8 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
     private getAttributeValueRange(line: vscode.TextLine, attribute: Attr): vscode.Range {
         const valueStart: number = (<any>attribute).columnNumber - 1;
         const valueEnd: number = valueStart + attribute.value.length;
+
+        console.log(`${attribute.name}(/${valueStart}-${valueEnd})`);
     
         return new vscode.Range(
             new vscode.Position(line.lineNumber, valueStart),

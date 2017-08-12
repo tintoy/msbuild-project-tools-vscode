@@ -2,7 +2,7 @@
     "PackageReference element": {
 		"prefix": "pr",
 		"body": [
-			"<PackageReference Include=\"${1:PackageId}\" Version=\"${2:PackageVersion}\" />$0"
+			"<PackageReference Include=\"$1\" Version=\"$2\" />$0"
 		],
 		"description": "An MSBuild project PackageReference element."
 	}

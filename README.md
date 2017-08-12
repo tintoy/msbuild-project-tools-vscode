@@ -10,7 +10,7 @@ When you're editing your project file, type `pr` then press `tab` to insert a `P
 
 ## Installation
 
-You can install this extension from the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=tintoy.dotnet-package-reference-completion).
+Since this extension is not available from the VS gallery yet, simply [download](https://github.com/tintoy/dotnet-package-reference-completion/releases/latest) the VSIX package for the latest release and install it by choosing "Install from VSIX" from the menu on the top right of the extensions panel.
 
 ## Notes
 

@@ -1,13 +1,13 @@
 {
-    "name": "dotnet-package-reference-completion",
-    "displayName": ".NET PackageReference auto-completion",
-    "description": "Auto-complete for package Ids and versions when editing MSBuild project files.",
+    "name": "msbuild-project-tools",
+    "displayName": "MSBuild project tools",
+    "description": "Tools for working with MSBuild project files (such as auto-complete for package Ids / versions).",
     "version": "0.0.1",
     "publisher": "tintoy",
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "https://github.com/tintoy/dotnet-package-reference-completion.git"
+        "url": "https://github.com/tintoy/msbuild-project-tools.git"
     },
     "icon": "images/icon.png",
     "engines": {
@@ -18,8 +18,8 @@
         "Other"
     ],
     "keywords": [
-        "dotnet",
         "msbuild",
+        "dotnet",
         "nuget",
         "packagereference"
     ],

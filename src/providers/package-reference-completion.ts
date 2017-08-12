@@ -98,10 +98,13 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
         }
         
         if (wantPackageId) {
-            // TODO: Use nuget-client.
+            // TODO: Use NuGetClient from 'nuget-client'.
+
+            // TODO: Don't hard-code the base URL; resolve it from https://api.nuget.org/v3/index.json (resources[@type='SearchAutocompleteService']).
             const response = await axios.get(
                 `https://api-v2v3search-0.nuget.org/autocomplete?q=${encodeURIComponent(packageId)}&take=${pageSize}&prerelease=true`
             );
+
             const availablePackageIds = response.data.data as string[];
             availablePackageIds.sort();
             for (const availablePackageId of availablePackageIds) {
@@ -114,10 +117,13 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
 
             console.log(`Package Id completions for "${packageId}":`, completionItems);
         } else if (packageId && wantPackageVersion) {
-            // TODO: Use nuget-client.
+            // TODO: Use NuGetClient from 'nuget-client'.
+            
+            // TODO: Don't hard-code the base URL; resolve it from https://api.nuget.org/v3/index.json (resources[@type='SearchAutocompleteService']).
             const response = await axios.get(
                 `https://api-v2v3search-0.nuget.org/autocomplete?id=${encodeURIComponent(packageId)}&take=${pageSize}&prerelease=true`
             );
+
             const availablePackageVersions = response.data.data as string[];
             availablePackageVersions.sort();
             if (availablePackageVersions) {
@@ -128,9 +134,10 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
             }
         }
 
-        const isIncomplete = completionItems.length >= pageSize; // Max page size.
+        // If the list is incomplete, VSCode will call us again as the user continues to type.
+        const moreResultsAvailable = completionItems.length >= pageSize;
         
-        return new vscode.CompletionList(completionItems, isIncomplete);
+        return new vscode.CompletionList(completionItems, moreResultsAvailable);
     }
 
     /**

@@ -1,6 +1,8 @@
 # MSBuild project file tools
 
-An extension for VS Code that provides auto-complete when editing `<PackageReference />` elements MSBuild project files.
+An extension for VS Code that provides auto-complete when editing `<PackageReference>` elements MSBuild project files.
+
+![PackageReference completion](docs/images/package-reference-completion.gif)
 
 ## Usage
 

@@ -1,0 +1,64 @@
+{
+    "name": "dotnet-package-reference-completion",
+    "displayName": ".NET PackageReference auto-completion",
+    "description": "Auto-complete for package Ids and versions when editing MSBuild project files.",
+    "version": "0.0.1",
+    "publisher": "tintoy",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/tintoy/dotnet-package-reference-completion.git"
+    },
+    "icon": "images/icon.png",
+    "engines": {
+        "vscode": "^1.14.0"
+    },
+    "categories": [
+        "Languages",
+        "Other"
+    ],
+    "keywords": [
+        "dotnet",
+        "msbuild",
+        "nuget",
+        "packagereference"
+    ],
+    "activationEvents": [
+        "workspaceContains:NuGet.config",
+        "onLanguage:xml"
+    ],
+    "main": "./out/src/extension",
+    "contributes": {
+        "snippets": [
+            {
+                "language": "xml",
+                "path": "./snippets/msbuild-project.json"
+            }
+        ]
+    },
+    "scripts": {
+        "vscode:prepublish": "tsc -p ./",
+        "compile": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "test": "node ./node_modules/vscode/bin/test"
+    },
+    "devDependencies": {
+        "@types/chai": "^4.0.2",
+        "@types/mocha": "^2.2.32",
+        "@types/mz": "0.0.31",
+        "@types/node": "^6.0.40",
+        "@types/xmldom": "^0.1.29",
+        "chai": "^4.1.1",
+        "mocha": "^2.3.3",
+        "tslint": "^5.5.0",
+        "typescript": "^2.0.3",
+        "vscode": "^1.0.0"
+    },
+    "dependencies": {
+        "axios": "^0.16.2",
+        "mz": "^2.6.0",
+        "nuget-client": "^0.1.2",
+        "rxjs": "^5.4.2",
+        "xmldom": "^0.1.27"
+    }
+}

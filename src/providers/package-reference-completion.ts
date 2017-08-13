@@ -1,4 +1,3 @@
-import { NuGetClient } from 'nuget-client';
 import * as vscode from 'vscode';
 import * as xmldom from 'xmldom';
 
@@ -33,14 +32,11 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
     private packageVersionCache = new Map<string, string[]>();
 
     /**
-     * Client for the NuGet API.
-     */
-    private nugetClient = new NuGetClient();
-
-    /**
      * Create a new {@link PackageReferenceCompletionProvider}.
+     * 
+     * @param nugetAutoCompleteUrls The URL of the NuGet API end-point to use.
      */
-    constructor() {}
+    constructor(private nugetAutoCompleteUrl: string) {}
 
     /**
      * Provide completion items for the specified document position.
@@ -78,6 +74,7 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
         let packageVersion: string;
         let wantPackageId = false;
         let wantPackageVersion = false;
+        let isLocallyFiltered = false;
         for (let i = 0; i < elements.length; i++) {
             const element = elements[i];
 
@@ -100,16 +97,19 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
         if (wantPackageId) {
             // TODO: Use NuGetClient from 'nuget-client'.
 
-            // TODO: Don't hard-code the base URL; resolve it from https://api.nuget.org/v3/index.json (resources[@type='SearchAutocompleteService']).
+            // TODO: Don't hard-code the use of the primary base URL; use Promise.race to call both end-points.
             const response = await axios.get(
-                `https://api-v2v3search-0.nuget.org/autocomplete?q=${encodeURIComponent(packageId)}&take=${pageSize}&prerelease=true`
+                `${this.nugetAutoCompleteUrl}?q=${encodeURIComponent(packageId)}&take=${pageSize}&prerelease=true`
             );
 
             const availablePackageIds = response.data.data as string[];
             availablePackageIds.sort();
             for (const availablePackageId of availablePackageIds) {
-                if (packageId && !availablePackageId.startsWith(packageId))
+                if (packageId && !availablePackageId.startsWith(packageId)) {
+                    isLocallyFiltered = true;
+
                     continue;
+                }
 
                 const completionItem = new vscode.CompletionItem(availablePackageId, vscode.CompletionItemKind.Module);
                 completionItems.push(completionItem);  
@@ -119,23 +119,29 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
         } else if (packageId && wantPackageVersion) {
             // TODO: Use NuGetClient from 'nuget-client'.
             
-            // TODO: Don't hard-code the base URL; resolve it from https://api.nuget.org/v3/index.json (resources[@type='SearchAutocompleteService']).
+            // TODO: Don't hard-code the use of the primary base URL; use Promise.race to call both end-points.
             const response = await axios.get(
-                `https://api-v2v3search-0.nuget.org/autocomplete?id=${encodeURIComponent(packageId)}&take=${pageSize}&prerelease=true`
+                `${this.nugetAutoCompleteUrl}?id=${encodeURIComponent(packageId)}&take=${pageSize}&prerelease=true`
             );
 
             const availablePackageVersions = response.data.data as string[];
             availablePackageVersions.sort();
             if (availablePackageVersions) {
                 for (const availablePackageVersion of availablePackageVersions) {
+                    if (packageVersion && !availablePackageVersion.startsWith(packageVersion)) {
+                        isLocallyFiltered = true;
+                        
+                        continue;
+                    }
+
                     const completionItem = new vscode.CompletionItem(availablePackageVersion, vscode.CompletionItemKind.Value);
                     completionItems.push(completionItem);  
                 }
             }
         }
 
-        // If the list is incomplete, VSCode will call us again as the user continues to type.
-        const moreResultsAvailable = completionItems.length >= pageSize;
+        // If the list is locally-filtered or incomplete, VSCode will call us again as the user continues to type.
+        const moreResultsAvailable = isLocallyFiltered || completionItems.length >= pageSize;
         
         return new vscode.CompletionList(completionItems, moreResultsAvailable);
     }

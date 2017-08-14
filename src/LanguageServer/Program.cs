@@ -1,11 +1,14 @@
-﻿using System;
+﻿using Lsp;
+using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace MSBuildProjectTools.LanguageServer
 {
-    using System.IO;
     using Handlers;
+    using Logging;
+    using Serilog;
 
     /// <summary>
     ///     The MSBuild language server.
@@ -17,10 +20,6 @@ namespace MSBuildProjectTools.LanguageServer
         /// </summary>
         static void Main()
         {
-            File.WriteAllText("D:\\Stage\\ServerLaunched.txt", "Launched!");
-
-            System.Diagnostics.Debugger.Break();
-
             SynchronizationContext.SetSynchronizationContext(
                 new SynchronizationContext()
             );
@@ -31,19 +30,14 @@ namespace MSBuildProjectTools.LanguageServer
             }
             catch (AggregateException aggregateError)
             {
-                int count = 0;
                 foreach (Exception unexpectedError in aggregateError.Flatten().InnerExceptions)
                 {
                     Console.WriteLine(unexpectedError);
-
-                    File.WriteAllText($"D:\\Stage\\AggregateUnexpectedError{++count}.txt", unexpectedError.ToString());
                 }
             }
             catch (Exception unexpectedError)
             {
                 Console.WriteLine(unexpectedError);
-
-                File.WriteAllText("D:\\Stage\\UnexpectedError.txt", unexpectedError.ToString());
             }
         }
 
@@ -60,12 +54,31 @@ namespace MSBuildProjectTools.LanguageServer
                 output: Console.OpenStandardOutput()
             );
 
+            ConfigureLogging(server);
+
             server.AddHandler(
-                new ProjectDocumentHandler(server)
+                new ProjectDocumentHandler(server, Log.Logger)
             );
 
             await server.Initialize();
             await server.WasShutDown;
+        }
+
+        /// <summary>
+        ///     Configure Serilog to write log events to the language server.
+        /// </summary>
+        /// <param name="languageServer">
+        ///     The language server.
+        /// </param>
+        static void ConfigureLogging(Lsp.LanguageServer languageServer)
+        {
+            if (languageServer == null)
+                throw new ArgumentNullException(nameof(languageServer));
+            
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Information()
+                .WriteTo.LanguageServer(languageServer)
+                .CreateLogger();
         }
     }
 }

@@ -56,7 +56,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         command: 'C:\\Program Files\\dotnet\\dotnet.exe',
         args: [ serverExecutable ],
     };
-    const languageClient = new LanguageClient('msbuildProjectFileTools', serverOptions, clientOptions);
+    const languageClient = new LanguageClient('MSBuild Project File Tools', serverOptions, clientOptions);
     languageClient.trace = Trace.Messages;
     context.subscriptions.push(
         languageClient.start()

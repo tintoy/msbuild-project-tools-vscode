@@ -3,6 +3,7 @@ using Lsp.Capabilities.Client;
 using Lsp.Capabilities.Server;
 using Lsp.Models;
 using Lsp.Protocol;
+using Serilog;
 using System;
 using System.Threading.Tasks;
 using System.Linq;
@@ -26,12 +27,13 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <param name="logger">
         ///     The application logger.
         /// </param>
-        public TextDocumentHandler(ILanguageServer server)
+        public TextDocumentHandler(ILanguageServer server, ILogger logger)
         {
             if (server == null)
                 throw new ArgumentNullException(nameof(server));
 
             Server = server;
+            Logger = logger.ForContext(GetType());
         }
 
         /// <summary>
@@ -53,6 +55,11 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         ///     The document selector that describes documents targeted by the handler.
         /// </summary>
         protected abstract DocumentSelector DocumentSelector { get; }
+
+        /// <summary>
+        ///     The handler's logger.
+        /// </summary>
+        protected ILogger Logger { get; }
 
         /// <summary>
         ///     The language server.
@@ -150,87 +157,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 DocumentSelector = DocumentSelector,
                 IncludeText = Options.Save.IncludeText
             };
-        }
-
-        /// <summary>
-        ///     Log a verbose message.
-        /// </summary>
-        /// <param name="messageOrFormat">
-        ///     The message or message-format specifier.
-        /// </param>
-        /// <param name="formatArgs">
-        ///     Optional message-format arguments.
-        /// </param>
-        protected void LogVerbose(string messageOrFormat, params object[] formatArgs)
-        {
-            if (messageOrFormat == null)
-                throw new ArgumentNullException(nameof(messageOrFormat));
-
-            Server.LogMessage(new LogMessageParams
-            {
-                Type = MessageType.Log,
-                Message = formatArgs.Length > 0 ? String.Format(messageOrFormat, formatArgs) : messageOrFormat
-            });
-        }
-
-        /// <summary>
-        ///     Log an information message.
-        /// </summary>
-        /// <param name="messageOrFormat">
-        ///     The message or message-format specifier.
-        /// </param>
-        /// <param name="formatArgs">
-        ///     Optional message-format arguments.
-        /// </param>
-        protected void LogInformation(string messageOrFormat, params object[] formatArgs)
-        {
-            if (messageOrFormat == null)
-                throw new ArgumentNullException(nameof(messageOrFormat));
-
-            Server.LogMessage(new LogMessageParams
-            {
-                Type = MessageType.Info,
-                Message = formatArgs.Length > 0 ? String.Format(messageOrFormat, formatArgs) : messageOrFormat
-            });
-        }
-
-        /// <summary>
-        ///     Log a warning message.
-        /// </summary>
-        /// <param name="messageOrFormat">
-        ///     The message or message-format specifier.
-        /// </param>
-        /// <param name="formatArgs">
-        ///     Optional message-format arguments.
-        /// </param>
-        protected void LogWarning(string messageOrFormat, params object[] formatArgs)
-        {
-            if (messageOrFormat == null)
-                throw new ArgumentNullException(nameof(messageOrFormat));
-
-            Server.LogMessage(new LogMessageParams
-            {
-                Type = MessageType.Warning,
-                Message = formatArgs.Length > 0 ? String.Format(messageOrFormat, formatArgs) : messageOrFormat
-            });
-        }
-
-        /// <summary>
-        ///     Log an error message.
-        /// </summary>
-        /// <param name="messageOrFormat">
-        ///     The message or message-format specifier.
-        /// </param>
-        /// <param name="formatArgs">
-        ///     Optional message-format arguments.
-        /// </param>
-        protected void LogError(string messageOrFormat, params object[] formatArgs)
-        {
-            Server.LogMessage(new LogMessageParams
-            {
-                Type = MessageType.Error,
-                Message = formatArgs.Length > 0 ? String.Format(messageOrFormat, formatArgs) : messageOrFormat
-            });
         }
 
         /// <summary>

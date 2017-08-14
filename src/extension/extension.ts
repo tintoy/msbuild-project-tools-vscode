@@ -1,9 +1,13 @@
 'use strict';
 
 import { default as axios } from 'axios';
+import * as path from 'path';
 import * as vscode from 'vscode';
+import { LanguageClient, ServerOptions, LanguageClientOptions, ErrorAction, CloseAction } from 'vscode-languageclient';
 
 import { PackageReferenceCompletionProvider } from './providers/package-reference-completion';
+import { Trace } from 'vscode-jsonrpc/lib/main';
+import { Message } from 'vscode-jsonrpc/lib/messages';
 
 /**
  * Called when the extension is activated.
@@ -20,6 +24,42 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 nugetEndPointURLs[0] // For now, just default to using the primary.
             )
         )
+    );
+
+    const clientOptions: LanguageClientOptions = {
+        documentSelector: [{
+            language: 'xml',
+            pattern: '*.csproj'
+        }],
+        synchronize: {
+            // Synchronize the setting section 'languageServerExample' to the server
+            configurationSection: 'msbuildProjectFileTools',
+            // Notify the server about file changes to '.clientrc files contain in the workspace
+            fileEvents: vscode.workspace.createFileSystemWatcher('**/.clientrc')
+        },
+        errorHandler: {
+            error: (error: Error, message: Message, count: number) => {
+                console.log(error);
+                console.log(message.jsonrpc);
+                
+                return ErrorAction.Shutdown;
+            },
+            closed: () => {
+                console.log('Server close!');
+
+                return CloseAction.DoNotRestart;
+            }
+        }
+    };
+    const serverExecutable = context.asAbsolutePath('src/LanguageServer/bin/Debug/netcoreapp2.0/publish/LanguageServer.dll');
+    const serverOptions: ServerOptions = {
+        command: 'C:\\Program Files\\dotnet\\dotnet.exe',
+        args: [ serverExecutable ],
+    };
+    const languageClient = new LanguageClient('msbuildProjectFileTools', serverOptions, clientOptions);
+    languageClient.trace = Trace.Messages;
+    context.subscriptions.push(
+        languageClient.start()
     );
 }
 

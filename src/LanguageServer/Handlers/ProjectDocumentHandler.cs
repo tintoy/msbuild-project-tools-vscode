@@ -1,4 +1,5 @@
 using Lsp;
+using Lsp.Capabilities.Server;
 using Lsp.Models;
 using Lsp.Protocol;
 using System;
@@ -7,6 +8,7 @@ using System.Linq;
 
 namespace MSBuildProjectTools.LanguageServer.Handlers
 {
+    using Newtonsoft.Json;
     using Utilities;
 
     /// <summary>
@@ -38,6 +40,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         public ProjectDocumentHandler(ILanguageServer server)
             : base(server)
         {
+            Options.Change = TextDocumentSyncKind.Incremental;
         }
 
         /// <summary>
@@ -84,11 +87,12 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 LogVerbose("Changed {0} characters in '{1}' between ({2}, {3}) to ({4}, {5}).",
                     change.RangeLength,
                     documentPath,
-                    change.Range.Start.Line,
-                    change.Range.Start.Character,
-                    change.Range.End.Line,
-                    change.Range.End.Character
+                    change.Range?.Start?.Line ?? 0,
+                    change.Range?.Start.Character ?? 0,
+                    change.Range?.End?.Line ?? 0,
+                    change.Range?.End?.Character ?? 0
                 );
+                LogVerbose("ChangeEvent: {0}", JsonConvert.SerializeObject(change));
             }
 
             return Task.CompletedTask;

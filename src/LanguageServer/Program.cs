@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 
 namespace MSBuildProjectTools.LanguageServer
 {
+    using System.IO;
     using Handlers;
 
     /// <summary>
@@ -16,6 +17,10 @@ namespace MSBuildProjectTools.LanguageServer
         /// </summary>
         static void Main()
         {
+            File.WriteAllText("D:\\Stage\\ServerLaunched.txt", "Launched!");
+
+            System.Diagnostics.Debugger.Break();
+
             SynchronizationContext.SetSynchronizationContext(
                 new SynchronizationContext()
             );
@@ -26,14 +31,19 @@ namespace MSBuildProjectTools.LanguageServer
             }
             catch (AggregateException aggregateError)
             {
+                int count = 0;
                 foreach (Exception unexpectedError in aggregateError.Flatten().InnerExceptions)
                 {
                     Console.WriteLine(unexpectedError);
+
+                    File.WriteAllText($"D:\\Stage\\AggregateUnexpectedError{++count}.txt", unexpectedError.ToString());
                 }
             }
             catch (Exception unexpectedError)
             {
                 Console.WriteLine(unexpectedError);
+
+                File.WriteAllText("D:\\Stage\\UnexpectedError.txt", unexpectedError.ToString());
             }
         }
 

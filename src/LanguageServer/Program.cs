@@ -1,5 +1,4 @@
-﻿using Serilog;
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,8 +20,6 @@ namespace MSBuildProjectTools.LanguageServer
                 new SynchronizationContext()
             );
 
-            ConfigureLogging();
-
             try
             {
                 AsyncMain().Wait();
@@ -31,12 +28,12 @@ namespace MSBuildProjectTools.LanguageServer
             {
                 foreach (Exception unexpectedError in aggregateError.Flatten().InnerExceptions)
                 {
-                    Log.Error(unexpectedError, "Unexpected error: {Message}", unexpectedError.Message);
+                    Console.WriteLine(unexpectedError);
                 }
             }
             catch (Exception unexpectedError)
             {
-                Log.Error(unexpectedError, "Unexpected error: {Message}", unexpectedError.Message);
+                Console.WriteLine(unexpectedError);
             }
         }
 
@@ -54,22 +51,11 @@ namespace MSBuildProjectTools.LanguageServer
             );
 
             server.AddHandler(
-                new ProjectDocumentHandler(server, Log.Logger)
+                new ProjectDocumentHandler(server)
             );
 
             await server.Initialize();
             await server.WasShutDown;
-        }
-
-        /// <summary>
-        ///     Configure the global application logger.
-        /// </summary>
-        static void ConfigureLogging()
-        {
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Information()
-                .WriteTo.LiterateConsole()
-                .CreateLogger();
         }
     }
 }

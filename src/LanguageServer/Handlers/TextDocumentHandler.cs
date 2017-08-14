@@ -3,12 +3,11 @@ using Lsp.Capabilities.Client;
 using Lsp.Capabilities.Server;
 using Lsp.Models;
 using Lsp.Protocol;
-using Serilog;
 using System;
 using System.Threading.Tasks;
 using System.Linq;
-using JsonRpc;
 using System.Threading;
+using System.IO;
 
 namespace MSBuildProjectTools.LanguageServer.Handlers
 {
@@ -19,11 +18,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         : ITextDocumentSyncHandler
     {
         /// <summary>
-        ///     The handler's logger.
-        /// </summary>
-        readonly ILogger _logger;
-
-        /// <summary>
         ///     Create a new <see cref="TextDocumentHandler"/>.
         /// </summary>
         /// <param name="server">
@@ -32,16 +26,12 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <param name="logger">
         ///     The application logger.
         /// </param>
-        public TextDocumentHandler(ILanguageServer server, ILogger logger)
+        public TextDocumentHandler(ILanguageServer server)
         {
             if (server == null)
                 throw new ArgumentNullException(nameof(server));
 
-            if (logger == null)
-                throw new ArgumentNullException(nameof(logger));
-            
             Server = server;
-            _logger = logger.ForContext(GetType());
         }
 
         /// <summary>
@@ -160,6 +150,87 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 DocumentSelector = DocumentSelector,
                 IncludeText = Options.Save.IncludeText
             };
+        }
+
+        /// <summary>
+        ///     Log a verbose message.
+        /// </summary>
+        /// <param name="messageOrFormat">
+        ///     The message or message-format specifier.
+        /// </param>
+        /// <param name="formatArgs">
+        ///     Optional message-format arguments.
+        /// </param>
+        protected void LogVerbose(string messageOrFormat, params object[] formatArgs)
+        {
+            if (messageOrFormat == null)
+                throw new ArgumentNullException(nameof(messageOrFormat));
+
+            Server.LogMessage(new LogMessageParams
+            {
+                Type = MessageType.Log,
+                Message = formatArgs.Length > 0 ? String.Format(messageOrFormat, formatArgs) : messageOrFormat
+            });
+        }
+
+        /// <summary>
+        ///     Log an information message.
+        /// </summary>
+        /// <param name="messageOrFormat">
+        ///     The message or message-format specifier.
+        /// </param>
+        /// <param name="formatArgs">
+        ///     Optional message-format arguments.
+        /// </param>
+        protected void LogInformation(string messageOrFormat, params object[] formatArgs)
+        {
+            if (messageOrFormat == null)
+                throw new ArgumentNullException(nameof(messageOrFormat));
+
+            Server.LogMessage(new LogMessageParams
+            {
+                Type = MessageType.Info,
+                Message = formatArgs.Length > 0 ? String.Format(messageOrFormat, formatArgs) : messageOrFormat
+            });
+        }
+
+        /// <summary>
+        ///     Log a warning message.
+        /// </summary>
+        /// <param name="messageOrFormat">
+        ///     The message or message-format specifier.
+        /// </param>
+        /// <param name="formatArgs">
+        ///     Optional message-format arguments.
+        /// </param>
+        protected void LogWarning(string messageOrFormat, params object[] formatArgs)
+        {
+            if (messageOrFormat == null)
+                throw new ArgumentNullException(nameof(messageOrFormat));
+
+            Server.LogMessage(new LogMessageParams
+            {
+                Type = MessageType.Warning,
+                Message = formatArgs.Length > 0 ? String.Format(messageOrFormat, formatArgs) : messageOrFormat
+            });
+        }
+
+        /// <summary>
+        ///     Log an error message.
+        /// </summary>
+        /// <param name="messageOrFormat">
+        ///     The message or message-format specifier.
+        /// </param>
+        /// <param name="formatArgs">
+        ///     Optional message-format arguments.
+        /// </param>
+        protected void LogError(string messageOrFormat, params object[] formatArgs)
+        {
+            Server.LogMessage(new LogMessageParams
+            {
+                Type = MessageType.Error,
+                Message = formatArgs.Length > 0 ? String.Format(messageOrFormat, formatArgs) : messageOrFormat
+            });
         }
 
         /// <summary>
@@ -283,85 +354,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 throw new ArgumentNullException(nameof(documentUri));
 
             return new TextDocumentAttributes(documentUri, "xml");
-        }
-
-        /// <summary>
-        ///     Log an information message.
-        /// </summary>
-        /// <param name="message">
-        ///     The message (Serilog-style format string).
-        /// </param>
-        /// <param name="propertyValues">
-        ///     Values for message properties (if any).
-        /// </param>
-        void LogInformation(string message, params object[] propertyValues)
-        {
-            if (message == null)
-                throw new ArgumentNullException(nameof(message));
-
-            _logger.Information(message, propertyValues);
-
-            // TODO: _server.LogMessage
-        }
-
-        /// <summary>
-        ///     Log a warning message.
-        /// </summary>
-        /// <param name="message">
-        ///     The message (Serilog-style format string).
-        /// </param>
-        /// <param name="propertyValues">
-        ///     Values for message properties (if any).
-        /// </param>
-        void LogWarning(string message, params object[] propertyValues)
-        {
-            if (message == null)
-                throw new ArgumentNullException(nameof(message));
-
-            _logger.Warning(message, propertyValues);
-
-            // TODO: _server.LogMessage
-        }
-
-        /// <summary>
-        ///     Log an error message.
-        /// </summary>
-        /// <param name="message">
-        ///     The message (Serilog-style format string).
-        /// </param>
-        /// <param name="propertyValues">
-        ///     Values for message properties (if any).
-        /// </param>
-        void LogError(string message, params object[] propertyValues)
-        {
-            if (message == null)
-                throw new ArgumentNullException(nameof(message));
-
-            _logger.Error(message, propertyValues);
-
-            // TODO: _server.LogMessage
-        }
-
-        /// <summary>
-        ///     Log an exception.
-        /// </summary>
-        /// <param name="exception">
-        ///     The exception.
-        /// </param>
-        /// <param name="message">
-        ///     An error message (Serilog-style format string) to go with the exception.
-        /// </param>
-        /// <param name="propertyValues">
-        ///     Values for message properties (if any).
-        /// </param>
-        void LogException(Exception exception, string message, params object[] propertyValues)
-        {
-            if (exception == null)
-                throw new ArgumentNullException(nameof(exception));
-
-            _logger.Error(exception, message, propertyValues);
-
-            // TODO: _server.LogMessage
         }
     }
 }

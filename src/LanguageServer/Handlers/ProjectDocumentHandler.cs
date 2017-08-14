@@ -1,7 +1,6 @@
 using Lsp;
 using Lsp.Models;
 using Lsp.Protocol;
-using Serilog;
 using System;
 using System.Threading.Tasks;
 using System.Linq;
@@ -36,8 +35,8 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <param name="logger">
         ///     The application logger.
         /// </param>
-        public ProjectDocumentHandler(ILanguageServer server, ILogger logger)
-            : base(server, logger)
+        public ProjectDocumentHandler(ILanguageServer server)
+            : base(server)
         {
         }
 

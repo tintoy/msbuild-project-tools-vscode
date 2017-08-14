@@ -3,11 +3,11 @@
         <OutputType>Exe</OutputType>
         <TargetFramework>netcoreapp2.0</TargetFramework>
         <!-- Suppress NuGet compatibility warning (JsonRpc package is currently broken) -->
-        <NoWarn>NU1701</NoWarn>
+        <!-- <NoWarn>NU1701</NoWarn> -->
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="JsonRpc" Version="1.0.1.0" />
+        <PackageReference Include="JsonRpc" Version="1.0.0" />
         <PackageReference Include="LSP" Version="1.0.0" />
         <PackageReference Include="Serilog" Version="2.5.0" />
         <PackageReference Include="Serilog.Sinks.Literate" Version="3.0.0" />

@@ -1,3 +1,6 @@
+## Mac
+.DS_Store
+
 ## Extension
 out/
 
@@ -168,8 +171,6 @@ publish/
 # in these scripts will be unencrypted
 PublishScripts/
 
-# NuGet Packages
-*.nupkg
 # The packages folder can be ignored because of Package Restore
 **/packages/*
 # except build/, which is used as an MSBuild target.
@@ -307,3 +308,6 @@ __pycache__/
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+# Don't ignore library packages
+!lib/packages/

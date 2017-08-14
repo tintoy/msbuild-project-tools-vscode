@@ -1,15 +1,19 @@
-﻿using Lsp;
-using Lsp.Models;
-using Serilog;
+﻿using Serilog;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace MSBuildProjectTools.LanguageServer
 {
+    /// <summary>
+    ///     The MSBuild language server.
+    /// </summary>
     static class Program
     {
-        static void Main(string[] args)
+        /// <summary>
+        ///     The main program entry-point.
+        /// </summary>
+        static void Main()
         {
             SynchronizationContext.SetSynchronizationContext(
                 new SynchronizationContext()
@@ -19,11 +23,11 @@ namespace MSBuildProjectTools.LanguageServer
 
             try
             {
-                AsyncMain(args).Wait();
+                AsyncMain().Wait();
             }
             catch (AggregateException aggregateError)
             {
-                foreach (Exception unexpectedError in aggregateError.InnerExceptions)
+                foreach (Exception unexpectedError in aggregateError.Flatten().InnerExceptions)
                 {
                     Log.Error(unexpectedError, "Unexpected error: {Message}", unexpectedError.Message);
                 }
@@ -34,14 +38,26 @@ namespace MSBuildProjectTools.LanguageServer
             }
         }
 
-        static async Task AsyncMain(string[] args)
+        /// <summary>
+        ///     The asynchronous program entry-point.
+        /// </summary>
+        /// <returns>
+        ///     A <see cref="Task"/> representing program execution.
+        /// </returns>
+        static async Task AsyncMain()
         {
-            var server = new Lsp.LanguageServer(Console.OpenStandardInput(), Console.OpenStandardOutput());
+            var server = new Lsp.LanguageServer(
+                input: Console.OpenStandardInput(),
+                output: Console.OpenStandardOutput()
+            );
 
             await server.Initialize();
             await server.WasShutDown;
         }
 
+        /// <summary>
+        ///     Configure the global application logger.
+        /// </summary>
         static void ConfigureLogging()
         {
             Log.Logger = new LoggerConfiguration()

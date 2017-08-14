@@ -51,6 +51,10 @@ namespace MSBuildProjectTools.LanguageServer
                 output: Console.OpenStandardOutput()
             );
 
+            server.AddHandler(
+                new TextDocumentHandler(server)
+            );
+
             await server.Initialize();
             await server.WasShutDown;
         }

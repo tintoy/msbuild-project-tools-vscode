@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 
 namespace MSBuildProjectTools.LanguageServer
 {
+    using Handlers;
+
     /// <summary>
     ///     The MSBuild language server.
     /// </summary>
@@ -52,7 +54,7 @@ namespace MSBuildProjectTools.LanguageServer
             );
 
             server.AddHandler(
-                new TextDocumentHandler(server, Log.Logger)
+                new ProjectDocumentHandler(server, Log.Logger)
             );
 
             await server.Initialize();

@@ -52,11 +52,10 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         protected override Task OnDidOpenTextDocument(DidOpenTextDocumentParams notification)
         {
             string documentPath = notification.TextDocument.Uri.GetFileSystemPath();
-            Server.LogMessage(new LogMessageParams
-            {
-                Type = MessageType.Log,
-                Message = $"Opened document '{documentPath}'."
-            });
+            if (documentPath == null)
+                return Task.CompletedTask;
+
+            LogInformation("Opened document '{0}'.", documentPath);
 
             return Task.CompletedTask;
         }
@@ -73,19 +72,23 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         protected override Task OnDidChangeTextDocument(DidChangeTextDocumentParams parameters)
         {
             string documentPath = parameters.TextDocument.Uri.GetFileSystemPath();
-            int changeCount = parameters.ContentChanges.Count();
-            Server.LogMessage(new LogMessageParams
-            {
-                Type = MessageType.Log,
-                Message = $"Document '{documentPath}' changed."
-            });
+            if (documentPath == null)
+                return Task.CompletedTask;
+
+            LogInformation("Document '{0}' changed ({1} changes).",
+                documentPath,
+                parameters.ContentChanges.Count()
+            );
             foreach (TextDocumentContentChangeEvent change in parameters.ContentChanges)
             {
-                Server.LogMessage(new LogMessageParams
-                {
-                    Type = MessageType.Log,
-                    Message = $"Changed {change.RangeLength} characters in '{documentPath}' between ({change.Range.Start.Line}, {change.Range.Start.Character}) to ({change.Range.End.Line}, {change.Range.End.Character})."
-                });
+                LogVerbose("Changed {0} characters in '{1}' between ({2}, {3}) to ({4}, {5}).",
+                    change.RangeLength,
+                    documentPath,
+                    change.Range.Start.Line,
+                    change.Range.Start.Character,
+                    change.Range.End.Line,
+                    change.Range.End.Character
+                );
             }
 
             return Task.CompletedTask;

@@ -52,7 +52,7 @@ namespace MSBuildProjectTools.LanguageServer
             );
 
             server.AddHandler(
-                new TextDocumentHandler(server)
+                new TextDocumentHandler(server, Log.Logger)
             );
 
             await server.Initialize();

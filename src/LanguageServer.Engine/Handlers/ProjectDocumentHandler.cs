@@ -5,7 +5,7 @@ using Lsp.Protocol;
 using Newtonsoft.Json;
 using Serilog;
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
@@ -32,7 +32,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <summary>
         ///     Documents for loaded project files.
         /// </summary>
-        readonly Dictionary<string, ProjectDocument> _projectDocuments = new Dictionary<string, ProjectDocument>();
+        readonly ConcurrentDictionary<string, ProjectDocument> _projectDocuments = new ConcurrentDictionary<string, ProjectDocument>();
 
         /// <summary>
         ///     Create a new <see cref="ProjectDocumentHandler"/>.
@@ -49,7 +49,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         public ProjectDocumentHandler(ILanguageServer server, ILogger logger)
             : base(server, logger)
         {
-            Options.Change = TextDocumentSyncKind.Incremental;
+            Options.Change = TextDocumentSyncKind.Full;
         }
 
         /// <summary>
@@ -72,23 +72,21 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     A <see cref="Task"/> representing the operation.
         /// </returns>
-        protected override Task OnDidOpenTextDocument(DidOpenTextDocumentParams parameters)
+        protected override async Task OnDidOpenTextDocument(DidOpenTextDocumentParams parameters)
         {
             string documentPath = parameters.TextDocument.Uri.GetFileSystemPath();
             if (documentPath == null)
-                return Task.CompletedTask;
+                return;
 
-            ProjectDocument projectDocument = TryLoadProjectDocument(documentPath);
+            ProjectDocument projectDocument = await TryLoadProjectDocument(documentPath);
             if (projectDocument == null)
             {
                 Log.Warning("Failed to load project file '{DocumentPath}'.", documentPath);
 
-                return Task.CompletedTask;
+                return;
             }
 
             Log.Information("Successfully loaded project '{DocumentPath}'.", documentPath);
-
-            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -100,15 +98,44 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     A <see cref="Task"/> representing the operation.
         /// </returns>
-        protected override Task OnDidCloseTextDocument(DidCloseTextDocumentParams parameters)
+        protected override async Task OnDidChangeTextDocument(DidChangeTextDocumentParams parameters)
+        {
+            TextDocumentContentChangeEvent mostRecentChange = parameters.ContentChanges.LastOrDefault();
+            if (mostRecentChange == null)
+                return;
+
+            string documentPath = parameters.TextDocument.Uri.GetFileSystemPath();
+            if (documentPath == null)
+                return;
+
+            string updatedDocumentText = mostRecentChange.Text;
+            ProjectDocument reloadedProjectDocument = await TryUpdateProjectDocument(documentPath, updatedDocumentText);
+            if (reloadedProjectDocument == null)
+                Log.Warning("Failed to update project '{DocumentPath}'.", documentPath);
+        }
+
+        /// <summary>
+        ///     Called when a text document is opened.
+        /// </summary>
+        /// <param name="parameters">
+        ///     The notification parameters.
+        /// </param>
+        /// <returns>
+        ///     A <see cref="Task"/> representing the operation.
+        /// </returns>
+        protected override async Task OnDidCloseTextDocument(DidCloseTextDocumentParams parameters)
         {
             string documentPath = parameters.TextDocument.Uri.GetFileSystemPath();
             if (documentPath == null)
-                return Task.CompletedTask;
+                return;
 
-            _projectDocuments.Remove(documentPath);
-
-            return Task.CompletedTask;
+            if (_projectDocuments.TryRemove(documentPath, out ProjectDocument projectDocument))
+            {
+                using (await projectDocument.Lock.WriterLockAsync())
+                {
+                    projectDocument.Unload();
+                }
+            }
         }
 
         /// <summary>
@@ -123,78 +150,122 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     A <see cref="Task{TResult}"/> whose result is the hover details, or <c>null</c> if no hover details are provided by the handler.
         /// </returns>
-        protected override Task<Hover> OnHover(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
+        protected override async Task<Hover> OnHover(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
         {
             string documentPath = parameters.TextDocument.Uri.GetFileSystemPath();
-            ProjectDocument projectDocument = TryLoadProjectDocument(documentPath);
+            ProjectDocument projectDocument = await TryLoadProjectDocument(documentPath);
             if (projectDocument == null)
-                return NoHover;
+                return null;
 
             Position position = Position.FromZeroBased(
                 parameters.Position.Line,
                 parameters.Position.Character
             ).ToOneBased();
 
-            XObject objectAtPosition = projectDocument.GetXmlAtPosition(position);
-            if (objectAtPosition == null)
-                return NoHover;
-
-            // Display a not-so-informative tooltip (this is just to prove that our language server is correctly servicing hover requests).
-
-            XmlNodeType objectType = objectAtPosition.NodeType;
+            Range nodeRange;
+            XmlNodeType objectType;
             string objectNameLabel;
-            string objectValueLabel = "";            
-            switch (objectAtPosition)
+            string objectValueLabel = "";
+
+            using (await projectDocument.Lock.ReaderLockAsync(cancellationToken))
             {
-                case XElement element:
-                {
-                    objectNameLabel = element.Name.LocalName;
+                XObject objectAtPosition = projectDocument.GetXmlAtPosition(position);
+                if (objectAtPosition == null)
+                    return null;
 
-                    break;
-                }
-                case XAttribute attribute:
-                {
-                    objectNameLabel = attribute.Name.LocalName;
-                    objectValueLabel = $" (='{attribute.Value}')";
+                nodeRange = objectAtPosition.Annotation<NodeLocation>().Range;
 
-                    break;
-                }
-                default:
-                {
-                    objectNameLabel = "Unknown";
+                // Display a not-so-informative tooltip (this is just to prove that our language server is correctly servicing hover requests).
 
-                    break;
+                objectType = objectAtPosition.NodeType;
+                switch (objectAtPosition)
+                {
+                    case XElement element:
+                    {
+                        objectNameLabel = element.Name.LocalName;
+
+                        break;
+                    }
+                    case XAttribute attribute:
+                    {
+                        objectNameLabel = attribute.Name.LocalName;
+                        objectValueLabel = $" (='{attribute.Value}')";
+
+                        break;
+                    }
+                    default:
+                    {
+                        objectNameLabel = "Unknown";
+
+                        break;
+                    }
                 }
             }
 
-            return Task.FromResult(new Hover
+            return new Hover
             {
-                Range = objectAtPosition.Annotation<NodeLocation>().Range.ToLspModel(),
+                Range = nodeRange.ToLspModel(),
                 Contents = $"{objectType} '{objectNameLabel}'{objectValueLabel}",
-            });
+            };
         }
 
         /// <summary>
-        ///     Try to load the latest state for the specified project document.
+        ///     Try to retrieve the current state for the specified project document.
         /// </summary>
         /// <param name="documentPath">
         ///     The full path to the project document.
         /// </param>
+        /// <param name="reload">
+        ///     Reload the project if it is already loaded?
+        /// </param>
         /// <returns>
         ///     The project document, or <c>null</c> if the project could not be loaded.
         /// </returns>
-        ProjectDocument TryLoadProjectDocument(string documentPath)
+        async Task<ProjectDocument> TryUpdateProjectDocument(string documentPath, string documentText)
+        {
+            ProjectDocument projectDocument;
+            if (!_projectDocuments.TryGetValue(documentPath, out projectDocument))
+                return null;
+
+            using (await projectDocument.Lock.WriterLockAsync())
+            {
+                projectDocument.Update(documentText);
+            }
+
+            return projectDocument;
+        }
+
+        /// <summary>
+        ///     Try to retrieve the current state for the specified project document.
+        /// </summary>
+        /// <param name="documentPath">
+        ///     The full path to the project document.
+        /// </param>
+        /// <param name="reload">
+        ///     Reload the project if it is already loaded?
+        /// </param>
+        /// <returns>
+        ///     The project document, or <c>null</c> if the project could not be loaded.
+        /// </returns>
+        async Task<ProjectDocument> TryLoadProjectDocument(string documentPath, bool reload = false)
         {
             try
             {
-                ProjectDocument projectDocument;
-                if (!_projectDocuments.TryGetValue(documentPath, out projectDocument))
+                bool isNewProject = false;
+                ProjectDocument projectDocument = _projectDocuments.GetOrAdd(documentPath, _ =>
                 {
-                    projectDocument = new ProjectDocument(documentPath);
-                    _projectDocuments.Add(documentPath, projectDocument);
-                }
+                    isNewProject = true;
+                     
+                    return new ProjectDocument(documentPath);
+                });
 
-                projectDocument.Load();
+                if (isNewProject || reload)
+                {
+                    using (await projectDocument.Lock.WriterLockAsync())
+                    {
+                        projectDocument.Load();
+                    }
+                }
 
                 return projectDocument;
             }

@@ -1,3 +1,4 @@
+using Nito.AsyncEx;
 using System;
 using System.IO;
 using System.Xml.Linq;
@@ -41,9 +42,19 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         }
 
         /// <summary>
+        ///     A lock used to control access to project state.
+        /// </summary>
+        public AsyncReaderWriterLock Lock { get; } = new AsyncReaderWriterLock();
+
+        /// <summary>
         ///     Is the project currently loaded?
         /// </summary>
         public bool IsLoaded => _xml != null && _lookup != null;
+
+        /// <summary>
+        ///     Does the project have in-memory changes?
+        /// </summary>
+        public bool IsDirty { get; private set; }
 
         /// <summary>
         ///     The parsed project XML.
@@ -71,12 +82,37 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         {
             _xml = LocatingXmlTextReader.LoadWithLocations(_projectFile.FullName);
             _lookup = new PositionalObjectLookup(_xml);
+            IsDirty = false;
         }
 
+        /// <summary>
+        ///     Update the project in-memory state.
+        /// </summary>
+        /// <param name="xml">
+        ///     The project XML.
+        /// </param>
+        public void Update(string xml)
+        {
+            if (xml == null)
+                throw new ArgumentNullException(nameof(xml));
+
+            using (StringReader reader = new StringReader(xml))
+            {
+                _xml = LocatingXmlTextReader.LoadWithLocations(reader);
+            }
+            
+            _lookup = new PositionalObjectLookup(_xml);
+            IsDirty = true;
+        }
+
+        /// <summary>
+        ///     Unload the project.
+        /// </summary>
         public void Unload()
         {
             _xml = null;
             _lookup = null;
+            IsDirty = false;
         }
 
         /// <summary>

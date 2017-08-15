@@ -18,6 +18,8 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
     using Utilities;
     using XmlParser;
 
+    // Note - you can get the workspace root path from Server.Client.RootPath
+
     /// <summary>
     ///     Handler for project file document events.
     /// </summary>

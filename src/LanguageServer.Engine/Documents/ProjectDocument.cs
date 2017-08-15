@@ -9,6 +9,7 @@ using MSBuild = Microsoft.Build.Evaluation;
 
 namespace MSBuildProjectTools.LanguageServer.Documents
 {
+    using Utilities;
     using XmlParser;
 
     /// <summary>
@@ -30,6 +31,11 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         ///     The lookup for XML objects by position.
         /// </summary>
         PositionalObjectLookup _lookup;
+
+        /// <summary>
+        ///     The underlying MSBuild project collection.
+        /// </summary>
+        MSBuild.ProjectCollection _msbuildProjectCollection;
 
         /// <summary>
         ///     The underlying MSBuild project.
@@ -69,7 +75,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <summary>
         ///     Is the underlying MSBuild project currently loaded?
         /// </summary>
-        public bool IsMSBuildProjectLoaded => _msbuildProject != null;
+        public bool HaveMSBuildProject => _msbuildProject != null;
 
         /// <summary>
         ///     The parsed project XML.
@@ -89,6 +95,11 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         ///     The project is not loaded.
         /// </exception>
         public PositionalObjectLookup Lookup => _lookup ?? throw new InvalidOperationException("Project is not loaded.");
+
+        /// <summary>
+        ///     The underlying MSBuild project (if any).
+        /// </summary>
+        public MSBuild.Project MSBuildProject => _msbuildProject;
 
         /// <summary>
         ///     The document's logger.
@@ -117,14 +128,11 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             if (xml == null)
                 throw new ArgumentNullException(nameof(xml));
 
-            TryUnloadMSBuildProject();
-            
             _xml = Parser.Parse(xml);
             _lookup = new PositionalObjectLookup(_xml);
+            IsDirty = true;
             
             TryLoadMSBuildProject();
-
-            IsDirty = true;
         }
 
         /// <summary>
@@ -186,27 +194,34 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// </returns>
         bool TryLoadMSBuildProject()
         {
-            // TODO: Work out what we need to tell MSBuild about how to find "Microsoft.NET.Sdk".
-            /// Currently, we get "Microsoft.Build.Exceptions.InvalidProjectFileException: The SDK 'Microsoft.NET.Sdk' specified could not be found." when loading the project.
+            try
+            {
+                if (HaveMSBuildProject && !IsDirty)
+                    return true;
 
-            return true;
+                if (_msbuildProjectCollection == null)
+                    _msbuildProjectCollection = MSBuildHelper.CreateProjectCollection(_projectFile.Directory.FullName);
 
-            // try
-            // {
-            //     // SDKReferenceDirectoryRoot
-            //     // Environment.SetEnvironmentVariable("SDKReferenceDirectoryRoot", "/usr/local/share/dotnet/sdk");
-            //     // Environment.SetEnvironmentVariable("MSBuildSDKsPath", "/usr/local/share/dotnet/sdk/2.0.0/Sdks/Microsoft.NET.Sdk");
-            //     _msbuildProject = MSBuild.ProjectCollection.GlobalProjectCollection.LoadProject(_projectFile.FullName);
+                if (HaveMSBuildProject && IsDirty)
+                {
+                    _msbuildProject.Xml.ReloadFrom(
+                        reader: _xml.CreateReader(),
+                        throwIfUnsavedChanges: false
+                    );
 
-            //     return true;
-            // }
-            // catch (Exception loadError)
-            // {
-            //     Log.Error("{@Error}", loadError);
-            //     Log.Error(loadError, "Error loading MSBuild project '{ProjectFileName}'.", _projectFile.FullName);
+                    Log.Verbose("Successfully updated MSBuild project '{ProjectFileName}' from in-memory changes.");
+                }
+                else
+                    _msbuildProject = _msbuildProjectCollection.LoadProject(_projectFile.FullName);
 
-            //     return false;
-            // }
+                return true;
+            }
+            catch (Exception loadError)
+            {
+                Log.Error(loadError, "Error loading MSBuild project '{ProjectFileName}'.", _projectFile.FullName);
+
+                return false;
+            }
         }
 
         /// <summary>
@@ -217,24 +232,25 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// </returns>
         bool TryUnloadMSBuildProject()
         {
-            // TODO: Work out what we need to tell MSBuild about how to find "Microsoft.NET.Sdk".
-            /// Currently, we get "Microsoft.Build.Exceptions.InvalidProjectFileException: The SDK 'Microsoft.NET.Sdk' specified could not be found." when loading the project.
+            try
+            {
+                if (!HaveMSBuildProject)
+                    return true;
 
-            return true;
+                if (_msbuildProjectCollection == null)
+                    return true;
 
-            // try
-            // {
-            //     MSBuild.ProjectCollection.GlobalProjectCollection.UnloadProject(_msbuildProject);
-            //     _msbuildProject = null;
+                _msbuildProjectCollection.UnloadProject(_msbuildProject);
+                _msbuildProject = null;
 
-            //     return true;
-            // }
-            // catch (Exception unloadError)
-            // {
-            //     Log.Error(unloadError, "Error unloading MSBuild project '{ProjectFileName}'.", _projectFile.FullName);
+                return true;
+            }
+            catch (Exception unloadError)
+            {
+                Log.Error(unloadError, "Error unloading MSBuild project '{ProjectFileName}'.", _projectFile.FullName);
 
-            //     return false;
-            // }
+                return false;
+            }
         }
     }
 }

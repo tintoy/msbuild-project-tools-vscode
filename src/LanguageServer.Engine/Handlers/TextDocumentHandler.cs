@@ -113,13 +113,13 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <param name="parameters">
         ///     The notification parameters.
         /// </param>
-        /// <param name="token">
+        /// <param name="cancellationToken">
         ///     A <see cref="CancellationToken"/> that can be used to cancel the operation.
         /// </param>
         /// <returns>
         ///     A <see cref="Task{TResult}"/> whose result is the hover details, or <c>null</c> if no hover details are provided by the handler.
         /// </returns>
-        protected virtual Task<Hover> RequestHover(TextDocumentPositionParams parameters, CancellationToken token) => Task.FromResult<Hover>(null);
+        protected virtual Task<Hover> OnHover(TextDocumentPositionParams parameters, CancellationToken cancellationToken) => Task.FromResult<Hover>(null);
 
         /// <summary>
         ///     Get global registration options for handling document events.
@@ -242,9 +242,9 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     A <see cref="Task"/> representing the operation whose result is the hover details or null if no hover details are provided.
         /// </returns>
-        Task<Hover> IRequestHandler<TextDocumentPositionParams, Hover>.Handle(TextDocumentPositionParams parameters, CancellationToken token)
+        Task<Hover> IRequestHandler<TextDocumentPositionParams, Hover>.Handle(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
         {
-            return RequestHover(parameters, token);
+            return OnHover(parameters, cancellationToken);
         }
 
         /// <summary>

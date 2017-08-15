@@ -78,36 +78,15 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             if (documentPath == null)
                 return Task.CompletedTask;
 
-            Log.Information("Opened project file '{DocumentPath}'.", documentPath);
-
-            ProjectDocument projectDocument = new ProjectDocument(documentPath);
-            _projectDocuments.Add(documentPath, projectDocument);
-
-            if (!TryLoadProjectDocument(documentPath))
+            ProjectDocument projectDocument = TryLoadProjectDocument(documentPath);
+            if (projectDocument == null)
             {
-                Log.Warning("Failed to parse project file '{DocumentPath}'.", documentPath);
+                Log.Warning("Failed to load project file '{DocumentPath}'.", documentPath);
 
                 return Task.CompletedTask;
             }
 
-            XElement[] packageReferenceElements = projectDocument.Xml.Descendants("PackageReference").ToArray();
-            Log.Information("Successfully parsed XML for project '{DocumentPath}' ({PackageReferenceCount} package references detected).",
-                documentPath,
-                packageReferenceElements.Length
-            );
-            foreach (XElement packageReferenceElement in packageReferenceElements)
-            {
-                NodeLocation elementLocation = packageReferenceElement.Annotation<NodeLocation>();
-                if (elementLocation == null)
-                    continue;
-
-                Log.Information("Found PackageReference element spanning ({StartLine},{StartColumn}) to ({EndLine},{EndColumn}).",
-                    elementLocation.Start.LineNumber,
-                    elementLocation.Start.ColumnNumber,
-                    elementLocation.End.LineNumber,
-                    elementLocation.End.ColumnNumber
-                );
-            }
+            Log.Information("Successfully loaded project '{DocumentPath}'.", documentPath);
 
             return Task.CompletedTask;
         }
@@ -171,19 +150,29 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             return Task.CompletedTask;
         }
 
-        protected override Task<Hover> RequestHover(TextDocumentPositionParams parameters, CancellationToken token)
+        /// <summary>
+        ///     Called when the mouse pointer hovers over text.
+        /// </summary>
+        /// <param name="parameters">
+        ///     The notification parameters.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///     A <see cref="CancellationToken"/> that can be used to cancel the operation.
+        /// </param>
+        /// <returns>
+        ///     A <see cref="Task{TResult}"/> whose result is the hover details, or <c>null</c> if no hover details are provided by the handler.
+        /// </returns>
+        protected override Task<Hover> OnHover(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
         {
             string documentPath = parameters.TextDocument.Uri.GetFileSystemPath();
             ProjectDocument projectDocument;
             if (!_projectDocuments.TryGetValue(documentPath, out projectDocument) || !projectDocument.IsLoaded)
                 return NoHover;
 
-            var position = Position.FromZeroBased(
-                (int)parameters.Position.Line,
-                (int)parameters.Position.Character
-            );
-
-            position = position.ToOneBased();
+            Position position = Position.FromZeroBased(
+                parameters.Position.Line,
+                parameters.Position.Character
+            ).ToOneBased();
 
             XObject objectAtPosition = projectDocument.GetXmlAtPosition(position);
             if (objectAtPosition == null)
@@ -191,6 +180,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
             XmlNodeType objectType = objectAtPosition.NodeType;
             string objectName;
+            string objectValue = "";            
             switch (objectAtPosition)
             {
                 case XElement element:
@@ -202,6 +192,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 case XAttribute attribute:
                 {
                     objectName = attribute.Name.LocalName;
+                    objectValue = $" (='{attribute.Value}')";
 
                     break;
                 }
@@ -216,7 +207,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             return Task.FromResult(new Hover
             {
                 Range = objectAtPosition.Annotation<NodeLocation>().Range.ToLspModel(),
-                Contents = $"{objectType} object '{objectName}'",
+                Contents = $"{objectType} '{objectName}'{objectValue}",
             });
         }
 
@@ -227,19 +218,22 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         ///     The full path to the project document.
         /// </param>
         /// <returns>
-        ///     <c>true</c>, if the project was loaded; otherwise, <c>false</c>.
+        ///     The project document, or <c>null</c> if the project could not be loaded.
         /// </returns>
-        bool TryLoadProjectDocument(string documentPath)
+        ProjectDocument TryLoadProjectDocument(string documentPath)
         {
             try
             {
                 ProjectDocument projectDocument;
                 if (!_projectDocuments.TryGetValue(documentPath, out projectDocument))
-                    return false;
+                {
+                    projectDocument = new ProjectDocument(documentPath);
+                    _projectDocuments.Add(documentPath, projectDocument);
+                }
 
                 projectDocument.Load();
 
-                return true;
+                return projectDocument;
             }
             catch (XmlException invalidXml)
             {
@@ -253,7 +247,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 Log.Error(loadError, "Unexpected error loading file {DocumentPath}.", documentPath);
             }
 
-            return false;
+            return null;
         }
     }
 }

@@ -224,6 +224,24 @@ namespace MSBuildProjectTools.LanguageServer.XmlParser
         }
 
         /// <summary>
+        ///     Create a new 0-based <see cref="Position"/>.
+        /// </summary>
+        /// <param name="lineNumber">
+        ///     The line number (0-based).
+        /// </param>
+        /// <param name="columnNumber">
+        ///     The column number (0-based).
+        /// </param>
+        public static Position FromZeroBased(long lineNumber, long columnNumber)
+        {
+            // Seriously, who has an XML document with more lines or columns than you can fit in an Int32?
+            return FromZeroBased(
+                (int)lineNumber,
+                (int)columnNumber
+            );
+        }
+
+        /// <summary>
         ///     Test 2 positions for equality.
         /// </summary>
         /// <param name="position1">

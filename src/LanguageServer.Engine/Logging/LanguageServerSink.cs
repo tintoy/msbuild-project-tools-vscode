@@ -58,6 +58,8 @@ namespace MSBuildProjectTools.LanguageServer.Logging
             {
                 Message = logEvent.RenderMessage()
             };
+            if (logEvent.Exception != null)
+                logParameters.Message += "\n" + logEvent.Exception.ToString();
 
             switch (logEvent.Level)
             {

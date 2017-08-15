@@ -1,4 +1,5 @@
 using Nito.AsyncEx;
+using Serilog;
 using System;
 using System.IO;
 using System.Linq;
@@ -8,7 +9,6 @@ using MSBuild = Microsoft.Build.Evaluation;
 
 namespace MSBuildProjectTools.LanguageServer.Documents
 {
-    using Serilog;
     using XmlParser;
 
     /// <summary>
@@ -186,18 +186,27 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// </returns>
         bool TryLoadMSBuildProject()
         {
-            try
-            {
-                _msbuildProject = MSBuild.ProjectCollection.GlobalProjectCollection.LoadProject(_projectFile.FullName);
+            // TODO: Work out what we need to tell MSBuild about how to find "Microsoft.NET.Sdk".
+            /// Currently, we get "Microsoft.Build.Exceptions.InvalidProjectFileException: The SDK 'Microsoft.NET.Sdk' specified could not be found." when loading the project.
 
-                return true;
-            }
-            catch (Exception loadError)
-            {
-                Log.Error(loadError, "Error loading MSBuild project '{ProjectFileName}'.", _projectFile.FullName);
+            return true;
 
-                return false;
-            }
+            // try
+            // {
+            //     // SDKReferenceDirectoryRoot
+            //     // Environment.SetEnvironmentVariable("SDKReferenceDirectoryRoot", "/usr/local/share/dotnet/sdk");
+            //     // Environment.SetEnvironmentVariable("MSBuildSDKsPath", "/usr/local/share/dotnet/sdk/2.0.0/Sdks/Microsoft.NET.Sdk");
+            //     _msbuildProject = MSBuild.ProjectCollection.GlobalProjectCollection.LoadProject(_projectFile.FullName);
+
+            //     return true;
+            // }
+            // catch (Exception loadError)
+            // {
+            //     Log.Error("{@Error}", loadError);
+            //     Log.Error(loadError, "Error loading MSBuild project '{ProjectFileName}'.", _projectFile.FullName);
+
+            //     return false;
+            // }
         }
 
         /// <summary>
@@ -208,19 +217,24 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// </returns>
         bool TryUnloadMSBuildProject()
         {
-            try
-            {
-                MSBuild.ProjectCollection.GlobalProjectCollection.UnloadProject(_msbuildProject);
-                _msbuildProject = null;
+            // TODO: Work out what we need to tell MSBuild about how to find "Microsoft.NET.Sdk".
+            /// Currently, we get "Microsoft.Build.Exceptions.InvalidProjectFileException: The SDK 'Microsoft.NET.Sdk' specified could not be found." when loading the project.
 
-                return true;
-            }
-            catch (Exception unloadError)
-            {
-                Log.Error(unloadError, "Error unloading MSBuild project '{ProjectFileName}'.", _projectFile.FullName);
+            return true;
 
-                return false;
-            }
+            // try
+            // {
+            //     MSBuild.ProjectCollection.GlobalProjectCollection.UnloadProject(_msbuildProject);
+            //     _msbuildProject = null;
+
+            //     return true;
+            // }
+            // catch (Exception unloadError)
+            // {
+            //     Log.Error(unloadError, "Error unloading MSBuild project '{ProjectFileName}'.", _projectFile.FullName);
+
+            //     return false;
+            // }
         }
     }
 }

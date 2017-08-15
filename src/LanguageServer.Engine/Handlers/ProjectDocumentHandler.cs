@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Xml;
@@ -13,7 +14,6 @@ using System.Xml.Linq;
     
 namespace MSBuildProjectTools.LanguageServer.Handlers
 {
-    using System.Threading;
     using Documents;
     using Utilities;
     using XmlParser;
@@ -112,45 +112,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         }
 
         /// <summary>
-        ///     Called when a text document is opened.
-        /// </summary>
-        /// <param name="parameters">
-        ///     The notification parameters.
-        /// </param>
-        /// <returns>
-        ///     A <see cref="Task"/> representing the operation.
-        /// </returns>
-        protected override Task OnDidChangeTextDocument(DidChangeTextDocumentParams parameters)
-        {
-            string documentPath = parameters.TextDocument.Uri.GetFileSystemPath();
-            if (documentPath == null)
-                return Task.CompletedTask;
-
-            TextDocumentContentChangeEvent[] contentChanges = parameters.ContentChanges.ToArray();
-            Log.Information("Document '{DocumentPath}' changed ({ChangeCount} changes detected).",
-                documentPath,
-                contentChanges.Length
-            );
-            if (contentChanges.Length == 0)
-                return Task.CompletedTask;
-
-            foreach (TextDocumentContentChangeEvent change in contentChanges)
-            {
-                Log.Verbose("Changed {RangeLength} characters in '{DocumentPath}' between ({StartRangeLine}, {StartRangeColumn}) to ({EndRangeLine}, {EndRangeColumn}).",
-                    change.RangeLength,
-                    documentPath,
-                    change.Range?.Start?.Line ?? 0,
-                    change.Range?.Start.Character ?? 0,
-                    change.Range?.End?.Line ?? 0,
-                    change.Range?.End?.Character ?? 0
-                );
-                Log.Verbose("ChangeEvent: {EventData}", JsonConvert.SerializeObject(change));
-            }
-
-            return Task.CompletedTask;
-        }
-
-        /// <summary>
         ///     Called when the mouse pointer hovers over text.
         /// </summary>
         /// <param name="parameters">
@@ -165,8 +126,8 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         protected override Task<Hover> OnHover(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
         {
             string documentPath = parameters.TextDocument.Uri.GetFileSystemPath();
-            ProjectDocument projectDocument;
-            if (!_projectDocuments.TryGetValue(documentPath, out projectDocument) || !projectDocument.IsLoaded)
+            ProjectDocument projectDocument = TryLoadProjectDocument(documentPath);
+            if (projectDocument == null)
                 return NoHover;
 
             Position position = Position.FromZeroBased(
@@ -178,27 +139,29 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             if (objectAtPosition == null)
                 return NoHover;
 
+            // Display a not-so-informative tooltip (this is just to prove that our language server is correctly servicing hover requests).
+
             XmlNodeType objectType = objectAtPosition.NodeType;
-            string objectName;
-            string objectValue = "";            
+            string objectNameLabel;
+            string objectValueLabel = "";            
             switch (objectAtPosition)
             {
                 case XElement element:
                 {
-                    objectName = element.Name.LocalName;
+                    objectNameLabel = element.Name.LocalName;
 
                     break;
                 }
                 case XAttribute attribute:
                 {
-                    objectName = attribute.Name.LocalName;
-                    objectValue = $" (='{attribute.Value}')";
+                    objectNameLabel = attribute.Name.LocalName;
+                    objectValueLabel = $" (='{attribute.Value}')";
 
                     break;
                 }
                 default:
                 {
-                    objectName = "Unknown";
+                    objectNameLabel = "Unknown";
 
                     break;
                 }
@@ -207,7 +170,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             return Task.FromResult(new Hover
             {
                 Range = objectAtPosition.Annotation<NodeLocation>().Range.ToLspModel(),
-                Contents = $"{objectType} '{objectName}'{objectValue}",
+                Contents = $"{objectType} '{objectNameLabel}'{objectValueLabel}",
             });
         }
 

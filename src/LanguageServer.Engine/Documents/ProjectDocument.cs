@@ -3,8 +3,12 @@ using System;
 using System.IO;
 using System.Xml.Linq;
 
+using MSBuild = Microsoft.Build.Evaluation;
+
 namespace MSBuildProjectTools.LanguageServer.Documents
 {
+    using System.Linq;
+    using Serilog;
     using XmlParser;
 
     /// <summary>
@@ -28,17 +32,23 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         PositionalObjectLookup _lookup;
 
         /// <summary>
+        ///     The underlying MSBuild project.
+        /// </summary>
+        MSBuild.Project _msbuildProject;
+
+        /// <summary>
         ///     Create a new <see cref="ProjectDocument"/>.
         /// </summary>
         /// <param name="projectFilePath">
         ///     The full path to the project file.
         /// </param>
-        public ProjectDocument(string projectFilePath)
+        public ProjectDocument(string projectFilePath, ILogger logger)
         {
             if (String.IsNullOrWhiteSpace(projectFilePath))
                 throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'projectFilePath'.", nameof(projectFilePath));
             
             _projectFile = new FileInfo(projectFilePath);
+            Log = logger.ForContext("ProjectDocument", _projectFile.FullName);
         }
 
         /// <summary>
@@ -55,6 +65,11 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         ///     Does the project have in-memory changes?
         /// </summary>
         public bool IsDirty { get; private set; }
+
+        /// <summary>
+        ///     Is the underlying MSBuild project currently loaded?
+        /// </summary>
+        public bool IsMSBuildProjectLoaded => _msbuildProject != null;
 
         /// <summary>
         ///     The parsed project XML.
@@ -76,12 +91,18 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         public PositionalObjectLookup Lookup => _lookup ?? throw new InvalidOperationException("Project is not loaded.");
 
         /// <summary>
+        ///     The document's logger.
+        /// </summary>
+        ILogger Log { get; set; }
+
+        /// <summary>
         ///     Load and parse the project.
         /// </summary>
         public void Load()
         {
             _xml = LocatingXmlTextReader.LoadWithLocations(_projectFile.FullName);
             _lookup = new PositionalObjectLookup(_xml);
+            TryLoadMSBuildProject();
             IsDirty = false;
         }
 
@@ -96,12 +117,17 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             if (xml == null)
                 throw new ArgumentNullException(nameof(xml));
 
+            TryUnloadMSBuildProject();
+            
             using (StringReader reader = new StringReader(xml))
             {
                 _xml = LocatingXmlTextReader.LoadWithLocations(reader);
             }
             
             _lookup = new PositionalObjectLookup(_xml);
+            
+            TryLoadMSBuildProject();
+
             IsDirty = true;
         }
 
@@ -110,6 +136,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// </summary>
         public void Unload()
         {
+            TryUnloadMSBuildProject();
             _xml = null;
             _lookup = null;
             IsDirty = false;
@@ -153,6 +180,39 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             where TXml : XObject
         {
             return GetXmlAtPosition(position) as TXml;
+        }
+
+        bool TryLoadMSBuildProject()
+        {
+            try
+            {
+                _msbuildProject = MSBuild.ProjectCollection.GlobalProjectCollection.LoadProject(_projectFile.FullName);
+
+                return true;
+            }
+            catch (Exception loadError)
+            {
+                Log.Error(loadError, "Error loading MSBuild project '{ProjectFileName}'.", _projectFile.FullName);
+
+                return false;
+            }
+        }
+
+        bool TryUnloadMSBuildProject()
+        {
+            try
+            {
+                MSBuild.ProjectCollection.GlobalProjectCollection.UnloadProject(_msbuildProject);
+                _msbuildProject = null;
+
+                return true;
+            }
+            catch (Exception unloadError)
+            {
+                Log.Error(unloadError, "Error unloading MSBuild project '{ProjectFileName}'.", _projectFile.FullName);
+
+                return false;
+            }
         }
     }
 }

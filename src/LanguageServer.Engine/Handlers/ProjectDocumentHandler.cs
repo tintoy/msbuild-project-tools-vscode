@@ -256,7 +256,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 {
                     isNewProject = true;
                      
-                    return new ProjectDocument(documentPath);
+                    return new ProjectDocument(documentPath, Log);
                 });
 
                 if (isNewProject || reload)

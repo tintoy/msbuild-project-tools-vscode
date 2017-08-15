@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using System.Threading;
 using System.IO;
+using JsonRpc;
 
 namespace MSBuildProjectTools.LanguageServer.Handlers
 {
@@ -16,7 +17,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
     ///     The base class for language server text-document event handlers.
     /// </summary>
     public abstract class TextDocumentHandler
-        : ITextDocumentSyncHandler
+        : Handler, ITextDocumentSyncHandler, IHoverHandler
     {
         /// <summary>
         ///     Create a new <see cref="TextDocumentHandler"/>.
@@ -28,12 +29,8 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         ///     The application logger.
         /// </param>
         public TextDocumentHandler(ILanguageServer server, ILogger logger)
+            : base(server, logger)
         {
-            if (server == null)
-                throw new ArgumentNullException(nameof(server));
-
-            Server = server;
-            Logger = logger.ForContext(GetType());
         }
 
         /// <summary>
@@ -57,19 +54,14 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         protected abstract DocumentSelector DocumentSelector { get; }
 
         /// <summary>
-        ///     The handler's logger.
-        /// </summary>
-        protected ILogger Logger { get; }
-
-        /// <summary>
-        ///     The language server.
-        /// </summary>
-        protected ILanguageServer Server { get; }
-
-        /// <summary>
         ///     The server's synchronisation capabilities.
         /// </summary>
-        protected SynchronizationCapability Capabilities { get; private set; }
+        protected SynchronizationCapability SynchronizationCapabilities { get; private set; }
+
+        /// <summary>
+        ///     The server's hover capabilities.
+        /// </summary>
+        protected HoverCapability HoverCapabilities { get; private set; }
 
         /// <summary>
         ///     Called when a text document is opened.
@@ -116,12 +108,26 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         protected virtual Task OnDidChangeTextDocument(DidChangeTextDocumentParams parameters) => Task.CompletedTask;
 
         /// <summary>
+        ///     Called when the mouse pointer hovers over text.
+        /// </summary>
+        /// <param name="parameters">
+        ///     The notification parameters.
+        /// </param>
+        /// <param name="token">
+        ///     A <see cref="CancellationToken"/> that can be used to cancel the operation.
+        /// </param>
+        /// <returns>
+        ///     A <see cref="Task{TResult}"/> whose result is the hover details, or <c>null</c> if no hover details are provided by the handler.
+        /// </returns>
+        protected virtual Task<Hover> RequestHover(TextDocumentPositionParams parameters, CancellationToken token) => Task.FromResult<Hover>(null);
+
+        /// <summary>
         ///     Get global registration options for handling document events.
         /// </summary>
         /// <returns>
         ///     The registration options.
         /// </returns>
-        protected virtual TextDocumentRegistrationOptions RegistrationOptions
+        protected virtual TextDocumentRegistrationOptions DocumentRegistrationOptions
         {
             get => new TextDocumentRegistrationOptions
             {
@@ -168,7 +174,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     A <see cref="Task"/> representing the operation.
         /// </returns>
-        public Task Handle(DidOpenTextDocumentParams parameters)
+        Task INotificationHandler<DidOpenTextDocumentParams>.Handle(DidOpenTextDocumentParams parameters)
         {
             if (parameters == null)
                 throw new ArgumentNullException(nameof(parameters));
@@ -185,7 +191,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     A <see cref="Task"/> representing the operation.
         /// </returns>
-        public Task Handle(DidCloseTextDocumentParams parameters)
+        Task INotificationHandler<DidCloseTextDocumentParams>.Handle(DidCloseTextDocumentParams parameters)
         {
             if (parameters == null)
                 throw new ArgumentNullException(nameof(parameters));
@@ -202,7 +208,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     A <see cref="Task"/> representing the operation.
         /// </returns>
-        public Task Handle(DidChangeTextDocumentParams parameters)
+        Task INotificationHandler<DidChangeTextDocumentParams>.Handle(DidChangeTextDocumentParams parameters)
         {
             if (parameters == null)
                 throw new ArgumentNullException(nameof(parameters));
@@ -219,7 +225,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     A <see cref="Task"/> representing the operation.
         /// </returns>
-        public Task Handle(DidSaveTextDocumentParams parameters)
+        Task INotificationHandler<DidSaveTextDocumentParams>.Handle(DidSaveTextDocumentParams parameters)
         {
             if (parameters == null)
                 throw new ArgumentNullException(nameof(parameters));
@@ -228,12 +234,26 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         }
 
         /// <summary>
+        ///     Handle a request for hover information.
+        /// </summary>
+        /// <param name="parameters">
+        ///     The notification parameters.
+        /// </param>
+        /// <returns>
+        ///     A <see cref="Task"/> representing the operation whose result is the hover details or null if no hover details are provided.
+        /// </returns>
+        Task<Hover> IRequestHandler<TextDocumentPositionParams, Hover>.Handle(TextDocumentPositionParams parameters, CancellationToken token)
+        {
+            return RequestHover(parameters, token);
+        }
+
+        /// <summary>
         ///     Get global registration options for handling document events.
         /// </summary>
         /// <returns>
         ///     The registration options.
         /// </returns>
-        TextDocumentRegistrationOptions IRegistration<TextDocumentRegistrationOptions>.GetRegistrationOptions() => RegistrationOptions;
+        TextDocumentRegistrationOptions IRegistration<TextDocumentRegistrationOptions>.GetRegistrationOptions() => DocumentRegistrationOptions;
 
         /// <summary>
         ///     Get registration options for handling document-change events.
@@ -262,7 +282,21 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             if (capabilities == null)
                 throw new ArgumentNullException(nameof(capabilities));
 
-            Capabilities = capabilities;
+            SynchronizationCapabilities = capabilities;
+        }
+
+        /// <summary>
+        ///     Called to inform the handler of the language server's hover capabilities.
+        /// </summary>
+        /// <param name="capabilities">
+        ///     A <see cref="SynchronizationCapability"/> data structure representing the capabilities.
+        /// </param>
+        void ICapability<HoverCapability>.SetCapability(HoverCapability capabilities)
+        {
+            if (capabilities == null)
+                throw new ArgumentNullException(nameof(capabilities));
+
+            HoverCapabilities = capabilities;
         }
 
         /// <summary>

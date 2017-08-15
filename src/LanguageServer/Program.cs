@@ -1,14 +1,16 @@
 ﻿using Lsp;
+using Serilog;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace MSBuildProjectTools.LanguageServer
 {
+    using Documents;
     using Handlers;
     using Logging;
-    using Serilog;
 
     /// <summary>
     ///     The MSBuild language server.

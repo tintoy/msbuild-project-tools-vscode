@@ -5,6 +5,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { LanguageClient, ServerOptions, LanguageClientOptions, ErrorAction, CloseAction } from 'vscode-languageclient';
 
+import * as executables from './utils/executables';
 import { PackageReferenceCompletionProvider } from './providers/package-reference-completion';
 import { Trace } from 'vscode-jsonrpc/lib/main';
 import { Message } from 'vscode-jsonrpc/lib/messages';
@@ -26,6 +27,26 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         )
     );
 
+    const languageClient = await createLanguageClient(context);
+    context.subscriptions.push(
+        languageClient.start()
+    );
+}
+
+/**
+ * Called when the extension is deactivated.
+ */
+export function deactivate(): void {
+    // Nothing to clean up.
+}
+
+/**
+ * Create the MSBuild language client.
+ * 
+ * @param context The current extension context.
+ * @returns A promise that resolves to the language client.
+ */
+async function createLanguageClient(context: vscode.ExtensionContext): Promise<LanguageClient> {
     const clientOptions: LanguageClientOptions = {
         documentSelector: [{
             language: 'xml',
@@ -51,23 +72,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             }
         }
     };
-    const serverExecutable = context.asAbsolutePath('src/LanguageServer/bin/Debug/netcoreapp2.0/publish/LanguageServer.dll');
-    const serverOptions: ServerOptions = {
-        command: 'C:\\Program Files\\dotnet\\dotnet.exe',
-        args: [ serverExecutable ],
-    };
-    const languageClient = new LanguageClient('MSBuild Project File Tools', serverOptions, clientOptions);
-    languageClient.trace = Trace.Messages;
-    context.subscriptions.push(
-        languageClient.start()
-    );
-}
 
-/**
- * Called when the extension is deactivated.
- */
-export function deactivate(): void {
-    // Nothing to clean up.
+    const dotNetExecutable = await executables.find('dotnet');
+    const serverAssembly = context.asAbsolutePath('src/LanguageServer/bin/Debug/netcoreapp2.0/publish/LanguageServer.dll');
+    const serverOptions: ServerOptions = {
+        command: dotNetExecutable,
+        args: [ serverAssembly ],
+    };
+
+    return new LanguageClient('MSBuild Project File Tools', serverOptions, clientOptions);
 }
 
 /**

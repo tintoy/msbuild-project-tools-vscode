@@ -7,27 +7,37 @@ namespace MSBuildProjectTools.LanguageServer.XmlParser
     ///     Location information for an XML attribute.
     /// </summary>
     public class AttributeLocation
-        : Location
+        : NodeLocation
     {
+        /// <summary>
+        ///     The text range containing the attribute's name.
+        /// </summary>
+        public Range NameRange { get; internal set; }
+
         /// <summary>
         ///     The starting position of the attribute name.
         /// </summary>
-        public Position NameStart { get; internal set; }
+        public Position NameStart => NameRange?.Start;
 
         /// <summary>
         ///     The ending position of the attribute name.
         /// </summary>
-        public Position NameEnd { get; internal set; }
+        public Position NameEnd => NameRange?.End;
+
+        /// <summary>
+        ///     The text range containing the attribute's value.
+        /// </summary>
+        public Range ValueRange { get; internal set; }
 
         /// <summary>
         ///     The starting position of the attribute value.
         /// </summary>
-        public Position ValueStart { get; internal set; }
+        public Position ValueStart => ValueRange?.Start;
 
         /// <summary>
         ///     The ending position of the attribute value.
         /// </summary>
-        public Position ValueEnd { get; internal set; }
+        public Position ValueEnd => ValueRange?.End;
 
         /// <summary>
         ///     Create an <see cref="AttributeLocation"/>, calculating values as required.
@@ -54,19 +64,25 @@ namespace MSBuildProjectTools.LanguageServer.XmlParser
 
             return new AttributeLocation
             {
-                Start = start,
-                End = start.Move(
-                    columnCount: name.Length + 2 /* =" */ + value.Length + 1 /* " */
+                Range = new Range(
+                    start: start,
+                    end: start.Move(
+                        columnCount: name.Length + 2 /* =" */ + value.Length + 1 /* " */
+                    )
                 ),
-                NameStart = start,
-                NameEnd = start.Move(
-                    columnCount: name.Length
+                NameRange = new Range(
+                    start: start,
+                    end: start.Move(
+                        columnCount: name.Length
+                    )
                 ),
-                ValueStart = start.Move(
-                    columnCount: name.Length + 2 /* =" */
-                ),
-                ValueEnd = start.Move(
-                    columnCount: name.Length + 2 /* =" */ + value.Length
+                ValueRange = new Range(
+                    start: start.Move(
+                        columnCount: name.Length + 2 /* =" */
+                    ),
+                    end: start.Move(
+                        columnCount: name.Length + 2 /* =" */ + value.Length
+                    )
                 )
             };
         }

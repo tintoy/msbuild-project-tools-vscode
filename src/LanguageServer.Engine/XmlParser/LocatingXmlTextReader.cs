@@ -22,7 +22,7 @@ namespace MSBuildProjectTools.LanguageServer.XmlParser
         /// <summary>
         ///     Locations captured by the reader.
         /// </summary>
-        readonly List<Location> _locations = new List<Location>();
+        readonly List<NodeLocation> _locations = new List<NodeLocation>();
 
         /// <summary>
         ///     A stack containing the elements being processed.
@@ -48,7 +48,7 @@ namespace MSBuildProjectTools.LanguageServer.XmlParser
         /// <summary>
         ///     Locations captured by the reader.
         /// </summary>
-        public IReadOnlyList<Location> Locations => _locations;
+        public IReadOnlyList<NodeLocation> Locations => _locations;
 
         /// <summary>
         ///     A <see cref="Position"/> representing the current element position.
@@ -175,7 +175,9 @@ namespace MSBuildProjectTools.LanguageServer.XmlParser
                 {
                     // Element followed by element; capture the end of the previous element.
                     elementLocation = _elementLocationStack.Pop();
-                    elementLocation.End = CurrentPosition.Move(columnCount: -1);
+                    elementLocation.Range = elementLocation.Range.WithEnd(
+                        CurrentPosition.Move(columnCount: -1)
+                    );
 
                     Log.Verbose("[Capture{NodeType}LocationEnd] {Name} ({StartLineNumber},{StartColumnNumber}-{EndLineNumber},{EndColumnNumber})",
                         NodeType, Name,
@@ -194,7 +196,9 @@ namespace MSBuildProjectTools.LanguageServer.XmlParser
                 elementLocation = new ElementLocation
                 {
                     Depth = Depth,
-                    Start = CurrentPosition.Move(columnCount: -1)
+                    Range = Range.FromPosition(
+                        CurrentPosition.Move(columnCount: -1)
+                    )
                 };
                 _locations.Add(elementLocation);
                 _elementLocationStack.Push(elementLocation);
@@ -203,7 +207,7 @@ namespace MSBuildProjectTools.LanguageServer.XmlParser
             {
                 // Element, followed by whitespace / text, followed by element.
                 ElementLocation elementLocation = _elementLocationStack.Pop();
-                elementLocation.End = CurrentPosition;
+                elementLocation.Range = elementLocation.Range.WithEnd(CurrentPosition);
 
                 Log.Verbose("[Capture{NodeType}LocationEnd] {Name} ({StartLineNumber},{StartColumnNumber}-{EndLineNumber},{EndColumnNumber})",
                     NodeType, Name,
@@ -230,7 +234,7 @@ namespace MSBuildProjectTools.LanguageServer.XmlParser
         }
 
         /// <summary>
-        ///     Load an <see cref="XDocument"/> with <see cref="Location"/> annotations.
+        ///     Load an <see cref="XDocument"/> with <see cref="NodeLocation"/> annotations.
         /// </summary>
         /// <param name="filePath">
         ///     The path of the file containing the XML.
@@ -247,7 +251,7 @@ namespace MSBuildProjectTools.LanguageServer.XmlParser
         }
 
         /// <summary>
-        ///     Load an <see cref="XDocument"/> with <see cref="Location"/> annotations.
+        ///     Load an <see cref="XDocument"/> with <see cref="NodeLocation"/> annotations.
         /// </summary>
         /// <param name="stream">
         ///     The <see cref="Stream"/> to read from.
@@ -264,7 +268,7 @@ namespace MSBuildProjectTools.LanguageServer.XmlParser
         }
 
         /// <summary>
-        ///     Load an <see cref="XDocument"/> with <see cref="Location"/> annotations.
+        ///     Load an <see cref="XDocument"/> with <see cref="NodeLocation"/> annotations.
         /// </summary>
         /// <param name="textReader">
         ///     The <see cref="TextReader"/> to read from.
@@ -279,7 +283,7 @@ namespace MSBuildProjectTools.LanguageServer.XmlParser
             {
                 document = XDocument.Load(xmlReader, LoadOptions.PreserveWhitespace | LoadOptions.SetBaseUri | LoadOptions.SetLineInfo);
                 AddLocations(document.Root,
-                    new Queue<Location>(xmlReader._locations)
+                    new Queue<NodeLocation>(xmlReader._locations)
                 );
             }
 
@@ -287,7 +291,7 @@ namespace MSBuildProjectTools.LanguageServer.XmlParser
         }
 
         /// <summary>
-        ///     Recursively add <see cref="Location"/> annotations to the specified <see cref="XElement"/>.
+        ///     Recursively add <see cref="NodeLocation"/> annotations to the specified <see cref="XElement"/>.
         /// </summary>
         /// <param name="element">
         ///     The <see cref="XElement"/>.
@@ -295,7 +299,7 @@ namespace MSBuildProjectTools.LanguageServer.XmlParser
         /// <param name="locations">
         ///     A queue containing location information for elements and attributes (document-node order).
         /// </param>
-        static void AddLocations(XElement element, Queue<Location> locations)
+        static void AddLocations(XElement element, Queue<NodeLocation> locations)
         {
             element.AddAnnotation(
                 (ElementLocation)locations.Dequeue()

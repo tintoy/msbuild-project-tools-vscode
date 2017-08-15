@@ -6,7 +6,7 @@ namespace MSBuildProjectTools.LanguageServer.XmlParser
     ///     Location information for an XML element.
     /// </summary>
     public class ElementLocation
-        : Location
+        : NodeLocation
     {
     }
 }

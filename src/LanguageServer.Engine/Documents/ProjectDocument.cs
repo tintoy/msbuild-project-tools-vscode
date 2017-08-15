@@ -1,13 +1,13 @@
 using Nito.AsyncEx;
 using System;
 using System.IO;
+using System.Linq;
 using System.Xml.Linq;
 
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace MSBuildProjectTools.LanguageServer.Documents
 {
-    using System.Linq;
     using Serilog;
     using XmlParser;
 
@@ -100,7 +100,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// </summary>
         public void Load()
         {
-            _xml = LocatingXmlTextReader.LoadWithLocations(_projectFile.FullName);
+            _xml = Parser.Load(_projectFile.FullName);
             _lookup = new PositionalObjectLookup(_xml);
             TryLoadMSBuildProject();
             IsDirty = false;
@@ -119,11 +119,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
 
             TryUnloadMSBuildProject();
             
-            using (StringReader reader = new StringReader(xml))
-            {
-                _xml = LocatingXmlTextReader.LoadWithLocations(reader);
-            }
-            
+            _xml = Parser.Parse(xml);
             _lookup = new PositionalObjectLookup(_xml);
             
             TryLoadMSBuildProject();

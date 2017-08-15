@@ -13,10 +13,8 @@ namespace MSBuildProjectTools.LanguageServer.XmlParser
     /// </summary>
     /// <remarks>
     ///     This reader is only intended to be used via <see cref="XDocument.Load(XmlReader)"/>; it is sensitive to the order in which its methods are called.
-    /// 
-    ///     TODO: Consider exposing an <see cref="IObservable{T}"/> of location information (this would make it easier to isolate the logic for capturing node start / end locations).
     /// </remarks>
-    public class LocatingXmlTextReader
+    class LocatingXmlTextReader
         : XmlTextReader
     {
         /// <summary>
@@ -40,7 +38,7 @@ namespace MSBuildProjectTools.LanguageServer.XmlParser
         /// <param name="input">
         ///     The <see cref="TextReader"/> to read from.
         /// </param>
-        internal LocatingXmlTextReader(TextReader input)
+        public LocatingXmlTextReader(TextReader input)
             : base(input)
         {
         }
@@ -235,87 +233,6 @@ namespace MSBuildProjectTools.LanguageServer.XmlParser
                     NodeType, Name, LineNumber, LinePosition
                 );
             }
-        }
-
-        /// <summary>
-        ///     Load an <see cref="XDocument"/> with <see cref="NodeLocation"/> annotations.
-        /// </summary>
-        /// <param name="filePath">
-        ///     The path of the file containing the XML.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="XDocument"/>.
-        /// </returns>
-        public static XDocument LoadWithLocations(string filePath)
-        {
-            using (StreamReader reader = File.OpenText(filePath))
-            {
-                return LoadWithLocations(reader);
-            }
-        }
-
-        /// <summary>
-        ///     Load an <see cref="XDocument"/> with <see cref="NodeLocation"/> annotations.
-        /// </summary>
-        /// <param name="stream">
-        ///     The <see cref="Stream"/> to read from.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="XDocument"/>.
-        /// </returns>
-        public static XDocument LoadWithLocations(Stream stream)
-        {
-            using (StreamReader reader = new StreamReader(stream))
-            {
-                return LoadWithLocations(reader);
-            }
-        }
-
-        /// <summary>
-        ///     Load an <see cref="XDocument"/> with <see cref="NodeLocation"/> annotations.
-        /// </summary>
-        /// <param name="textReader">
-        ///     The <see cref="TextReader"/> to read from.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="XDocument"/>.
-        /// </returns>
-        public static XDocument LoadWithLocations(TextReader textReader)
-        {
-            XDocument document;
-            using (LocatingXmlTextReader xmlReader = new LocatingXmlTextReader(textReader))
-            {
-                document = XDocument.Load(xmlReader, LoadOptions.PreserveWhitespace | LoadOptions.SetBaseUri | LoadOptions.SetLineInfo);
-                AddLocations(document.Root,
-                    new Queue<NodeLocation>(xmlReader._locations)
-                );
-            }
-
-            return document;
-        }
-
-        /// <summary>
-        ///     Recursively add <see cref="NodeLocation"/> annotations to the specified <see cref="XElement"/>.
-        /// </summary>
-        /// <param name="element">
-        ///     The <see cref="XElement"/>.
-        /// </param>
-        /// <param name="locations">
-        ///     A queue containing location information for elements and attributes (document-node order).
-        /// </param>
-        static void AddLocations(XElement element, Queue<NodeLocation> locations)
-        {
-            element.AddAnnotation(
-                (ElementLocation)locations.Dequeue()
-            );
-            foreach (XAttribute attribute in element.Attributes())
-            {
-                attribute.AddAnnotation(
-                    (AttributeLocation)locations.Dequeue()
-                );
-            }
-            foreach (XElement childElement in element.Elements())
-                AddLocations(childElement, locations);
         }
 
         /// <summary>

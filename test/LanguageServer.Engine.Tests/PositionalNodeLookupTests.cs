@@ -28,7 +28,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
             XDocument document;
             using (StringReader reader = new StringReader(xml))
             {
-                document = LocatingXmlTextReader.LoadWithLocations(reader);
+                document = Parser.Load(reader);
             }
 
             PositionalObjectLookup lookup = new PositionalObjectLookup(document);
@@ -61,7 +61,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
             XDocument document;
             using (StringReader reader = new StringReader(xml))
             {
-                document = LocatingXmlTextReader.LoadWithLocations(reader);
+                document = Parser.Load(reader);
             }
 
             PositionalObjectLookup lookup = new PositionalObjectLookup(document);
@@ -99,7 +99,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
             XDocument document;
             using (StringReader reader = new StringReader(xml))
             {
-                document = LocatingXmlTextReader.LoadWithLocations(reader);
+                document = Parser.Load(reader);
             }
 
             PositionalObjectLookup lookup = new PositionalObjectLookup(document);

@@ -7,6 +7,8 @@
         <PackageReference Include="JsonRpc" Version="1.0.0" />
         <PackageReference Include="LSP" Version="1.0.0" />
         <PackageReference Include="Microsoft.Build" Version="15.3.409" />
+        <PackageReference Include="Nito.AsyncEx.Tasks" Version="1.0.1" />
+        <PackageReference Include="Nito.AsyncEx.Coordination" Version="1.0.1" />
         <PackageReference Include="Serilog" Version="2.5.0" />
     </ItemGroup>
 </Project>

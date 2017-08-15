@@ -141,6 +141,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         public void Unload()
         {
             TryUnloadMSBuildProject();
+
             _xml = null;
             _lookup = null;
             IsDirty = false;

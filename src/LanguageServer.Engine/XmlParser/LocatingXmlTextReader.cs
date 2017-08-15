@@ -207,7 +207,11 @@ namespace MSBuildProjectTools.LanguageServer.XmlParser
             {
                 // Element, followed by whitespace / text, followed by element.
                 ElementLocation elementLocation = _elementLocationStack.Pop();
-                elementLocation.Range = elementLocation.Range.WithEnd(CurrentPosition);
+                Position endPosition = CurrentPosition;
+                if (NodeType == XmlNodeType.EndElement)
+                    endPosition.Move(Name.Length + 1 /* > */);
+
+                elementLocation.Range = elementLocation.Range.WithEnd(endPosition);
 
                 Log.Verbose("[Capture{NodeType}LocationEnd] {Name} ({StartLineNumber},{StartColumnNumber}-{EndLineNumber},{EndColumnNumber})",
                     NodeType, Name,

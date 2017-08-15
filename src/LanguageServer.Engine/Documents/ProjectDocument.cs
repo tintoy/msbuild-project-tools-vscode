@@ -182,6 +182,12 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             return GetXmlAtPosition(position) as TXml;
         }
 
+        /// <summary>
+        ///     Attempt to load the underlying MSBuild project.
+        /// </summary>
+        /// <returns>
+        ///     <c>true</c>, if the project was successfully loaded; otherwise, <c>false</c>.
+        /// </returns>
         bool TryLoadMSBuildProject()
         {
             try
@@ -198,6 +204,12 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             }
         }
 
+        /// <summary>
+        ///     Attempt to unload the underlying MSBuild project.
+        /// </summary>
+        /// <returns>
+        ///     <c>true</c>, if the project was successfully unloaded; otherwise, <c>false</c>.
+        /// </returns>
         bool TryUnloadMSBuildProject()
         {
             try

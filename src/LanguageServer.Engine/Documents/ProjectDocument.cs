@@ -30,7 +30,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <summary>
         ///     The lookup for XML objects by position.
         /// </summary>
-        PositionalObjectLookup _lookup;
+        PositionalXmlObjectLookup _xmlLookup;
 
         /// <summary>
         ///     The underlying MSBuild project collection.
@@ -41,6 +41,11 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         ///     The underlying MSBuild project.
         /// </summary>
         MSBuild.Project _msbuildProject;
+
+        /// <summary>
+        ///     The lookup for MSBuild objects by position.
+        /// </summary>
+        PositionalMSBuildLookup _msbuildLookup;
 
         /// <summary>
         ///     Create a new <see cref="ProjectDocument"/>.
@@ -65,7 +70,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <summary>
         ///     Is the project currently loaded?
         /// </summary>
-        public bool IsLoaded => _xml != null && _lookup != null;
+        public bool IsLoaded => _xml != null && _xmlLookup != null;
 
         /// <summary>
         ///     Does the project have in-memory changes?
@@ -89,12 +94,20 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         public XDocument Xml => _xml ?? throw new InvalidOperationException("Project is not loaded.");
 
         /// <summary>
-        ///     The project object-lookup facility.
+        ///     The project XML object lookup facility.
         /// </summary>
         /// <exception cref="InvalidOperationException">
         ///     The project is not loaded.
         /// </exception>
-        public PositionalObjectLookup Lookup => _lookup ?? throw new InvalidOperationException("Project is not loaded.");
+        public PositionalXmlObjectLookup XmlLookup => _xmlLookup ?? throw new InvalidOperationException("Project is not loaded.");
+
+        /// <summary>
+        ///     The project MSBuild object-lookup facility.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">
+        ///     The project is not loaded.
+        /// </exception>
+        public PositionalMSBuildLookup MSBuildLookup => _msbuildLookup ?? throw new InvalidOperationException("MSBuild project is not loaded.");
 
         /// <summary>
         ///     The underlying MSBuild project (if any).
@@ -112,7 +125,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         public void Load()
         {
             _xml = Parser.Load(_projectFile.FullName);
-            _lookup = new PositionalObjectLookup(_xml);
+            _xmlLookup = new PositionalXmlObjectLookup(_xml);
             TryLoadMSBuildProject();
             IsDirty = false;
         }
@@ -129,7 +142,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                 throw new ArgumentNullException(nameof(xml));
 
             _xml = Parser.Parse(xml);
-            _lookup = new PositionalObjectLookup(_xml);
+            _xmlLookup = new PositionalXmlObjectLookup(_xml);
             IsDirty = true;
             
             TryLoadMSBuildProject();
@@ -143,12 +156,12 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             TryUnloadMSBuildProject();
 
             _xml = null;
-            _lookup = null;
+            _xmlLookup = null;
             IsDirty = false;
         }
 
         /// <summary>
-        ///     Get the XML object (if any) at the specified position.
+        ///     Get the XML object (if any) at the specified position in the project file.
         /// </summary>
         /// <param name="position">
         ///     The target position.
@@ -164,13 +177,13 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             if (!IsLoaded)
                 throw new InvalidOperationException("Project is not loaded.");
 
-            return _lookup.Find(
+            return _xmlLookup.Find(
                 position.ToOneBased()
             );
         }
 
         /// <summary>
-        ///     Get the XML object (if any) at the specified position.
+        ///     Get the XML object (if any) at the specified position in the project file.
         /// </summary>
         /// <typeparam name="TXml">
         ///     The type of XML object to return.
@@ -185,6 +198,23 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             where TXml : XObject
         {
             return GetXmlAtPosition(position) as TXml;
+        }
+
+        /// <summary>
+        ///     Get the MSBuild object (if any) at the specified position in the project file.
+        /// </summary>
+        /// <param name="position">
+        ///     The target position.
+        /// </param>
+        /// <returns>
+        ///     The MSBuild object, or <c>null</c> no object was found at the specified position.
+        /// </returns>
+        public object GetMSBuildObjectAtPosition(Position position)
+        {
+            if (!HaveMSBuildProject)
+                throw new InvalidOperationException("Project is not loaded.");
+
+            return _msbuildLookup.Find(position);
         }
 
         /// <summary>
@@ -215,6 +245,8 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                 else
                     _msbuildProject = _msbuildProjectCollection.LoadProject(_projectFile.FullName);
 
+                _msbuildLookup = new PositionalMSBuildLookup(_msbuildProject, _xmlLookup);
+
                 return true;
             }
             catch (Exception loadError)
@@ -241,6 +273,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                 if (_msbuildProjectCollection == null)
                     return true;
 
+                _msbuildLookup = null;
                 _msbuildProjectCollection.UnloadProject(_msbuildProject);
                 _msbuildProject = null;
 

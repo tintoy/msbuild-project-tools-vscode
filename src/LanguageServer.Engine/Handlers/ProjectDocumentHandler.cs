@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
+
+using MSBuild = Microsoft.Build.Evaluation;
     
 namespace MSBuildProjectTools.LanguageServer.Handlers
 {
@@ -164,23 +166,66 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 parameters.Position.Character
             ).ToOneBased();
 
-            Range nodeRange;
-            XmlNodeType objectType;
-            string objectNameLabel;
-            string objectValueLabel = "";
-
             using (await projectDocument.Lock.ReaderLockAsync(cancellationToken))
             {
-                XObject objectAtPosition = projectDocument.GetXmlAtPosition(position);
-                if (objectAtPosition == null)
+                // First, match up the MSBuild item / property with its corresponding XML element / attribute.
+
+                object msbuildObjectAtPosition = projectDocument.GetMSBuildObjectAtPosition(position);
+                if (msbuildObjectAtPosition == null)
                     return null;
 
-                nodeRange = objectAtPosition.Annotation<NodeLocation>().Range;
+                XObject xmlAtPosition = projectDocument.GetXmlAtPosition(position);
+                if (xmlAtPosition == null)
+                    return null;
 
-                // Display a not-so-informative tooltip (this is just to prove that our language server is correctly servicing hover requests).
+                Range xmlRange = xmlAtPosition.Annotation<NodeLocation>().Range;
 
-                objectType = objectAtPosition.NodeType;
-                switch (objectAtPosition)
+                MSBuild.ProjectProperty propertyAtPosition = msbuildObjectAtPosition as MSBuild.ProjectProperty;
+                if (propertyAtPosition != null)
+                {
+                    return new Hover
+                    {
+                        Range = xmlRange.ToLspModel(),
+                        Contents = $"Property '{propertyAtPosition.Name}' (='{propertyAtPosition.EvaluatedValue}')"
+                    };
+                }
+
+                MSBuild.ProjectItem itemAtPosition = msbuildObjectAtPosition as MSBuild.ProjectItem;
+                if (itemAtPosition != null)
+                {
+                    // Are we on a metadata attribute?
+                    if (xmlAtPosition is XAttribute attribute)
+                    {
+                        string metadataName = attribute.Name.LocalName;
+                        if (String.Equals(metadataName, "Include"))
+                            metadataName = "Identity";
+
+                        string metadataValue = itemAtPosition.GetMetadataValue(metadataName);
+                        
+                        return new Hover
+                        {
+                            Range = xmlRange.ToLspModel(),
+                            Contents = $"Metadata '{metadataName}' of {attribute.Parent.Name} item '{itemAtPosition.EvaluatedInclude}' (='{metadataValue}')"
+                        };
+                    }
+                    else if (xmlAtPosition is XElement element)
+                    {
+                        return new Hover
+                        {
+                            Range = xmlRange.ToLspModel(),
+                            Contents = $"{element.Name} item '{itemAtPosition.EvaluatedInclude}'"
+                        };
+                    }
+
+                    return null;
+                }
+
+                // No idea what (if any) part of the project this is, so just display a not-so-informative tooltip.
+                XmlNodeType objectType = xmlAtPosition.NodeType;
+                string objectNameLabel = "Unknown";
+                string objectValueLabel = "";
+                objectType = xmlAtPosition.NodeType;
+                switch (xmlAtPosition)
                 {
                     case XElement element:
                     {
@@ -195,20 +240,14 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                         break;
                     }
-                    default:
-                    {
-                        objectNameLabel = "Unknown";
-
-                        break;
-                    }
                 }
-            }
 
-            return new Hover
-            {
-                Range = nodeRange.ToLspModel(),
-                Contents = $"{objectType} '{objectNameLabel}'{objectValueLabel}",
-            };
+                return new Hover
+                {
+                    Range = xmlRange.ToLspModel(),
+                    Contents = $"{objectType} '{objectNameLabel}'{objectValueLabel}"
+                };
+            }
         }
 
         /// <summary>

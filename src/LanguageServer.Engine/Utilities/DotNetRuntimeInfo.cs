@@ -58,7 +58,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
                         continue;
                     }
 
-                    string[] property = currentLine.Split(':');
+                    string[] property = currentLine.Split(new char[] { ':' }, count: 2);
                     if (property.Length != 2)
                         continue;
 

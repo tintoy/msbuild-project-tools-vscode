@@ -8,7 +8,7 @@ namespace MSBuildProjectTools.LanguageServer.XmlParser
     /// <summary>
     ///     Handles lookups of XML objects in a document by textual position.
     /// </summary>
-    public class PositionalObjectLookup
+    public class PositionalXmlObjectLookup
     {
         /// <summary>
         ///     The ranges for all XML objects in the document with positional annotations.
@@ -32,12 +32,12 @@ namespace MSBuildProjectTools.LanguageServer.XmlParser
         readonly XDocument _document;
         
         /// <summary>
-        ///     Create a new <see cref="PositionalObjectLookup"/> for an XML document.
+        ///     Create a new <see cref="PositionalXmlObjectLookup"/> for an XML document.
         /// </summary>
         /// <param name="document">
         ///     The XML document.
         /// </param>
-        public PositionalObjectLookup(XDocument document)
+        public PositionalXmlObjectLookup(XDocument document)
         {
             if (document == null)
                 throw new ArgumentNullException(nameof(document));

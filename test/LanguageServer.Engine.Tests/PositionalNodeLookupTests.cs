@@ -8,7 +8,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
     using XmlParser;
     
     /// <summary>
-    ///     Tests for <see cref="PositionalObjectLookup"/>.
+    ///     Tests for <see cref="PositionalXmlObjectLookup"/>.
     /// </summary>
     public class PositionalNodeLookupTests
     {
@@ -31,7 +31,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
                 document = Parser.Load(reader);
             }
 
-            PositionalObjectLookup lookup = new PositionalObjectLookup(document);
+            PositionalXmlObjectLookup lookup = new PositionalXmlObjectLookup(document);
 
             // node1/node2
             XObject match = lookup.Find(new Position(
@@ -64,7 +64,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
                 document = Parser.Load(reader);
             }
 
-            PositionalObjectLookup lookup = new PositionalObjectLookup(document);
+            PositionalXmlObjectLookup lookup = new PositionalXmlObjectLookup(document);
 
             // node1/node3/@attribute2
             XObject match = lookup.Find(new Position(
@@ -102,7 +102,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
                 document = Parser.Load(reader);
             }
 
-            PositionalObjectLookup lookup = new PositionalObjectLookup(document);
+            PositionalXmlObjectLookup lookup = new PositionalXmlObjectLookup(document);
 
             // Project/ItemGroup/PackageReference
             XObject match = lookup.Find(new Position(

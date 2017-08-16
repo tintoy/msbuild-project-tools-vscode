@@ -77,10 +77,13 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         /// <param name="packageSources">
         ///     The package sources.
         /// </param>
+        /// <param name="cancellationToken">
+        ///     An optional <see cref="CancellationToken"> that can be used to cancel the operation.
+        /// </param>
         /// <returns>
         ///     A task that resolves to a list of <see cref="AutoCompleteResource"/>s.
         /// </returns>
-        public static async Task<List<AutoCompleteResource>> GetAutoCompleteResources(IEnumerable<PackageSource> packageSources)
+        public static async Task<List<AutoCompleteResource>> GetAutoCompleteResources(IEnumerable<PackageSource> packageSources, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (packageSources == null)
                 throw new ArgumentNullException(nameof(packageSources));
@@ -99,7 +102,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
             {
                 SourceRepository sourceRepository = new SourceRepository(packageSource, providers);
 
-                AutoCompleteResource autoCompleteResource = await sourceRepository.GetResourceAsync<AutoCompleteResource>();
+                AutoCompleteResource autoCompleteResource = await sourceRepository.GetResourceAsync<AutoCompleteResource>(cancellationToken);
                 if (autoCompleteResource != null)
                     autoCompleteResources.Add(autoCompleteResource);
             }
@@ -137,17 +140,9 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
                 throw new ArgumentNullException(nameof(packageIdPrefix));
 
             IEnumerable<string>[] results = await Task.WhenAll(
-                autoCompleteResources.Select(async autoCompleteResource =>
-                {
-                     try
-                     {
-                         return await autoCompleteResource.IdStartsWith(packageIdPrefix, includePrerelease, NullLogger.Instance, cancellationToken);
-                     }
-                     catch (Exception)
-                     {
-                         return Enumerable.Empty<string>();
-                     }
-                })
+                autoCompleteResources.Select(
+                    autoCompleteResource => autoCompleteResource.IdStartsWith(packageIdPrefix, includePrerelease, logger ?? NullLogger.Instance, cancellationToken)
+                )
             );
 
             return new SortedSet<string>(
@@ -188,17 +183,9 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
                 throw new ArgumentNullException(nameof(packageId));
 
             IEnumerable<NuGetVersion>[] results = await Task.WhenAll(
-                autoCompleteResources.Select(async autoCompleteResource =>
-                {
-                     try
-                     {
-                         return await autoCompleteResource.VersionStartsWith(packageId, versionPrefix, includePrerelease, NullLogger.Instance, cancellationToken);
-                     }
-                     catch (Exception)
-                     {
-                         return Enumerable.Empty<NuGetVersion>();
-                     }
-                })
+                autoCompleteResources.Select(
+                    autoCompleteResource => autoCompleteResource.VersionStartsWith(packageId, versionPrefix, includePrerelease, logger ?? NullLogger.Instance, cancellationToken)
+                )
             );
 
             return new SortedSet<NuGetVersion>(

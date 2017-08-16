@@ -4,6 +4,7 @@ using Lsp.Models;
 using Lsp.Protocol;
 using Newtonsoft.Json;
 using NuGet.Configuration;
+using NuGet.Versioning;
 using Serilog;
 using System;
 using System.Collections.Concurrent;
@@ -17,6 +18,7 @@ using MSBuild = Microsoft.Build.Evaluation;
     
 namespace MSBuildProjectTools.LanguageServer.Handlers
 {
+    using System.Collections.Generic;
     using Documents;
     using Utilities;
     using XmlParser;
@@ -29,11 +31,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
     public class ProjectDocumentHandler
         : TextDocumentHandler
     {
-        /// <summary>
-        ///     A pre-completed task representing a null hover result.
-        /// </summary>
-        static readonly Task<Hover> NoHover = Task.FromResult<Hover>(null);
-
         /// <summary>
         ///     Documents for loaded project files.
         /// </summary>
@@ -121,9 +118,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 return;
 
             string updatedDocumentText = mostRecentChange.Text;
-            ProjectDocument reloadedProjectDocument = await TryUpdateProjectDocument(projectFilePath, updatedDocumentText);
-            if (reloadedProjectDocument == null)
-                Log.Warning("Failed to update project {ProjectFilePath}.", projectFilePath);
+            await TryUpdateProjectDocument(projectFilePath, updatedDocumentText);
         }
 
         /// <summary>
@@ -200,13 +195,10 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         {
             string projectFilePath = parameters.TextDocument.Uri.GetFileSystemPath();
             ProjectDocument projectDocument = await TryLoadProjectDocument(projectFilePath);
-            if (projectDocument == null)
+            if (projectDocument == null || !projectDocument.HasMSBuildProject)
                 return null;
 
-            Position position = Position.FromZeroBased(
-                parameters.Position.Line,
-                parameters.Position.Character
-            ).ToOneBased();
+            Position position = parameters.Position.ToNative();
 
             using (await projectDocument.Lock.ReaderLockAsync(cancellationToken))
             {
@@ -227,7 +219,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 {
                     return new Hover
                     {
-                        Range = xmlRange.ToLspModel(),
+                        Range = xmlRange.ToLsp(),
                         Contents = $"Property '{propertyAtPosition.Name}' (='{propertyAtPosition.EvaluatedValue}')"
                     };
                 }
@@ -246,7 +238,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                         
                         return new Hover
                         {
-                            Range = xmlRange.ToLspModel(),
+                            Range = xmlRange.ToLsp(),
                             Contents = $"Metadata '{metadataName}' of {attribute.Parent.Name} item '{itemAtPosition.EvaluatedInclude}' (='{metadataValue}')"
                         };
                     }
@@ -254,7 +246,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                     {
                         return new Hover
                         {
-                            Range = xmlRange.ToLspModel(),
+                            Range = xmlRange.ToLsp(),
                             Contents = $"{element.Name} item '{itemAtPosition.EvaluatedInclude}'"
                         };
                     }
@@ -286,10 +278,103 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 return new Hover
                 {
-                    Range = xmlRange.ToLspModel(),
+                    Range = xmlRange.ToLsp(),
                     Contents = $"{objectType} '{objectNameLabel}'{objectValueLabel}"
                 };
             }
+        }
+
+        /// <summary>
+        ///     Called when completions are requested.
+        /// </summary>
+        /// <param name="parameters">
+        ///     The request parameters.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///     A <see cref="CancellationToken"/> that can be used to cancel the request.
+        /// </param>
+        /// <returns>
+        ///     A <see cref="Task"/> representing the operation whose result is the completion list or <c>null</c> if no completions are provided.
+        /// </returns>
+        protected override async Task<CompletionList> OnCompletion(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
+        {
+            string projectFilePath = parameters.TextDocument.Uri.GetFileSystemPath();
+            ProjectDocument projectDocument = await TryLoadProjectDocument(projectFilePath);
+            if (projectDocument == null || !projectDocument.HasXml)
+                return null;
+
+            Position position = parameters.Position.ToNative();
+
+            List<CompletionItem> completionItems = new List<CompletionItem>();
+            using (await projectDocument.Lock.ReaderLockAsync(cancellationToken))
+            {
+                // Are we on an attribute?
+                XAttribute attributeAtPosition = projectDocument.GetXmlAtPosition<XAttribute>(position);
+                if (attributeAtPosition == null)
+                    return null;
+
+                // Must be a PackageReference element.
+                if (!String.Equals(attributeAtPosition.Parent.Name.LocalName, "PackageReference", StringComparison.OrdinalIgnoreCase))
+                    return null;
+
+                // Are we on the attribute's value?
+                AttributeLocation attributeLocation = attributeAtPosition.Annotation<AttributeLocation>();
+                if (!attributeLocation.ValueRange.Contains(position))
+                    return null;
+
+                try
+                {
+                    if (attributeAtPosition.Name == "Include")
+                    {
+                        SortedSet<string> packageIds = await projectDocument.SuggestPackageIds(attributeAtPosition.Value, cancellationToken);
+                        completionItems.AddRange(
+                            packageIds.Select(packageId => new CompletionItem
+                            {
+                                Label = packageId,
+                                Kind = CompletionItemKind.Module,
+                                TextEdit = new TextEdit
+                                {
+                                    Range = attributeLocation.ValueRange.ToLsp(),
+                                    NewText = packageId
+                                }
+                            })
+                        );
+                    }
+                    else if (attributeAtPosition.Name == "Include")
+                    {
+                        SortedSet<NuGetVersion> packageIds = await projectDocument.SuggestPackageVersions(attributeAtPosition.Value, cancellationToken);
+                        completionItems.AddRange(
+                            packageIds.Select(packageVersion => new CompletionItem
+                            {
+                                Label = packageVersion.ToNormalizedString(),
+                                Kind = CompletionItemKind.Field,
+                                TextEdit = new TextEdit
+                                {
+                                    Range = attributeLocation.ValueRange.ToLsp(),
+                                    NewText = packageVersion.ToNormalizedString()
+                                }
+                            })
+                        );
+                    }
+                    else
+                        return null; // No completions.
+                }
+                catch (AggregateException aggregateSuggestionError)
+                {
+                    foreach (Exception suggestionError in aggregateSuggestionError.Flatten().InnerExceptions)
+                    {
+                        Log.Error(suggestionError, "Failed to provide completions.");    
+                    }
+                }
+                catch (Exception suggestionError)
+                {
+                    Log.Error(suggestionError, "Failed to provide completions.");
+                }
+            }
+
+            return new CompletionList(completionItems,
+                isIncomplete: completionItems.Count >= 20 // Default page size.
+            );
         }
 
         /// <summary>
@@ -302,7 +387,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         ///     Reload the project if it is already loaded?
         /// </param>
         /// <returns>
-        ///     The project document, or <c>null</c> if the project could not be loaded.
+        ///     The project document, or <c>null</c> if the project is not already loaded.
         /// </returns>
         async Task<ProjectDocument> TryUpdateProjectDocument(string projectFilePath, string documentText)
         {
@@ -310,9 +395,16 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             if (!_projectDocuments.TryGetValue(projectFilePath, out projectDocument))
                 return null;
 
-            using (await projectDocument.Lock.WriterLockAsync())
+            try
             {
-                projectDocument.Update(documentText);
+                using (await projectDocument.Lock.WriterLockAsync())
+                {
+                    projectDocument.Update(documentText);
+                }
+            }
+            catch (Exception updateError)
+            {
+                Log.Error(updateError, "Failed to update project {ProjectFile}.", projectFilePath);
             }
 
             return projectDocument;
@@ -346,7 +438,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 {
                     using (await projectDocument.Lock.WriterLockAsync())
                     {
-                        projectDocument.Load();
+                        await projectDocument.Load();
                     }
                 }
 

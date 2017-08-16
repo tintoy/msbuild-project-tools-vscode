@@ -1,16 +1,22 @@
 using Nito.AsyncEx;
 using NuGet.Configuration;
+using NuGet.Protocol.Core.Types;
+using NuGet.Versioning;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 
 using MSBuild = Microsoft.Build.Evaluation;
+using MSBuildExceptions = Microsoft.Build.Exceptions;
 
 namespace MSBuildProjectTools.LanguageServer.Documents
 {
+    using System.Xml;
     using Utilities;
     using XmlParser;
 
@@ -28,6 +34,21 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         ///     The project's configured package sources.
         /// </summary>
         readonly List<PackageSource> _configuredPackageSources = new List<PackageSource>();
+        
+        /// <summary>
+        ///     NuGet auto-complete APIs for configured package sources.
+        /// </summary>
+        readonly List<AutoCompleteResource> _autoCompleteResources = new List<AutoCompleteResource>();
+
+        /// <summary>
+        ///     Cached package Ids, keyed by partial package Id.
+        /// </summary>
+        readonly Dictionary<string, string[]> _packageIdCache = new Dictionary<string, string[]>();
+
+        /// <summary>
+        ///     Cached package versions, keyed by package Id.
+        /// </summary>
+        readonly Dictionary<string, NuGetVersion[]> _packageVersionCache = new Dictionary<string, NuGetVersion[]>();
 
         /// <summary>
         ///     The parsed project XML.
@@ -75,19 +96,19 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         public AsyncReaderWriterLock Lock { get; } = new AsyncReaderWriterLock();
 
         /// <summary>
-        ///     Is the project currently loaded?
+        ///     Is the project XML currently loaded?
         /// </summary>
-        public bool IsLoaded => _xml != null && _xmlLookup != null;
+        public bool HasXml => _xml != null && _xmlLookup != null;
+
+        /// <summary>
+        ///     Is the underlying MSBuild project currently loaded?
+        /// </summary>
+        public bool HasMSBuildProject => HasXml && _msbuildProject != null;
 
         /// <summary>
         ///     Does the project have in-memory changes?
         /// </summary>
         public bool IsDirty { get; private set; }
-
-        /// <summary>
-        ///     Is the underlying MSBuild project currently loaded?
-        /// </summary>
-        public bool HaveMSBuildProject => _msbuildProject != null;
 
         /// <summary>
         ///     The parsed project XML.
@@ -134,13 +155,36 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <summary>
         ///     Load and parse the project.
         /// </summary>
-        public void Load()
+        /// <param name="cancellationToken">
+        ///     An optional <see cref="CancellationToken"> that can be used to cancel the operation.
+        /// </param>
+        /// <returns>
+        ///     A task representing the load operation.
+        /// </returns>
+        public async Task Load(CancellationToken cancellationToken = default(CancellationToken))
         {
-            _xml = Parser.Load(_projectFile.FullName);
-            _xmlLookup = new PositionalXmlObjectLookup(_xml);
-            TryLoadMSBuildProject();
-            RefreshPackageSources();
+            try
+            {
+                _xml = Parser.Load(_projectFile.FullName);
+                _xmlLookup = new PositionalXmlObjectLookup(_xml);
+            }
+            catch (XmlException invalidXml)
+            {
+                Log.Error(invalidXml, "Failed to update project {ProjectFile}.", _projectFile.FullName);
+
+                _xml = null;
+                _xmlLookup = null;
+                IsDirty = false;
+
+                TryUnloadMSBuildProject();
+
+                return;
+            }
+            
             IsDirty = false;
+
+            TryLoadMSBuildProject();
+            await ConfigurePackageSources(cancellationToken);
         }
 
         /// <summary>
@@ -154,26 +198,58 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             if (xml == null)
                 throw new ArgumentNullException(nameof(xml));
 
-            _xml = Parser.Parse(xml);
-            _xmlLookup = new PositionalXmlObjectLookup(_xml);
-            IsDirty = true;
+            try
+            {
+                _xml = Parser.Parse(xml);
+                _xmlLookup = new PositionalXmlObjectLookup(_xml);
+                IsDirty = true;
+            }
+            catch (XmlException invalidXml)
+            {
+                Log.Warning("XML is invalid for project {ProjectFile} (line {LineNumber}, column {ColumnNumber}): {ErrorMessage:l}",
+                    _projectFile.FullName,
+                    invalidXml.LineNumber,
+                    invalidXml.LinePosition,
+                    invalidXml.Message.Replace(
+                        $" Line {invalidXml.LineNumber}, position {invalidXml.LinePosition}.",
+                        String.Empty
+                    )
+                );
+
+                _xml = null;
+                _xmlLookup = null;
+                IsDirty = true;
+
+                TryUnloadMSBuildProject();
+
+                return;
+            }
             
             TryLoadMSBuildProject();
         }
 
         /// <summary>
-        ///     Determine the NuGet package sources configured for the current project.
+        ///     Determine the NuGet package sources configured for the current project and create clients for them.
         /// </summary>
+        /// <param name="cancellationToken">
+        ///     An optional <see cref="CancellationToken"> that can be used to cancel the operation.
+        /// </param>
         /// <returns>
         ///     <c>true</c>, if the package sources were loaded; otherwise, <c>false</c>.
         /// </returns>
-        public bool RefreshPackageSources()
+        public async Task<bool> ConfigurePackageSources(CancellationToken cancellationToken = default(CancellationToken))
         {
             try
             {
                 _configuredPackageSources.Clear();
+                _autoCompleteResources.Clear();
+
                 _configuredPackageSources.AddRange(
                     NuGetHelper.GetWorkspacePackageSources(_projectFile.Directory.FullName)
+                        .Where(packageSource => packageSource.IsHttp)
+                );
+                _autoCompleteResources.AddRange(
+                    await NuGetHelper.GetAutoCompleteResources(_configuredPackageSources, cancellationToken)
                 );
 
                 return true;
@@ -184,6 +260,62 @@ namespace MSBuildProjectTools.LanguageServer.Documents
 
                 return false;
             }
+        }
+
+        /// <summary>
+        ///     Suggest package Ids based on the specified package Id prefix.
+        /// </summary>
+        /// <param name="packageIdPrefix">
+        ///     The package Id prefix.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///     An optional <see cref="CancellationToken"> that can be used to cancel the operation.
+        /// </param>
+        /// <returns>
+        ///     A task that resolves to a sorted set of suggested package Ids.
+        /// </returns>
+        public async Task<SortedSet<string>> SuggestPackageIds(string packageIdPrefix, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            // We don't actually need a working MSBuild project for this.
+            if (!HasXml)
+                throw new InvalidOperationException("Project is not currently loaded.");
+
+            if (_packageIdCache.TryGetValue(packageIdPrefix, out string[] cachedPackageIds))
+                return new SortedSet<string>(cachedPackageIds);
+
+            SortedSet<string> packageIds = await _autoCompleteResources.SuggestPackageIds(packageIdPrefix, includePrerelease: true, cancellationToken: cancellationToken);
+            if (packageIds.Count > 0)
+                _packageIdCache[packageIdPrefix] = packageIds.ToArray();
+
+            return packageIds;
+        }
+
+        /// <summary>
+        ///     Suggest package versions for the specified package.
+        /// </summary>
+        /// <param name="packageId">
+        ///     The package Id.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///     An optional <see cref="CancellationToken"> that can be used to cancel the operation.
+        /// </param>
+        /// <returns>
+        ///     A task that resolves to a sorted set of suggested package versions.
+        /// </returns>
+        public async Task<SortedSet<NuGetVersion>> SuggestPackageVersions(string packageId, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            // We don't actually need a working MSBuild project for this.
+            if (!HasXml)
+                throw new InvalidOperationException("Project is not currently loaded.");
+
+            if (_packageVersionCache.TryGetValue(packageId, out NuGetVersion[] cachedPackageVersions))
+                return new SortedSet<NuGetVersion>(cachedPackageVersions);
+
+            SortedSet<NuGetVersion> packageVersions = await _autoCompleteResources.SuggestPackageVersions(packageId, includePrerelease: true, cancellationToken: cancellationToken);
+            if (packageVersions.Count > 0)
+                _packageVersionCache[packageId] = packageVersions.ToArray();
+
+            return packageVersions;
         }
 
         /// <summary>
@@ -212,8 +344,8 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             if (position == null)
                 throw new ArgumentNullException(nameof(position));
 
-            if (!IsLoaded)
-                throw new InvalidOperationException("Project is not loaded.");
+            if (!HasXml)
+                throw new InvalidOperationException($"XML for project '{_projectFile.FullName}' is not loaded.");
 
             return _xmlLookup.Find(
                 position.ToOneBased()
@@ -249,8 +381,8 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// </returns>
         public object GetMSBuildObjectAtPosition(Position position)
         {
-            if (!HaveMSBuildProject)
-                throw new InvalidOperationException("Project is not loaded.");
+            if (!HasMSBuildProject)
+                throw new InvalidOperationException($"MSBuild project '{_projectFile.FullName}' is not loaded.");
 
             return _msbuildLookup.Find(position);
         }
@@ -265,17 +397,18 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         {
             try
             {
-                if (HaveMSBuildProject && !IsDirty)
+                if (HasMSBuildProject && !IsDirty)
                     return true;
 
                 if (_msbuildProjectCollection == null)
                     _msbuildProjectCollection = MSBuildHelper.CreateProjectCollection(_projectFile.Directory.FullName);
 
-                if (HaveMSBuildProject && IsDirty)
+                if (HasMSBuildProject && IsDirty)
                 {
                     _msbuildProject.Xml.ReloadFrom(
                         reader: _xml.CreateReader(),
-                        throwIfUnsavedChanges: false
+                        throwIfUnsavedChanges: false,
+                        preserveFormatting: true
                     );
 
                     Log.Verbose("Successfully updated MSBuild project '{ProjectFileName}' from in-memory changes.");
@@ -287,9 +420,39 @@ namespace MSBuildProjectTools.LanguageServer.Documents
 
                 return true;
             }
+            catch (MSBuildExceptions.InvalidProjectFileException invalidProjectFile)
+            {
+                // TODO: Only warn once.
+
+                if (String.Equals(_projectFile.FullName, invalidProjectFile.ProjectFile, StringComparison.OrdinalIgnoreCase))
+                {
+                    Log.Warning("Unable to load MSBuild project {ProjectFileName} because it is invalid (line {LineNumber}, column {ColumnNumber}): {ErrorMessage:l}",
+                        _projectFile.FullName,
+                        invalidProjectFile.LineNumber,
+                        invalidProjectFile.ColumnNumber,
+                        invalidProjectFile.BaseMessage
+                    );
+                }
+                else
+                {
+                    Log.Warning("Unable to load MSBuild project {ProjectFileName} because a project file it depends on ({DependsOnProjectFile}) is invalid (line {LineNumber}, column {ColumnNumber}): {ErrorMessage:l}",
+                        _projectFile.FullName,
+                        invalidProjectFile.ProjectFile,
+                        invalidProjectFile.LineNumber,
+                        invalidProjectFile.ColumnNumber,
+                        invalidProjectFile.BaseMessage
+                    );
+                }
+
+                TryUnloadMSBuildProject();
+
+                return false;
+            }
             catch (Exception loadError)
             {
                 Log.Error(loadError, "Error loading MSBuild project '{ProjectFileName}'.", _projectFile.FullName);
+
+                TryUnloadMSBuildProject();
 
                 return false;
             }
@@ -305,7 +468,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         {
             try
             {
-                if (!HaveMSBuildProject)
+                if (!HasMSBuildProject)
                     return true;
 
                 if (_msbuildProjectCollection == null)

@@ -1,6 +1,8 @@
 using Nito.AsyncEx;
+using NuGet.Configuration;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -21,6 +23,11 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         ///     The project file.
         /// </summary>
         readonly FileInfo _projectFile;
+
+        /// <summary>
+        ///     The project's configured package sources.
+        /// </summary>
+        readonly List<PackageSource> _configuredPackageSources = new List<PackageSource>();
 
         /// <summary>
         ///     The parsed project XML.
@@ -115,6 +122,11 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         public MSBuild.Project MSBuildProject => _msbuildProject;
 
         /// <summary>
+        ///     NuGet package sources configured for the current project.
+        /// </summary>
+        public IReadOnlyList<PackageSource> ConfiguredPackageSources => _configuredPackageSources;
+
+        /// <summary>
         ///     The document's logger.
         /// </summary>
         ILogger Log { get; set; }
@@ -127,6 +139,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             _xml = Parser.Load(_projectFile.FullName);
             _xmlLookup = new PositionalXmlObjectLookup(_xml);
             TryLoadMSBuildProject();
+            RefreshPackageSources();
             IsDirty = false;
         }
 
@@ -146,6 +159,31 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             IsDirty = true;
             
             TryLoadMSBuildProject();
+        }
+
+        /// <summary>
+        ///     Determine the NuGet package sources configured for the current project.
+        /// </summary>
+        /// <returns>
+        ///     <c>true</c>, if the package sources were loaded; otherwise, <c>false</c>.
+        /// </returns>
+        public bool RefreshPackageSources()
+        {
+            try
+            {
+                _configuredPackageSources.Clear();
+                _configuredPackageSources.AddRange(
+                    NuGetHelper.GetWorkspacePackageSources(_projectFile.Directory.FullName)
+                );
+
+                return true;
+            }
+            catch (Exception packageSourceLoadError)
+            {
+                Log.Error(packageSourceLoadError, "Error configuring NuGet package sources for MSBuild project '{ProjectFileName}'.", _projectFile.FullName);
+
+                return false;
+            }
         }
 
         /// <summary>

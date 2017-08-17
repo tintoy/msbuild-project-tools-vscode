@@ -1,5 +1,4 @@
 using System;
-using MSBuildProjectTools.LanguageServer.XmlParser;
 
 namespace MSBuildProjectTools.LanguageServer.Utilities
 {

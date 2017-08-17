@@ -6,8 +6,9 @@ using System.Xml.Linq;
 
 namespace MSBuildProjectTools.LanguageServer.Utilities
 {
-    using XmlParser;
-
+    /// <summary>
+    ///     A facility for looking up MSBuild project members by textual location.
+    /// </summary>
     public class PositionalMSBuildLookup
     {
         /// <summary>
@@ -18,8 +19,6 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         /// </remarks>
         readonly List<Range> _objectRanges = new List<Range>();
 
-        readonly Project _project;
-
         /// <summary>
         ///     All objects in the project, keyed by starting position.
         /// </summary>
@@ -28,6 +27,23 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         /// </remarks>
         readonly SortedDictionary<Position, object> _objectsByStartPosition = new SortedDictionary<Position, object>();
 
+        /// <summary>
+        ///     The MSBuild project.
+        /// </summary>
+        readonly Project _project;
+
+        /// <summary>
+        ///     Create a new <see cref="PositionalMSBuildLookup"/>.
+        /// </summary>
+        /// <param name="project">
+        ///     The MSBuild project.
+        /// </param>
+        /// <param name="projectXml">
+        ///     The project XML.
+        /// </param>
+        /// <param name="xmlPositions">
+        ///     The position-lookup for the project XML.
+        /// </param>
         public PositionalMSBuildLookup(Project project, XmlDocumentSyntax projectXml, TextPositions xmlPositions)
         {
             if (project == null)
@@ -38,52 +54,50 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
             
             _project = project;
 
-            // string projectFilePath = _project.FullPath ?? String.Empty;
-            // foreach (ProjectProperty property in _project.Properties)
-            // {
-            //     if (property.Xml == null || property.Xml.Location.File != projectFilePath)
-            //         continue; // Not declared in main project file.
+            string projectFilePath = _project.FullPath ?? String.Empty;
+            foreach (ProjectProperty property in _project.Properties)
+            {
+                if (property.Xml == null || property.Xml.Location.File != projectFilePath)
+                    continue; // Not declared in main project file.
 
-            //     Position propertyStart = new Position(
-            //         property.Xml.Location.Line,
-            //         property.Xml.Location.Column
-            //     );
+                Position propertyStart = property.Xml.Location.ToNative();
                 
-            //     IXmlElementSyntax propertyElement = SyntaxLocator.FindNode(projectXml,
-            //         position: xmlPositions.GetAbsolutePosition(propertyStart)
-            //     ) as IXmlElementSyntax;
-            //     if (propertyElement == null)
-            //         continue;
+                SyntaxNode xmlAtPosition = projectXml.FindNode(propertyStart, xmlPositions);
+                if (xmlAtPosition == null)
+                    continue;
 
-            //     Range propertyRange = new Range(
-            //         start: new Position()
-            //     );
+                XmlElementSyntaxBase propertyElement = xmlAtPosition.GetContainingElement();
+                if (propertyElement == null)
+                    continue;
 
-            //     _objectRanges.Add(propertyRange);
-            //     _objectsByStartPosition.Add(propertyRange.Start, property);
-            // }
+                Range propertyRange = propertyElement.Span.ToNative(xmlPositions);
 
-            // foreach (ProjectItem item in _project.Items)
-            // {
-            //     if (item.Xml == null || item.Xml.Location.File != projectFilePath)
-            //         continue; // Not declared in main project file.
+                _objectRanges.Add(propertyRange);
+                _objectsByStartPosition.Add(propertyRange.Start, property);
+            }
 
-            //     Position itemStart = new Position(
-            //         item.Xml.Location.Line,
-            //         item.Xml.Location.Column
-            //     );
+            foreach (ProjectItem item in _project.Items)
+            {
+                if (item.Xml == null || item.Xml.Location.File != projectFilePath)
+                    continue; // Not declared in main project file.
+
+                Position itemStart = item.Xml.Location.ToNative();
                 
-            //     XElement itemElement = xmlPositions.Find(itemStart) as XElement;
-            //     if (itemElement == null)
-            //         continue;
+                SyntaxNode xmlAtPosition = projectXml.FindNode(itemStart, xmlPositions);
+                if (xmlAtPosition == null)
+                    continue;
 
-            //     Range itemRange = itemElement.Annotation<NodeLocation>().Range;
+                XmlElementSyntaxBase itemElement = xmlAtPosition.GetContainingElement();
+                if (itemElement == null)
+                    continue;
 
-            //     _objectRanges.Add(itemRange);
-            //     _objectsByStartPosition.Add(itemRange.Start, item);
-            // }
+                Range itemRange = itemElement.Span.ToNative(xmlPositions);
 
-            // _objectRanges.Sort();
+                _objectRanges.Add(itemRange);
+                _objectsByStartPosition.Add(itemRange.Start, item);
+            }
+
+            _objectRanges.Sort();
         }
 
         /// <summary>

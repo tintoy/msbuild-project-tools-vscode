@@ -18,7 +18,6 @@ using MSBuildExceptions = Microsoft.Build.Exceptions;
 namespace MSBuildProjectTools.LanguageServer.Documents
 {
     using Utilities;
-    using XmlParser;
 
     /// <summary>
     ///     Represents the document state for an MSBuild project.
@@ -316,7 +315,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
 
             int absolutePosition = _xmlPositions.GetAbsolutePosition(position);
 
-            return SyntaxLocator.FindNode(_xml, absolutePosition);
+            return _xml.FindNode(position, _xmlPositions);
         }
 
         /// <summary>

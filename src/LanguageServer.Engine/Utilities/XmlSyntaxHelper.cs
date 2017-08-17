@@ -5,6 +5,9 @@ using System.Linq;
 
 namespace MSBuildProjectTools.LanguageServer.Utilities
 {
+    /// <summary>
+    ///     Extension methods for working with types from Microsoft.Language.Xml.
+    /// </summary>
     public static class XmlSyntaxHelper
     {
         public static IEnumerable<IXmlElement> Descendants(this IEnumerable<IXmlElement> elements)
@@ -129,7 +132,23 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
             return syntaxNode.GetFirstParentOfKinds(
                 SyntaxKind.XmlAttribute,
                 SyntaxKind.XmlEmptyElement,
-                SyntaxKind.XmlElementStartTag
+                SyntaxKind.XmlElement
+            );
+        }
+
+        public static SyntaxNode FindNode(this SyntaxNode syntaxNode, Position position, TextPositions xmlPositions)
+        {
+            if (syntaxNode == null)
+                throw new ArgumentNullException(nameof(syntaxNode));
+            
+            if (position == null)
+                throw new ArgumentNullException(nameof(position));
+            
+            if (xmlPositions == null)
+                throw new ArgumentNullException(nameof(xmlPositions));
+            
+            return SyntaxLocator.FindNode(syntaxNode,
+                position: xmlPositions.GetAbsolutePosition(position)
             );
         }
     }

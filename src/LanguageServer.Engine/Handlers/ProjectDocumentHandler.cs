@@ -17,12 +17,11 @@ using System.Xml;
 using System.Xml.Linq;
 
 using MSBuild = Microsoft.Build.Evaluation;
-    
+
 namespace MSBuildProjectTools.LanguageServer.Handlers
 {
     using Documents;
     using Utilities;
-    using XmlParser;
 
     // Note - you can get the workspace root path from Server.Client.RootPath
 
@@ -203,119 +202,67 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
             using (await projectDocument.Lock.ReaderLockAsync(cancellationToken))
             {
-                // First, match up the MSBuild item / property with its corresponding XML element / attribute.
-
-                // object msbuildObjectAtPosition = projectDocument.GetMSBuildObjectAtPosition(position);
-                // if (msbuildObjectAtPosition == null)
-                //     return null;
-
+                // Try to match up the position with an element or attribute in the XML, then match that up with an MSBuild object.
                 SyntaxNode xmlAtPosition = projectDocument.GetXmlAtPosition(position);
                 if (xmlAtPosition == null)
                     return null;
 
+                // Match up the MSBuild item / property with its corresponding XML element / attribute.
+                object msbuildObjectAtPosition = projectDocument.HasMSBuildProject ? projectDocument.GetMSBuildObjectAtPosition(position) : null;
+                if (msbuildObjectAtPosition != null)
+                    Log.Information("Found MSBuild object at position {Position}.", position);
+                else
+                    Log.Information("Did not find MSBuild object at position {Position}.", position);
+
                 SyntaxNode elementOrAttribute = xmlAtPosition.GetContainingAttributeOrElement();
+                if (elementOrAttribute == null)
+                    return null;
+
+                Range range = elementOrAttribute.Span.ToNative(projectDocument.XmlPositions);
+                Hover result = new Hover
+                {
+                    Range = range.ToLsp()
+                };
+
                 if (elementOrAttribute is IXmlElementSyntax element)
                 {
-                    Position startPosition = projectDocument.XmlPositions.GetPosition(elementOrAttribute.Span.Start);
-                    Position endPosition = projectDocument.XmlPositions.GetPosition(elementOrAttribute.Span.End);
+                    Log.Information("Element spans {Range}.", range);
 
-                    return new Hover
-                    {
-                        Contents = $"Element '{element.Name.Name}'",
-                        Range = new Lsp.Models.Range
-                        {                            
-                            Start = startPosition.ToLsp(),
-                            End = endPosition.ToLsp()
-                        }
-                    };
+                    if (msbuildObjectAtPosition is MSBuild.ProjectProperty propertyFromElementAtPosition)
+                        result.Contents = $"Property '{propertyFromElementAtPosition.Name}' (='{propertyFromElementAtPosition.EvaluatedValue}')";
+                    else if (msbuildObjectAtPosition is MSBuild.ProjectItem itemFromElementAtPosition)
+                        result.Contents = $"{element.Name.Name} item '{itemFromElementAtPosition.EvaluatedInclude}'";
+                    else
+                        result.Contents = $"Element '{element.Name.Name}'";
                 }
-
-                if (elementOrAttribute is XmlAttributeSyntax attribute)
+                else if (elementOrAttribute is XmlAttributeSyntax attribute)
                 {
-                    Position startPosition = projectDocument.XmlPositions.GetPosition(elementOrAttribute.Span.Start);
-                    Position endPosition = projectDocument.XmlPositions.GetPosition(elementOrAttribute.Span.End);
+                    Log.Information("Attribute spans {Range}.", range);
 
-                    return new Hover
+                    if (msbuildObjectAtPosition is MSBuild.ProjectItem itemFromAttributeAtPosition)
                     {
-                        Contents = $"Attribute '{attribute.Name}' (='{attribute.Value}')",
-                        Range = new Lsp.Models.Range
-                        {                            
-                            Start = startPosition.ToLsp(),
-                            End = endPosition.ToLsp()
-                        }
-                    };
+                        string metadataName = attribute.Name;
+                        if (String.Equals(metadataName, "Include"))
+                            metadataName = "Identity";
+
+                        string metadataValue = itemFromAttributeAtPosition.GetMetadataValue(metadataName);
+                        result.Contents = $"Metadata '{metadataName}' of {attribute.ParentElement.Name} item '{itemFromAttributeAtPosition.EvaluatedInclude}' (='{metadataValue}')";
+                    }
+                    else
+                        result.Contents = $"Attribute '{attribute.Name}' (='{attribute.Value}')";
                 }
-
-                // Range xmlRange = xmlAtPosition.Annotation<NodeLocation>().Range;
-
-                // MSBuild.ProjectProperty propertyAtPosition = msbuildObjectAtPosition as MSBuild.ProjectProperty;
-                // if (propertyAtPosition != null)
-                // {
-                //     return new Hover
-                //     {
-                //         Range = xmlRange.ToLsp(),
-                //         Contents = $"Property '{propertyAtPosition.Name}' (='{propertyAtPosition.EvaluatedValue}')"
-                //     };
-                // }
-
-                // MSBuild.ProjectItem itemAtPosition = msbuildObjectAtPosition as MSBuild.ProjectItem;
-                // if (itemAtPosition != null)
-                // {
-                //     // Are we on a metadata attribute?
-                //     if (xmlAtPosition is XAttribute attribute)
-                //     {
-                //         string metadataName = attribute.Name.LocalName;
-                //         if (String.Equals(metadataName, "Include"))
-                //             metadataName = "Identity";
-
-                //         string metadataValue = itemAtPosition.GetMetadataValue(metadataName);
-                        
-                //         return new Hover
-                //         {
-                //             Range = xmlRange.ToLsp(),
-                //             Contents = $"Metadata '{metadataName}' of {attribute.Parent.Name} item '{itemAtPosition.EvaluatedInclude}' (='{metadataValue}')"
-                //         };
-                //     }
-                //     else if (xmlAtPosition is XElement element)
-                //     {
-                //         return new Hover
-                //         {
-                //             Range = xmlRange.ToLsp(),
-                //             Contents = $"{element.Name} item '{itemAtPosition.EvaluatedInclude}'"
-                //         };
-                //     }
+                else
+                {
+                    Log.Information("Nothing useful spanning {Range} (only a {NodeKind}).",
+                        range,
+                        elementOrAttribute.Kind
+                    );
 
                     return null;
                 }
 
-                // No idea what (if any) part of the project this is, so just display a not-so-informative tooltip.
-                // XmlNodeType objectType = xmlAtPosition.NodeType;
-                // string objectNameLabel = "Unknown";
-                // string objectValueLabel = "";
-                // objectType = xmlAtPosition.NodeType;
-                // switch (xmlAtPosition)
-                // {
-                //     case XElement element:
-                //     {
-                //         objectNameLabel = element.Name.LocalName;
-
-                //         break;
-                //     }
-                //     case XAttribute attribute:
-                //     {
-                //         objectNameLabel = attribute.Name.LocalName;
-                //         objectValueLabel = $" (='{attribute.Value}')";
-
-                //         break;
-                //     }
-                // }
-
-                // return new Hover
-                // {
-                //     Range = xmlRange.ToLsp(),
-                //     Contents = $"{objectType} '{objectNameLabel}'{objectValueLabel}"
-                // };
-            // }
+                return result;
+            }
         }
 
         /// <summary>
@@ -466,7 +413,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 ProjectDocument projectDocument = _projectDocuments.GetOrAdd(projectFilePath, _ =>
                 {
                     isNewProject = true;
-                     
+
                     return new ProjectDocument(projectFilePath, Log);
                 });
 

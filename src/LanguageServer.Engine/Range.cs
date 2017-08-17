@@ -1,6 +1,6 @@
 using System;
 
-namespace MSBuildProjectTools.LanguageServer.XmlParser
+namespace MSBuildProjectTools.LanguageServer
 {
     /// <summary>
     ///     Represents a range in a text document.

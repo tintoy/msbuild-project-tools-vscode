@@ -95,7 +95,13 @@ namespace MSBuildProjectTools.LanguageServer
         /// <returns>
         ///     The new <see cref="Position"/>.
         /// </returns>
-        public Position Move(int lineCount = 0, int columnCount = 0) => new Position(LineNumber + lineCount, ColumnNumber + columnCount, IsZeroBased);
+        public Position Move(int lineCount = 0, int columnCount = 0)
+        {
+            if (lineCount == 0 && columnCount == 0)
+                return this;
+
+            return new Position(LineNumber + lineCount, ColumnNumber + columnCount, IsZeroBased);
+        }
 
         /// <summary>
         ///     Determine whether the position is equal to another object.

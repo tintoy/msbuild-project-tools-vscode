@@ -89,6 +89,8 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             }
 
             Log.Information("Successfully loaded project {ProjectFilePath}.", projectFilePath);
+            Log.Information("===========================");
+            
             foreach (PackageSource packageSource in projectDocument.ConfiguredPackageSources)
             {
                 Log.Information(" - Project uses package source {PackageSourceName} ({PackageSourceUrl})",
@@ -222,8 +224,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 if (elementOrAttribute is IXmlElementSyntax element)
                 {
-                    Log.Information("Element spans {Range}.", range);
-
                     if (msbuildObjectAtPosition is MSBuild.ProjectProperty propertyFromElementAtPosition)
                         result.Contents = $"Property '{propertyFromElementAtPosition.Name}' (='{propertyFromElementAtPosition.EvaluatedValue}')";
                     else if (msbuildObjectAtPosition is MSBuild.ProjectItem itemFromElementAtPosition)
@@ -233,8 +233,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 }
                 else if (elementOrAttribute is XmlAttributeSyntax attribute)
                 {
-                    Log.Information("Attribute spans {Range}.", range);
-
                     if (msbuildObjectAtPosition is MSBuild.ProjectItem itemFromAttributeAtPosition)
                     {
                         string metadataName = attribute.Name;
@@ -248,14 +246,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                         result.Contents = $"Attribute '{attribute.Name}' (='{attribute.Value}')";
                 }
                 else
-                {
-                    Log.Information("Nothing useful spanning {Range} (only a {NodeKind}).",
-                        range,
-                        elementOrAttribute.Kind
-                    );
-
                     return null;
-                }
 
                 return result;
             }
@@ -282,78 +273,97 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
             Position position = parameters.Position.ToNative();
 
-            return null;
+            List<CompletionItem> completionItems = new List<CompletionItem>();
+            using (await projectDocument.Lock.ReaderLockAsync(cancellationToken))
+            {
+                // Try to match up the position with an element or attribute in the XML.
+                SyntaxNode xmlAtPosition = projectDocument.GetXmlAtPosition(position);
+                if (xmlAtPosition == null)
+                    return null;
 
-            // List<CompletionItem> completionItems = new List<CompletionItem>();
-            // using (await projectDocument.Lock.ReaderLockAsync(cancellationToken))
-            // {
-            //     // Are we on an attribute?
-            //     XAttribute attributeAtPosition = projectDocument.GetXmlAtPosition<XAttribute>(position);
-            //     if (attributeAtPosition == null)
-            //         return null;
+                // Are we on an attribute?
+                XmlAttributeSyntax attributeAtPosition = xmlAtPosition.GetContainingAttribute();
+                if (attributeAtPosition == null)
+                    return null;
 
-            //     // Must be a PackageReference element.
-            //     if (!String.Equals(attributeAtPosition.Parent.Name.LocalName, "PackageReference", StringComparison.OrdinalIgnoreCase))
-            //         return null;
+                // Must be a PackageReference element.
+                if (!String.Equals(attributeAtPosition.ParentElement.Name, "PackageReference", StringComparison.OrdinalIgnoreCase))
+                    return null;
 
-            //     // Are we on the attribute's value?
-            //     AttributeLocation attributeLocation = attributeAtPosition.Annotation<AttributeLocation>();
-            //     if (!attributeLocation.ValueRange.Contains(position))
-            //         return null;
+                // Are we on the attribute's value?
+                Range attributeValueRange = attributeAtPosition.ValueNode.Span
+                    .ToNative(projectDocument.XmlPositions)
+                    .Transform( // Trim off leading and trailing quotes.
+                        moveStartColumns: 1,
+                        moveEndColumns: -1
+                    );
+                if (!attributeValueRange.Contains(position))
+                    return null;
 
-            //     try
-            //     {
-            //         if (attributeAtPosition.Name == "Include")
-            //         {
-            //             SortedSet<string> packageIds = await projectDocument.SuggestPackageIds(attributeAtPosition.Value, cancellationToken);
-            //             completionItems.AddRange(
-            //                 packageIds.Select(packageId => new CompletionItem
-            //                 {
-            //                     Label = packageId,
-            //                     Kind = CompletionItemKind.Module,
-            //                     TextEdit = new TextEdit
-            //                     {
-            //                         Range = attributeLocation.ValueRange.ToLsp(),
-            //                         NewText = packageId
-            //                     }
-            //                 })
-            //             );
-            //         }
-            //         else if (attributeAtPosition.Name == "Include")
-            //         {
-            //             SortedSet<NuGetVersion> packageIds = await projectDocument.SuggestPackageVersions(attributeAtPosition.Value, cancellationToken);
-            //             completionItems.AddRange(
-            //                 packageIds.Select(packageVersion => new CompletionItem
-            //                 {
-            //                     Label = packageVersion.ToNormalizedString(),
-            //                     Kind = CompletionItemKind.Field,
-            //                     TextEdit = new TextEdit
-            //                     {
-            //                         Range = attributeLocation.ValueRange.ToLsp(),
-            //                         NewText = packageVersion.ToNormalizedString()
-            //                     }
-            //                 })
-            //             );
-            //         }
-            //         else
-            //             return null; // No completions.
-            //     }
-            //     catch (AggregateException aggregateSuggestionError)
-            //     {
-            //         foreach (Exception suggestionError in aggregateSuggestionError.Flatten().InnerExceptions)
-            //         {
-            //             Log.Error(suggestionError, "Failed to provide completions.");    
-            //         }
-            //     }
-            //     catch (Exception suggestionError)
-            //     {
-            //         Log.Error(suggestionError, "Failed to provide completions.");
-            //     }
-            // }
+                try
+                {
+                    if (attributeAtPosition.Name == "Include")
+                    {
+                        string packageIdPrefix = attributeAtPosition.Value;
+                        SortedSet<string> packageIds = await projectDocument.SuggestPackageIds(packageIdPrefix, cancellationToken);
+                        
+                        completionItems.AddRange(
+                            packageIds.Select(packageId => new CompletionItem
+                            {
+                                Label = packageId,
+                                Kind = CompletionItemKind.Module,
+                                TextEdit = new TextEdit
+                                {
+                                    Range = attributeValueRange.ToLsp(),
+                                    NewText = packageId
+                                }
+                            })
+                        );
+                    }
+                    else if (attributeAtPosition.Name == "Version")
+                    {
+                        XmlAttributeSyntax includeAttribute = attributeAtPosition.ParentElement.AsSyntaxElement["Include"];
+                        if (includeAttribute == null)
+                            return null;
 
-            // return new CompletionList(completionItems,
-            //     isIncomplete: completionItems.Count >= 20 // Default page size.
-            // );
+                        string packageId = includeAttribute.Value;
+                        SortedSet<NuGetVersion> packageVersions = await projectDocument.SuggestPackageVersions(packageId, cancellationToken);
+                        
+                        completionItems.AddRange(
+                            packageVersions.Select(packageVersion => new CompletionItem
+                            {
+                                Label = packageVersion.ToNormalizedString(),
+                                Kind = CompletionItemKind.Field,
+                                TextEdit = new TextEdit
+                                {
+                                    Range = attributeValueRange.ToLsp(),
+                                    NewText = packageVersion.ToNormalizedString()
+                                }
+                            })
+                        );
+                    }
+                    else
+                        return null; // No completions.
+                }
+                catch (AggregateException aggregateSuggestionError)
+                {
+                    foreach (Exception suggestionError in aggregateSuggestionError.Flatten().InnerExceptions)
+                    {
+                        Log.Error(suggestionError, "Failed to provide completions.");
+                    }
+                }
+                catch (Exception suggestionError)
+                {
+                    Log.Error(suggestionError, "Failed to provide completions.");
+                }
+            }
+
+            CompletionList completionList = new CompletionList(completionItems,
+                isIncomplete: completionItems.Count >= 20 // Default page size.
+            );
+            Log.Information("Completion list: {@CompletionList}", completionList);
+
+            return completionList;
         }
 
         /// <summary>

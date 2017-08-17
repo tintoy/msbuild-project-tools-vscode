@@ -65,6 +65,32 @@ namespace MSBuildProjectTools.LanguageServer
         public Range WithEnd(Position end) => new Range(Start, end);
 
         /// <summary>
+        ///     Transform the range by moving the start and end positions.
+        /// </summary>
+        /// <param name="moveStartLines">
+        ///     The number of lines (if any) to move the start position.
+        /// </param>
+        /// <param name="moveStartColumns">
+        ///     The number of columns (if any) to move the start position.
+        /// </param>
+        /// <param name="moveEndLines">
+        ///     The number of lines (if any) to move the end position.
+        /// </param>
+        /// <param name="moveEndColumns">
+        ///     The number of columns (if any) to move the start position.
+        /// </param>
+        /// <returns>
+        ///     The number of columns (if any) to move the end position.
+        /// </returns>
+        public Range Transform(int moveStartLines = 0, int moveStartColumns = 0, int moveEndLines = 0, int moveEndColumns = 0)
+        {
+            return new Range(
+                Start.Move(moveStartLines, moveStartColumns),
+                End.Move(moveEndLines, moveEndColumns)
+            );
+        }
+
+        /// <summary>
         ///     Determine whether the range contains the specified position.
         /// </summary>
         /// <param name="position">

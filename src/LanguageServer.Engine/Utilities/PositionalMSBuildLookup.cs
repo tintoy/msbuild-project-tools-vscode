@@ -1,3 +1,4 @@
+using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
 using Microsoft.Language.Xml;
 using System;
@@ -55,6 +56,27 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
             _project = project;
 
             string projectFilePath = _project.FullPath ?? String.Empty;
+            foreach (ProjectTargetElement target in _project.Xml.Targets)
+            {
+                if (target.Location.File != projectFilePath)
+                    continue; // Not declared in main project file.
+
+                Position propertyStart = target.Location.ToNative();
+                
+                SyntaxNode xmlAtPosition = projectXml.FindNode(propertyStart, xmlPositions);
+                if (xmlAtPosition == null)
+                    continue;
+
+                XmlElementSyntaxBase targetElement = xmlAtPosition.GetContainingElement();
+                if (targetElement == null)
+                    continue;
+
+                Range targetRange = targetElement.Span.ToNative(xmlPositions);
+
+                _objectRanges.Add(targetRange);
+                _objectsByStartPosition.Add(targetRange.Start, target);
+            }
+
             foreach (ProjectProperty property in _project.Properties)
             {
                 if (property.Xml == null || property.Xml.Location.File != projectFilePath)

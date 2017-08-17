@@ -209,12 +209,8 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 // Match up the MSBuild item / property with its corresponding XML element / attribute.
                 object msbuildObjectAtPosition = projectDocument.HasMSBuildProject ? projectDocument.GetMSBuildObjectAtPosition(position) : null;
-                if (msbuildObjectAtPosition != null)
-                    Log.Information("Found MSBuild object at position {Position}.", position);
-                else
-                    Log.Information("Did not find MSBuild object at position {Position}.", position);
 
-                SyntaxNode elementOrAttribute = xmlAtPosition.GetContainingAttributeOrElement();
+                SyntaxNode elementOrAttribute = xmlAtPosition.GetContainingElementOrAttribute();
                 if (elementOrAttribute == null)
                     return null;
 

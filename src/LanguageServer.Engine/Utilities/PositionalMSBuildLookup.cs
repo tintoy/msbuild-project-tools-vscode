@@ -1,10 +1,11 @@
 using Microsoft.Build.Evaluation;
+using Microsoft.Language.Xml;
 using System;
 using System.Collections.Generic;
+using System.Xml.Linq;
 
 namespace MSBuildProjectTools.LanguageServer.Utilities
 {
-    using System.Xml.Linq;
     using XmlParser;
 
     public class PositionalMSBuildLookup
@@ -27,58 +28,62 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         /// </remarks>
         readonly SortedDictionary<Position, object> _objectsByStartPosition = new SortedDictionary<Position, object>();
 
-        public PositionalMSBuildLookup(Project project, PositionalXmlObjectLookup xmlObjectLookup)
+        public PositionalMSBuildLookup(Project project, XmlDocumentSyntax projectXml, TextPositions xmlPositions)
         {
             if (project == null)
                 throw new ArgumentNullException(nameof(project));
             
-            if (xmlObjectLookup == null)
-                throw new ArgumentNullException(nameof(xmlObjectLookup));
+            if (xmlPositions == null)
+                throw new ArgumentNullException(nameof(xmlPositions));
             
             _project = project;
 
-            string projectFilePath = _project.FullPath ?? String.Empty;
-            foreach (ProjectProperty property in _project.Properties)
-            {
-                if (property.Xml == null || property.Xml.Location.File != projectFilePath)
-                    continue; // Not declared in main project file.
+            // string projectFilePath = _project.FullPath ?? String.Empty;
+            // foreach (ProjectProperty property in _project.Properties)
+            // {
+            //     if (property.Xml == null || property.Xml.Location.File != projectFilePath)
+            //         continue; // Not declared in main project file.
 
-                Position propertyStart = new Position(
-                    property.Xml.Location.Line,
-                    property.Xml.Location.Column
-                );
+            //     Position propertyStart = new Position(
+            //         property.Xml.Location.Line,
+            //         property.Xml.Location.Column
+            //     );
                 
-                XElement propertyElement = xmlObjectLookup.Find(propertyStart) as XElement;
-                if (propertyElement == null)
-                    continue;
+            //     IXmlElementSyntax propertyElement = SyntaxLocator.FindNode(projectXml,
+            //         position: xmlPositions.GetAbsolutePosition(propertyStart)
+            //     ) as IXmlElementSyntax;
+            //     if (propertyElement == null)
+            //         continue;
 
-                Range propertyRange = propertyElement.Annotation<NodeLocation>().Range;
+            //     Range propertyRange = new Range(
+            //         start: new Position()
+            //     );
 
-                _objectRanges.Add(propertyRange);
-                _objectsByStartPosition.Add(propertyRange.Start, property);
-            }
+            //     _objectRanges.Add(propertyRange);
+            //     _objectsByStartPosition.Add(propertyRange.Start, property);
+            // }
 
-            foreach (ProjectItem item in _project.Items)
-            {
-                if (item.Xml == null || item.Xml.Location.File != projectFilePath)
-                    continue; // Not declared in main project file.
+            // foreach (ProjectItem item in _project.Items)
+            // {
+            //     if (item.Xml == null || item.Xml.Location.File != projectFilePath)
+            //         continue; // Not declared in main project file.
 
-                Position itemStart = new Position(
-                    item.Xml.Location.Line,
-                    item.Xml.Location.Column
-                );
+            //     Position itemStart = new Position(
+            //         item.Xml.Location.Line,
+            //         item.Xml.Location.Column
+            //     );
                 
-                XElement itemElement = xmlObjectLookup.Find(itemStart) as XElement;
-                if (itemElement == null)
-                    continue;
+            //     XElement itemElement = xmlPositions.Find(itemStart) as XElement;
+            //     if (itemElement == null)
+            //         continue;
 
-                Range itemRange = itemElement.Annotation<NodeLocation>().Range;
+            //     Range itemRange = itemElement.Annotation<NodeLocation>().Range;
 
-                _objectRanges.Add(itemRange);
-                _objectsByStartPosition.Add(itemRange.Start, item);
-            }
+            //     _objectRanges.Add(itemRange);
+            //     _objectsByStartPosition.Add(itemRange.Start, item);
+            // }
 
-            _objectRanges.Sort();
+            // _objectRanges.Sort();
         }
 
         /// <summary>

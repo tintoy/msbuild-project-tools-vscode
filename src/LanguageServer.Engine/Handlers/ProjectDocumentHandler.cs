@@ -1,3 +1,4 @@
+using Microsoft.Language.Xml;
 using Lsp;
 using Lsp.Capabilities.Server;
 using Lsp.Models;
@@ -7,6 +8,7 @@ using NuGet.Configuration;
 using NuGet.Versioning;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,7 +20,6 @@ using MSBuild = Microsoft.Build.Evaluation;
     
 namespace MSBuildProjectTools.LanguageServer.Handlers
 {
-    using System.Collections.Generic;
     using Documents;
     using Utilities;
     using XmlParser;
@@ -204,84 +205,117 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             {
                 // First, match up the MSBuild item / property with its corresponding XML element / attribute.
 
-                object msbuildObjectAtPosition = projectDocument.GetMSBuildObjectAtPosition(position);
-                if (msbuildObjectAtPosition == null)
-                    return null;
+                // object msbuildObjectAtPosition = projectDocument.GetMSBuildObjectAtPosition(position);
+                // if (msbuildObjectAtPosition == null)
+                //     return null;
 
-                XObject xmlAtPosition = projectDocument.GetXmlAtPosition(position);
+                SyntaxNode xmlAtPosition = projectDocument.GetXmlAtPosition(position);
                 if (xmlAtPosition == null)
                     return null;
 
-                Range xmlRange = xmlAtPosition.Annotation<NodeLocation>().Range;
-
-                MSBuild.ProjectProperty propertyAtPosition = msbuildObjectAtPosition as MSBuild.ProjectProperty;
-                if (propertyAtPosition != null)
+                SyntaxNode elementOrAttribute = xmlAtPosition.GetContainingAttributeOrElement();
+                if (elementOrAttribute is IXmlElementSyntax element)
                 {
+                    Position startPosition = projectDocument.XmlPositions.GetPosition(elementOrAttribute.Span.Start);
+                    Position endPosition = projectDocument.XmlPositions.GetPosition(elementOrAttribute.Span.End);
+
                     return new Hover
                     {
-                        Range = xmlRange.ToLsp(),
-                        Contents = $"Property '{propertyAtPosition.Name}' (='{propertyAtPosition.EvaluatedValue}')"
+                        Contents = $"Element '{element.Name.Name}'",
+                        Range = new Lsp.Models.Range
+                        {                            
+                            Start = startPosition.ToLsp(),
+                            End = endPosition.ToLsp()
+                        }
                     };
                 }
 
-                MSBuild.ProjectItem itemAtPosition = msbuildObjectAtPosition as MSBuild.ProjectItem;
-                if (itemAtPosition != null)
+                if (elementOrAttribute is XmlAttributeSyntax attribute)
                 {
-                    // Are we on a metadata attribute?
-                    if (xmlAtPosition is XAttribute attribute)
-                    {
-                        string metadataName = attribute.Name.LocalName;
-                        if (String.Equals(metadataName, "Include"))
-                            metadataName = "Identity";
+                    Position startPosition = projectDocument.XmlPositions.GetPosition(elementOrAttribute.Span.Start);
+                    Position endPosition = projectDocument.XmlPositions.GetPosition(elementOrAttribute.Span.End);
 
-                        string metadataValue = itemAtPosition.GetMetadataValue(metadataName);
-                        
-                        return new Hover
-                        {
-                            Range = xmlRange.ToLsp(),
-                            Contents = $"Metadata '{metadataName}' of {attribute.Parent.Name} item '{itemAtPosition.EvaluatedInclude}' (='{metadataValue}')"
-                        };
-                    }
-                    else if (xmlAtPosition is XElement element)
+                    return new Hover
                     {
-                        return new Hover
-                        {
-                            Range = xmlRange.ToLsp(),
-                            Contents = $"{element.Name} item '{itemAtPosition.EvaluatedInclude}'"
-                        };
-                    }
+                        Contents = $"Attribute '{attribute.Name}' (='{attribute.Value}')",
+                        Range = new Lsp.Models.Range
+                        {                            
+                            Start = startPosition.ToLsp(),
+                            End = endPosition.ToLsp()
+                        }
+                    };
+                }
+
+                // Range xmlRange = xmlAtPosition.Annotation<NodeLocation>().Range;
+
+                // MSBuild.ProjectProperty propertyAtPosition = msbuildObjectAtPosition as MSBuild.ProjectProperty;
+                // if (propertyAtPosition != null)
+                // {
+                //     return new Hover
+                //     {
+                //         Range = xmlRange.ToLsp(),
+                //         Contents = $"Property '{propertyAtPosition.Name}' (='{propertyAtPosition.EvaluatedValue}')"
+                //     };
+                // }
+
+                // MSBuild.ProjectItem itemAtPosition = msbuildObjectAtPosition as MSBuild.ProjectItem;
+                // if (itemAtPosition != null)
+                // {
+                //     // Are we on a metadata attribute?
+                //     if (xmlAtPosition is XAttribute attribute)
+                //     {
+                //         string metadataName = attribute.Name.LocalName;
+                //         if (String.Equals(metadataName, "Include"))
+                //             metadataName = "Identity";
+
+                //         string metadataValue = itemAtPosition.GetMetadataValue(metadataName);
+                        
+                //         return new Hover
+                //         {
+                //             Range = xmlRange.ToLsp(),
+                //             Contents = $"Metadata '{metadataName}' of {attribute.Parent.Name} item '{itemAtPosition.EvaluatedInclude}' (='{metadataValue}')"
+                //         };
+                //     }
+                //     else if (xmlAtPosition is XElement element)
+                //     {
+                //         return new Hover
+                //         {
+                //             Range = xmlRange.ToLsp(),
+                //             Contents = $"{element.Name} item '{itemAtPosition.EvaluatedInclude}'"
+                //         };
+                //     }
 
                     return null;
                 }
 
                 // No idea what (if any) part of the project this is, so just display a not-so-informative tooltip.
-                XmlNodeType objectType = xmlAtPosition.NodeType;
-                string objectNameLabel = "Unknown";
-                string objectValueLabel = "";
-                objectType = xmlAtPosition.NodeType;
-                switch (xmlAtPosition)
-                {
-                    case XElement element:
-                    {
-                        objectNameLabel = element.Name.LocalName;
+                // XmlNodeType objectType = xmlAtPosition.NodeType;
+                // string objectNameLabel = "Unknown";
+                // string objectValueLabel = "";
+                // objectType = xmlAtPosition.NodeType;
+                // switch (xmlAtPosition)
+                // {
+                //     case XElement element:
+                //     {
+                //         objectNameLabel = element.Name.LocalName;
 
-                        break;
-                    }
-                    case XAttribute attribute:
-                    {
-                        objectNameLabel = attribute.Name.LocalName;
-                        objectValueLabel = $" (='{attribute.Value}')";
+                //         break;
+                //     }
+                //     case XAttribute attribute:
+                //     {
+                //         objectNameLabel = attribute.Name.LocalName;
+                //         objectValueLabel = $" (='{attribute.Value}')";
 
-                        break;
-                    }
-                }
+                //         break;
+                //     }
+                // }
 
-                return new Hover
-                {
-                    Range = xmlRange.ToLsp(),
-                    Contents = $"{objectType} '{objectNameLabel}'{objectValueLabel}"
-                };
-            }
+                // return new Hover
+                // {
+                //     Range = xmlRange.ToLsp(),
+                //     Contents = $"{objectType} '{objectNameLabel}'{objectValueLabel}"
+                // };
+            // }
         }
 
         /// <summary>
@@ -305,76 +339,78 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
             Position position = parameters.Position.ToNative();
 
-            List<CompletionItem> completionItems = new List<CompletionItem>();
-            using (await projectDocument.Lock.ReaderLockAsync(cancellationToken))
-            {
-                // Are we on an attribute?
-                XAttribute attributeAtPosition = projectDocument.GetXmlAtPosition<XAttribute>(position);
-                if (attributeAtPosition == null)
-                    return null;
+            return null;
 
-                // Must be a PackageReference element.
-                if (!String.Equals(attributeAtPosition.Parent.Name.LocalName, "PackageReference", StringComparison.OrdinalIgnoreCase))
-                    return null;
+            // List<CompletionItem> completionItems = new List<CompletionItem>();
+            // using (await projectDocument.Lock.ReaderLockAsync(cancellationToken))
+            // {
+            //     // Are we on an attribute?
+            //     XAttribute attributeAtPosition = projectDocument.GetXmlAtPosition<XAttribute>(position);
+            //     if (attributeAtPosition == null)
+            //         return null;
 
-                // Are we on the attribute's value?
-                AttributeLocation attributeLocation = attributeAtPosition.Annotation<AttributeLocation>();
-                if (!attributeLocation.ValueRange.Contains(position))
-                    return null;
+            //     // Must be a PackageReference element.
+            //     if (!String.Equals(attributeAtPosition.Parent.Name.LocalName, "PackageReference", StringComparison.OrdinalIgnoreCase))
+            //         return null;
 
-                try
-                {
-                    if (attributeAtPosition.Name == "Include")
-                    {
-                        SortedSet<string> packageIds = await projectDocument.SuggestPackageIds(attributeAtPosition.Value, cancellationToken);
-                        completionItems.AddRange(
-                            packageIds.Select(packageId => new CompletionItem
-                            {
-                                Label = packageId,
-                                Kind = CompletionItemKind.Module,
-                                TextEdit = new TextEdit
-                                {
-                                    Range = attributeLocation.ValueRange.ToLsp(),
-                                    NewText = packageId
-                                }
-                            })
-                        );
-                    }
-                    else if (attributeAtPosition.Name == "Include")
-                    {
-                        SortedSet<NuGetVersion> packageIds = await projectDocument.SuggestPackageVersions(attributeAtPosition.Value, cancellationToken);
-                        completionItems.AddRange(
-                            packageIds.Select(packageVersion => new CompletionItem
-                            {
-                                Label = packageVersion.ToNormalizedString(),
-                                Kind = CompletionItemKind.Field,
-                                TextEdit = new TextEdit
-                                {
-                                    Range = attributeLocation.ValueRange.ToLsp(),
-                                    NewText = packageVersion.ToNormalizedString()
-                                }
-                            })
-                        );
-                    }
-                    else
-                        return null; // No completions.
-                }
-                catch (AggregateException aggregateSuggestionError)
-                {
-                    foreach (Exception suggestionError in aggregateSuggestionError.Flatten().InnerExceptions)
-                    {
-                        Log.Error(suggestionError, "Failed to provide completions.");    
-                    }
-                }
-                catch (Exception suggestionError)
-                {
-                    Log.Error(suggestionError, "Failed to provide completions.");
-                }
-            }
+            //     // Are we on the attribute's value?
+            //     AttributeLocation attributeLocation = attributeAtPosition.Annotation<AttributeLocation>();
+            //     if (!attributeLocation.ValueRange.Contains(position))
+            //         return null;
 
-            return new CompletionList(completionItems,
-                isIncomplete: completionItems.Count >= 20 // Default page size.
-            );
+            //     try
+            //     {
+            //         if (attributeAtPosition.Name == "Include")
+            //         {
+            //             SortedSet<string> packageIds = await projectDocument.SuggestPackageIds(attributeAtPosition.Value, cancellationToken);
+            //             completionItems.AddRange(
+            //                 packageIds.Select(packageId => new CompletionItem
+            //                 {
+            //                     Label = packageId,
+            //                     Kind = CompletionItemKind.Module,
+            //                     TextEdit = new TextEdit
+            //                     {
+            //                         Range = attributeLocation.ValueRange.ToLsp(),
+            //                         NewText = packageId
+            //                     }
+            //                 })
+            //             );
+            //         }
+            //         else if (attributeAtPosition.Name == "Include")
+            //         {
+            //             SortedSet<NuGetVersion> packageIds = await projectDocument.SuggestPackageVersions(attributeAtPosition.Value, cancellationToken);
+            //             completionItems.AddRange(
+            //                 packageIds.Select(packageVersion => new CompletionItem
+            //                 {
+            //                     Label = packageVersion.ToNormalizedString(),
+            //                     Kind = CompletionItemKind.Field,
+            //                     TextEdit = new TextEdit
+            //                     {
+            //                         Range = attributeLocation.ValueRange.ToLsp(),
+            //                         NewText = packageVersion.ToNormalizedString()
+            //                     }
+            //                 })
+            //             );
+            //         }
+            //         else
+            //             return null; // No completions.
+            //     }
+            //     catch (AggregateException aggregateSuggestionError)
+            //     {
+            //         foreach (Exception suggestionError in aggregateSuggestionError.Flatten().InnerExceptions)
+            //         {
+            //             Log.Error(suggestionError, "Failed to provide completions.");    
+            //         }
+            //     }
+            //     catch (Exception suggestionError)
+            //     {
+            //         Log.Error(suggestionError, "Failed to provide completions.");
+            //     }
+            // }
+
+            // return new CompletionList(completionItems,
+            //     isIncomplete: completionItems.Count >= 20 // Default page size.
+            // );
         }
 
         /// <summary>

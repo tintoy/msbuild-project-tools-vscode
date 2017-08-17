@@ -8,6 +8,7 @@
         <PackageReference Include="JsonRpc" Version="1.0.0" />
         <PackageReference Include="LSP" Version="1.0.0" />
         <PackageReference Include="Microsoft.Build" Version="15.3.409" />
+        <PackageReference Include="Microsoft.Language.Xml" Version="1.1.11" />
         <PackageReference Include="Microsoft.Build.Runtime" Version="15.3.409" />
         <PackageReference Include="Nito.AsyncEx.Tasks" Version="1.0.1" />
         <PackageReference Include="Nito.AsyncEx.Coordination" Version="1.0.1" />

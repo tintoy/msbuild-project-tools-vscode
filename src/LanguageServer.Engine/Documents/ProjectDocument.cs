@@ -1,3 +1,4 @@
+using Microsoft.Language.Xml;
 using Nito.AsyncEx;
 using NuGet.Configuration;
 using NuGet.Protocol.Core.Types;
@@ -9,14 +10,13 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Linq;
+using System.Xml;
 
 using MSBuild = Microsoft.Build.Evaluation;
 using MSBuildExceptions = Microsoft.Build.Exceptions;
 
 namespace MSBuildProjectTools.LanguageServer.Documents
 {
-    using System.Xml;
     using Utilities;
     using XmlParser;
 
@@ -53,12 +53,12 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <summary>
         ///     The parsed project XML.
         /// </summary>
-        XDocument _xml;
+        XmlDocumentSyntax _xml;
 
         /// <summary>
-        ///     The lookup for XML objects by position.
+        ///     Positional calculator for the project XML.
         /// </summary>
-        PositionalXmlObjectLookup _xmlLookup;
+        TextPositions _xmlPositions;
 
         /// <summary>
         ///     The underlying MSBuild project collection.
@@ -98,7 +98,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <summary>
         ///     Is the project XML currently loaded?
         /// </summary>
-        public bool HasXml => _xml != null && _xmlLookup != null;
+        public bool HasXml => _xml != null && _xmlPositions != null;
 
         /// <summary>
         ///     Is the underlying MSBuild project currently loaded?
@@ -119,7 +119,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <remarks>
         ///     Do not modify this <see cref="XDocument"/>.
         /// </remarks>
-        public XDocument Xml => _xml ?? throw new InvalidOperationException("Project is not loaded.");
+        public XmlDocumentSyntax Xml => _xml ?? throw new InvalidOperationException("Project is not loaded.");
 
         /// <summary>
         ///     The project XML object lookup facility.
@@ -127,7 +127,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <exception cref="InvalidOperationException">
         ///     The project is not loaded.
         /// </exception>
-        public PositionalXmlObjectLookup XmlLookup => _xmlLookup ?? throw new InvalidOperationException("Project is not loaded.");
+        public TextPositions XmlPositions => _xmlPositions ?? throw new InvalidOperationException("Project is not loaded.");
 
         /// <summary>
         ///     The project MSBuild object-lookup facility.
@@ -163,23 +163,13 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// </returns>
         public async Task Load(CancellationToken cancellationToken = default(CancellationToken))
         {
-            try
+            string xml;
+            using (StreamReader reader = _projectFile.OpenText())
             {
-                _xml = Parser.Load(_projectFile.FullName);
-                _xmlLookup = new PositionalXmlObjectLookup(_xml);
+                xml = await reader.ReadToEndAsync();
             }
-            catch (XmlException invalidXml)
-            {
-                Log.Error(invalidXml, "Failed to update project {ProjectFile}.", _projectFile.FullName);
-
-                _xml = null;
-                _xmlLookup = null;
-                IsDirty = false;
-
-                TryUnloadMSBuildProject();
-
-                return;
-            }
+            _xml = Microsoft.Language.Xml.Parser.ParseText(xml);
+            _xmlPositions = new TextPositions(xml);
             
             IsDirty = false;
 
@@ -198,32 +188,9 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             if (xml == null)
                 throw new ArgumentNullException(nameof(xml));
 
-            try
-            {
-                _xml = Parser.Parse(xml);
-                _xmlLookup = new PositionalXmlObjectLookup(_xml);
-                IsDirty = true;
-            }
-            catch (XmlException invalidXml)
-            {
-                Log.Warning("XML is invalid for project {ProjectFile} (line {LineNumber}, column {ColumnNumber}): {ErrorMessage:l}",
-                    _projectFile.FullName,
-                    invalidXml.LineNumber,
-                    invalidXml.LinePosition,
-                    invalidXml.Message.Replace(
-                        $" Line {invalidXml.LineNumber}, position {invalidXml.LinePosition}.",
-                        String.Empty
-                    )
-                );
-
-                _xml = null;
-                _xmlLookup = null;
-                IsDirty = true;
-
-                TryUnloadMSBuildProject();
-
-                return;
-            }
+            _xml = Microsoft.Language.Xml.Parser.ParseText(xml);
+            _xmlPositions = new TextPositions(xml);
+            IsDirty = true;
             
             TryLoadMSBuildProject();
         }
@@ -326,7 +293,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             TryUnloadMSBuildProject();
 
             _xml = null;
-            _xmlLookup = null;
+            _xmlPositions = null;
             IsDirty = false;
         }
 
@@ -339,7 +306,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <returns>
         ///     The object, or <c>null</c> no object was found at the specified position.
         /// </returns>
-        public XObject GetXmlAtPosition(Position position)
+        public SyntaxNode GetXmlAtPosition(Position position)
         {
             if (position == null)
                 throw new ArgumentNullException(nameof(position));
@@ -347,9 +314,9 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             if (!HasXml)
                 throw new InvalidOperationException($"XML for project '{_projectFile.FullName}' is not loaded.");
 
-            return _xmlLookup.Find(
-                position.ToOneBased()
-            );
+            int absolutePosition = _xmlPositions.GetAbsolutePosition(position);
+
+            return SyntaxLocator.FindNode(_xml, absolutePosition);
         }
 
         /// <summary>
@@ -365,7 +332,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         ///     The object, or <c>null</c> no object of the specified type was found at the specified position.
         /// </returns>
         public TXml GetXmlAtPosition<TXml>(Position position)
-            where TXml : XObject
+            where TXml : SyntaxNode
         {
             return GetXmlAtPosition(position) as TXml;
         }
@@ -405,18 +372,21 @@ namespace MSBuildProjectTools.LanguageServer.Documents
 
                 if (HasMSBuildProject && IsDirty)
                 {
-                    _msbuildProject.Xml.ReloadFrom(
-                        reader: _xml.CreateReader(),
-                        throwIfUnsavedChanges: false,
-                        preserveFormatting: true
-                    );
+                    using (StringReader reader = new StringReader(_xml.ToFullString()))
+                    using (XmlTextReader xmlReader = new XmlTextReader(reader))
+                    {
+                        _msbuildProject.Xml.ReloadFrom(xmlReader,
+                            throwIfUnsavedChanges: false,
+                            preserveFormatting: true
+                        );
+                    }
 
                     Log.Verbose("Successfully updated MSBuild project '{ProjectFileName}' from in-memory changes.");
                 }
                 else
                     _msbuildProject = _msbuildProjectCollection.LoadProject(_projectFile.FullName);
 
-                _msbuildLookup = new PositionalMSBuildLookup(_msbuildProject, _xmlLookup);
+                _msbuildLookup = new PositionalMSBuildLookup(_msbuildProject, _xml, _xmlPositions);
 
                 return true;
             }

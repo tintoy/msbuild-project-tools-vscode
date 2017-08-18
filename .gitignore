@@ -309,5 +309,8 @@ __pycache__/
 !.vscode/launch.json
 !.vscode/extensions.json
 
+# Published extension packages
+*.vsix
+
 # Don't ignore library packages
 !lib/packages/

@@ -11,22 +11,46 @@ import { Trace } from 'vscode-jsonrpc/lib/main';
 import { Message } from 'vscode-jsonrpc/lib/messages';
 
 /**
+ * Enable the MSBuild language service?
+ */
+let enableLanguageService = false;
+
+let outputChannel: vscode.OutputChannel;
+
+/**
  * Called when the extension is activated.
  * 
  * @param context The extension context.
  */
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
-    // TODO: Define configuration option to switch beetween simple completion provider and full language service.
+    loadConfiguration();
 
-    const languageClient = await createLanguageClient(context);
-    
-    const outputChannel = languageClient.outputChannel;
-    outputChannel.appendLine('Starting MSBuild language service...');
-    context.subscriptions.push(
-        languageClient.start()
-    );
-    await languageClient.onReady();
-    outputChannel.appendLine('MSBuild language service is running.');
+    if (enableLanguageService) {
+        const languageClient = await createLanguageClient(context);
+        
+        outputChannel = languageClient.outputChannel;
+        outputChannel.appendLine('Starting MSBuild language service...');
+        context.subscriptions.push(
+            languageClient.start()
+        );
+        await languageClient.onReady();
+        outputChannel.appendLine('MSBuild language service is running.');
+    } else {
+        outputChannel = vscode.window.createOutputChannel('MSBuild Project File Tools');
+        outputChannel.appendLine('MSBuild language service disabled; using the classic completion provider.');
+        
+        const nugetEndPointURLs = await getNuGetV3AutoCompleteEndPoints();
+        context.subscriptions.push(
+            vscode.languages.registerCompletionItemProvider(
+                { language: 'xml', pattern: '**/*.*proj' }, 
+                new PackageReferenceCompletionProvider(
+                    nugetEndPointURLs[0] // For now, just default to using the primary.
+                )
+            )
+        );
+
+        outputChannel.appendLine('Classic completion provider is now enabled.');
+    }
 }
 
 /**
@@ -34,6 +58,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
  */
 export function deactivate(): void {
     // Nothing to clean up.
+}
+
+/**
+ * Load extension configuration from the workspace.
+ */
+function loadConfiguration(): void {
+    const configuration = vscode.workspace.getConfiguration();
+
+    enableLanguageService = configuration.get<boolean>('msbuildProjectFileTools.languageService.enable');
 }
 
 /**
@@ -64,4 +97,52 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<L
     };
 
     return new LanguageClient('MSBuild Project File Tools', serverOptions, clientOptions);
+}
+
+/**
+ * Get the current end-points URLs for the NuGet v3 AutoComplete API.
+ */
+async function getNuGetV3AutoCompleteEndPoints(): Promise<string[]> {
+    const nugetIndexResponse = await axios.get('https://api.nuget.org/v3/index.json');
+    
+    const index: NuGetIndex = nugetIndexResponse.data;
+    const autoCompleteEndPoints = index.resources
+        .filter(
+            resource => resource['@type'] === 'SearchAutocompleteService'
+        )
+        .map(
+            resource => resource['@id']
+        );
+
+    return autoCompleteEndPoints;
+}
+
+/**
+ * Represents the index response from the NuGet v3 API.
+ */
+export interface NuGetIndex {
+    /**
+     * Available API resources.
+     */
+    resources: NuGetApiResource[];
+}
+
+/**
+ * Represents a NuGet API resource.
+ */
+export interface NuGetApiResource {
+    /**
+     * The resource Id (end-point URL).
+     */
+    '@id': string;
+
+    /**
+     * The resource type.
+     */
+    '@type': string;
+
+    /**
+     * An optional comment describing the resource.
+     */
+    comment?: string;
 }

@@ -16,6 +16,8 @@ import { Message } from 'vscode-jsonrpc/lib/messages';
  * @param context The extension context.
  */
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
+    // TODO: Define configuration option to switch beetween simple completion provider and full language service.
+
     const languageClient = await createLanguageClient(context);
     
     const outputChannel = languageClient.outputChannel;
@@ -55,7 +57,7 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<L
     };
 
     const dotNetExecutable = await executables.find('dotnet');
-    const serverAssembly = context.asAbsolutePath('src/LanguageServer/bin/Debug/netcoreapp2.0/publish/LanguageServer.dll');
+    const serverAssembly = context.asAbsolutePath('out/language-server/LanguageServer.dll');
     const serverOptions: ServerOptions = {
         command: dotNetExecutable,
         args: [ serverAssembly ],

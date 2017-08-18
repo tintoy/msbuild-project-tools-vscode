@@ -213,11 +213,13 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 if (elementOrAttribute is IXmlElementSyntax element)
                 {
                     if (msbuildObjectAtPosition is MSBuildProperty propertyFromElementAtPosition)
-                        result.Contents = $"Property '{propertyFromElementAtPosition.Name}' (='{propertyFromElementAtPosition.Value}')";
+                        result.Contents = $"**Property**: {propertyFromElementAtPosition.Name} = '{propertyFromElementAtPosition.Value}'";
                     else if (msbuildObjectAtPosition is MSBuildItem itemFromElementAtPosition)
-                        result.Contents = $"{element.Name.Name} item '{itemFromElementAtPosition.Include}'";
+                        result.Contents = $"**Item**: {element.Name.Name}({itemFromElementAtPosition.Include})";
+                    else if (msbuildObjectAtPosition is MSBuildTarget targetFromElementAtPosition)
+                        result.Contents = $"**Target**: {targetFromElementAtPosition.Name}";
                     else
-                        result.Contents = $"Element '{element.Name.Name}'";
+                        result.Contents = $"**Element**: {element.Name.Name}";
                 }
                 else if (elementOrAttribute is XmlAttributeSyntax attribute)
                 {
@@ -228,10 +230,10 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                             metadataName = "Identity";
 
                         string metadataValue = itemFromAttributeAtPosition.GetMetadataValue(metadataName);
-                        result.Contents = $"Metadata '{metadataName}' of {itemFromAttributeAtPosition.Name} item '{itemFromAttributeAtPosition.Include}' (='{metadataValue}')";
+                        result.Contents = $"**Metadata**: {itemFromAttributeAtPosition.Name}({itemFromAttributeAtPosition.Include}).{metadataName} = '{metadataValue}'";
                     }
                     else
-                        result.Contents = $"Attribute '{attribute.Name}' (='{attribute.Value}')";
+                        result.Contents = $"**Attribute**: {attribute.Name} (='{attribute.Value}')";
                 }
                 else
                     return null;

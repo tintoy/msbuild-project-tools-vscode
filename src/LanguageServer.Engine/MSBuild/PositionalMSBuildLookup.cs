@@ -5,8 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
-namespace MSBuildProjectTools.LanguageServer.Utilities
+namespace MSBuildProjectTools.LanguageServer.MSBuild
 {
+    using Utilities;
+
     /// <summary>
     ///     A facility for looking up MSBuild project members by textual location.
     /// </summary>
@@ -26,7 +28,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         /// <remarks>
         ///     Sorted by range comparison.
         /// </remarks>
-        readonly SortedDictionary<Position, object> _objectsByStartPosition = new SortedDictionary<Position, object>();
+        readonly SortedDictionary<Position, MSBuildObject> _objectsByStartPosition = new SortedDictionary<Position, MSBuildObject>();
 
         /// <summary>
         ///     The MSBuild project.
@@ -74,7 +76,9 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
                 Range targetRange = targetElement.Span.ToNative(xmlPositions);
 
                 _objectRanges.Add(targetRange);
-                _objectsByStartPosition.Add(targetRange.Start, target);
+                _objectsByStartPosition.Add(targetRange.Start,
+                    new MSBuildTarget(target, targetElement, targetRange)
+                );
             }
 
             foreach (ProjectProperty property in _project.Properties)
@@ -95,7 +99,9 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
                 Range propertyRange = propertyElement.Span.ToNative(xmlPositions);
 
                 _objectRanges.Add(propertyRange);
-                _objectsByStartPosition.Add(propertyRange.Start, property);
+                _objectsByStartPosition.Add(propertyRange.Start,
+                    new MSBuildProperty(property, propertyElement, propertyRange)
+                );
             }
 
             foreach (ProjectItem item in _project.Items)
@@ -116,7 +122,9 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
                 Range itemRange = itemElement.Span.ToNative(xmlPositions);
 
                 _objectRanges.Add(itemRange);
-                _objectsByStartPosition.Add(itemRange.Start, item);
+                _objectsByStartPosition.Add(itemRange.Start,
+                    new MSBuildItem(item, itemElement, itemRange)
+                );
             }
 
             _objectRanges.Sort();
@@ -131,7 +139,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         /// <returns>
         ///     The project object, or <c>null</c> if no object was found at the specified position.
         /// </returns>
-        public object Find(Position position)
+        public MSBuildObject Find(Position position)
         {
             if (position == null)
                 throw new ArgumentNullException(nameof(position));

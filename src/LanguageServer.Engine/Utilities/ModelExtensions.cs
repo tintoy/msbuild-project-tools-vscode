@@ -1,6 +1,7 @@
-using MLXML = Microsoft.Language.Xml;
-using MSBuild = Microsoft.Build.Construction;
 using System;
+using Microsoft.Build.Construction;
+
+using MLXML = Microsoft.Language.Xml;
 
 namespace MSBuildProjectTools.LanguageServer.Utilities
 {
@@ -61,7 +62,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         /// <returns>
         ///     The equivalent <see cref="Position"/>.
         /// </returns>
-        public static Position ToNative(this MSBuild.ElementLocation location)
+        public static Position ToNative(this ElementLocation location)
         {
             if (location == null)
                 return null;

@@ -1,9 +1,11 @@
-using Microsoft.Language.Xml;
 using Lsp;
 using Lsp.Capabilities.Server;
 using Lsp.Models;
 using Lsp.Protocol;
+using Microsoft.Build.Evaluation;
+using Microsoft.Language.Xml;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using NuGet.Configuration;
 using NuGet.Versioning;
 using Serilog;
@@ -16,14 +18,11 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 
-using MSBuild = Microsoft.Build.Evaluation;
-
 namespace MSBuildProjectTools.LanguageServer.Handlers
 {
     using Documents;
+    using MSBuild;
     using Utilities;
-
-    // Note - you can get the workspace root path from Server.Client.RootPath
 
     /// <summary>
     ///     Handler for project file document events.
@@ -210,7 +209,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                     return null;
 
                 // Match up the MSBuild item / property with its corresponding XML element / attribute.
-                object msbuildObjectAtPosition = projectDocument.HasMSBuildProject ? projectDocument.GetMSBuildObjectAtPosition(position) : null;
+                MSBuildObject msbuildObjectAtPosition = projectDocument.HasMSBuildProject ? projectDocument.GetMSBuildObjectAtPosition(position) : null;
 
                 SyntaxNode elementOrAttribute = xmlAtPosition.GetContainingElementOrAttribute();
                 if (elementOrAttribute == null)
@@ -224,23 +223,23 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 if (elementOrAttribute is IXmlElementSyntax element)
                 {
-                    if (msbuildObjectAtPosition is MSBuild.ProjectProperty propertyFromElementAtPosition)
-                        result.Contents = $"Property '{propertyFromElementAtPosition.Name}' (='{propertyFromElementAtPosition.EvaluatedValue}')";
-                    else if (msbuildObjectAtPosition is MSBuild.ProjectItem itemFromElementAtPosition)
-                        result.Contents = $"{element.Name.Name} item '{itemFromElementAtPosition.EvaluatedInclude}'";
+                    if (msbuildObjectAtPosition is MSBuildProperty propertyFromElementAtPosition)
+                        result.Contents = $"Property '{propertyFromElementAtPosition.Name}' (='{propertyFromElementAtPosition.Value}')";
+                    else if (msbuildObjectAtPosition is MSBuildItem itemFromElementAtPosition)
+                        result.Contents = $"{element.Name.Name} item '{itemFromElementAtPosition.Include}'";
                     else
                         result.Contents = $"Element '{element.Name.Name}'";
                 }
                 else if (elementOrAttribute is XmlAttributeSyntax attribute)
                 {
-                    if (msbuildObjectAtPosition is MSBuild.ProjectItem itemFromAttributeAtPosition)
+                    if (msbuildObjectAtPosition is MSBuildItem itemFromAttributeAtPosition)
                     {
                         string metadataName = attribute.Name;
                         if (String.Equals(metadataName, "Include"))
                             metadataName = "Identity";
 
                         string metadataValue = itemFromAttributeAtPosition.GetMetadataValue(metadataName);
-                        result.Contents = $"Metadata '{metadataName}' of {attribute.ParentElement.Name} item '{itemFromAttributeAtPosition.EvaluatedInclude}' (='{metadataValue}')";
+                        result.Contents = $"Metadata '{metadataName}' of {itemFromAttributeAtPosition.Name} item '{itemFromAttributeAtPosition.Include}' (='{metadataValue}')";
                     }
                     else
                         result.Contents = $"Attribute '{attribute.Name}' (='{attribute.Value}')";
@@ -361,7 +360,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             CompletionList completionList = new CompletionList(completionItems,
                 isIncomplete: completionItems.Count >= 20 // Default page size.
             );
-            Log.Information("Completion list: {@CompletionList}", completionList);
 
             return completionList;
         }

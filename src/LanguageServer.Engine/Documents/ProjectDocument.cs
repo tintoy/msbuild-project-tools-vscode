@@ -1,3 +1,5 @@
+using Microsoft.Build.Evaluation;
+using Microsoft.Build.Exceptions;
 using Microsoft.Language.Xml;
 using Nito.AsyncEx;
 using NuGet.Configuration;
@@ -12,11 +14,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 
-using MSBuild = Microsoft.Build.Evaluation;
-using MSBuildExceptions = Microsoft.Build.Exceptions;
-
 namespace MSBuildProjectTools.LanguageServer.Documents
 {
+    using MSBuild;
     using Utilities;
 
     /// <summary>
@@ -62,12 +62,12 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <summary>
         ///     The underlying MSBuild project collection.
         /// </summary>
-        MSBuild.ProjectCollection _msbuildProjectCollection;
+        ProjectCollection _msbuildProjectCollection;
 
         /// <summary>
         ///     The underlying MSBuild project.
         /// </summary>
-        MSBuild.Project _msbuildProject;
+        Project _msbuildProject;
 
         /// <summary>
         ///     The lookup for MSBuild objects by position.
@@ -139,7 +139,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <summary>
         ///     The underlying MSBuild project (if any).
         /// </summary>
-        public MSBuild.Project MSBuildProject => _msbuildProject;
+        public Project MSBuildProject => _msbuildProject;
 
         /// <summary>
         ///     NuGet package sources configured for the current project.
@@ -345,7 +345,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <returns>
         ///     The MSBuild object, or <c>null</c> no object was found at the specified position.
         /// </returns>
-        public object GetMSBuildObjectAtPosition(Position position)
+        public MSBuildObject GetMSBuildObjectAtPosition(Position position)
         {
             if (!HasMSBuildProject)
                 throw new InvalidOperationException($"MSBuild project '{_projectFile.FullName}' is not loaded.");
@@ -389,7 +389,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
 
                 return true;
             }
-            catch (MSBuildExceptions.InvalidProjectFileException invalidProjectFile)
+            catch (InvalidProjectFileException invalidProjectFile)
             {
                 // TODO: Only warn once.
 

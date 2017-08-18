@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.Build.Evaluation;
 
-namespace MSBuildProjectTools.LanguageServer.Utilities
+namespace MSBuildProjectTools.LanguageServer.MSBuild
 {
+    using Utilities;
+
     /// <summary>
     ///     Helper methods for working with MSBuild projects.
     /// </summary>
@@ -45,7 +47,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
 
             if (runtimeInfo == null)
                 throw new ArgumentNullException(nameof(runtimeInfo));
-            
+
             if (String.IsNullOrWhiteSpace(runtimeInfo.BaseDirectory))
                 throw new InvalidOperationException("Cannot determine base directory for .NET Core.");
 
@@ -66,7 +68,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
 
             return projectCollection;
         }
-        
+
         /// <summary>
         ///     Create global properties for MSBuild.
         /// </summary>
@@ -86,19 +88,19 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
 
             if (String.IsNullOrWhiteSpace(solutionDirectory))
                 throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'solutionDirectory'.", nameof(solutionDirectory));
-            
+
             if (solutionDirectory.Length > 0 && solutionDirectory[solutionDirectory.Length - 1] != Path.DirectorySeparatorChar)
                 solutionDirectory += Path.DirectorySeparatorChar;
-            
+
             return new Dictionary<string, string>
             {
-                [WellKnownProperties.DesignTimeBuild] = "true",
-                [WellKnownProperties.BuildProjectReferences] = "false",
-                [WellKnownProperties.ResolveReferenceDependencies] = "true",
-                [WellKnownProperties.SolutionDir] = solutionDirectory,
-                [WellKnownProperties.MSBuildExtensionsPath] = runtimeInfo.BaseDirectory,
-                [WellKnownProperties.MSBuildSDKsPath] = Path.Combine(runtimeInfo.BaseDirectory, "Sdks"),
-                [WellKnownProperties.RoslynTargetsPath] = Path.Combine(runtimeInfo.BaseDirectory, "Roslyn")
+                [MSBuildProperties.DesignTimeBuild] = "true",
+                [MSBuildProperties.BuildProjectReferences] = "false",
+                [MSBuildProperties.ResolveReferenceDependencies] = "true",
+                [MSBuildProperties.SolutionDir] = solutionDirectory,
+                [MSBuildProperties.MSBuildExtensionsPath] = runtimeInfo.BaseDirectory,
+                [MSBuildProperties.MSBuildSDKsPath] = Path.Combine(runtimeInfo.BaseDirectory, "Sdks"),
+                [MSBuildProperties.RoslynTargetsPath] = Path.Combine(runtimeInfo.BaseDirectory, "Roslyn")
             };
         }
 
@@ -115,54 +117,13 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
 
             // Kinda sucks that the simplest way to get MSBuild to resolve SDKs correctly is using environment variables, but there you go.
             Environment.SetEnvironmentVariable(
-                WellKnownProperties.MSBuildExtensionsPath,
-                globalMSBuildProperties[WellKnownProperties.MSBuildExtensionsPath]
+                MSBuildProperties.MSBuildExtensionsPath,
+                globalMSBuildProperties[MSBuildProperties.MSBuildExtensionsPath]
             );
             Environment.SetEnvironmentVariable(
-                WellKnownProperties.MSBuildSDKsPath,
-                globalMSBuildProperties[WellKnownProperties.MSBuildSDKsPath]
+                MSBuildProperties.MSBuildSDKsPath,
+                globalMSBuildProperties[MSBuildProperties.MSBuildSDKsPath]
             );
-        }
-
-        /// <summary>
-        ///     The names of well-known MSBuild properties.
-        /// </summary>
-        public static class WellKnownProperties
-        {
-            /// <summary>
-            ///     The "MSBuildExtensionsPath" property.
-            /// </summary>
-            public static readonly string MSBuildExtensionsPath = "MSBuildExtensionsPath";
-
-            /// <summary>
-            ///     The "MSBuildSDKsPath" property.
-            /// </summary>
-            public static readonly string MSBuildSDKsPath = "MSBuildSDKsPath";
-
-            /// <summary>
-            ///     The "SolutionDir" property.
-            /// </summary>
-            public static readonly string SolutionDir = "SolutionDir";
-
-            /// <summary>
-            ///     The "_ResolveReferenceDependencies" property.
-            /// </summary>
-            public static readonly string ResolveReferenceDependencies = "_ResolveReferenceDependencies";
-
-            /// <summary>
-            ///     The "DesignTimeBuild" property.
-            /// </summary>
-            public static readonly string DesignTimeBuild = "DesignTimeBuild";
-
-            /// <summary>
-            ///     The "BuildProjectReferences" property.
-            /// </summary>
-            public static readonly string BuildProjectReferences = "BuildProjectReferences";
-
-            /// <summary>
-            ///     The "RoslynTargetsPath" property.
-            /// </summary>
-            public static readonly string RoslynTargetsPath = "RoslynTargetsPath";
         }
     }
 }

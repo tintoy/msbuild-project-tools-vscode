@@ -17,7 +17,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
     ///     The base class for language server text-document event handlers.
     /// </summary>
     public abstract class TextDocumentHandler
-        : Handler, ITextDocumentSyncHandler, IHoverHandler, ICompletionHandler
+        : Handler, ITextDocumentSyncHandler, IHoverHandler, ICompletionHandler, IDocumentSymbolHandler
     {
         /// <summary>
         ///     Create a new <see cref="TextDocumentHandler"/>.
@@ -67,6 +67,11 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         ///     The server's completion capabilities.
         /// </summary>
         protected CompletionCapability CompletionCapabilities { get; private set; }
+
+        /// <summary>
+        ///     The server's document symbol capabilities.
+        /// </summary>
+        protected DocumentSymbolCapability DocumentSymbolCapabilities { get; private set; }
 
         /// <summary>
         ///     Called when a text document is opened.
@@ -139,6 +144,20 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         ///     A <see cref="Task"/> representing the operation whose result is the completion list or <c>null</c> if no completions are provided.
         /// </returns>
         protected virtual Task<CompletionList> OnCompletion(TextDocumentPositionParams parameters, CancellationToken cancellationToken) => Task.FromResult<CompletionList>(null);
+
+        /// <summary>
+        ///     Called when document symbols are requested.
+        /// </summary>
+        /// <param name="parameters">
+        ///     The request parameters.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///     A <see cref="CancellationToken"/> that can be used to cancel the request.
+        /// </param>
+        /// <returns>
+        ///     A <see cref="Task"/> representing the operation whose result is the symbol container or <c>null</c> if no symbols are provided.
+        /// </returns>
+        protected virtual Task<SymbolInformationContainer> OnDocumentSymbols(DocumentSymbolParams parameters, CancellationToken cancellationToken) => Task.FromResult<SymbolInformationContainer>(null);
 
         /// <summary>
         ///     Get global registration options for handling document events.
@@ -290,6 +309,23 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         }
 
         /// <summary>
+        ///     Handle a request for document symbols.
+        /// </summary>
+        /// <param name="parameters">
+        ///     The request parameters.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///     A <see cref="CancellationToken"/> that can be used to cancel the request.
+        /// </param>
+        /// <returns>
+        ///     A <see cref="Task"/> representing the operation whose result is the symbol container or <c>null</c> if no symbols are provided.
+        /// </returns>
+        Task<SymbolInformationContainer> IRequestHandler<DocumentSymbolParams, SymbolInformationContainer>.Handle(DocumentSymbolParams parameters, CancellationToken cancellationToken)
+        {
+            return OnDocumentSymbols(parameters, cancellationToken);
+        }
+
+        /// <summary>
         ///     Get global registration options for handling document events.
         /// </summary>
         /// <returns>
@@ -361,6 +397,20 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 throw new ArgumentNullException(nameof(capabilities));
 
             CompletionCapabilities = capabilities;
+        }
+
+        /// <summary>
+        ///     Called to inform the handler of the language server's document symbol capabilities.
+        /// </summary>
+        /// <param name="capabilities">
+        ///     A <see cref="CompletionCapability"/> data structure representing the capabilities.
+        /// </param>
+        void ICapability<DocumentSymbolCapability>.SetCapability(DocumentSymbolCapability capabilities)
+        {
+            if (capabilities == null)
+                throw new ArgumentNullException(nameof(capabilities));
+
+            DocumentSymbolCapabilities = capabilities;
         }
 
         /// <summary>

@@ -135,6 +135,11 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         }
 
         /// <summary>
+        ///     All known MSBuild objects.
+        /// </summary>
+        public IEnumerable<MSBuildObject> AllObjects => _objectsByStartPosition.Values;
+
+        /// <summary>
         ///     Find the project object (if any) at the specified position.
         /// </summary>
         /// <param name="position">

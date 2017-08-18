@@ -185,13 +185,14 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         protected override async Task<Hover> OnHover(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
         {
             ProjectDocument projectDocument = await GetProjectDocument(parameters.TextDocument.Uri);
-            if (!projectDocument.HasXml)
-                return null;
-
-            Position position = parameters.Position.ToNative();
-
+            
             using (await projectDocument.Lock.ReaderLockAsync(cancellationToken))
             {
+                if (!projectDocument.HasXml)
+                    return null;
+
+                Position position = parameters.Position.ToNative();
+                
                 // Try to match up the position with an element or attribute in the XML, then match that up with an MSBuild object.
                 SyntaxNode xmlAtPosition = projectDocument.GetXmlAtPosition(position);
                 if (xmlAtPosition == null)
@@ -257,14 +258,15 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         protected override async Task<CompletionList> OnCompletion(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
         {
             ProjectDocument projectDocument = await GetProjectDocument(parameters.TextDocument.Uri);
-            if (!projectDocument.HasXml)
-                return null;
-
-            Position position = parameters.Position.ToNative();
 
             List<CompletionItem> completionItems = new List<CompletionItem>();
             using (await projectDocument.Lock.ReaderLockAsync(cancellationToken))
             {
+                if (!projectDocument.HasXml)
+                    return null;
+
+                Position position = parameters.Position.ToNative();
+
                 // Try to match up the position with an element or attribute in the XML.
                 SyntaxNode xmlAtPosition = projectDocument.GetXmlAtPosition(position);
                 if (xmlAtPosition == null)
@@ -352,6 +354,60 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             );
 
             return completionList;
+        }
+
+        /// <summary>
+        ///     Called when completions are requested.
+        /// </summary>
+        /// <param name="parameters">
+        ///     The request parameters.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///     A <see cref="CancellationToken"/> that can be used to cancel the request.
+        /// </param>
+        /// <returns>
+        ///     A <see cref="Task"/> representing the operation whose result is the completion list or <c>null</c> if no completions are provided.
+        /// </returns>
+        protected override async Task<SymbolInformationContainer> OnDocumentSymbols(DocumentSymbolParams parameters, CancellationToken cancellationToken)
+        {
+            ProjectDocument projectDocument = await GetProjectDocument(parameters.TextDocument.Uri);
+
+            List<SymbolInformation> symbols = new List<SymbolInformation>();
+            using (await projectDocument.Lock.ReaderLockAsync(cancellationToken))
+            {
+                if (!projectDocument.HasMSBuildProject)
+                    return null;
+
+                foreach (MSBuildObject msbuildObject in projectDocument.MSBuildLookup.AllObjects)
+                {
+                    SymbolInformation symbolInformation = new SymbolInformation
+                    {
+                        Name = msbuildObject.Name,
+                        ContainerName = "MSBuild",
+                        Location = new Location
+                        {
+                            Uri = projectDocument.DocumentUri,
+                            Range = msbuildObject.XmlRange.ToLsp()
+                        }
+                    };
+                    if (msbuildObject is MSBuildItem item)
+                    {
+                        symbolInformation.Name = $"{item.Name} ({item.Include})";
+                        symbolInformation.Kind = SymbolKind.Array;
+                    }
+                    else if (msbuildObject is MSBuildTarget target)
+                        symbolInformation.Kind = SymbolKind.Function;
+                    else if (msbuildObject is MSBuildProperty property)
+                        symbolInformation.Kind = SymbolKind.Property;
+
+                    symbols.Add(symbolInformation);
+                }
+            }
+
+            if (symbols.Count == 0)
+                return null;
+
+            return new SymbolInformationContainer(symbols);
         }
 
         /// <summary>

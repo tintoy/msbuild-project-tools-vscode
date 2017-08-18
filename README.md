@@ -4,20 +4,21 @@ An extension for VS Code that provides auto-complete when editing `<PackageRefer
 
 ![PackageReference completion](docs/images/package-reference-completion.gif)
 
+**Note**: this is an experimental version of the extension that uses an out-of-process language server using Microsoft's Language Server Protocol. It is functional but is definitely **not ready for production**.
+
 ## Usage
 
 * When you're editing your project file, type `pr` then press `tab` to insert a `PackageReference` element.
 * Move to the `Include` or `Version` attribute of your `PackageReference` element and press `ctrl+space` to bring up a list of package Ids / versions.
+* Hover the mouse over targets, items, and properties to see information about them.
 
 ## Installation
 
-You can install this extension from the [VS marketplace](https://marketplace.visualstudio.com/items?itemName=tintoy.msbuild-project-tools), or simply [download](https://github.com/tintoy/msbuild-project-tools-vscode/releases/latest) the VSIX package for the latest release and install it by choosing "Install from VSIX" from the menu on the top right of the extensions panel.
+To install this extension, [download](https://github.com/tintoy/msbuild-project-tools-vscode/releases/) the VSIX package for the latest experimental release and install it by choosing "Install from VSIX" from the menu on the top right of the extensions panel.
 
 ## Notes
 
 This extension uses the NuGet v3 API to resolve package names and versions. The API is pretty slow, unfortunately; I'll try to improve performance / result caching in the next release. For now, it only searches the [nuget.org](https://nuget.org) package feed but in a future release it will respect package sources defined in `NuGet.config`.
-
-The parsing of project XML occurs on a line-by-line basis, so if your `PackageReference` element spans more than one line, auto-complete will not be available.
 
 ## Questions / bug reports
 

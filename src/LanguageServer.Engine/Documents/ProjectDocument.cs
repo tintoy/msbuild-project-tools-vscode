@@ -25,9 +25,9 @@ namespace MSBuildProjectTools.LanguageServer.Documents
     public class ProjectDocument
     {
         /// <summary>
-        ///     The project file.
+        ///     Diagnostics (if any) for the project.
         /// </summary>
-        readonly FileInfo _projectFile;
+        readonly List<Lsp.Models.Diagnostic> _diagnostics = new List<Lsp.Models.Diagnostic>();
 
         /// <summary>
         ///     The project's configured package sources.
@@ -77,22 +77,45 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <summary>
         ///     Create a new <see cref="ProjectDocument"/>.
         /// </summary>
-        /// <param name="projectFilePath">
-        ///     The full path to the project file.
+        /// <param name="documentUri">
+        ///     The document URI.
         /// </param>
-        public ProjectDocument(string projectFilePath, ILogger logger)
+        public ProjectDocument(Uri documentUri, ILogger logger)
         {
-            if (String.IsNullOrWhiteSpace(projectFilePath))
-                throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'projectFilePath'.", nameof(projectFilePath));
-            
-            _projectFile = new FileInfo(projectFilePath);
-            Log = logger.ForContext("ProjectDocument", _projectFile.FullName);
+            if (documentUri == null)
+                throw new ArgumentNullException(nameof(documentUri));
+
+            DocumentUri = documentUri;
+            ProjectFile = new FileInfo(
+                documentUri.GetFileSystemPath()
+            );
+            Log = logger.ForContext("ProjectDocument", ProjectFile.FullName);
         }
+
+        /// <summary>
+        ///     The project document URI.
+        /// </summary>
+        public Uri DocumentUri { get; }
+
+        /// <summary>
+        ///     The project file.
+        /// </summary>
+        public FileInfo ProjectFile { get; }
 
         /// <summary>
         ///     A lock used to control access to project state.
         /// </summary>
         public AsyncReaderWriterLock Lock { get; } = new AsyncReaderWriterLock();
+
+        /// <summary>
+        ///     Are there currently any diagnostics to be published for the project?
+        /// </summary>
+        public bool HasDiagnostics => _diagnostics.Count > 0;
+
+        /// <summary>
+        ///     Diagnostics (if any) for the project.
+        /// </summary>
+        public IReadOnlyList<Lsp.Models.Diagnostic> Diagnostics => _diagnostics;
 
         /// <summary>
         ///     Is the project XML currently loaded?
@@ -162,8 +185,10 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// </returns>
         public async Task Load(CancellationToken cancellationToken = default(CancellationToken))
         {
+            ClearDiagnostics();
+
             string xml;
-            using (StreamReader reader = _projectFile.OpenText())
+            using (StreamReader reader = ProjectFile.OpenText())
             {
                 xml = await reader.ReadToEndAsync();
             }
@@ -186,6 +211,8 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         {
             if (xml == null)
                 throw new ArgumentNullException(nameof(xml));
+
+            ClearDiagnostics();
 
             _xml = Microsoft.Language.Xml.Parser.ParseText(xml);
             _xmlPositions = new TextPositions(xml);
@@ -211,7 +238,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                 _autoCompleteResources.Clear();
 
                 _configuredPackageSources.AddRange(
-                    NuGetHelper.GetWorkspacePackageSources(_projectFile.Directory.FullName)
+                    NuGetHelper.GetWorkspacePackageSources(ProjectFile.Directory.FullName)
                         .Where(packageSource => packageSource.IsHttp)
                 );
                 _autoCompleteResources.AddRange(
@@ -222,7 +249,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             }
             catch (Exception packageSourceLoadError)
             {
-                Log.Error(packageSourceLoadError, "Error configuring NuGet package sources for MSBuild project '{ProjectFileName}'.", _projectFile.FullName);
+                Log.Error(packageSourceLoadError, "Error configuring NuGet package sources for MSBuild project '{ProjectFileName}'.", ProjectFile.FullName);
 
                 return false;
             }
@@ -311,7 +338,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                 throw new ArgumentNullException(nameof(position));
 
             if (!HasXml)
-                throw new InvalidOperationException($"XML for project '{_projectFile.FullName}' is not loaded.");
+                throw new InvalidOperationException($"XML for project '{ProjectFile.FullName}' is not loaded.");
 
             int absolutePosition = _xmlPositions.GetAbsolutePosition(position);
 
@@ -348,7 +375,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         public MSBuildObject GetMSBuildObjectAtPosition(Position position)
         {
             if (!HasMSBuildProject)
-                throw new InvalidOperationException($"MSBuild project '{_projectFile.FullName}' is not loaded.");
+                throw new InvalidOperationException($"MSBuild project '{ProjectFile.FullName}' is not loaded.");
 
             return _msbuildLookup.Find(position);
         }
@@ -367,7 +394,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                     return true;
 
                 if (_msbuildProjectCollection == null)
-                    _msbuildProjectCollection = MSBuildHelper.CreateProjectCollection(_projectFile.Directory.FullName);
+                    _msbuildProjectCollection = MSBuildHelper.CreateProjectCollection(ProjectFile.Directory.FullName);
 
                 if (HasMSBuildProject && IsDirty)
                 {
@@ -383,7 +410,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                     Log.Verbose("Successfully updated MSBuild project '{ProjectFileName}' from in-memory changes.");
                 }
                 else
-                    _msbuildProject = _msbuildProjectCollection.LoadProject(_projectFile.FullName);
+                    _msbuildProject = _msbuildProjectCollection.LoadProject(ProjectFile.FullName);
 
                 _msbuildLookup = new PositionalMSBuildLookup(_msbuildProject, _xml, _xmlPositions);
 
@@ -391,27 +418,10 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             }
             catch (InvalidProjectFileException invalidProjectFile)
             {
-                // TODO: Only warn once.
-
-                if (String.Equals(_projectFile.FullName, invalidProjectFile.ProjectFile, StringComparison.OrdinalIgnoreCase))
-                {
-                    Log.Warning("Unable to load MSBuild project {ProjectFileName} because it is invalid (line {LineNumber}, column {ColumnNumber}): {ErrorMessage:l}",
-                        _projectFile.FullName,
-                        invalidProjectFile.LineNumber,
-                        invalidProjectFile.ColumnNumber,
-                        invalidProjectFile.BaseMessage
-                    );
-                }
-                else
-                {
-                    Log.Warning("Unable to load MSBuild project {ProjectFileName} because a project file it depends on ({DependsOnProjectFile}) is invalid (line {LineNumber}, column {ColumnNumber}): {ErrorMessage:l}",
-                        _projectFile.FullName,
-                        invalidProjectFile.ProjectFile,
-                        invalidProjectFile.LineNumber,
-                        invalidProjectFile.ColumnNumber,
-                        invalidProjectFile.BaseMessage
-                    );
-                }
+                AddErrorDiagnostic(invalidProjectFile.BaseMessage,
+                    range: invalidProjectFile.GetRange(),
+                    diagnosticCode: invalidProjectFile.ErrorCode
+                );
 
                 TryUnloadMSBuildProject();
 
@@ -419,7 +429,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             }
             catch (Exception loadError)
             {
-                Log.Error(loadError, "Error loading MSBuild project '{ProjectFileName}'.", _projectFile.FullName);
+                Log.Error(loadError, "Error loading MSBuild project '{ProjectFileName}'.", ProjectFile.FullName);
 
                 TryUnloadMSBuildProject();
 
@@ -451,10 +461,104 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             }
             catch (Exception unloadError)
             {
-                Log.Error(unloadError, "Error unloading MSBuild project '{ProjectFileName}'.", _projectFile.FullName);
+                Log.Error(unloadError, "Error unloading MSBuild project '{ProjectFileName}'.", ProjectFile.FullName);
 
                 return false;
             }
         }
+
+        /// <summary>
+        ///     Remove all diagnostics for the project file.
+        /// </summary>
+        void ClearDiagnostics()
+        {
+            _diagnostics.Clear();
+        }
+
+        /// <summary>
+        ///     Add a diagnostic to be published for the project file.
+        /// </summary>
+        /// <param name="severity">
+        ///     The diagnostic severity.
+        /// </param>
+        /// <param name="message">
+        ///     The diagnostic message.
+        /// </param>
+        /// <param name="range">
+        ///     The range of text within the project XML that the diagnostic relates to.
+        /// </param>
+        /// <param name="diagnosticCode">
+        ///     A code to identify the diagnostic type.
+        /// </param>
+        void AddDiagnostic(Lsp.Models.DiagnosticSeverity severity, string message, Range range, string diagnosticCode)
+        {
+            if (String.IsNullOrWhiteSpace(message))
+                throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'message'.", nameof(message));
+            
+            _diagnostics.Add(new Lsp.Models.Diagnostic
+            {
+                Severity = severity,
+                Code = new Lsp.Models.DiagnosticCode(diagnosticCode),
+                Message = message,
+                Range = range.ToLsp(),
+                Source = ProjectFile.FullName
+            });
+        }
+
+        /// <summary>
+        ///     Add an error diagnostic to be published for the project file.
+        /// </summary>
+        /// <param name="message">
+        ///     The diagnostic message.
+        /// </param>
+        /// <param name="range">
+        ///     The range of text within the project XML that the diagnostic relates to.
+        /// </param>
+        /// <param name="diagnosticCode">
+        ///     A code to identify the diagnostic type.
+        /// </param>
+        void AddErrorDiagnostic(string message, Range range, string diagnosticCode) => AddDiagnostic(Lsp.Models.DiagnosticSeverity.Error, message, range, diagnosticCode);
+
+        /// <summary>
+        ///     Add a warning diagnostic to be published for the project file.
+        /// </summary>
+        /// <param name="message">
+        ///     The diagnostic message.
+        /// </param>
+        /// <param name="range">
+        ///     The range of text within the project XML that the diagnostic relates to.
+        /// </param>
+        /// <param name="diagnosticCode">
+        ///     A code to identify the diagnostic type.
+        /// </param>
+        void AddWarningDiagnostic(string message, Range range, string diagnosticCode) => AddDiagnostic(Lsp.Models.DiagnosticSeverity.Warning, message, range, diagnosticCode);
+
+        /// <summary>
+        ///     Add an informational diagnostic to be published for the project file.
+        /// </summary>
+        /// <param name="message">
+        ///     The diagnostic message.
+        /// </param>
+        /// <param name="range">
+        ///     The range of text within the project XML that the diagnostic relates to.
+        /// </param>
+        /// <param name="diagnosticCode">
+        ///     A code to identify the diagnostic type.
+        /// </param>
+        void AddInformationDiagnostic(string message, Range range, string diagnosticCode) => AddDiagnostic(Lsp.Models.DiagnosticSeverity.Information, message, range, diagnosticCode);
+
+        /// <summary>
+        ///     Add a hint diagnostic to be published for the project file.
+        /// </summary>
+        /// <param name="message">
+        ///     The diagnostic message.
+        /// </param>
+        /// <param name="range">
+        ///     The range of text within the project XML that the diagnostic relates to.
+        /// </param>
+        /// <param name="diagnosticCode">
+        ///     A code to identify the diagnostic type.
+        /// </param>
+        void AddHintDiagnostic(string message, Range range, string diagnosticCode) => AddDiagnostic(Lsp.Models.DiagnosticSeverity.Hint, message, range, diagnosticCode);
     }
 }

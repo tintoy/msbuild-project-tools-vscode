@@ -9,6 +9,16 @@ namespace MSBuildProjectTools.LanguageServer
         : IEquatable<Position>, IComparable<Position>, IComparable<Range>
     {
         /// <summary>
+        ///     The origin position (1,1).
+        /// </summary>
+        public static Position Origin = new Position(1,1);
+
+        /// <summary>
+        ///     The zero position (0,0).
+        /// </summary>
+        public static Position Zero = new Position(0,0);
+
+        /// <summary>
         ///     Create a new <see cref="Position"/>.
         /// </summary>
         /// <param name="lineNumber">

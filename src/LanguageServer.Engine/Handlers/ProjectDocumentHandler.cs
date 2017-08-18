@@ -31,9 +31,9 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         : TextDocumentHandler
     {
         /// <summary>
-        ///     Documents for loaded project files.
+        ///     Documents for loaded project, keyed by document URI.
         /// </summary>
-        readonly ConcurrentDictionary<string, ProjectDocument> _projectDocuments = new ConcurrentDictionary<string, ProjectDocument>();
+        readonly ConcurrentDictionary<Uri, ProjectDocument> _projectDocuments = new ConcurrentDictionary<Uri, ProjectDocument>();
 
         /// <summary>
         ///     Create a new <see cref="ProjectDocumentHandler"/>.
@@ -75,24 +75,22 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </returns>
         protected override async Task OnDidOpenTextDocument(DidOpenTextDocumentParams parameters)
         {
-            string projectFilePath = parameters.TextDocument.Uri.GetFileSystemPath();
-            if (projectFilePath == null)
-                return;
-
-            ProjectDocument projectDocument = await TryLoadProjectDocument(projectFilePath);
-            if (projectDocument == null)
+            ProjectDocument projectDocument = await GetProjectDocument(parameters.TextDocument.Uri);
+            PublishDiagnostics(projectDocument);
+            
+            if (!projectDocument.HasXml)
             {
-                Log.Warning("Failed to load project file {ProjectFilePath}.", projectFilePath);
+                Log.Warning("Failed to load project file {ProjectFilePath}.", projectDocument.ProjectFile.FullName);
 
                 return;
             }
 
-            Log.Information("Successfully loaded project {ProjectFilePath}.", projectFilePath);
-            Log.Information("===========================");
+            Log.Information("Successfully loaded project {ProjectFilePath}.", projectDocument.ProjectFile.FullName);
+            Log.Verbose("===========================");
             
             foreach (PackageSource packageSource in projectDocument.ConfiguredPackageSources)
             {
-                Log.Information(" - Project uses package source {PackageSourceName} ({PackageSourceUrl})",
+                Log.Verbose(" - Project uses package source {PackageSourceName} ({PackageSourceUrl})",
                     packageSource.Name,
                     packageSource.Source
                 );
@@ -114,12 +112,9 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             if (mostRecentChange == null)
                 return;
 
-            string projectFilePath = parameters.TextDocument.Uri.GetFileSystemPath();
-            if (projectFilePath == null)
-                return;
-
             string updatedDocumentText = mostRecentChange.Text;
-            await TryUpdateProjectDocument(projectFilePath, updatedDocumentText);
+            ProjectDocument projectDocument = await TryUpdateProjectDocument(parameters.TextDocument.Uri, updatedDocumentText);
+            PublishDiagnostics(projectDocument);
         }
 
         /// <summary>
@@ -133,27 +128,25 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </returns>
         protected override async Task OnDidSaveTextDocument(DidSaveTextDocumentParams parameters)
         {
-            string projectFilePath = parameters.TextDocument.Uri.GetFileSystemPath();
-            if (projectFilePath == null)
-                return;
+            Log.Information("Reloading project...");
+            ProjectDocument projectDocument = await GetProjectDocument(parameters.TextDocument.Uri, reload: true);
+            PublishDiagnostics(projectDocument);
 
-            Log.Information("Reloading project {ProjectFilePath}...", projectFilePath);
-            ProjectDocument projectDocument = await TryLoadProjectDocument(projectFilePath, reload: true);
-            if (projectDocument == null)
+            if (!projectDocument.HasXml)
             {
-                Log.Warning("Failed to reload project file {ProjectFilePath}.", projectFilePath);
+                Log.Warning("Failed to reload project file {ProjectFilePath} (XML is invalid).", projectDocument.ProjectFile.FullName);
 
                 return;
             }
 
-            Log.Information("Successfully reloaded project {ProjectFilePath}.", projectFilePath);
-            foreach (PackageSource packageSource in projectDocument.ConfiguredPackageSources)
+            if (!projectDocument.HasMSBuildProject)
             {
-                Log.Information(" - Project uses package source {PackageSourceName} ({PackageSourceUrl})",
-                    packageSource.Name,
-                    packageSource.Source
-                );
+                Log.Warning("Reloaded project file {ProjectFilePath} (XML is valid, but MSBuild project is not).", projectDocument.ProjectFile.FullName);
+
+                return;
             }
+
+            Log.Information("Successfully reloaded project {ProjectFilePath}.", projectDocument.ProjectFile.FullName);
         }
 
         /// <summary>
@@ -167,14 +160,11 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </returns>
         protected override async Task OnDidCloseTextDocument(DidCloseTextDocumentParams parameters)
         {
-            string projectFilePath = parameters.TextDocument.Uri.GetFileSystemPath();
-            if (projectFilePath == null)
-                return;
-
-            if (_projectDocuments.TryRemove(projectFilePath, out ProjectDocument projectDocument))
+            if (_projectDocuments.TryRemove(parameters.TextDocument.Uri, out ProjectDocument projectDocument))
             {
                 using (await projectDocument.Lock.WriterLockAsync())
                 {
+                    ClearDiagnostics(projectDocument);
                     projectDocument.Unload();
                 }
             }
@@ -194,9 +184,8 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </returns>
         protected override async Task<Hover> OnHover(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
         {
-            string projectFilePath = parameters.TextDocument.Uri.GetFileSystemPath();
-            ProjectDocument projectDocument = await TryLoadProjectDocument(projectFilePath);
-            if (projectDocument == null || !projectDocument.HasMSBuildProject)
+            ProjectDocument projectDocument = await GetProjectDocument(parameters.TextDocument.Uri);
+            if (!projectDocument.HasXml)
                 return null;
 
             Position position = parameters.Position.ToNative();
@@ -265,9 +254,8 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </returns>
         protected override async Task<CompletionList> OnCompletion(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
         {
-            string projectFilePath = parameters.TextDocument.Uri.GetFileSystemPath();
-            ProjectDocument projectDocument = await TryLoadProjectDocument(projectFilePath);
-            if (projectDocument == null || !projectDocument.HasXml)
+            ProjectDocument projectDocument = await GetProjectDocument(parameters.TextDocument.Uri);
+            if (!projectDocument.HasXml)
                 return null;
 
             Position position = parameters.Position.ToNative();
@@ -367,20 +355,73 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <summary>
         ///     Try to retrieve the current state for the specified project document.
         /// </summary>
-        /// <param name="projectFilePath">
-        ///     The full path to the project document.
+        /// <param name="documentUri">
+        ///     The project document URI.
         /// </param>
         /// <param name="reload">
         ///     Reload the project if it is already loaded?
         /// </param>
         /// <returns>
-        ///     The project document, or <c>null</c> if the project is not already loaded.
+        ///     The project document.
         /// </returns>
-        async Task<ProjectDocument> TryUpdateProjectDocument(string projectFilePath, string documentText)
+        async Task<ProjectDocument> GetProjectDocument(Uri documentUri, bool reload = false)
+        {
+            string projectFilePath = documentUri.GetFileSystemPath();
+
+            bool isNewProject = false;
+            ProjectDocument projectDocument = _projectDocuments.GetOrAdd(documentUri, _ =>
+            {
+                isNewProject = true;
+
+                return new ProjectDocument(documentUri, Log);
+            });
+
+            try
+            {
+                if (isNewProject || reload)
+                {
+                    using (await projectDocument.Lock.WriterLockAsync())
+                    {
+                        await projectDocument.Load();
+                    }
+                }
+            }
+            catch (XmlException invalidXml)
+            {
+                Log.Error("Error parsing project file {ProjectFilePath}: {ErrorMessage:l}",
+                    projectFilePath,
+                    invalidXml.Message
+                );
+            }
+            catch (Exception loadError)
+            {
+                Log.Error(loadError, "Unexpected error loading file {ProjectFilePath}.", projectFilePath);
+            }
+
+            return projectDocument;
+        }
+
+        /// <summary>
+        ///     Try to retrieve the current state for the specified project document.
+        /// </summary>
+        /// <param name="documentUri">
+        ///     The project document URI.
+        /// </param>
+        /// <param name="reload">
+        ///     Reload the project if it is already loaded?
+        /// </param>
+        /// <returns>
+        ///     The project document.
+        /// </returns>
+        async Task<ProjectDocument> TryUpdateProjectDocument(Uri documentUri, string documentText)
         {
             ProjectDocument projectDocument;
-            if (!_projectDocuments.TryGetValue(projectFilePath, out projectDocument))
-                return null;
+            if (!_projectDocuments.TryGetValue(documentUri, out projectDocument))
+            {
+                Log.Error("Tried to update non-existent project with document URI {DocumentUri}.", documentUri);
+
+                throw new InvalidOperationException($"Project with document URI '{documentUri}' is not loaded.");
+            }
 
             try
             {
@@ -391,59 +432,50 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             }
             catch (Exception updateError)
             {
-                Log.Error(updateError, "Failed to update project {ProjectFile}.", projectFilePath);
+                Log.Error(updateError, "Failed to update project {ProjectFile}.", projectDocument.ProjectFile.FullName);
             }
 
             return projectDocument;
         }
 
         /// <summary>
-        ///     Try to retrieve the current state for the specified project document.
+        ///     Publish current diagnostics (if any) for the specified project document.
         /// </summary>
-        /// <param name="projectFilePath">
-        ///     The full path to the project document.
+        /// <param name="projectDocument">
+        ///     The project document.
         /// </param>
-        /// <param name="reload">
-        ///     Reload the project if it is already loaded?
-        /// </param>
-        /// <returns>
-        ///     The project document, or <c>null</c> if the project could not be loaded.
-        /// </returns>
-        async Task<ProjectDocument> TryLoadProjectDocument(string projectFilePath, bool reload = false)
+        void PublishDiagnostics(ProjectDocument projectDocument)
         {
-            try
+            if (projectDocument == null)
+                throw new ArgumentNullException(nameof(projectDocument));
+
+            Server.PublishDiagnostics(new PublishDiagnosticsParams
             {
-                bool isNewProject = false;
-                ProjectDocument projectDocument = _projectDocuments.GetOrAdd(projectFilePath, _ =>
-                {
-                    isNewProject = true;
+                Uri = projectDocument.DocumentUri,
+                Diagnostics = projectDocument.Diagnostics.ToArray()
+            });   
+        }
 
-                    return new ProjectDocument(projectFilePath, Log);
-                });
+        /// <summary>
+        ///     Clear current diagnostics (if any) for the specified project document.
+        /// </summary>
+        /// <param name="projectDocument">
+        ///     The project document.
+        /// </param>
+        void ClearDiagnostics(ProjectDocument projectDocument)
+        {
+            if (projectDocument == null)
+                throw new ArgumentNullException(nameof(projectDocument));
 
-                if (isNewProject || reload)
-                {
-                    using (await projectDocument.Lock.WriterLockAsync())
-                    {
-                        await projectDocument.Load();
-                    }
-                }
+            if (!projectDocument.HasDiagnostics)
+                return;
 
-                return projectDocument;
-            }
-            catch (XmlException invalidXml)
+            Server.PublishDiagnostics(new PublishDiagnosticsParams
             {
-                Log.Error("Error parsing project file {ProjectFilePath}: {ErrorMessage}",
-                    projectFilePath,
-                    invalidXml.Message
-                );
-            }
-            catch (Exception loadError)
-            {
-                Log.Error(loadError, "Unexpected error loading file {ProjectFilePath}.", projectFilePath);
-            }
-
-            return null;
+                Uri = projectDocument.DocumentUri,
+                Diagnostics = new Lsp.Models.Diagnostic[0] // Overwrites existing diagnostics for this document with an empty list
+            });
+            
         }
     }
 }

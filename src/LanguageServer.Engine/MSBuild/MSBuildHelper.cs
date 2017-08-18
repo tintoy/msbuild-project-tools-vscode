@@ -1,7 +1,8 @@
+using Microsoft.Build.Evaluation;
+using Microsoft.Build.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Microsoft.Build.Evaluation;
 
 namespace MSBuildProjectTools.LanguageServer.MSBuild
 {
@@ -124,6 +125,35 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
                 MSBuildProperties.MSBuildSDKsPath,
                 globalMSBuildProperties[MSBuildProperties.MSBuildSDKsPath]
             );
+        }
+
+        /// <summary>
+        ///     Get the <see cref="Range"/> represented by the <see cref="InvalidProjectFileException"/>.
+        /// </summary>
+        /// <param name="invalidProjectFileException">
+        ///     The <see cref="InvalidProjectFileException"/>.
+        /// </param>
+        /// <returns>
+        ///     The <see cref="Range"/>.
+        /// </returns>
+        public static Range GetRange(this InvalidProjectFileException invalidProjectFileException)
+        {
+            if (invalidProjectFileException == null)
+                throw new ArgumentNullException(nameof(invalidProjectFileException));
+
+            Position startPosition = new Position(
+                invalidProjectFileException.LineNumber,
+                invalidProjectFileException.ColumnNumber
+            );
+
+            Position endPosition = new Position(
+                invalidProjectFileException.EndLineNumber,
+                invalidProjectFileException.EndColumnNumber
+            );
+            if (endPosition == Position.Zero)
+                endPosition = startPosition;
+            
+            return new Range(startPosition, endPosition);
         }
     }
 }

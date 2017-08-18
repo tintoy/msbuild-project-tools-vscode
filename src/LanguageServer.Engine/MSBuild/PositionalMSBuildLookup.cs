@@ -110,6 +110,10 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
                     continue; // Not declared in main project file.
 
                 Position itemStart = item.Xml.Location.ToNative();
+
+                // HACK: One project item element can give rise to multiple project items; we don't support this yet and will therefore store only the first one.
+                if (_objectsByStartPosition.ContainsKey(itemStart))
+                    continue; // TODO: We should really store a list of all items in the group, instead of just the first item.
                 
                 SyntaxNode xmlAtPosition = projectXml.FindNode(itemStart, xmlPositions);
                 if (xmlAtPosition == null)

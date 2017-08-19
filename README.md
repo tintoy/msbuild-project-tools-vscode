@@ -1,23 +1,27 @@
 # MSBuild project file tools
 
-An extension for VS Code that provides auto-complete when editing `<PackageReference>` elements MSBuild project files.
+An extension for VS Code that provides intellisense for MSBuild project files, including auto-complete for `<PackageReference>` elements.
 
-![PackageReference completion](docs/images/package-reference-completion.gif)
+![PackageReference completion](docs/images/extension-in-action.gif)
+
+**Note**: there are some experimental features in the extension that use an out-of-process language server. This is disabled by default but you can enable it by setting `msbuildProjectFileTools.languageService.enable` to `true` in your VSCode preferences. You don't have to use it, but it does provide a lot of additional functionality and is already fairly stable.
 
 ## Usage
 
 * When you're editing your project file, type `pr` then press `tab` to insert a `PackageReference` element.
 * Move to the `Include` or `Version` attribute of your `PackageReference` element and press `ctrl+space` to bring up a list of package Ids / versions.
+* Hover the mouse over targets, items, and properties to see information about them.
+* Go-to-definition is implemented for both SDK-style and regular project imports.
+* Document symbols are supported for imports, targets, items, and properties.
 
 ## Installation
 
 You can install this extension from the [VS marketplace](https://marketplace.visualstudio.com/items?itemName=tintoy.msbuild-project-tools), or simply [download](https://github.com/tintoy/msbuild-project-tools-vscode/releases/latest) the VSIX package for the latest release and install it by choosing "Install from VSIX" from the menu on the top right of the extensions panel.
 
-## Notes
+## Limitations
 
-This extension uses the NuGet v3 API to resolve package names and versions. The API is pretty slow, unfortunately; I'll try to improve performance / result caching in the next release. For now, it only searches the [nuget.org](https://nuget.org) package feed but in a future release it will respect package sources defined in `NuGet.config`.
-
-The parsing of project XML occurs on a line-by-line basis, so if your `PackageReference` element spans more than one line, auto-complete will not be available.
+* This extension uses the NuGet v3 API to resolve package names and versions. The API is pretty slow, unfortunately; I'll try to improve performance / result caching in the next release.
+* Intellisense is not currently available for items with conditions evaluating to `false` as they are not present in the MSBuild project at runtime. I've fixed this for properties, so there's definitely a way forward; hopefully in the next release.
 
 ## Questions / bug reports
 

@@ -58,9 +58,14 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
             if (Path.DirectorySeparatorChar == '\\')
                 fileSystemPath = fileSystemPath.Replace('\\', '/');
 
-            Uri documentUri = new Uri("file:///" + fileSystemPath);
+            UriBuilder documentUriBuilder = new UriBuilder
+            {
+                Scheme = Uri.UriSchemeFile,
+                Host = "", // Needed to get the leading triple-slash in the URI
+                Path = fileSystemPath
+            };
 
-            return documentUri;
+            return documentUriBuilder.Uri;
         }
     }
 }

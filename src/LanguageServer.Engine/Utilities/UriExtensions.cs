@@ -26,13 +26,14 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
                 return null;
 
             // The language server protocol represents "C:\Foo\Bar" as "file:///c:/foo/bar".
-            string path = uri.LocalPath;
-            if (path.StartsWith("\\"))
-                path = path.Substring(1);
+            string fileSystemPath = Uri.UnescapeDataString(uri.AbsolutePath);
+            if (fileSystemPath.StartsWith("/"))
+                fileSystemPath = fileSystemPath.Substring(1);
 
-            path = path.Replace('\\', '/');
+            if (Path.DirectorySeparatorChar == '\\')
+                fileSystemPath = fileSystemPath.Replace('/', '\\');
 
-            return path;
+            return fileSystemPath;
         }
 
         /// <summary>
@@ -55,7 +56,9 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
             if (Path.DirectorySeparatorChar == '\\')
                 fileSystemPath = fileSystemPath.Replace('\\', '/');
 
-            return new Uri("file:///" + fileSystemPath);
+            Uri documentUri = new Uri("file:///" + fileSystemPath);
+
+            return documentUri;
         }
     }
 }

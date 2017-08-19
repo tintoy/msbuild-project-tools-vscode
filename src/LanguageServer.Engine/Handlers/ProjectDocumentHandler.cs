@@ -116,11 +116,13 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 foreach (MSBuildObject msbuildObject in msbuildObjects)
                 {
-                    Log.Verbose("{Type:l}: {Kind} {Name} spanning {XmlRange}",
+                    Log.Verbose("{Type:l}: {Kind} {Name} spanning {XmlRange} (ABS:{SpanStart}-{SpanEnd})",
                         msbuildObject.GetType().Name,
                         msbuildObject.Kind,
                         msbuildObject.Name,
-                        msbuildObject.XmlRange
+                        msbuildObject.XmlRange,
+                        msbuildObject.Xml.Span.Start,
+                        msbuildObject.Xml.Span.End
                     );
                 }
             }
@@ -129,7 +131,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         }
 
         /// <summary>
-        ///     Called when a text document is opened.
+        ///     Called when a text document is modified.
         /// </summary>
         /// <param name="parameters">
         ///     The notification parameters.
@@ -150,16 +152,17 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             if (projectDocument.HasMSBuildProject)
             {
                 MSBuildObject[] msbuildObjects = projectDocument.MSBuildObjects.ToArray();
-                Log.Verbose("MSBuild project reloaded ({MSBuildObjectCount} MSBuild objects).", msbuildObjects.Length);
+                Log.Verbose("MSBuild project loaded ({MSBuildObjectCount} MSBuild objects).", msbuildObjects.Length);
 
                 foreach (MSBuildObject msbuildObject in msbuildObjects)
                 {
-                    Log.Verbose("{Type:l}: {Kind} {Name} spanning {XmlRange}:\n{@Object}",
+                    Log.Verbose("{Type:l}: {Kind} {Name} spanning {XmlRange} (ABS:{SpanStart}-{SpanEnd})",
                         msbuildObject.GetType().Name,
                         msbuildObject.Kind,
                         msbuildObject.Name,
                         msbuildObject.XmlRange,
-                        msbuildObject
+                        msbuildObject.Xml.Span.Start,
+                        msbuildObject.Xml.Span.End
                     );
                 }
             }
@@ -243,20 +246,42 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                     return null;
 
                 Position position = parameters.Position.ToNative();
+
+                Log.Verbose("OnHover at {Position}", position);
                 
                 // Try to match up the position with an element or attribute in the XML, then match that up with an MSBuild object.
                 SyntaxNode xmlNode = projectDocument.GetXmlAtPosition(position);
                 if (xmlNode == null)
                     return null;
 
+                Log.Verbose("OnHover: found node {Kind} at {Position} (spans {Range}",
+                    xmlNode.Kind,
+                    position,
+                    xmlNode.Span.ToNative(projectDocument.XmlPositions)
+                );
+
+                SyntaxNode elementOrAttribute = xmlNode.GetContainingElementOrAttribute();
+                if (elementOrAttribute == null)
+                    return null;
+
+                position = elementOrAttribute.Span.ToNative(projectDocument.XmlPositions).Start;
+
+                Log.Verbose("OnHover: found containing {Kind} at {Position} (spans {Range}",
+                    elementOrAttribute.Kind,
+                    position,
+                    elementOrAttribute.Span.ToNative(projectDocument.XmlPositions)
+                );
+
                 // Match up the MSBuild item / property with its corresponding XML element / attribute.
                 MSBuildObject msbuildObject = projectDocument.GetMSBuildObjectAtPosition(position);
                 if (msbuildObject == null)
                     return null;
 
-                SyntaxNode elementOrAttribute = xmlNode.GetContainingElementOrAttribute();
-                if (elementOrAttribute == null)
-                    return null;
+                Log.Verbose("OnHover: found MSBuild {Kind} at {Position}",
+                    msbuildObject.Kind,
+                    position,
+                    xmlNode.Span.ToNative(projectDocument.XmlPositions)
+                );
 
                 Range range = elementOrAttribute.Span.ToNative(projectDocument.XmlPositions);
                 Hover result = new Hover

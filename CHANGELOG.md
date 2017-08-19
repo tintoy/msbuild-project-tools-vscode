@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.1.1
+
+* Use a patched version of `Microsoft.Language.Xml` that behaves correctly in non-windows environments.
+
 ## v0.1.0
 
 * Fix handling of non-windows line endings.

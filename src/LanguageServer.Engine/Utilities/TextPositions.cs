@@ -27,16 +27,15 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
                 throw new ArgumentNullException(nameof(text));
 
             HasWindowsLineEndings = text.Contains("\r\n") || !text.Contains("\n");
-            
-            string lineEnding = HasWindowsLineEndings ? "\r\n" : "\n";
+            LineEnding = HasWindowsLineEndings ? "\r\n" : "\n";
             
             string[] lines = text.Split(
-                separator: new string[] { lineEnding },
+                separator: new string[] { LineEnding },
                 options: StringSplitOptions.None
             );
             _lineLengths = new int[lines.Length];
             for (int lineIndex = 0; lineIndex < lines.Length; lineIndex++)
-                _lineLengths[lineIndex] = lines[lineIndex].Length + lineEnding.Length;
+                _lineLengths[lineIndex] = lines[lineIndex].Length + LineEnding.Length;
         }
 
         /// <summary>
@@ -48,6 +47,11 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         ///     Does the text have Windows-style line endines (CRLF)?
         /// </summary>
         public bool HasWindowsLineEndings { get; }
+
+        /// <summary>
+        ///     The line ending used by the text.
+        /// </summary>
+        public string LineEnding { get; set; }
 
         /// <summary>
         ///     Convert a <see cref="Position"/> to an absolute position within the text.
@@ -142,7 +146,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
                 remaining -= currentLineLength;
                 if (remaining < 0)
                 {
-                    // BUG - when working with *nix-style line endings (CR), this returns incorrect results for absolute positions at the end of the line.
+                    // BUG - this returns incorrect results for absolute positions at the end of the line.
                     targetLine = lineIndex + 1;
                     targetColumn = -1; // => 0
 

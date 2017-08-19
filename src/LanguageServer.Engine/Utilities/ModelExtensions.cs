@@ -113,7 +113,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
             Position startPosition = textPositions.GetPosition(span.Start);
             Position endPosition = textPositions.GetPosition(span.End);
             if (endPosition.ColumnNumber == 0) // HACK! Workaround for line-ending bug in TextPositions.GetPosition.
-                endPosition = textPositions.GetPosition(span.End - 1);
+                endPosition = textPositions.GetPosition(span.End - textPositions.LineEnding.Length);
 
             return new Range(startPosition, endPosition);
         }

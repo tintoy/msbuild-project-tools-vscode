@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.1.0
+
+* Fix handling of non-windows line endings.
+
 ## v0.1.0-rc1
 
 * Fix cross-platform path handling.

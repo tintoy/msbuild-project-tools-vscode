@@ -110,10 +110,12 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
             if (textPositions == null)
                 throw new ArgumentNullException(nameof(textPositions));
 
-            return new Range(
-                start: textPositions.GetPosition(span.Start),
-                end: textPositions.GetPosition(span.End)
-            );
+            Position startPosition = textPositions.GetPosition(span.Start);
+            Position endPosition = textPositions.GetPosition(span.End);
+            if (endPosition.ColumnNumber == 0) // HACK! Workaround for line-ending bug in TextPositions.GetPosition.
+                endPosition = textPositions.GetPosition(span.End - 1);
+
+            return new Range(startPosition, endPosition);
         }
 
         /// <summary>

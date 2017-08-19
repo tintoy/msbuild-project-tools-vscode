@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
@@ -21,7 +22,6 @@ using System.Xml.Linq;
 
 namespace MSBuildProjectTools.LanguageServer.Handlers
 {
-    using System.Text;
     using Documents;
     using MSBuild;
     using Utilities;
@@ -251,6 +251,8 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 // Match up the MSBuild item / property with its corresponding XML element / attribute.
                 MSBuildObject msbuildObject = projectDocument.GetMSBuildObjectAtPosition(position);
+                if (msbuildObject == null)
+                    return null;
 
                 SyntaxNode elementOrAttribute = xmlNode.GetContainingElementOrAttribute();
                 if (elementOrAttribute == null)

@@ -20,6 +20,7 @@ You can install this extension from the [VS marketplace](https://marketplace.vis
 
 ## Limitations
 
+* The new language server hasn't been tested on Linux / MacOS (although existing extension functionality has been).
 * This extension uses the NuGet v3 API to resolve package names and versions. The API is pretty slow, unfortunately; I'll try to improve performance / result caching in the next release.
 * Intellisense is not currently available for items with conditions evaluating to `false` as they are not present in the MSBuild project at runtime. I've fixed this for properties, so there's definitely a way forward; hopefully in the next release.
 

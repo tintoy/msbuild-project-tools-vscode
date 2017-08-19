@@ -720,6 +720,9 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 throw new ArgumentNullException(nameof(undefinedProperty));
             
             string condition = undefinedProperty.PropertyElement.Condition;
+            if (String.IsNullOrWhiteSpace(condition))
+                condition = undefinedProperty.PropertyElement.Parent.Condition; // Condition may be on parent element.
+
             string expandedCondition = projectDocument.MSBuildProject.ExpandString(condition);
 
             return new MarkedStringContainer(

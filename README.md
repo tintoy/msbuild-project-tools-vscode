@@ -12,6 +12,7 @@ An extension for VS Code that provides auto-complete when editing `<PackageRefer
 * Move to the `Include` or `Version` attribute of your `PackageReference` element and press `ctrl+space` to bring up a list of package Ids / versions.
 * Hover the mouse over targets, items, and properties to see information about them.
 * Go-to-definition is implemented for both SDK-style and regular project imports.
+* Document symbols are supported for imports, targets, items, and properties.
 
 ## Installation
 
@@ -19,7 +20,7 @@ To install this extension, [download](https://github.com/tintoy/msbuild-project-
 
 ## Notes
 
-This extension uses the NuGet v3 API to resolve package names and versions. The API is pretty slow, unfortunately; I'll try to improve performance / result caching in the next release. For now, it only searches the [nuget.org](https://nuget.org) package feed but in a future release it will respect package sources defined in `NuGet.config`.
+This extension uses the NuGet v3 API to resolve package names and versions. The API is pretty slow, unfortunately; I'll try to improve performance / result caching in the next release.
 
 ## Questions / bug reports
 

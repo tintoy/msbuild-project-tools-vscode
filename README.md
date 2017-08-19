@@ -18,9 +18,10 @@ An extension for VS Code that provides auto-complete when editing `<PackageRefer
 
 To install this extension, [download](https://github.com/tintoy/msbuild-project-tools-vscode/releases/) the VSIX package for the latest experimental release and install it by choosing "Install from VSIX" from the menu on the top right of the extensions panel.
 
-## Notes
+## Limitations
 
-This extension uses the NuGet v3 API to resolve package names and versions. The API is pretty slow, unfortunately; I'll try to improve performance / result caching in the next release.
+* This extension uses the NuGet v3 API to resolve package names and versions. The API is pretty slow, unfortunately; I'll try to improve performance / result caching in the next release.
+* At present the extension only works on project files (`*.*proj`) and although it does process any `.targets` / `.props` files they include, it doesn't provide intellisense inside those files (this is mainly because VS Code doesn't make it easy to keep track of which project a given `.props` file was opened for). This aspect of the design needs further analysis, I think.
 
 ## Questions / bug reports
 

@@ -23,6 +23,7 @@ You can install this extension from the [VS marketplace](https://marketplace.vis
 * The new language server hasn't been tested extensively on Linux / MacOS (although I've verified that it works for simple cases).
 * This extension uses the NuGet v3 API to resolve package names and versions. The API is pretty slow, unfortunately; I'll try to improve performance / result caching in the next release.
 * Intellisense is not currently available for items with conditions evaluating to `false` as they are not present in the MSBuild project at runtime. I've fixed this for properties, so there's definitely a way forward; hopefully in the next release.
+* There are some issues around line endings on MacOS and Linux (you may see them show up as occasional incorrect highlighting of elements on hover). They should be fixed in the next release which will hopefully be out soon.
 
 ## Questions / bug reports
 

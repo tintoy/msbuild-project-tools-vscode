@@ -27,11 +27,13 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
 
             // The language server protocol represents "C:\Foo\Bar" as "file:///c:/foo/bar".
             string fileSystemPath = Uri.UnescapeDataString(uri.AbsolutePath);
-            if (fileSystemPath.StartsWith("/"))
-                fileSystemPath = fileSystemPath.Substring(1);
-
             if (Path.DirectorySeparatorChar == '\\')
+            {
+                if (fileSystemPath.StartsWith("/"))
+                    fileSystemPath = fileSystemPath.Substring(1);
+
                 fileSystemPath = fileSystemPath.Replace('/', '\\');
+            }
 
             return fileSystemPath;
         }

@@ -234,12 +234,19 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     A <see cref="Task"/> representing the operation.
         /// </returns>
-        Task INotificationHandler<DidOpenTextDocumentParams>.Handle(DidOpenTextDocumentParams parameters)
+        async Task INotificationHandler<DidOpenTextDocumentParams>.Handle(DidOpenTextDocumentParams parameters)
         {
             if (parameters == null)
                 throw new ArgumentNullException(nameof(parameters));
             
-            return OnDidOpenTextDocument(parameters);
+            try
+            {
+                await OnDidOpenTextDocument(parameters);
+            }
+            catch (Exception unexpectedError)
+            {
+                Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDidOpenTextDocument");
+            }
         }
 
         /// <summary>
@@ -251,12 +258,19 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     A <see cref="Task"/> representing the operation.
         /// </returns>
-        Task INotificationHandler<DidCloseTextDocumentParams>.Handle(DidCloseTextDocumentParams parameters)
+        async Task INotificationHandler<DidCloseTextDocumentParams>.Handle(DidCloseTextDocumentParams parameters)
         {
             if (parameters == null)
                 throw new ArgumentNullException(nameof(parameters));
 
-            return OnDidCloseTextDocument(parameters);
+            try
+            {
+                await OnDidCloseTextDocument(parameters);
+            }
+            catch (Exception unexpectedError)
+            {
+                Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDidCloseTextDocument");
+            }
         }
 
         /// <summary>
@@ -268,12 +282,19 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     A <see cref="Task"/> representing the operation.
         /// </returns>
-        Task INotificationHandler<DidChangeTextDocumentParams>.Handle(DidChangeTextDocumentParams parameters)
+        async Task INotificationHandler<DidChangeTextDocumentParams>.Handle(DidChangeTextDocumentParams parameters)
         {
             if (parameters == null)
                 throw new ArgumentNullException(nameof(parameters));
 
-            return OnDidChangeTextDocument(parameters);
+            try
+            {
+                await OnDidChangeTextDocument(parameters);
+            }
+            catch (Exception unexpectedError)
+            {
+                Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDidChangeTextDocument");
+            }
         }
 
         /// <summary>
@@ -285,12 +306,19 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     A <see cref="Task"/> representing the operation.
         /// </returns>
-        Task INotificationHandler<DidSaveTextDocumentParams>.Handle(DidSaveTextDocumentParams parameters)
+        async Task INotificationHandler<DidSaveTextDocumentParams>.Handle(DidSaveTextDocumentParams parameters)
         {
             if (parameters == null)
                 throw new ArgumentNullException(nameof(parameters));
 
-            return OnDidSaveTextDocument(parameters);
+            try
+            {
+                await OnDidSaveTextDocument(parameters);
+            }
+            catch (Exception unexpectedError)
+            {
+                Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDidSaveTextDocument");
+            }
         }
 
         /// <summary>
@@ -305,9 +333,21 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     A <see cref="Task"/> representing the operation whose result is the hover details or <c>null</c> if no hover details are provided.
         /// </returns>
-        Task<Hover> IRequestHandler<TextDocumentPositionParams, Hover>.Handle(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
+        async Task<Hover> IRequestHandler<TextDocumentPositionParams, Hover>.Handle(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
         {
-            return OnHover(parameters, cancellationToken);
+            if (parameters == null)
+                throw new ArgumentNullException(nameof(parameters));
+            
+            try
+            {
+                return await OnHover(parameters, cancellationToken);
+            }
+            catch (Exception unexpectedError)
+            {
+                Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnHover");
+
+                return null;
+            }
         }
 
         /// <summary>
@@ -322,9 +362,21 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     A <see cref="Task"/> representing the operation whose result is the completion list or <c>null</c> if no completions are provided.
         /// </returns>
-        Task<CompletionList> IRequestHandler<TextDocumentPositionParams, CompletionList>.Handle(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
+        async Task<CompletionList> IRequestHandler<TextDocumentPositionParams, CompletionList>.Handle(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
         {
-            return OnCompletion(parameters, cancellationToken);
+            if (parameters == null)
+                throw new ArgumentNullException(nameof(parameters));
+            
+            try
+            {
+                return await OnCompletion(parameters, cancellationToken);
+            }
+            catch (Exception unexpectedError)
+            {
+                Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnCompletion");
+
+                return null;
+            }
         }
 
         /// <summary>
@@ -339,9 +391,21 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     A <see cref="Task"/> representing the operation whose result is the symbol container or <c>null</c> if no symbols are provided.
         /// </returns>
-        Task<SymbolInformationContainer> IRequestHandler<DocumentSymbolParams, SymbolInformationContainer>.Handle(DocumentSymbolParams parameters, CancellationToken cancellationToken)
+        async Task<SymbolInformationContainer> IRequestHandler<DocumentSymbolParams, SymbolInformationContainer>.Handle(DocumentSymbolParams parameters, CancellationToken cancellationToken)
         {
-            return OnDocumentSymbols(parameters, cancellationToken);
+            if (parameters == null)
+                throw new ArgumentNullException(nameof(parameters));
+            
+            try
+            {
+                return await OnDocumentSymbols(parameters, cancellationToken);
+            }
+            catch (Exception unexpectedError)
+            {
+                Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDocumentSymbols");
+
+                return null;
+            }
         }
 
         /// <summary>
@@ -356,9 +420,21 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     A <see cref="Task"/> representing the operation whose result is definition location or <c>null</c> if no definition is provided.
         /// </returns>
-        Task<LocationOrLocations> IRequestHandler<TextDocumentPositionParams, LocationOrLocations>.Handle(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
+        async Task<LocationOrLocations> IRequestHandler<TextDocumentPositionParams, LocationOrLocations>.Handle(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
         {
-            return OnDefinition(parameters, cancellationToken);
+            if (parameters == null)
+                throw new ArgumentNullException(nameof(parameters));
+            
+            try
+            {
+                return await OnDefinition(parameters, cancellationToken);
+            }
+            catch (Exception unexpectedError)
+            {
+                Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDefinition");
+
+                return null;
+            }
         }
 
         /// <summary>

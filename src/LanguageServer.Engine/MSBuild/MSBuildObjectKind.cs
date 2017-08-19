@@ -29,13 +29,18 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         Property = 3,
 
         /// <summary>
+        ///     An undefined property (<see cref="ProjectPropertyElement"/> without a corresponding <see cref="ProjectProperty"/>) in an MSBuild project.
+        /// </summary>
+        UndefinedProperty = 4,
+
+        /// <summary>
         ///     A project import (<see cref="ResolvedImport"/>) in an MSBuild project.
         /// </summary>
-        Import = 4,
+        Import = 5,
 
         /// <summary>
         ///     An SDK-style project import (<see cref="ResolvedImport"/>) in an MSBuild project.
         /// </summary>
-        SdkImport = 5
+        SdkImport = 6
     }
 }

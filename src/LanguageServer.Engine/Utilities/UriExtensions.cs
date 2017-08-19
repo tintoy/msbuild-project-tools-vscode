@@ -42,7 +42,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         /// <returns>
         ///     The VSCode document URI.
         /// </returns>
-        public static Uri ToDocumentUri(string fileSystemPath)
+        public static Uri CreateDocumentUri(string fileSystemPath)
         {
             if (String.IsNullOrWhiteSpace(fileSystemPath))
                 throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'fileSystemPath'.", nameof(fileSystemPath));

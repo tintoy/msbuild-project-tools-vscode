@@ -8,9 +8,7 @@ import { LanguageClient, ServerOptions, LanguageClientOptions, ErrorAction, Clos
 
 import * as dotnet from './utils/dotnet';
 import * as executables from './utils/executables';
-import { PackageReferenceCompletionProvider } from './providers/package-reference-completion';
-import { Trace } from 'vscode-jsonrpc/lib/main';
-import { Message } from 'vscode-jsonrpc/lib/messages';
+import { PackageReferenceCompletionProvider, getNuGetV3AutoCompleteEndPoints } from './providers/package-reference-completion';
 
 /**
  * Enable the MSBuild language service?
@@ -107,6 +105,16 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<L
             configurationSection: 'msbuildProjectFileTools',
             // Notify the server about file changes to '.clientrc files contain in the workspace
             fileEvents: vscode.workspace.createFileSystemWatcher('**/.clientrc')
+        },
+        errorHandler: {
+            error: (error, message, count) =>
+            {
+                console.log(message);
+                console.log(error);
+
+                return ErrorAction.Continue;
+            },
+            closed: () => CloseAction.Restart
         }
     };
 
@@ -118,52 +126,4 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<L
     };
 
     return new LanguageClient('MSBuild Project File Tools', serverOptions, clientOptions);
-}
-
-/**
- * Get the current end-points URLs for the NuGet v3 AutoComplete API.
- */
-async function getNuGetV3AutoCompleteEndPoints(): Promise<string[]> {
-    const nugetIndexResponse = await axios.get('https://api.nuget.org/v3/index.json');
-    
-    const index: NuGetIndex = nugetIndexResponse.data;
-    const autoCompleteEndPoints = index.resources
-        .filter(
-            resource => resource['@type'] === 'SearchAutocompleteService'
-        )
-        .map(
-            resource => resource['@id']
-        );
-
-    return autoCompleteEndPoints;
-}
-
-/**
- * Represents the index response from the NuGet v3 API.
- */
-export interface NuGetIndex {
-    /**
-     * Available API resources.
-     */
-    resources: NuGetApiResource[];
-}
-
-/**
- * Represents a NuGet API resource.
- */
-export interface NuGetApiResource {
-    /**
-     * The resource Id (end-point URL).
-     */
-    '@id': string;
-
-    /**
-     * The resource type.
-     */
-    '@type': string;
-
-    /**
-     * An optional comment describing the resource.
-     */
-    comment?: string;
 }

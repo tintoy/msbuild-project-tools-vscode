@@ -430,6 +430,8 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                         );
                     }
 
+                    _msbuildProject.ReevaluateIfNecessary();
+
                     Log.Verbose("Successfully updated MSBuild project '{ProjectFileName}' from in-memory changes.");
                 }
                 else

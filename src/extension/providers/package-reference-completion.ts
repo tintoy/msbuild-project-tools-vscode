@@ -220,3 +220,51 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
         );
     }
 }
+
+/**
+ * Get the current end-points URLs for the NuGet v3 AutoComplete API.
+ */
+export async function getNuGetV3AutoCompleteEndPoints(): Promise<string[]> {
+    const nugetIndexResponse = await axios.get('https://api.nuget.org/v3/index.json');
+    
+    const index: NuGetIndex = nugetIndexResponse.data;
+    const autoCompleteEndPoints = index.resources
+        .filter(
+            resource => resource['@type'] === 'SearchAutocompleteService'
+        )
+        .map(
+            resource => resource['@id']
+        );
+
+    return autoCompleteEndPoints;
+}
+
+/**
+ * Represents the index response from the NuGet v3 API.
+ */
+interface NuGetIndex {
+    /**
+     * Available API resources.
+     */
+    resources: NuGetApiResource[];
+}
+
+/**
+ * Represents a NuGet API resource.
+ */
+interface NuGetApiResource {
+    /**
+     * The resource Id (end-point URL).
+     */
+    '@id': string;
+
+    /**
+     * The resource type.
+     */
+    '@type': string;
+
+    /**
+     * An optional comment describing the resource.
+     */
+    comment?: string;
+}

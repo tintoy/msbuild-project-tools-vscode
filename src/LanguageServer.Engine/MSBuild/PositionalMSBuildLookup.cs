@@ -61,7 +61,7 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
             string projectFilePath = _project.FullPath ?? String.Empty;
             foreach (ProjectTargetElement target in _project.Xml.Targets)
             {
-                if (target.Location.File != projectFilePath)
+                if (!String.Equals(target.Location.File, projectFilePath, StringComparison.OrdinalIgnoreCase))
                     continue; // Not declared in main project file.
 
                 Position propertyStart = target.Location.ToNative();
@@ -82,12 +82,9 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
                 );
             }
 
-            foreach (ProjectProperty property in _project.Properties)
+            foreach (ProjectPropertyElement property in _project.Xml.Properties)
             {
-                if (property.Xml == null || !String.Equals(property.Xml.Location.File, projectFilePath, StringComparison.OrdinalIgnoreCase))
-                    continue; // Not declared in main project file.
-
-                Position propertyStart = property.Xml.Location.ToNative();
+                Position propertyStart = property.Location.ToNative();
                 
                 SyntaxNode xmlAtPosition = projectXml.FindNode(propertyStart, xmlPositions);
                 if (xmlAtPosition == null)
@@ -98,24 +95,50 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
                     continue;
 
                 Range propertyRange = propertyElement.Span.ToNative(xmlPositions);
-
                 _objectRanges.Add(propertyRange);
-                _objectsByStartPosition.Add(propertyRange.Start,
-                    new MSBuildProperty(property, propertyElement, propertyRange)
-                );
+
+                ProjectProperty projectProperty = _project.GetProperty(property.Name);
+                if (projectProperty != null)
+                {
+                    _objectsByStartPosition.Add(propertyRange.Start,
+                        new MSBuildProperty(projectProperty, propertyElement, propertyRange)
+                    );
+                }
+                else
+                {
+                    _objectsByStartPosition.Add(propertyRange.Start,
+                        new MSBuildUndefinedProperty(property, propertyElement, propertyRange)
+                    );
+                }
             }
 
+            // AF: Consider using:
+            //
+            // var itemsByElement =
+            //     _project.Items.Where(
+            //         item => item.Xml != null && String.Equals(item.Xml.Location.File, projectFilePath, StringComparison.OrdinalIgnoreCase)
+            //     )
+            //     .GroupBy(item => item.Xml);
+            
+            var itemsByElement = new Dictionary<ProjectItemElement, List<ProjectItem>>();
             foreach (ProjectItem item in _project.Items)
             {
                 if (item.Xml == null || !String.Equals(item.Xml.Location.File, projectFilePath, StringComparison.OrdinalIgnoreCase))
                     continue; // Not declared in main project file.
 
-                Position itemStart = item.Xml.Location.ToNative();
+                List<ProjectItem> itemsFromElement;
+                if (!itemsByElement.TryGetValue(item.Xml, out itemsFromElement))
+                {
+                    itemsFromElement = new List<ProjectItem>();
+                    itemsByElement.Add(item.Xml, itemsFromElement);
+                }
 
-                // HACK: One project item element can give rise to multiple project items; we don't support this yet and will therefore store only the first one.
-                if (_objectsByStartPosition.ContainsKey(itemStart))
-                    continue; // TODO: We should really store a list of all items in the group, instead of just the first item.
-                
+                itemsFromElement.Add(item);
+            }
+            foreach (ProjectItemElement item in itemsByElement.Keys)
+            {
+                Position itemStart = item.Location.ToNative();
+
                 SyntaxNode xmlAtPosition = projectXml.FindNode(itemStart, xmlPositions);
                 if (xmlAtPosition == null)
                     continue;
@@ -128,11 +151,10 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
 
                 _objectRanges.Add(itemRange);
                 _objectsByStartPosition.Add(itemRange.Start,
-                    new MSBuildItem(item, itemElement, itemRange)
+                    new MSBuildItemGroup(itemsByElement[item], item, itemElement, itemRange)
                 );
             }
 
-            // TODO: Include position of project SDK import.
             var importsBySdk =
                 project.Imports.Where(import =>
                     String.Equals(import.ImportingElement.Location.File, projectFilePath, StringComparison.OrdinalIgnoreCase)

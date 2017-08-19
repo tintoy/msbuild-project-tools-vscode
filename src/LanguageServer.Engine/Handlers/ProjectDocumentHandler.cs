@@ -89,7 +89,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         {
             ProjectDocument projectDocument = await GetProjectDocument(parameters.TextDocument.Uri);
             PublishDiagnostics(projectDocument);
-            
+
             if (!projectDocument.HasXml)
             {
                 Log.Warning("Failed to load project file {ProjectFilePath}.", projectDocument.ProjectFile.FullName);
@@ -98,8 +98,8 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             }
 
             Log.Information("Successfully loaded project {ProjectFilePath}.", projectDocument.ProjectFile.FullName);
-            Log.Verbose("===========================");
             
+            Log.Verbose("===========================");
             foreach (PackageSource packageSource in projectDocument.ConfiguredPackageSources)
             {
                 Log.Verbose(" - Project uses package source {PackageSourceName} ({PackageSourceUrl})",
@@ -108,14 +108,24 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 );
             }
 
-            foreach (MSBuildObject msbuildObject in projectDocument.MSBuildObjects)
+            Log.Verbose("===========================");
+            if (projectDocument.HasMSBuildProject)
             {
-                Log.Information("MSBuildObject: {Kind} {Name} spanning {XmlRange}",
-                    msbuildObject.Kind,
-                    msbuildObject.Name,
-                    msbuildObject.XmlRange
-                );
+                MSBuildObject[] msbuildObjects = projectDocument.MSBuildObjects.ToArray();
+                Log.Verbose("MSBuild project loaded ({MSBuildObjectCount} MSBuild objects).", msbuildObjects.Length);
+
+                foreach (MSBuildObject msbuildObject in msbuildObjects)
+                {
+                    Log.Verbose("{Type:l}: {Kind} {Name} spanning {XmlRange}",
+                        msbuildObject.GetType().Name,
+                        msbuildObject.Kind,
+                        msbuildObject.Name,
+                        msbuildObject.XmlRange
+                    );
+                }
             }
+            else
+                Log.Verbose("MSBuild project not loaded.");
         }
 
         /// <summary>
@@ -136,6 +146,25 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             string updatedDocumentText = mostRecentChange.Text;
             ProjectDocument projectDocument = await TryUpdateProjectDocument(parameters.TextDocument.Uri, updatedDocumentText);
             PublishDiagnostics(projectDocument);
+
+            if (projectDocument.HasMSBuildProject)
+            {
+                MSBuildObject[] msbuildObjects = projectDocument.MSBuildObjects.ToArray();
+                Log.Verbose("MSBuild project reloaded ({MSBuildObjectCount} MSBuild objects).", msbuildObjects.Length);
+
+                foreach (MSBuildObject msbuildObject in msbuildObjects)
+                {
+                    Log.Verbose("{Type:l}: {Kind} {Name} spanning {XmlRange}:\n{@Object}",
+                        msbuildObject.GetType().Name,
+                        msbuildObject.Kind,
+                        msbuildObject.Name,
+                        msbuildObject.XmlRange,
+                        msbuildObject
+                    );
+                }
+            }
+            else
+                Log.Verbose("MSBuild project not loaded.");
         }
 
         /// <summary>
@@ -209,20 +238,21 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             
             using (await projectDocument.Lock.ReaderLockAsync(cancellationToken))
             {
-                if (!projectDocument.HasXml)
+                // This won't work if we can't inspect the MSBuild project state.
+                if (!projectDocument.HasMSBuildProject)
                     return null;
 
                 Position position = parameters.Position.ToNative();
                 
                 // Try to match up the position with an element or attribute in the XML, then match that up with an MSBuild object.
-                SyntaxNode xmlAtPosition = projectDocument.GetXmlAtPosition(position);
-                if (xmlAtPosition == null)
+                SyntaxNode xmlNode = projectDocument.GetXmlAtPosition(position);
+                if (xmlNode == null)
                     return null;
 
                 // Match up the MSBuild item / property with its corresponding XML element / attribute.
-                MSBuildObject msbuildObjectAtPosition = projectDocument.HasMSBuildProject ? projectDocument.GetMSBuildObjectAtPosition(position) : null;
+                MSBuildObject msbuildObject = projectDocument.GetMSBuildObjectAtPosition(position);
 
-                SyntaxNode elementOrAttribute = xmlAtPosition.GetContainingElementOrAttribute();
+                SyntaxNode elementOrAttribute = xmlNode.GetContainingElementOrAttribute();
                 if (elementOrAttribute == null)
                     return null;
 
@@ -234,55 +264,27 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 if (elementOrAttribute is IXmlElementSyntax element)
                 {
-                    if (msbuildObjectAtPosition is MSBuildProperty propertyFromElementAtPosition)
-                        result.Contents = $"**Property**: {propertyFromElementAtPosition.Name} = '{propertyFromElementAtPosition.Value}'";
-                    else if (msbuildObjectAtPosition is MSBuildItem itemFromElementAtPosition)
-                    {
-                        if (itemFromElementAtPosition.Name == "PackageReference")
-                        {
-                            string packageVersion = itemFromElementAtPosition.GetMetadataValue("Version");
-                            result.Contents = $"**NuGet Package**: {itemFromElementAtPosition.Include} v{packageVersion}";
-                        }
-                        else
-                            result.Contents = $"**Item**: {element.Name.Name}({itemFromElementAtPosition.Include})";
-
-                    }
-                    else if (msbuildObjectAtPosition is MSBuildTarget targetFromElementAtPosition)
-                        result.Contents = $"**Target**: {targetFromElementAtPosition.Name}";
-                    else if (msbuildObjectAtPosition is MSBuildImport importFromElementAtPosition)
-                        result.Contents = $"**Import**: {importFromElementAtPosition.ProjectImportElement.Project}";
+                    if (msbuildObject is MSBuildProperty propertyFromElement)
+                        result.Contents = GetHoverContent(propertyFromElement);
+                    else if (msbuildObject is MSBuildUndefinedProperty undefinedPropertyFromElement)
+                        result.Contents = GetHoverContent(undefinedPropertyFromElement, projectDocument);
+                    else if (msbuildObject is MSBuildItemGroup itemGroupFromElement)
+                        result.Contents = GetHoverContent(itemGroupFromElement);
+                    else if (msbuildObject is MSBuildTarget targetFromElement)
+                        result.Contents = GetHoverContent(targetFromElement);
+                    else if (msbuildObject is MSBuildImport importFromElement)
+                        result.Contents = GetHoverContent(importFromElement);
                     else
                         return null;
                 }
                 else if (elementOrAttribute is XmlAttributeSyntax attribute)
                 {
-                    if (msbuildObjectAtPosition is MSBuildItem itemFromAttributeAtPosition && attribute.Name == "Sdk")
-                    {
-                        string metadataName = attribute.Name;
-                        if (String.Equals(metadataName, "Include"))
-                            metadataName = "Identity";
-
-                        string metadataValue = itemFromAttributeAtPosition.GetMetadataValue(metadataName);
-                        result.Contents = $"**Metadata**: {itemFromAttributeAtPosition.Name}({itemFromAttributeAtPosition.Include}).{metadataName} = '{metadataValue}'";
-                    }
-                    else if (msbuildObjectAtPosition is MSBuildSdkImport sdkImportFromAttribute)
-                    {
-                        StringBuilder importedProjectFiles = new StringBuilder();
-                        foreach (string projectFile in sdkImportFromAttribute.ImportedProjectFiles)
-                            importedProjectFiles.AppendLine($"* Imports [{Path.GetFileName(projectFile)}]({UriHelper.ToDocumentUri(projectFile)})");
-
-                        result.Contents = new MarkedStringContainer(
-                            $"**SDK Import**: {sdkImportFromAttribute.Name}",
-                            importedProjectFiles.ToString()
-                        );
-                    }
-                    else if (msbuildObjectAtPosition is MSBuildImport importFromAttribute && attribute.Name == "Project")
-                    {
-                        result.Contents = new MarkedStringContainer(
-                            $"**Import**: {importFromAttribute.Name}",
-                            $"* Imports [{Path.GetFileName(importFromAttribute.ImportedProjectRoot.FullPath)}]({UriHelper.ToDocumentUri(importFromAttribute.ImportedProjectRoot.FullPath)})"
-                        );
-                    }
+                    if (msbuildObject is MSBuildItemGroup itemGroupFromAttribute)
+                        result.Contents = GetHoverContent(itemGroupFromAttribute, attribute);
+                    else if (msbuildObject is MSBuildSdkImport sdkImportFromAttribute)
+                        result.Contents = GetHoverContent(sdkImportFromAttribute);
+                    else if (msbuildObject is MSBuildImport importFromAttribute)
+                        result.Contents = GetHoverContent(importFromAttribute);
                     else
                         return null;
                 }
@@ -318,21 +320,21 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 Position position = parameters.Position.ToNative();
 
                 // Try to match up the position with an element or attribute in the XML.
-                SyntaxNode xmlAtPosition = projectDocument.GetXmlAtPosition(position);
-                if (xmlAtPosition == null)
+                SyntaxNode xml = projectDocument.GetXmlAtPosition(position);
+                if (xml == null)
                     return null;
 
                 // Are we on an attribute?
-                XmlAttributeSyntax attributeAtPosition = xmlAtPosition.GetContainingAttribute();
-                if (attributeAtPosition == null)
+                XmlAttributeSyntax attribute = xml.GetContainingAttribute();
+                if (attribute == null)
                     return null;
 
                 // Must be a PackageReference element.
-                if (!String.Equals(attributeAtPosition.ParentElement.Name, "PackageReference", StringComparison.OrdinalIgnoreCase))
+                if (!String.Equals(attribute.ParentElement.Name, "PackageReference", StringComparison.OrdinalIgnoreCase))
                     return null;
 
                 // Are we on the attribute's value?
-                Range attributeValueRange = attributeAtPosition.ValueNode.Span
+                Range attributeValueRange = attribute.ValueNode.Span
                     .ToNative(projectDocument.XmlPositions)
                     .Transform( // Trim off leading and trailing quotes.
                         moveStartColumns: 1,
@@ -343,9 +345,9 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 try
                 {
-                    if (attributeAtPosition.Name == "Include")
+                    if (attribute.Name == "Include")
                     {
-                        string packageIdPrefix = attributeAtPosition.Value;
+                        string packageIdPrefix = attribute.Value;
                         SortedSet<string> packageIds = await projectDocument.SuggestPackageIds(packageIdPrefix, cancellationToken);
                         
                         completionItems.AddRange(
@@ -361,9 +363,9 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                             })
                         );
                     }
-                    else if (attributeAtPosition.Name == "Version")
+                    else if (attribute.Name == "Version")
                     {
-                        XmlAttributeSyntax includeAttribute = attributeAtPosition.ParentElement.AsSyntaxElement["Include"];
+                        XmlAttributeSyntax includeAttribute = attribute.ParentElement.AsSyntaxElement["Include"];
                         if (includeAttribute == null)
                             return null;
 
@@ -430,6 +432,35 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 foreach (MSBuildObject msbuildObject in projectDocument.MSBuildLookup.AllObjects)
                 {
+                    // Special case for item groups, which can contribute multiple symbols from a single item group.
+                    if (msbuildObject is MSBuildItemGroup itemGroup)
+                    {
+                        symbols.AddRange(itemGroup.Includes.Select(include =>
+                        {
+                            string trimmedInclude = String.Join(";",
+                                include.Split(
+                                    new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries
+                                )
+                                .Select(includedItem => includedItem.Trim())
+                            );
+                                
+
+                            return new SymbolInformation
+                            {
+                                Name = $"{itemGroup.Name} ({trimmedInclude})",
+                                Kind = SymbolKind.Array,
+                                ContainerName = "Item",
+                                Location = new Location
+                                {
+                                    Uri = projectDocument.DocumentUri,
+                                    Range = msbuildObject.XmlRange.ToLsp()
+                                }
+                            };
+                        }));
+
+                        continue;
+                    }
+
                     SymbolInformation symbol = new SymbolInformation
                     {
                         Name = msbuildObject.Name,
@@ -439,13 +470,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                             Range = msbuildObject.XmlRange.ToLsp()
                         }
                     };
-                    if (msbuildObject is MSBuildItem item)
-                    {
-                        symbol.ContainerName = "Item";
-                        symbol.Name = $"{item.Name} ({item.Include})";
-                        symbol.Kind = SymbolKind.Array;
-                    }
-                    else if (msbuildObject is MSBuildTarget)
+                    if (msbuildObject is MSBuildTarget)
                     {
                         symbol.ContainerName = "Target";
                         symbol.Kind = SymbolKind.Function;
@@ -516,7 +541,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                                 importedProjectRoot => new Location
                                 {
                                     Range = Range.Empty.ToLsp(),
-                                    Uri = UriHelper.ToDocumentUri(importedProjectRoot.Location.File)
+                                    Uri = UriHelper.CreateDocumentUri(importedProjectRoot.Location.File)
                                 }
                             )
                             .ToArray();
@@ -529,7 +554,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                         return new LocationOrLocations(new Location
                         {
                             Range = Range.Empty.ToLsp(),
-                            Uri = UriHelper.ToDocumentUri(importAtPosition.ImportedProjectRoot.Location.File)
+                            Uri = UriHelper.CreateDocumentUri(importAtPosition.ImportedProjectRoot.Location.File)
                         });
                     }
                 }
@@ -660,8 +685,201 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             {
                 Uri = projectDocument.DocumentUri,
                 Diagnostics = new Lsp.Models.Diagnostic[0] // Overwrites existing diagnostics for this document with an empty list
-            });
+            });   
+        }
+
+        /// <summary>
+        ///     Get hover content for an <see cref="MSBuildProperty"/>.
+        /// </summary>
+        /// <param name="property">
+        ///     The <see cref="MSBuildProperty"/>.
+        /// </param>
+        /// <returns>
+        ///     The content.
+        /// </returns>
+        MarkedStringContainer GetHoverContent(MSBuildProperty property)
+        {
+            if (property == null)
+                throw new ArgumentNullException(nameof(property));
             
+            return $"**Property**: {property.Name} = '{property.Value}'";
+        }
+
+        /// <summary>
+        ///     Get hover content for an <see cref="MSBuildUndefinedProperty"/>.
+        /// </summary>
+        /// <param name="undefinedProperty">
+        ///     The <see cref="MSBuildUndefinedProperty"/>.
+        /// </param>
+        /// <returns>
+        ///     The content.
+        /// </returns>
+        MarkedStringContainer GetHoverContent(MSBuildUndefinedProperty undefinedProperty, ProjectDocument projectDocument)
+        {
+            if (undefinedProperty == null)
+                throw new ArgumentNullException(nameof(undefinedProperty));
+            
+            string condition = undefinedProperty.PropertyElement.Condition;
+            string expandedCondition = projectDocument.MSBuildProject.ExpandString(condition);
+
+            return new MarkedStringContainer(
+                $"**Property**: {undefinedProperty.Name} != '{undefinedProperty.Value}' (condition evaluates to false)",
+                $"Condition:\n* Raw =`{condition}`\n* Evaluated = `{expandedCondition}`"
+            );
+        }
+
+        /// <summary>
+        ///     Get hover content for an <see cref="MSBuildItemGroup"/>.
+        /// </summary>
+        /// <param name="itemGroup">
+        ///     The <see cref="MSBuildItemGroup"/>.
+        /// </param>
+        /// <returns>
+        ///     The content.
+        /// </returns>
+        MarkedStringContainer GetHoverContent(MSBuildItemGroup itemGroup)
+        {
+            if (itemGroup == null)
+                throw new ArgumentNullException(nameof(itemGroup));
+            
+            if (itemGroup.Name == "PackageReference")
+            {
+                string packageVersion = itemGroup.GetFirstMetadataValue("Version");
+                
+                return $"**NuGet Package**: {itemGroup.FirstInclude} v{packageVersion}";
+            }
+
+            if (itemGroup.HasSingleItem)
+                return $"**Item**: {itemGroup.OriginatingElement.ItemType}({itemGroup.FirstInclude})";
+
+            string[] includes = itemGroup.Includes.ToArray();
+            StringBuilder itemIncludeContent = new StringBuilder();
+            itemIncludeContent.AppendLine(
+                $"Include = `{itemGroup.OriginatingElement.Include}`  "
+            );
+            itemIncludeContent.AppendLine(
+                $"Evaluates to {itemGroup.Items.Count} items:"
+            );
+            foreach (string include in includes.Take(5))
+            {
+                itemIncludeContent.AppendLine(
+                    $"* {include}"
+                );
+            }
+            if (includes.Length > 5)
+                itemIncludeContent.AppendLine("* ...");
+
+            return new MarkedStringContainer(
+                $"**Items**: {itemGroup.OriginatingElement.ItemType}",
+                itemIncludeContent.ToString()
+            );  
+        }
+
+        /// <summary>
+        ///     Get hover content for an attribute of an <see cref="MSBuildItemGroup"/>.
+        /// </summary>
+        /// <param name="itemGroup">
+        ///     The <see cref="MSBuildItemGroup"/>.
+        /// </param>
+        /// <param name="attribute">
+        ///     The attribute.
+        /// </param>
+        /// <returns>
+        ///     The content.
+        /// </returns>
+        MarkedStringContainer GetHoverContent(MSBuildItemGroup itemGroup, XmlAttributeSyntax attribute)
+        {
+            if (itemGroup == null)
+                throw new ArgumentNullException(nameof(itemGroup));
+
+            // TODO: Handle the "Condition" attribute.
+
+            string metadataName = attribute.Name;
+            if (String.Equals(metadataName, "Include"))
+                metadataName = "Identity";
+
+            if (itemGroup.Items.Count == 1)
+            {
+                string metadataValue = itemGroup.GetFirstMetadataValue(metadataName);
+                
+                return $"**Metadata**: {itemGroup.Name}({itemGroup.FirstInclude}).{metadataName} = '{metadataValue}'";
+            }
+
+            StringBuilder metadataValues = new StringBuilder();
+            metadataValues.AppendLine("Values:");
+
+            foreach (string metadataValue in itemGroup.GetMetadataValues(metadataName).Distinct())
+            {
+                metadataValues.AppendLine(
+                    $"* {metadataValue}"
+                );
+            }
+
+            return new MarkedStringContainer(
+                $"**Metadata**: {itemGroup.Name}({itemGroup.FirstRawInclude}).{metadataName}",
+                metadataValues.ToString()
+            );
+        }
+
+        /// <summary>
+        ///     Get hover content for an <see cref="MSBuildTarget"/>.
+        /// </summary>
+        /// <param name="target">
+        ///     The <see cref="MSBuildTarget"/>.
+        /// </param>
+        /// <returns>
+        ///     The content.
+        /// </returns>
+        MarkedStringContainer GetHoverContent(MSBuildTarget target)
+        {
+            if (target == null)
+                throw new ArgumentNullException(nameof(target));
+            
+            return $"**Target**: {target.Name}";
+        }
+
+        /// <summary>
+        ///     Get hover content for an <see cref="MSBuildImport"/>.
+        /// </summary>
+        /// <param name="import">
+        ///     The <see cref="MSBuildImport"/>.
+        /// </param>
+        /// <returns>
+        ///     The content.
+        /// </returns>
+        MarkedStringContainer GetHoverContent(MSBuildImport import)
+        {
+            if (import == null)
+                throw new ArgumentNullException(nameof(import));
+            
+            string importedProject = import.ProjectImportElement.Project;
+            Uri projectFileUri = UriHelper.CreateDocumentUri(import.ImportedProjectRoot.Location.File);
+
+            return $"**Import**: [{importedProject}]({projectFileUri})";
+        }
+
+        /// <summary>
+        ///     Get hover content for an <see cref="MSBuildSdkImport"/>.
+        /// </summary>
+        /// <param name="sdkImport">
+        ///     The <see cref="MSBuildSdkImport"/>.
+        /// </param>
+        /// <returns>
+        ///     The content.
+        /// </returns>
+        MarkedStringContainer GetHoverContent(MSBuildSdkImport sdkImport)
+        {
+            if (sdkImport == null)
+                throw new ArgumentNullException(nameof(sdkImport));
+            
+            StringBuilder importedProjectFiles = new StringBuilder();
+            foreach (string projectFile in sdkImport.ImportedProjectFiles)
+                importedProjectFiles.AppendLine($"* Imports [{Path.GetFileName(projectFile)}]({UriHelper.CreateDocumentUri(projectFile)})");
+
+            return new MarkedStringContainer(
+                $"**SDK Import**: {sdkImport.Name}",
+                importedProjectFiles.ToString()
+            );
         }
     }
 }

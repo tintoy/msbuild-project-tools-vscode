@@ -1,5 +1,11 @@
 # Change Log
 
+## v0.1.0-beta2
+
+* More informative tooltips on hover
+* Handle multiple items originating from a single item group element in the XML.
+* Improved error handling
+
 ## v0.1.0-beta1
 
 * Implement go-to-definition for project-style and SDK-style imports.

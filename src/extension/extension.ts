@@ -33,13 +33,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
         loadConfiguration();
     
-        let canEnableLanguageService: boolean;
+        let canEnableLanguageService = false;
         if (enableLanguageService) {
             const dotnetVersion = await dotnet.getVersion();
             canEnableLanguageService = dotnetVersion && semver.gte(dotnetVersion, '2.0.0');
         }
     
-        if (canEnableLanguageService && enableLanguageService) {
+        if (enableLanguageService && canEnableLanguageService) {
             const languageClient = await createLanguageClient(context);
             
             outputChannel = languageClient.outputChannel;
@@ -53,7 +53,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             outputChannel = vscode.window.createOutputChannel('MSBuild Project File Tools');
             
             if (enableLanguageService && !canEnableLanguageService)
-                outputChannel.appendLine('Cannot enable the MSBuild language service because .NET Core 2.0.0 was not found on the system path.');
+                outputChannel.appendLine('Cannot enable the MSBuild language service because .NET Core >= 2.0.0 was not found on the system path.');
         
             outputChannel.appendLine('MSBuild language service disabled; using the classic completion provider.');
             

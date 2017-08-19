@@ -1,10 +1,10 @@
 # MSBuild project file tools
 
-An extension for VS Code that provides auto-complete when editing `<PackageReference>` elements MSBuild project files.
+An extension for VS Code that provides intellisense for MSBuild project files, including auto-complete for `<PackageReference>` elements.
 
-![PackageReference completion](docs/images/package-reference-completion.gif)
+![PackageReference completion](docs/images/extension-in-action.gif)
 
-**Note**: this is an experimental version of the extension that uses an out-of-process language server using Microsoft's Language Server Protocol. It is functional but is not yet ready for production use.
+**Note**: there are some experimental features in the extension that use an out-of-process language server. This is disabled by default but you can enable it by setting `msbuildProjectFileTools.languageService.enable` to `true` in your VSCode preferences. You don't have to use it, but it does provide a lot of additional functionality and is already fairly stable.
 
 ## Usage
 
@@ -16,12 +16,12 @@ An extension for VS Code that provides auto-complete when editing `<PackageRefer
 
 ## Installation
 
-To install this extension, [download](https://github.com/tintoy/msbuild-project-tools-vscode/releases/) the VSIX package for the latest experimental release and install it by choosing "Install from VSIX" from the menu on the top right of the extensions panel.
+You can install this extension from the [VS marketplace](https://marketplace.visualstudio.com/items?itemName=tintoy.msbuild-project-tools), or simply [download](https://github.com/tintoy/msbuild-project-tools-vscode/releases/latest) the VSIX package for the latest release and install it by choosing "Install from VSIX" from the menu on the top right of the extensions panel.
 
 ## Limitations
 
 * This extension uses the NuGet v3 API to resolve package names and versions. The API is pretty slow, unfortunately; I'll try to improve performance / result caching in the next release.
-* Intellisense is not currently available for properties, items, and targets that only have conditions evaluating to `false` as they are not technically defined in the project. I'll see what I can do about this in the next release.
+* Intellisense is not currently available for items with conditions evaluating to `false` as they are not present in the MSBuild project at runtime. I've fixed this for properties, so there's definitely a way forward; hopefully in the next release.
 
 ## Questions / bug reports
 

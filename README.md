@@ -4,13 +4,14 @@ An extension for VS Code that provides auto-complete when editing `<PackageRefer
 
 ![PackageReference completion](docs/images/package-reference-completion.gif)
 
-**Note**: this is an experimental version of the extension that uses an out-of-process language server using Microsoft's Language Server Protocol. It is functional but is definitely **not ready for production**.
+**Note**: this is an experimental version of the extension that uses an out-of-process language server using Microsoft's Language Server Protocol. It is functional but is not yet ready for production use.
 
 ## Usage
 
 * When you're editing your project file, type `pr` then press `tab` to insert a `PackageReference` element.
 * Move to the `Include` or `Version` attribute of your `PackageReference` element and press `ctrl+space` to bring up a list of package Ids / versions.
 * Hover the mouse over targets, items, and properties to see information about them.
+* Go-to-definition is implemented for both SDK-style and regular project imports.
 
 ## Installation
 

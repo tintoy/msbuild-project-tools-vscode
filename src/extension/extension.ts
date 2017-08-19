@@ -2,9 +2,11 @@
 
 import { default as axios } from 'axios';
 import * as path from 'path';
+import * as semver from 'semver';
 import * as vscode from 'vscode';
 import { LanguageClient, ServerOptions, LanguageClientOptions, ErrorAction, CloseAction } from 'vscode-languageclient';
 
+import * as dotnet from './utils/dotnet';
 import * as executables from './utils/executables';
 import { PackageReferenceCompletionProvider } from './providers/package-reference-completion';
 import { Trace } from 'vscode-jsonrpc/lib/main';
@@ -23,34 +25,53 @@ let outputChannel: vscode.OutputChannel;
  * @param context The extension context.
  */
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
-    loadConfiguration();
+    const progressOptions: vscode.ProgressOptions = {
+        location: vscode.ProgressLocation.Window
+    };
+    await vscode.window.withProgress(progressOptions, async progress => {
+        progress.report({
+            message: 'Initialising MSBuild project tools...'
+        });
 
-    if (enableLanguageService) {
-        const languageClient = await createLanguageClient(context);
+        loadConfiguration();
+    
+        let canEnableLanguageService: boolean;
+        if (enableLanguageService) {
+            const dotnetVersion = await dotnet.getVersion();
+            canEnableLanguageService = dotnetVersion && semver.gte(dotnetVersion, '2.0.0');
+        }
+    
+        if (canEnableLanguageService && enableLanguageService) {
+            const languageClient = await createLanguageClient(context);
+            
+            outputChannel = languageClient.outputChannel;
+            outputChannel.appendLine('Starting MSBuild language service...');
+            context.subscriptions.push(
+                languageClient.start()
+            );
+            await languageClient.onReady();
+            outputChannel.appendLine('MSBuild language service is running.');
+        } else {
+            outputChannel = vscode.window.createOutputChannel('MSBuild Project File Tools');
+            
+            if (enableLanguageService && !canEnableLanguageService)
+                outputChannel.appendLine('Cannot enable the MSBuild language service because .NET Core 2.0.0 was not found on the system path.');
         
-        outputChannel = languageClient.outputChannel;
-        outputChannel.appendLine('Starting MSBuild language service...');
-        context.subscriptions.push(
-            languageClient.start()
-        );
-        await languageClient.onReady();
-        outputChannel.appendLine('MSBuild language service is running.');
-    } else {
-        outputChannel = vscode.window.createOutputChannel('MSBuild Project File Tools');
-        outputChannel.appendLine('MSBuild language service disabled; using the classic completion provider.');
-        
-        const nugetEndPointURLs = await getNuGetV3AutoCompleteEndPoints();
-        context.subscriptions.push(
-            vscode.languages.registerCompletionItemProvider(
-                { language: 'xml', pattern: '**/*.*proj' }, 
-                new PackageReferenceCompletionProvider(
-                    nugetEndPointURLs[0] // For now, just default to using the primary.
+            outputChannel.appendLine('MSBuild language service disabled; using the classic completion provider.');
+            
+            const nugetEndPointURLs = await getNuGetV3AutoCompleteEndPoints();
+            context.subscriptions.push(
+                vscode.languages.registerCompletionItemProvider(
+                    { language: 'xml', pattern: '**/*.*proj' }, 
+                    new PackageReferenceCompletionProvider(
+                        nugetEndPointURLs[0] // For now, just default to using the primary.
+                    )
                 )
-            )
-        );
-
-        outputChannel.appendLine('Classic completion provider is now enabled.');
-    }
+            );
+    
+            outputChannel.appendLine('Classic completion provider is now enabled.');
+        }
+    });
 }
 
 /**

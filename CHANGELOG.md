@@ -1,8 +1,9 @@
 # Change Log
 
-## v0.1.0-alpha3
+## v0.1.0-beta1
 
 * Implement go-to-definition for project-style and SDK-style imports.
+* Detect .NET Core version on startup, and fall back to classic completion provider if >= 2.0.0 is not available.
 
 ## v0.1.0-alpha2
 

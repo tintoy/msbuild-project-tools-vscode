@@ -9,6 +9,11 @@ namespace MSBuildProjectTools.LanguageServer
         : IEquatable<Position>, IComparable<Position>, IComparable<Range>
     {
         /// <summary>
+        ///     An invalid position (-1,-1).
+        /// </summary>
+        public static Position Invalid = new Position(-1,-1);
+
+        /// <summary>
         ///     The origin position (1,1).
         /// </summary>
         public static Position Origin = new Position(1,1);

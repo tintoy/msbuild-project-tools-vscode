@@ -67,6 +67,9 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
             if (location == null)
                 return null;
 
+            if (location.Line == 0)
+                return Position.Invalid;
+
             return new Position(location.Line, location.Column);
         }
 

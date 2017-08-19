@@ -1,3 +1,6 @@
+using Microsoft.Build.Construction;
+using Microsoft.Build.Evaluation;
+
 namespace MSBuildProjectTools.LanguageServer.MSBuild
 {
     /// <summary>
@@ -23,6 +26,16 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         /// <summary>
         ///     A property (<see cref="ProjectProperty"/>) in an MSBuild project.
         /// </summary>
-        Property = 3
+        Property = 3,
+
+        /// <summary>
+        ///     A project import (<see cref="ResolvedImport"/>) in an MSBuild project.
+        /// </summary>
+        Import = 4,
+
+        /// <summary>
+        ///     An SDK-style project import (<see cref="ResolvedImport"/>) in an MSBuild project.
+        /// </summary>
+        SdkImport = 5
     }
 }

@@ -216,11 +216,22 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                     if (msbuildObjectAtPosition is MSBuildProperty propertyFromElementAtPosition)
                         result.Contents = $"**Property**: {propertyFromElementAtPosition.Name} = '{propertyFromElementAtPosition.Value}'";
                     else if (msbuildObjectAtPosition is MSBuildItem itemFromElementAtPosition)
-                        result.Contents = $"**Item**: {element.Name.Name}({itemFromElementAtPosition.Include})";
+                    {
+                        if (itemFromElementAtPosition.Name == "PackageReference")
+                        {
+                            string packageVersion = itemFromElementAtPosition.GetMetadataValue("Version");
+                            result.Contents = $"**NuGet Package**: {itemFromElementAtPosition.Include} v{packageVersion}";
+                        }
+                        else
+                            result.Contents = $"**Item**: {element.Name.Name}({itemFromElementAtPosition.Include})";
+
+                    }
                     else if (msbuildObjectAtPosition is MSBuildTarget targetFromElementAtPosition)
                         result.Contents = $"**Target**: {targetFromElementAtPosition.Name}";
+                    else if (msbuildObjectAtPosition is MSBuildImport importFromElementAtPosition)
+                        result.Contents = $"**Import**: {importFromElementAtPosition.ProjectImportElement.Project}";
                     else
-                        result.Contents = $"**Element**: {element.Name.Name}";
+                        return null;
                 }
                 else if (elementOrAttribute is XmlAttributeSyntax attribute)
                 {
@@ -233,8 +244,10 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                         string metadataValue = itemFromAttributeAtPosition.GetMetadataValue(metadataName);
                         result.Contents = $"**Metadata**: {itemFromAttributeAtPosition.Name}({itemFromAttributeAtPosition.Include}).{metadataName} = '{metadataValue}'";
                     }
+                    else if (msbuildObjectAtPosition is MSBuildSdkImport sdkImportFromAttribute)
+                        result.Contents = $"**SDK Import**: {sdkImportFromAttribute.Name}";
                     else
-                        result.Contents = $"**Attribute**: {attribute.Name} (='{attribute.Value}')";
+                        return null;
                 }
                 else
                     return null;
@@ -380,10 +393,9 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 foreach (MSBuildObject msbuildObject in projectDocument.MSBuildLookup.AllObjects)
                 {
-                    SymbolInformation symbolInformation = new SymbolInformation
+                    SymbolInformation symbol = new SymbolInformation
                     {
                         Name = msbuildObject.Name,
-                        ContainerName = "MSBuild",
                         Location = new Location
                         {
                             Uri = projectDocument.DocumentUri,
@@ -392,22 +404,101 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                     };
                     if (msbuildObject is MSBuildItem item)
                     {
-                        symbolInformation.Name = $"{item.Name} ({item.Include})";
-                        symbolInformation.Kind = SymbolKind.Array;
+                        symbol.ContainerName = "Item";
+                        symbol.Name = $"{item.Name} ({item.Include})";
+                        symbol.Kind = SymbolKind.Array;
                     }
-                    else if (msbuildObject is MSBuildTarget target)
-                        symbolInformation.Kind = SymbolKind.Function;
-                    else if (msbuildObject is MSBuildProperty property)
-                        symbolInformation.Kind = SymbolKind.Property;
+                    else if (msbuildObject is MSBuildTarget)
+                    {
+                        symbol.ContainerName = "Target";
+                        symbol.Kind = SymbolKind.Function;
+                    }
+                    else if (msbuildObject is MSBuildProperty)
+                    {
+                        symbol.ContainerName = "Property";
+                        symbol.Kind = SymbolKind.Property;
+                    }
+                    else if (msbuildObject is MSBuildImport)
+                    {
+                        symbol.ContainerName = "Import";
+                        symbol.Kind = SymbolKind.Package;
+                    }
+                    else if (msbuildObject is MSBuildSdkImport)
+                    {
+                        symbol.ContainerName = "Import (SDK)";
+                        symbol.Kind = SymbolKind.Package;
+                    }
+                    else
+                        continue;
 
-                    symbols.Add(symbolInformation);
+                    symbols.Add(symbol);
                 }
             }
 
             if (symbols.Count == 0)
                 return null;
 
-            return new SymbolInformationContainer(symbols);
+            return new SymbolInformationContainer(
+                symbols.OrderBy(symbol => symbol.Name)
+            );
+        }
+
+        /// <summary>
+        ///     Called when a definition is requested.
+        /// </summary>
+        /// <param name="parameters">
+        ///     The request parameters.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///     A <see cref="CancellationToken"/> that can be used to cancel the request.
+        /// </param>
+        /// <returns>
+        ///     A <see cref="Task"/> representing the operation whose result is the definition location or <c>null</c> if no definition is provided.
+        /// </returns>
+        protected override async Task<LocationOrLocations> OnDefinition(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
+        {
+            ProjectDocument projectDocument = await GetProjectDocument(parameters.TextDocument.Uri);
+
+            using (await projectDocument.Lock.ReaderLockAsync(cancellationToken))
+            {
+                if (!projectDocument.HasMSBuildProject)
+                    return null;
+
+                Position position = parameters.Position.ToNative();
+                MSBuildObject msbuildObjectAtPosition = projectDocument.GetMSBuildObjectAtPosition(position);
+                if (msbuildObjectAtPosition == null)
+                    return null;
+
+                if (msbuildObjectAtPosition is MSBuildSdkImport import)
+                {
+                    if (msbuildObjectAtPosition is MSBuildSdkImport sdkImportAtPosition)
+                    {
+                        // TODO: Parse imported project and determine location of root element (use that range instead).
+                        Location[] locations =
+                            sdkImportAtPosition.ImportedProjectRoots.Select(
+                                importedProjectRoot => new Location
+                                {
+                                    Range = Range.Empty.ToLsp(),
+                                    Uri = UriHelper.ToDocumentUri(importedProjectRoot.Location.File)
+                                }
+                            )
+                            .ToArray();
+
+                        return new LocationOrLocations(locations);
+                    }
+                    else if (msbuildObjectAtPosition is MSBuildImport importAtPosition)
+                    {
+                        // TODO: Parse imported project and determine location of root element (use that range instead).
+                        return new LocationOrLocations(new Location
+                        {
+                            Range = Range.Empty.ToLsp(),
+                            Uri = UriHelper.ToDocumentUri(importAtPosition.ImportedProjectRoot.Location.File)
+                        });
+                    }
+                }
+            }
+
+            return null;
         }
 
         /// <summary>

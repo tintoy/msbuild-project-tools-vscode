@@ -46,7 +46,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         {
             if (elements == null)
                 throw new ArgumentNullException(nameof(elements));
-            
+
             return elements.SelectMany(
                 element => element.Descendants()
             );
@@ -69,7 +69,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
 
             do
                 yield return parent;
-                while ((parent = parent.Parent) != null);
+            while ((parent = parent.Parent) != null);
         }
 
         /// <summary>
@@ -115,9 +115,9 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
 
             do
                 yield return parent;
-                while ((parent = parent.Parent) != null);
+            while ((parent = parent.Parent) != null);
         }
-        
+
         /// <summary>
         ///     Get the syntax node's first ancestor of the specified type.
         /// </summary>
@@ -148,7 +148,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
 
             if (syntaxNode is XmlElementSyntaxBase element)
                 return element;
-            
+
             return syntaxNode.GetFirstParentOfType<XmlElementSyntaxBase>();
         }
 
@@ -168,7 +168,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
 
             if (syntaxNode is XmlAttributeSyntax attribute)
                 return attribute;
-            
+
             return syntaxNode.GetFirstParentOfType<XmlAttributeSyntax>();
         }
 
@@ -260,16 +260,42 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         {
             if (syntaxNode == null)
                 throw new ArgumentNullException(nameof(syntaxNode));
-            
+
             if (position == null)
                 throw new ArgumentNullException(nameof(position));
-            
+
             if (xmlPositions == null)
                 throw new ArgumentNullException(nameof(xmlPositions));
-            
+
             return SyntaxLocator.FindNode(syntaxNode,
                 position: xmlPositions.GetAbsolutePosition(position)
             );
+        }
+
+        /// <summary>
+        ///     Get a <see cref="Range"/> representing the attribute's span (without quotes) in the XML.
+        /// </summary>
+        /// <param name="attribute">
+        ///     The attribute.
+        /// </param>
+        /// <param name="xmlPositions">
+        ///     The XML position lookup.
+        /// </param>
+        /// <returns>
+        ///     The <see cref="Range"/>.
+        /// </returns>
+        public static Range GetValueRange(this XmlAttributeSyntax attribute, TextPositions xmlPositions)
+        {
+            if (attribute == null)
+                throw new ArgumentNullException(nameof(attribute));
+
+            if (xmlPositions == null)
+                throw new ArgumentNullException(nameof(xmlPositions));
+
+            Range valueRange = attribute.ValueNode.Span.ToNative(xmlPositions);
+
+            // Trim off leading and trailing quotes.
+            return valueRange.Transform(moveStartColumns: 1, moveEndColumns: -1);
         }
     }
 }

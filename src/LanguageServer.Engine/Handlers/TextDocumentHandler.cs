@@ -17,7 +17,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
     ///     The base class for language server text-document event handlers.
     /// </summary>
     public abstract class TextDocumentHandler
-        : Handler, ITextDocumentSyncHandler, IHoverHandler, ICompletionHandler, IDocumentSymbolHandler
+        : Handler, ITextDocumentSyncHandler, IHoverHandler, ICompletionHandler, IDocumentSymbolHandler, IDefinitionHandler
     {
         /// <summary>
         ///     Create a new <see cref="TextDocumentHandler"/>.
@@ -72,6 +72,11 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         ///     The server's document symbol capabilities.
         /// </summary>
         protected DocumentSymbolCapability DocumentSymbolCapabilities { get; private set; }
+
+        /// <summary>
+        ///     The server's definition capabilities.
+        /// </summary>
+        protected DefinitionCapability DefinitionCapabilities { get; private set; }
 
         /// <summary>
         ///     Called when a text document is opened.
@@ -158,6 +163,20 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         ///     A <see cref="Task"/> representing the operation whose result is the symbol container or <c>null</c> if no symbols are provided.
         /// </returns>
         protected virtual Task<SymbolInformationContainer> OnDocumentSymbols(DocumentSymbolParams parameters, CancellationToken cancellationToken) => Task.FromResult<SymbolInformationContainer>(null);
+
+        /// <summary>
+        ///     Called when a definition is requested.
+        /// </summary>
+        /// <param name="parameters">
+        ///     The request parameters.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///     A <see cref="CancellationToken"/> that can be used to cancel the request.
+        /// </param>
+        /// <returns>
+        ///     A <see cref="Task"/> representing the operation whose result is the definition location or <c>null</c> if no definition is provided.
+        /// </returns>
+        protected virtual Task<LocationOrLocations> OnDefinition(TextDocumentPositionParams parameters, CancellationToken cancellationToken) => Task.FromResult<LocationOrLocations>(null);
 
         /// <summary>
         ///     Get global registration options for handling document events.
@@ -326,6 +345,23 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         }
 
         /// <summary>
+        ///     Handle a request for a definition.
+        /// </summary>
+        /// <param name="parameters">
+        ///     The request parameters.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///     A <see cref="CancellationToken"/> that can be used to cancel the request.
+        /// </param>
+        /// <returns>
+        ///     A <see cref="Task"/> representing the operation whose result is definition location or <c>null</c> if no definition is provided.
+        /// </returns>
+        Task<LocationOrLocations> IRequestHandler<TextDocumentPositionParams, LocationOrLocations>.Handle(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
+        {
+            return OnDefinition(parameters, cancellationToken);
+        }
+
+        /// <summary>
         ///     Get global registration options for handling document events.
         /// </summary>
         /// <returns>
@@ -403,7 +439,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         ///     Called to inform the handler of the language server's document symbol capabilities.
         /// </summary>
         /// <param name="capabilities">
-        ///     A <see cref="CompletionCapability"/> data structure representing the capabilities.
+        ///     A <see cref="DocumentSymbolCapability"/> data structure representing the capabilities.
         /// </param>
         void ICapability<DocumentSymbolCapability>.SetCapability(DocumentSymbolCapability capabilities)
         {
@@ -411,6 +447,20 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 throw new ArgumentNullException(nameof(capabilities));
 
             DocumentSymbolCapabilities = capabilities;
+        }
+
+        /// <summary>
+        ///     Called to inform the handler of the language server's definition capabilities.
+        /// </summary>
+        /// <param name="capabilities">
+        ///     A <see cref="DefinitionCapability"/> data structure representing the capabilities.
+        /// </param>
+        void ICapability<DefinitionCapability>.SetCapability(DefinitionCapability capabilities)
+        {
+            if (capabilities == null)
+                throw new ArgumentNullException(nameof(capabilities));
+            
+            DefinitionCapabilities = capabilities;
         }
 
         /// <summary>

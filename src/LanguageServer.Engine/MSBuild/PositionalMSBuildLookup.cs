@@ -7,6 +7,7 @@ using System.Xml.Linq;
 
 namespace MSBuildProjectTools.LanguageServer.MSBuild
 {
+    using System.Linq;
     using Utilities;
 
     /// <summary>
@@ -83,7 +84,7 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
 
             foreach (ProjectProperty property in _project.Properties)
             {
-                if (property.Xml == null || property.Xml.Location.File != projectFilePath)
+                if (property.Xml == null || !String.Equals(property.Xml.Location.File, projectFilePath, StringComparison.OrdinalIgnoreCase))
                     continue; // Not declared in main project file.
 
                 Position propertyStart = property.Xml.Location.ToNative();
@@ -106,7 +107,7 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
 
             foreach (ProjectItem item in _project.Items)
             {
-                if (item.Xml == null || item.Xml.Location.File != projectFilePath)
+                if (item.Xml == null || !String.Equals(item.Xml.Location.File, projectFilePath, StringComparison.OrdinalIgnoreCase))
                     continue; // Not declared in main project file.
 
                 Position itemStart = item.Xml.Location.ToNative();
@@ -129,6 +130,70 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
                 _objectsByStartPosition.Add(itemRange.Start,
                     new MSBuildItem(item, itemElement, itemRange)
                 );
+            }
+
+            // TODO: Include position of project SDK import.
+            var importsBySdk =
+                project.Imports.Where(import =>
+                    String.Equals(import.ImportingElement.Location.File, projectFilePath, StringComparison.OrdinalIgnoreCase)
+                    &&
+                    import.ImportedProject.Location != null
+                )
+                .GroupBy(
+                    import => import.ImportingElement.Sdk
+                );
+            foreach (var importGroup in importsBySdk)
+            {
+                string importingSdk = importGroup.Key;
+                if (importingSdk != String.Empty)
+                {
+                    // An SDK-style import.
+                    ResolvedImport firstImport = importGroup.First();
+                    Position importStart = firstImport.ImportingElement.Location.ToNative();
+
+                    // If the Sdk attribute is on the Project element rather than an import element, then the location reported by MSBuild will be invalid (go figure).
+                    if (importStart == Position.Invalid)
+                        importStart = Position.Origin;
+                    
+                    SyntaxNode xmlAtPosition = projectXml.FindNode(importStart, xmlPositions);
+                    if (xmlAtPosition == null)
+                        continue;
+
+                    XmlElementSyntaxBase importElement = xmlAtPosition.GetContainingElement();
+                    if (importElement == null)
+                        continue;
+
+                    XmlAttributeSyntax sdkAttribute = importElement.AsSyntaxElement["Sdk"];
+                    Range importRange = sdkAttribute.Span.ToNative(xmlPositions);
+
+                    _objectRanges.Add(importRange);
+                    _objectsByStartPosition.Add(importRange.Start,
+                        new MSBuildSdkImport(importGroup.ToArray(), sdkAttribute, importRange)
+                    );
+                }
+                else
+                {
+                    // A regular import.
+                    foreach (ResolvedImport import in importGroup)
+                    {
+                        Position importStart = import.ImportingElement.Location.ToNative();
+                        
+                        SyntaxNode xmlAtPosition = projectXml.FindNode(importStart, xmlPositions);
+                        if (xmlAtPosition == null)
+                            continue;
+
+                        XmlElementSyntaxBase importElement = xmlAtPosition.GetContainingElement();
+                        if (importElement == null)
+                            continue;
+
+                        Range importRange = importElement.Span.ToNative(xmlPositions);
+                            
+                        _objectRanges.Add(importRange);
+                        _objectsByStartPosition.Add(importRange.Start,
+                            new MSBuildImport(import, importElement, importRange)
+                        );
+                    }
+                }
             }
 
             _objectRanges.Sort();

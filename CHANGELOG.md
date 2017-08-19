@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.1.0-alpha3
+
+* Implement go-to-definition for project-style and SDK-style imports.
+
 ## v0.1.0-alpha2
 
 * Add configuration property (`msbuildProjectFileTools.languageService.enable`) to switch between MSBuild language engine and classic completion provider.

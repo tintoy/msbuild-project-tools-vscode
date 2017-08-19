@@ -15,7 +15,7 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         /// <summary>
         ///     Create a new <see cref="MSBuildItem"/>.
         /// </summary>
-        /// <param name="target">
+        /// <param name="item">
         ///     The underlying MSBuild <see cref="ProjectItem"/>.
         /// </param>
         /// <param name="element">

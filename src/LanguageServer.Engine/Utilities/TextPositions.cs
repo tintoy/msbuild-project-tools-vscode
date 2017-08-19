@@ -36,6 +36,11 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         }
 
         /// <summary>
+        ///     The number of lines in the text.
+        /// </summary>
+        public int LineCount => _lineLengths.Length;
+
+        /// <summary>
         ///     Convert a <see cref="Position"/> to an absolute position within the text.
         /// </summary>
         /// <param name="position">
@@ -68,6 +73,12 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         /// </returns>
         public int GetAbsolutePosition(int line, int column)
         {
+            if (line < 1)
+                throw new ArgumentOutOfRangeException(nameof(line), line, "Line cannot be less than 1.");
+
+            if (column < 1)
+                throw new ArgumentOutOfRangeException(nameof(column), column, "Column cannot be less than 1.");
+
             // Indexes are 0-based.
             int targetLine = line - 1;
             int targetColumn = column - 1;

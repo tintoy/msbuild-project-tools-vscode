@@ -9,6 +9,11 @@ namespace MSBuildProjectTools.LanguageServer
         : IEquatable<Range>, IComparable<Range>
     {
         /// <summary>
+        ///     An empty range (1,1-1,1).
+        /// </summary>
+        public static readonly Range Empty = new Range(start: Position.Origin, end: Position.Origin);
+
+        /// <summary>
         ///     Create a new <see cref="Range"/>.
         /// </summary>
         /// <param name="start">

@@ -95,13 +95,13 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
 
             return new Dictionary<string, string>
             {
-                [MSBuildProperties.DesignTimeBuild] = "true",
-                [MSBuildProperties.BuildProjectReferences] = "false",
-                [MSBuildProperties.ResolveReferenceDependencies] = "true",
-                [MSBuildProperties.SolutionDir] = solutionDirectory,
-                [MSBuildProperties.MSBuildExtensionsPath] = runtimeInfo.BaseDirectory,
-                [MSBuildProperties.MSBuildSDKsPath] = Path.Combine(runtimeInfo.BaseDirectory, "Sdks"),
-                [MSBuildProperties.RoslynTargetsPath] = Path.Combine(runtimeInfo.BaseDirectory, "Roslyn")
+                [MSBuildPropertyNames.DesignTimeBuild] = "true",
+                [MSBuildPropertyNames.BuildProjectReferences] = "false",
+                [MSBuildPropertyNames.ResolveReferenceDependencies] = "true",
+                [MSBuildPropertyNames.SolutionDir] = solutionDirectory,
+                [MSBuildPropertyNames.MSBuildExtensionsPath] = runtimeInfo.BaseDirectory,
+                [MSBuildPropertyNames.MSBuildSDKsPath] = Path.Combine(runtimeInfo.BaseDirectory, "Sdks"),
+                [MSBuildPropertyNames.RoslynTargetsPath] = Path.Combine(runtimeInfo.BaseDirectory, "Roslyn")
             };
         }
 
@@ -118,12 +118,12 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
 
             // Kinda sucks that the simplest way to get MSBuild to resolve SDKs correctly is using environment variables, but there you go.
             Environment.SetEnvironmentVariable(
-                MSBuildProperties.MSBuildExtensionsPath,
-                globalMSBuildProperties[MSBuildProperties.MSBuildExtensionsPath]
+                MSBuildPropertyNames.MSBuildExtensionsPath,
+                globalMSBuildProperties[MSBuildPropertyNames.MSBuildExtensionsPath]
             );
             Environment.SetEnvironmentVariable(
-                MSBuildProperties.MSBuildSDKsPath,
-                globalMSBuildProperties[MSBuildProperties.MSBuildSDKsPath]
+                MSBuildPropertyNames.MSBuildSDKsPath,
+                globalMSBuildProperties[MSBuildPropertyNames.MSBuildSDKsPath]
             );
         }
 

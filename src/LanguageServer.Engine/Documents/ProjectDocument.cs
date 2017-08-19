@@ -89,6 +89,16 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             ProjectFile = new FileInfo(
                 documentUri.GetFileSystemPath()
             );
+
+            if (ProjectFile.Extension.EndsWith("proj", StringComparison.OrdinalIgnoreCase))
+                Kind = ProjectDocumentKind.Project;
+            else if (ProjectFile.Extension.Equals(".props", StringComparison.OrdinalIgnoreCase))
+                Kind = ProjectDocumentKind.Properties;
+            else if (ProjectFile.Extension.Equals(".targets", StringComparison.OrdinalIgnoreCase))
+                Kind = ProjectDocumentKind.Targets;
+            else
+                throw new ArgumentException($"Unexpected project file extension '{ProjectFile.Extension}'.", nameof(documentUri));
+
             Log = logger.ForContext("ProjectDocument", ProjectFile.FullName);
         }
 
@@ -101,6 +111,11 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         ///     The project file.
         /// </summary>
         public FileInfo ProjectFile { get; }
+
+        /// <summary>
+        ///     The kind of project document.
+        /// </summary>
+        public ProjectDocumentKind Kind { get; }
 
         /// <summary>
         ///     A lock used to control access to project state.
@@ -158,6 +173,14 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         ///     The project is not loaded.
         /// </exception>
         public PositionalMSBuildLookup MSBuildLookup => _msbuildLookup ?? throw new InvalidOperationException("MSBuild project is not loaded.");
+
+        /// <summary>
+        ///     MSBuild objects in the project that correspond to locations in the file.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">
+        ///     The project is not loaded.
+        /// </exception>
+        public IEnumerable<MSBuildObject> MSBuildObjects => MSBuildLookup.AllObjects;
 
         /// <summary>
         ///     The underlying MSBuild project (if any).

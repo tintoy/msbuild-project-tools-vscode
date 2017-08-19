@@ -34,7 +34,7 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         /// <summary>
         ///     The kind of MSBuild object represented by the <see cref="MSBuildProperty"/>.
         /// </summary>
-        public override MSBuildObjectKind Kind => MSBuildObjectKind.Target;
+        public override MSBuildObjectKind Kind => MSBuildObjectKind.Property;
 
         /// <summary>
         ///     The full path of the file where the target is declared.

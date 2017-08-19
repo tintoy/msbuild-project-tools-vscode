@@ -3,7 +3,7 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
     /// <summary>
     ///     The names of well-known MSBuild properties.
     /// </summary>
-    public static class MSBuildProperties
+    public static class MSBuildPropertyNames
     {
         /// <summary>
         ///     The "MSBuildExtensionsPath" property.

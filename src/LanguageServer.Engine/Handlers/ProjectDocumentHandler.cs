@@ -12,6 +12,7 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
@@ -20,6 +21,7 @@ using System.Xml.Linq;
 
 namespace MSBuildProjectTools.LanguageServer.Handlers
 {
+    using System.Text;
     using Documents;
     using MSBuild;
     using Utilities;
@@ -61,6 +63,16 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             {
                 Pattern = "**/*.*proj",
                 Language = "xml"
+            },
+            new DocumentFilter
+            {
+                Pattern = "**/*.props",
+                Language = "xml"
+            },
+            new DocumentFilter
+            {
+                Pattern = "**/*.targets",
+                Language = "xml"
             }
         );
 
@@ -93,6 +105,15 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 Log.Verbose(" - Project uses package source {PackageSourceName} ({PackageSourceUrl})",
                     packageSource.Name,
                     packageSource.Source
+                );
+            }
+
+            foreach (MSBuildObject msbuildObject in projectDocument.MSBuildObjects)
+            {
+                Log.Information("MSBuildObject: {Kind} {Name} spanning {XmlRange}",
+                    msbuildObject.Kind,
+                    msbuildObject.Name,
+                    msbuildObject.XmlRange
                 );
             }
         }
@@ -235,7 +256,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 }
                 else if (elementOrAttribute is XmlAttributeSyntax attribute)
                 {
-                    if (msbuildObjectAtPosition is MSBuildItem itemFromAttributeAtPosition)
+                    if (msbuildObjectAtPosition is MSBuildItem itemFromAttributeAtPosition && attribute.Name == "Sdk")
                     {
                         string metadataName = attribute.Name;
                         if (String.Equals(metadataName, "Include"))
@@ -245,7 +266,23 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                         result.Contents = $"**Metadata**: {itemFromAttributeAtPosition.Name}({itemFromAttributeAtPosition.Include}).{metadataName} = '{metadataValue}'";
                     }
                     else if (msbuildObjectAtPosition is MSBuildSdkImport sdkImportFromAttribute)
-                        result.Contents = $"**SDK Import**: {sdkImportFromAttribute.Name}";
+                    {
+                        StringBuilder importedProjectFiles = new StringBuilder();
+                        foreach (string projectFile in sdkImportFromAttribute.ImportedProjectFiles)
+                            importedProjectFiles.AppendLine($"* Imports [{Path.GetFileName(projectFile)}]({UriHelper.ToDocumentUri(projectFile)})");
+
+                        result.Contents = new MarkedStringContainer(
+                            $"**SDK Import**: {sdkImportFromAttribute.Name}",
+                            importedProjectFiles.ToString()
+                        );
+                    }
+                    else if (msbuildObjectAtPosition is MSBuildImport importFromAttribute && attribute.Name == "Project")
+                    {
+                        result.Contents = new MarkedStringContainer(
+                            $"**Import**: {importFromAttribute.Name}",
+                            $"* Imports [{Path.GetFileName(importFromAttribute.ImportedProjectRoot.FullPath)}]({UriHelper.ToDocumentUri(importFromAttribute.ImportedProjectRoot.FullPath)})"
+                        );
+                    }
                     else
                         return null;
                 }

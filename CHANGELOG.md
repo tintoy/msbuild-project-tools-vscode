@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.1.0-rc1
+
+* Fix cross-platform path handling.
+
 ## v0.1.0-beta2
 
 * More informative tooltips on hover

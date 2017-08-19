@@ -4,7 +4,7 @@ An extension for VS Code that provides intellisense for MSBuild project files, i
 
 ![PackageReference completion](docs/images/extension-in-action.gif)
 
-**Note**: there are some experimental features in the extension that use an out-of-process language server. This is disabled by default but you can enable it by setting `msbuildProjectFileTools.languageService.enable` to `true` in your VSCode preferences. You don't have to use it, but it does provide a lot of additional functionality and is already fairly stable.
+**Note**: there are new features in the extension that use an out-of-process language server. This is disabled by default but you can enable it by setting `msbuildProjectFileTools.languageService.enable` to `true` in your VSCode preferences. You don't have to use it, but it does provide a lot of additional functionality.
 
 ## Usage
 
@@ -20,7 +20,7 @@ You can install this extension from the [VS marketplace](https://marketplace.vis
 
 ## Limitations
 
-* The new language server hasn't been tested on Linux / MacOS (although existing extension functionality has been).
+* The new language server hasn't been tested extensively on Linux / MacOS (although I've verified that it works for simple cases).
 * This extension uses the NuGet v3 API to resolve package names and versions. The API is pretty slow, unfortunately; I'll try to improve performance / result caching in the next release.
 * Intellisense is not currently available for items with conditions evaluating to `false` as they are not present in the MSBuild project at runtime. I've fixed this for properties, so there's definitely a way forward; hopefully in the next release.
 

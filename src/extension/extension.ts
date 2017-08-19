@@ -50,7 +50,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             await languageClient.onReady();
             outputChannel.appendLine('MSBuild language service is running.');
         } else {
-            outputChannel = vscode.window.createOutputChannel('MSBuild Project File Tools');
+            outputChannel = vscode.window.createOutputChannel('MSBuild Project Tools');
             
             if (enableLanguageService && !canEnableLanguageService)
                 outputChannel.appendLine('Cannot enable the MSBuild language service because .NET Core >= 2.0.0 was not found on the system path.');
@@ -125,5 +125,5 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<L
         args: [ serverAssembly ],
     };
 
-    return new LanguageClient('MSBuild Project File Tools', serverOptions, clientOptions);
+    return new LanguageClient('MSBuild Project Tools', serverOptions, clientOptions);
 }

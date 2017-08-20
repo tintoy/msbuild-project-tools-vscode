@@ -112,32 +112,27 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
                 }
             }
 
-            // AF: Consider using:
-            //
-            // var itemsByElement =
-            //     _project.Items.Where(
-            //         item => item.Xml != null && String.Equals(item.Xml.Location.File, projectFilePath, StringComparison.OrdinalIgnoreCase)
-            //     )
-            //     .GroupBy(item => item.Xml);
+            HashSet<ProjectItem> itemsExcludedByCondition = new HashSet<ProjectItem>(_project.ItemsIgnoringCondition);
+            itemsExcludedByCondition.ExceptWith(_project.Items);
             
-            var itemsByElement = new Dictionary<ProjectItemElement, List<ProjectItem>>();
+            var itemsByXml = new Dictionary<ProjectItemElement, List<ProjectItem>>();
             foreach (ProjectItem item in _project.Items)
             {
                 if (item.Xml == null || !String.Equals(item.Xml.Location.File, projectFilePath, StringComparison.OrdinalIgnoreCase))
                     continue; // Not declared in main project file.
 
-                List<ProjectItem> itemsFromElement;
-                if (!itemsByElement.TryGetValue(item.Xml, out itemsFromElement))
+                List<ProjectItem> itemsFromXml;
+                if (!itemsByXml.TryGetValue(item.Xml, out itemsFromXml))
                 {
-                    itemsFromElement = new List<ProjectItem>();
-                    itemsByElement.Add(item.Xml, itemsFromElement);
+                    itemsFromXml = new List<ProjectItem>();
+                    itemsByXml.Add(item.Xml, itemsFromXml);
                 }
 
-                itemsFromElement.Add(item);
+                itemsFromXml.Add(item);
             }
-            foreach (ProjectItemElement item in itemsByElement.Keys)
+            foreach (ProjectItemElement itemXml in itemsByXml.Keys)
             {
-                Position itemStart = item.Location.ToNative();
+                Position itemStart = itemXml.Location.ToNative();
 
                 SyntaxNode xmlAtPosition = projectXml.FindNode(itemStart, xmlPositions);
                 if (xmlAtPosition == null)
@@ -149,9 +144,13 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
 
                 Range itemRange = itemElement.Span.ToNative(xmlPositions);
 
+                List<ProjectItem> itemsFromXml;
+                if (!itemsByXml.TryGetValue(itemXml, out itemsFromXml))
+                    continue; // TODO: Implement MSBuildUnevaluatedItemGroup representing items excluded by condition.
+
                 _objectRanges.Add(itemRange);
                 _objectsByStartPosition.Add(itemRange.Start,
-                    new MSBuildItemGroup(itemsByElement[item], item, itemElement, itemRange)
+                    new MSBuildItemGroup(itemsByXml[itemXml], itemXml, itemElement, itemRange)
                 );
             }
 

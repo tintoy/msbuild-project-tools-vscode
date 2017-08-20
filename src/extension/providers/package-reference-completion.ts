@@ -114,8 +114,6 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
                 const completionItem = new vscode.CompletionItem(availablePackageId, vscode.CompletionItemKind.Module);
                 completionItems.push(completionItem);  
             }
-
-            console.log(`Package Id completions for "${packageId}":`, completionItems);
         } else if (packageId && wantPackageVersion) {
             // TODO: Use NuGetClient from 'nuget-client'.
             

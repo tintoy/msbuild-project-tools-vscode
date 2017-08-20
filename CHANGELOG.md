@@ -2,8 +2,9 @@
 
 ## v0.1.2
 
-* Initial support for master and sub projects.
+* Provide intellisense for items whose conditions evaluate to `false`.
 * Handle `Import` elements that give rise to multiple imported projects (this already worked correctly for SDK-style imports).
+* Initial support for master and sub projects.
 
 ## v0.1.1
 

@@ -1,4 +1,5 @@
 using Lsp.Models;
+using Microsoft.Build.Evaluation;
 using Microsoft.Language.Xml;
 using System;
 using System.IO;
@@ -10,7 +11,8 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
     using MSBuild;
     using Documents;
     using Utilities;
-    using Microsoft.Build.Evaluation;
+
+    // TODO: Make this non-static so we can cache things like the MSBuild project and XML position-lookup.
 
     /// <summary>
     ///     Content for tooltips when hovering over nodes in the MSBuild XML.

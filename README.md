@@ -4,7 +4,7 @@ An extension for VS Code that provides intellisense for MSBuild project files, i
 
 ![The extension in action](docs/images/extension-in-action.gif)
 
-**Note**: there are features in the extension (marked "language service feature" below) that use an out-of-process language service; this is enabled by default but if all you want is `PackageReference` completion, you can disable the language service by setting `msbuildProjectFileTools.languageService.enable` to `false` in your VSCode preferences.
+**Note**: there are features in the extension (marked "language service feature" below) that use an out-of-process language service; this is enabled by default but if all you want is `PackageReference` completion, you can disable the language service by setting `msbuildProjectFileTools.languageService.enable` to `false` in your VSCode preferences. You will need to reload VSCode after changing this setting.
 
 You need .NET Core 2.0.0 or newer installed to use the language service (but your projects can target any version you have installed).
 

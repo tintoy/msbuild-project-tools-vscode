@@ -31,7 +31,7 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         /// <summary>
         ///     An undefined property (<see cref="ProjectPropertyElement"/> without a corresponding <see cref="ProjectProperty"/>) in an MSBuild project.
         /// </summary>
-        UndefinedProperty = 4,
+        UnusedProperty = 4,
 
         /// <summary>
         ///     A project import (<see cref="ResolvedImport"/>) in an MSBuild project.

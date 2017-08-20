@@ -2,7 +2,8 @@
 
 ## v0.1.1
 
-* Use a patched version of `Microsoft.Language.Xml` that behaves correctly in non-windows environments.
+* Use a patched version of `Microsoft.Language.Xml` that behaves correctly in non-windows environments (issues with CR vs CRLF line-endings).
+* Improve tooltips on hover.
 
 ## v0.1.0
 

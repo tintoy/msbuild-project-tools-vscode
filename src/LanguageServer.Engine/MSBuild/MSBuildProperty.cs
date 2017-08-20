@@ -1,5 +1,7 @@
+using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
 using Microsoft.Language.Xml;
+using System;
 
 namespace MSBuildProjectTools.LanguageServer.MSBuild
 {
@@ -12,8 +14,11 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         /// <summary>
         ///     Create a new <see cref="MSBuildProperty"/>.
         /// </summary>
-        /// <param name="target">
+        /// <param name="property">
         ///     The underlying MSBuild <see cref="ProjectProperty"/>.
+        /// </param>
+        /// <param name="declaringXml">
+        ///     The <see cref="ProjectPropertyElement"/> that results in the underlying MSBuild <see cref="ProjectProperty"/>'s current value.
         /// </param>
         /// <param name="element">
         ///     An <see cref="XmlElementSyntax"/> representing the property's XML element.
@@ -21,9 +26,13 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         /// <param name="xmlRange">
         ///     A <see cref="Range"/> representing the span of the property's XML element.
         /// </param>
-        public MSBuildProperty(ProjectProperty property, XmlElementSyntaxBase propertyElement, Range xmlRange)
+        public MSBuildProperty(ProjectProperty property, ProjectPropertyElement declaringXml, XmlElementSyntaxBase propertyElement, Range xmlRange)
             : base(property, propertyElement, xmlRange)
         {
+            if (declaringXml == null)
+                throw new ArgumentNullException(nameof(declaringXml));
+
+            DeclaringXml = declaringXml;
         }
 
         /// <summary>
@@ -37,7 +46,7 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         public override MSBuildObjectKind Kind => MSBuildObjectKind.Property;
 
         /// <summary>
-        ///     The full path of the file where the target is declared.
+        ///     The full path of the file where the property is declared.
         /// </summary>
         public override string SourceFile => Property.Xml.Location.File;
 
@@ -55,5 +64,15 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         ///     The underlying MSBuild <see cref="ProjectProperty"/>.
         /// </summary>
         public ProjectProperty Property => UnderlyingObject;
+
+        /// <summary>
+        ///     The <see cref="ProjectPropertyElement"/> that results in the underlying MSBuild <see cref="ProjectProperty"/>'s current value.
+        /// </summary>
+        public ProjectPropertyElement DeclaringXml { get; }
+        
+        /// <summary>
+        ///     Has the property value been overridden elsewhere?
+        /// </summary>
+        public bool IsOverridden => Property.Xml != DeclaringXml;
     }
 }

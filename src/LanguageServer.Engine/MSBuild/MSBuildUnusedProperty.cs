@@ -5,9 +5,9 @@ using Microsoft.Language.Xml;
 namespace MSBuildProjectTools.LanguageServer.MSBuild
 {
     /// <summary>
-    ///     An undefined property (i.e. a <see cref="ProjectPropertyElement"/> with no corresponding <see cref="ProjectProperty"/>) in an MSBuild project, usually because the condition evaluates to <c>false</c>.
+    ///     An unused property (i.e. a <see cref="ProjectPropertyElement"/> with no corresponding <see cref="ProjectProperty"/>) in an MSBuild project, usually because the condition evaluates to <c>false</c>.
     /// </summary>
-    public sealed class MSBuildUndefinedProperty
+    public sealed class MSBuildUnusedProperty
         : MSBuildObject<ProjectPropertyElement>
     {
         /// <summary>
@@ -22,7 +22,7 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         /// <param name="xmlRange">
         ///     A <see cref="Range"/> representing the span of the property's XML element.
         /// </param>
-        public MSBuildUndefinedProperty(ProjectPropertyElement property, XmlElementSyntaxBase propertyElement, Range xmlRange)
+        public MSBuildUnusedProperty(ProjectPropertyElement property, XmlElementSyntaxBase propertyElement, Range xmlRange)
             : base(property, propertyElement, xmlRange)
         {
         }
@@ -33,9 +33,9 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         public override string Name => PropertyElement.Name;
 
         /// <summary>
-        ///     The kind of MSBuild object represented by the <see cref="MSBuildUndefinedProperty"/>.
+        ///     The kind of MSBuild object represented by the <see cref="MSBuildUnusedProperty"/>.
         /// </summary>
-        public override MSBuildObjectKind Kind => MSBuildObjectKind.UndefinedProperty;
+        public override MSBuildObjectKind Kind => MSBuildObjectKind.UnusedProperty;
 
         /// <summary>
         ///     The full path of the file where the target is declared.

@@ -292,26 +292,26 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 if (elementOrAttribute is IXmlElementSyntax element)
                 {
                     if (msbuildObject is MSBuildProperty propertyFromElement)
-                        result.Contents = GetHoverContent(propertyFromElement);
-                    else if (msbuildObject is MSBuildUndefinedProperty undefinedPropertyFromElement)
-                        result.Contents = GetHoverContent(undefinedPropertyFromElement, projectDocument);
+                        result.Contents = HoverContent.Property(propertyFromElement);
+                    else if (msbuildObject is MSBuildUnusedProperty unusedPropertyFromElement)
+                        result.Contents = HoverContent.UnusedProperty(unusedPropertyFromElement, projectDocument);
                     else if (msbuildObject is MSBuildItemGroup itemGroupFromElement)
-                        result.Contents = GetHoverContent(itemGroupFromElement);
+                        result.Contents = HoverContent.ItemGroup(itemGroupFromElement);
                     else if (msbuildObject is MSBuildTarget targetFromElement)
-                        result.Contents = GetHoverContent(targetFromElement);
+                        result.Contents = HoverContent.Target(targetFromElement);
                     else if (msbuildObject is MSBuildImport importFromElement)
-                        result.Contents = GetHoverContent(importFromElement);
+                        result.Contents = HoverContent.Import(importFromElement);
                     else
                         return null;
                 }
                 else if (elementOrAttribute is XmlAttributeSyntax attribute)
                 {
                     if (msbuildObject is MSBuildItemGroup itemGroupFromAttribute)
-                        result.Contents = GetHoverContent(itemGroupFromAttribute, attribute);
+                        result.Contents = HoverContent.ItemGroup(itemGroupFromAttribute, attribute);
                     else if (msbuildObject is MSBuildSdkImport sdkImportFromAttribute)
-                        result.Contents = GetHoverContent(sdkImportFromAttribute);
+                        result.Contents = HoverContent.SdkImport(sdkImportFromAttribute);
                     else if (msbuildObject is MSBuildImport importFromAttribute)
-                        result.Contents = GetHoverContent(importFromAttribute);
+                        result.Contents = HoverContent.Import(importFromAttribute);
                     else
                         return null;
                 }
@@ -713,203 +713,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 Uri = projectDocument.DocumentUri,
                 Diagnostics = new Lsp.Models.Diagnostic[0] // Overwrites existing diagnostics for this document with an empty list
             });   
-        }
-
-        /// <summary>
-        ///     Get hover content for an <see cref="MSBuildProperty"/>.
-        /// </summary>
-        /// <param name="property">
-        ///     The <see cref="MSBuildProperty"/>.
-        /// </param>
-        /// <returns>
-        ///     The content.
-        /// </returns>
-        MarkedStringContainer GetHoverContent(MSBuildProperty property)
-        {
-            if (property == null)
-                throw new ArgumentNullException(nameof(property));
-            
-            return $"**Property**: {property.Name} = '{property.Value}'";
-        }
-
-        /// <summary>
-        ///     Get hover content for an <see cref="MSBuildUndefinedProperty"/>.
-        /// </summary>
-        /// <param name="undefinedProperty">
-        ///     The <see cref="MSBuildUndefinedProperty"/>.
-        /// </param>
-        /// <returns>
-        ///     The content.
-        /// </returns>
-        MarkedStringContainer GetHoverContent(MSBuildUndefinedProperty undefinedProperty, ProjectDocument projectDocument)
-        {
-            if (undefinedProperty == null)
-                throw new ArgumentNullException(nameof(undefinedProperty));
-            
-            string condition = undefinedProperty.PropertyElement.Condition;
-            if (String.IsNullOrWhiteSpace(condition))
-                condition = undefinedProperty.PropertyElement.Parent.Condition; // Condition may be on parent element.
-
-            string expandedCondition = projectDocument.MSBuildProject.ExpandString(condition);
-
-            return new MarkedStringContainer(
-                $"**Property**: {undefinedProperty.Name} != '{undefinedProperty.Value}' (condition evaluates to false)",
-                $"Condition:\n* Raw =`{condition}`\n* Evaluated = `{expandedCondition}`"
-            );
-        }
-
-        /// <summary>
-        ///     Get hover content for an <see cref="MSBuildItemGroup"/>.
-        /// </summary>
-        /// <param name="itemGroup">
-        ///     The <see cref="MSBuildItemGroup"/>.
-        /// </param>
-        /// <returns>
-        ///     The content.
-        /// </returns>
-        MarkedStringContainer GetHoverContent(MSBuildItemGroup itemGroup)
-        {
-            if (itemGroup == null)
-                throw new ArgumentNullException(nameof(itemGroup));
-            
-            if (itemGroup.Name == "PackageReference")
-            {
-                string packageVersion = itemGroup.GetFirstMetadataValue("Version");
-                
-                return $"**NuGet Package**: {itemGroup.FirstInclude} v{packageVersion}";
-            }
-
-            if (itemGroup.HasSingleItem)
-                return $"**Item**: {itemGroup.OriginatingElement.ItemType}({itemGroup.FirstInclude})";
-
-            string[] includes = itemGroup.Includes.ToArray();
-            StringBuilder itemIncludeContent = new StringBuilder();
-            itemIncludeContent.AppendLine(
-                $"Include = `{itemGroup.OriginatingElement.Include}`  "
-            );
-            itemIncludeContent.AppendLine(
-                $"Evaluates to {itemGroup.Items.Count} items:"
-            );
-            foreach (string include in includes.Take(5))
-            {
-                itemIncludeContent.AppendLine(
-                    $"* {include}"
-                );
-            }
-            if (includes.Length > 5)
-                itemIncludeContent.AppendLine("* ...");
-
-            return new MarkedStringContainer(
-                $"**Items**: {itemGroup.OriginatingElement.ItemType}",
-                itemIncludeContent.ToString()
-            );  
-        }
-
-        /// <summary>
-        ///     Get hover content for an attribute of an <see cref="MSBuildItemGroup"/>.
-        /// </summary>
-        /// <param name="itemGroup">
-        ///     The <see cref="MSBuildItemGroup"/>.
-        /// </param>
-        /// <param name="attribute">
-        ///     The attribute.
-        /// </param>
-        /// <returns>
-        ///     The content.
-        /// </returns>
-        MarkedStringContainer GetHoverContent(MSBuildItemGroup itemGroup, XmlAttributeSyntax attribute)
-        {
-            if (itemGroup == null)
-                throw new ArgumentNullException(nameof(itemGroup));
-
-            // TODO: Handle the "Condition" attribute.
-
-            string metadataName = attribute.Name;
-            if (String.Equals(metadataName, "Include"))
-                metadataName = "Identity";
-
-            if (itemGroup.Items.Count == 1)
-            {
-                string metadataValue = itemGroup.GetFirstMetadataValue(metadataName);
-                
-                return $"**Metadata**: {itemGroup.Name}({itemGroup.FirstInclude}).{metadataName} = '{metadataValue}'";
-            }
-
-            StringBuilder metadataValues = new StringBuilder();
-            metadataValues.AppendLine("Values:");
-
-            foreach (string metadataValue in itemGroup.GetMetadataValues(metadataName).Distinct())
-            {
-                metadataValues.AppendLine(
-                    $"* {metadataValue}"
-                );
-            }
-
-            return new MarkedStringContainer(
-                $"**Metadata**: {itemGroup.Name}({itemGroup.FirstRawInclude}).{metadataName}",
-                metadataValues.ToString()
-            );
-        }
-
-        /// <summary>
-        ///     Get hover content for an <see cref="MSBuildTarget"/>.
-        /// </summary>
-        /// <param name="target">
-        ///     The <see cref="MSBuildTarget"/>.
-        /// </param>
-        /// <returns>
-        ///     The content.
-        /// </returns>
-        MarkedStringContainer GetHoverContent(MSBuildTarget target)
-        {
-            if (target == null)
-                throw new ArgumentNullException(nameof(target));
-            
-            return $"**Target**: {target.Name}";
-        }
-
-        /// <summary>
-        ///     Get hover content for an <see cref="MSBuildImport"/>.
-        /// </summary>
-        /// <param name="import">
-        ///     The <see cref="MSBuildImport"/>.
-        /// </param>
-        /// <returns>
-        ///     The content.
-        /// </returns>
-        MarkedStringContainer GetHoverContent(MSBuildImport import)
-        {
-            if (import == null)
-                throw new ArgumentNullException(nameof(import));
-            
-            string importedProject = import.ProjectImportElement.Project;
-            Uri projectFileUri = UriHelper.CreateDocumentUri(import.ImportedProjectRoot.Location.File);
-
-            return $"**Import**: [{importedProject}]({projectFileUri})";
-        }
-
-        /// <summary>
-        ///     Get hover content for an <see cref="MSBuildSdkImport"/>.
-        /// </summary>
-        /// <param name="sdkImport">
-        ///     The <see cref="MSBuildSdkImport"/>.
-        /// </param>
-        /// <returns>
-        ///     The content.
-        /// </returns>
-        MarkedStringContainer GetHoverContent(MSBuildSdkImport sdkImport)
-        {
-            if (sdkImport == null)
-                throw new ArgumentNullException(nameof(sdkImport));
-            
-            StringBuilder importedProjectFiles = new StringBuilder();
-            foreach (string projectFile in sdkImport.ImportedProjectFiles)
-                importedProjectFiles.AppendLine($"* Imports [{Path.GetFileName(projectFile)}]({UriHelper.CreateDocumentUri(projectFile)})");
-
-            return new MarkedStringContainer(
-                $"**SDK Import**: {sdkImport.Name}",
-                importedProjectFiles.ToString()
-            );
         }
     }
 }

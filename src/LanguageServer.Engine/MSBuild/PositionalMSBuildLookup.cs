@@ -97,17 +97,17 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
                 Range propertyRange = propertyElement.Span.ToNative(xmlPositions);
                 _objectRanges.Add(propertyRange);
 
-                ProjectProperty projectProperty = _project.GetProperty(property.Name);
-                if (projectProperty != null)
+                ProjectProperty evaluatedProperty = _project.GetProperty(property.Name);
+                if (evaluatedProperty != null)
                 {
                     _objectsByStartPosition.Add(propertyRange.Start,
-                        new MSBuildProperty(projectProperty, propertyElement, propertyRange)
+                        new MSBuildProperty(evaluatedProperty, property, propertyElement, propertyRange)
                     );
                 }
                 else
                 {
                     _objectsByStartPosition.Add(propertyRange.Start,
-                        new MSBuildUndefinedProperty(property, propertyElement, propertyRange)
+                        new MSBuildUnusedProperty(property, propertyElement, propertyRange)
                     );
                 }
             }

@@ -10,9 +10,9 @@ An extension for VS Code that provides intellisense for MSBuild project files, i
 
 * When you're editing your project file, type `pr` then press `tab` to insert a `PackageReference` element.
 * Move to the `Include` or `Version` attribute of your `PackageReference` element and press `ctrl+space` to bring up a list of package Ids / versions.
-* Hover the mouse over targets, items, and properties to see information about them.
-* Go-to-definition is implemented for both SDK-style and regular project imports.
+* Hover the mouse over imports, targets, items, and properties to see information about them (including evaluated conditions).
 * Document symbols are supported for imports, targets, items, and properties.
+* Go-to-definition is implemented for both SDK-style and regular project imports.
 
 ## Installation
 
@@ -20,14 +20,14 @@ You can install this extension from the [VS marketplace](https://marketplace.vis
 
 ## Limitations
 
-* The new language server hasn't been tested extensively on Linux / MacOS (although I've verified that it works for simple cases).
-* This extension uses the NuGet v3 API to resolve package names and versions. The API is pretty slow, unfortunately; I'll try to improve performance / result caching in the next release.
-* Intellisense is not currently available for items with conditions evaluating to `false` as they are not present in the MSBuild project at runtime. I've fixed this for properties, so there's definitely a way forward; hopefully in the next release.
-* There are some issues around line endings on MacOS and Linux (you may see them show up as occasional incorrect highlighting of elements on hover). They should be fixed in the next release which will hopefully be out soon.
-* Note if you open more than one project at a time, subsequent projects will be loaded into the same MSBuild project collection as the first project. Once you have closed all open `*.*proj` files, the next file you open will become the master project. The master project will become selectable in a later release.
+* The new language server hasn't been tested extensively on Linux / MacOS (although I've verified that it works for common use-cases).
+* This extension uses the NuGet v3 API to resolve package names and versions. The API is pretty slow, unfortunately; I'll try to improve performance / result caching in a future release.
+* Intellisense is not currently available for imports with conditions evaluating to `false` as they are not present in the MSBuild project at runtime. I've fixed this for properties and items, so there's definitely a way forward; hopefully in the next release.
+
+**Note**: if you open more than one project at a time (or navigate to imported projects), subsequent projects will be loaded into the same MSBuild project collection as the first project. Once you have closed the last project file, the next project file you open will become the master project. The master project will become selectable in a later release.
 
 ## Questions / bug reports
 
-If you have questions, feature requests, or would like to report a bug, please feel free to reach out by creating an issue. When reporting a bug, please try to include as much information as possible about what you were doing at the time, what you expected to happen, and what actually happened.
+If you have questions, feedback, feature requests, or would like to report a bug, please feel free to reach out by creating an issue. When reporting a bug, please try to include as much information as possible about what you were doing at the time, what you expected to happen, and what actually happened.
 
 If you're interested in collaborating that'd be great, too :-)

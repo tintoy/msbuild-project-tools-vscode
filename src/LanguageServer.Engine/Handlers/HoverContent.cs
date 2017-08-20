@@ -107,7 +107,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         {
             if (itemGroup == null)
                 throw new ArgumentNullException(nameof(itemGroup));
-            
+
             if (itemGroup.Name == "PackageReference")
             {
                 string packageVersion = itemGroup.GetFirstMetadataValue("Version");

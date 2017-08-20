@@ -2,7 +2,7 @@
 
 ## v0.1.4
 
-* Provide intellisense for regular-style imports whose conditions evaluate to false.
+* Provide intellisense for regular-style and SDK-style imports whose conditions evaluate to false.
 * Respect the user's nominated version of the .NET Core tooling to use when loading master projects (equivalent to running `dotnet --version` in the solution directory, this respects `global.json` if present).
 
 ## v0.1.3

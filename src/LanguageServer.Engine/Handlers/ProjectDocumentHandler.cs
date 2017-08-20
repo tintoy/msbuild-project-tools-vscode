@@ -22,6 +22,7 @@ using System.Xml.Linq;
 
 namespace MSBuildProjectTools.LanguageServer.Handlers
 {
+    using ContentProviders;
     using Documents;
     using MSBuild;
     using Utilities;
@@ -305,37 +306,38 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                     Range = range.ToLsp()
                 };
                 
+                HoverContentProvider contentProvider = new HoverContentProvider(projectDocument);
                 if (elementOrAttribute is IXmlElementSyntax element)
                 {
                     if (msbuildObject is MSBuildProperty propertyFromElement)
-                        result.Contents = HoverContent.Property(propertyFromElement);
+                        result.Contents = contentProvider.Property(propertyFromElement);
                     else if (msbuildObject is MSBuildUnusedProperty unusedPropertyFromElement)
-                        result.Contents = HoverContent.UnusedProperty(unusedPropertyFromElement, projectDocument);
+                        result.Contents = contentProvider.UnusedProperty(unusedPropertyFromElement);
                     else if (msbuildObject is MSBuildItemGroup itemGroupFromElement)
-                        result.Contents = HoverContent.ItemGroup(itemGroupFromElement);
+                        result.Contents = contentProvider.ItemGroup(itemGroupFromElement);
                     else if (msbuildObject is MSBuildUnusedItemGroup unusedItemGroupFromElement)
-                        result.Contents = HoverContent.UnusedItemGroup(unusedItemGroupFromElement);
+                        result.Contents = contentProvider.UnusedItemGroup(unusedItemGroupFromElement);
                     else if (msbuildObject is MSBuildTarget targetFromElement)
-                        result.Contents = HoverContent.Target(targetFromElement);
+                        result.Contents = contentProvider.Target(targetFromElement);
                     else if (msbuildObject is MSBuildImport importFromElement)
-                        result.Contents = HoverContent.Import(importFromElement);
+                        result.Contents = contentProvider.Import(importFromElement);
                     else if (msbuildObject is MSBuildUnresolvedImport unresolvedImportFromElement)
-                        result.Contents = HoverContent.UnresolvedImport(unresolvedImportFromElement, projectDocument);
+                        result.Contents = contentProvider.UnresolvedImport(unresolvedImportFromElement);
                     else
                         return null;
                 }
                 else if (elementOrAttribute is XmlAttributeSyntax attribute)
                 {
                     if (msbuildObject is MSBuildItemGroup itemGroupFromAttribute)
-                        result.Contents = HoverContent.ItemGroupMetadata(itemGroupFromAttribute, attribute.Name);
+                        result.Contents = contentProvider.ItemGroupMetadata(itemGroupFromAttribute, attribute.Name);
                     else if (msbuildObject is MSBuildUnusedItemGroup unusedItemGroupFromAttribute)
-                        result.Contents = HoverContent.UnusedItemGroupMetadata(unusedItemGroupFromAttribute, attribute.Name);
+                        result.Contents = contentProvider.UnusedItemGroupMetadata(unusedItemGroupFromAttribute, attribute.Name);
                     else if (msbuildObject is MSBuildSdkImport sdkImportFromAttribute)
-                        result.Contents = HoverContent.SdkImport(sdkImportFromAttribute);
+                        result.Contents = contentProvider.SdkImport(sdkImportFromAttribute);
                     else if (msbuildObject is MSBuildUnresolvedSdkImport unresolvedSdkImportFromAttribute)
-                        result.Contents = HoverContent.UnresolvedSdkImport(unresolvedSdkImportFromAttribute, projectDocument);
+                        result.Contents = contentProvider.UnresolvedSdkImport(unresolvedSdkImportFromAttribute);
                     else if (msbuildObject is MSBuildImport importFromAttribute)
-                        result.Contents = HoverContent.Import(importFromAttribute);
+                        result.Contents = contentProvider.Import(importFromAttribute);
                     else
                         return null;
                 }

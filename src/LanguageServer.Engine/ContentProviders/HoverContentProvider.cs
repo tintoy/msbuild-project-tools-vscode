@@ -6,19 +6,36 @@ using System.IO;
 using System.Text;
 using System.Linq;
 
-namespace MSBuildProjectTools.LanguageServer.Handlers
+namespace MSBuildProjectTools.LanguageServer.ContentProviders
 {
     using MSBuild;
     using Documents;
     using Utilities;
 
-    // TODO: Make this non-static so we can cache things like the MSBuild project and XML position-lookup.
-
     /// <summary>
     ///     Content for tooltips when hovering over nodes in the MSBuild XML.
     /// </summary>
-    public static class HoverContent
+    public class HoverContentProvider
     {
+        /// <summary>
+        ///     The project document for which hover content is provided.
+        /// </summary>
+        readonly ProjectDocument _projectDocument;
+
+        /// <summary>
+        ///     Create a new <see cref="HoverContent"/>.
+        /// </summary>
+        /// <param name="projectDocument">
+        ///     The project document for which hover content is provided.
+        /// </param>
+        public HoverContentProvider(ProjectDocument projectDocument)
+        {
+            if (projectDocument == null)
+                throw new ArgumentNullException(nameof(projectDocument));
+            
+            _projectDocument = projectDocument;
+        }
+
         /// <summary>
         ///     Get hover content for an <see cref="MSBuildProperty"/>.
         /// </summary>
@@ -28,7 +45,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     The content.
         /// </returns>
-        public static MarkedStringContainer Property(MSBuildProperty property)
+        public MarkedStringContainer Property(MSBuildProperty property)
         {
             if (property == null)
                 throw new ArgumentNullException(nameof(property));
@@ -80,7 +97,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     The content.
         /// </returns>
-        public static MarkedStringContainer UnusedProperty(MSBuildUnusedProperty undefinedProperty, ProjectDocument projectDocument)
+        public MarkedStringContainer UnusedProperty(MSBuildUnusedProperty undefinedProperty)
         {
             if (undefinedProperty == null)
                 throw new ArgumentNullException(nameof(undefinedProperty));
@@ -89,7 +106,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             if (String.IsNullOrWhiteSpace(condition))
                 condition = undefinedProperty.PropertyElement.Parent.Condition; // Condition may be on parent element.
 
-            string expandedCondition = projectDocument.MSBuildProject.ExpandString(condition);
+            string expandedCondition = _projectDocument.MSBuildProject.ExpandString(condition);
 
             return new MarkedStringContainer(
                 $"Property: `{undefinedProperty.Name}` (condition evaluates to `false`)",
@@ -106,7 +123,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     The content.
         /// </returns>
-        public static MarkedStringContainer ItemGroup(MSBuildItemGroup itemGroup)
+        public MarkedStringContainer ItemGroup(MSBuildItemGroup itemGroup)
         {
             if (itemGroup == null)
                 throw new ArgumentNullException(nameof(itemGroup));
@@ -159,13 +176,13 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     The content.
         /// </returns>
-        public static MarkedStringContainer UnusedItemGroup(MSBuildUnusedItemGroup unusedItemGroup)
+        public MarkedStringContainer UnusedItemGroup(MSBuildUnusedItemGroup unusedItemGroup)
         {
             if (unusedItemGroup == null)
                 throw new ArgumentNullException(nameof(unusedItemGroup));
             
             string condition = unusedItemGroup.Condition;
-            string evaluatedCondition = unusedItemGroup.FirstItem.Project.ExpandString(condition);
+            string evaluatedCondition = _projectDocument.MSBuildProject.ExpandString(condition);
 
             StringBuilder descriptionContent = new StringBuilder();
             descriptionContent.AppendLine(
@@ -219,7 +236,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     The content.
         /// </returns>
-        public static MarkedStringContainer ItemGroupMetadata(MSBuildItemGroup itemGroup, string metadataName)
+        public MarkedStringContainer ItemGroupMetadata(MSBuildItemGroup itemGroup, string metadataName)
         {
             if (itemGroup == null)
                 throw new ArgumentNullException(nameof(itemGroup));
@@ -275,7 +292,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     The content.
         /// </returns>
-        public static MarkedStringContainer UnusedItemGroupMetadata(MSBuildUnusedItemGroup itemGroup, string metadataName)
+        public MarkedStringContainer UnusedItemGroupMetadata(MSBuildUnusedItemGroup itemGroup, string metadataName)
         {
             if (itemGroup == null)
                 throw new ArgumentNullException(nameof(itemGroup));
@@ -328,7 +345,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     The content.
         /// </returns>
-        public static MarkedStringContainer Target(MSBuildTarget target)
+        public MarkedStringContainer Target(MSBuildTarget target)
         {
             if (target == null)
                 throw new ArgumentNullException(nameof(target));
@@ -345,7 +362,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     The content.
         /// </returns>
-        public static MarkedStringContainer Import(MSBuildImport import)
+        public MarkedStringContainer Import(MSBuildImport import)
         {
             if (import == null)
                 throw new ArgumentNullException(nameof(import));
@@ -370,19 +387,16 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     The content.
         /// </returns>
-        public static MarkedStringContainer UnresolvedImport(MSBuildUnresolvedImport unresolvedImport, ProjectDocument projectDocument)
+        public MarkedStringContainer UnresolvedImport(MSBuildUnresolvedImport unresolvedImport)
         {
             if (unresolvedImport == null)
                 throw new ArgumentNullException(nameof(unresolvedImport));
 
-            if (projectDocument == null)
-                throw new ArgumentNullException(nameof(projectDocument));
-            
             string condition = unresolvedImport.Condition;
-            string evaluatedCondition = projectDocument.MSBuildProject.ExpandString(condition);
+            string evaluatedCondition = _projectDocument.MSBuildProject.ExpandString(condition);
 
             string project = unresolvedImport.Project;
-            string evaluatedProject = projectDocument.MSBuildProject.ExpandString(project);
+            string evaluatedProject = _projectDocument.MSBuildProject.ExpandString(project);
 
             StringBuilder descriptionContent = new StringBuilder();
             descriptionContent.AppendLine(
@@ -416,7 +430,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     The content.
         /// </returns>
-        public static MarkedStringContainer SdkImport(MSBuildSdkImport sdkImport)
+        public MarkedStringContainer SdkImport(MSBuildSdkImport sdkImport)
         {
             if (sdkImport == null)
                 throw new ArgumentNullException(nameof(sdkImport));
@@ -441,16 +455,13 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     The content.
         /// </returns>
-        public static MarkedStringContainer UnresolvedSdkImport(MSBuildUnresolvedSdkImport unresolvedSdkImport, ProjectDocument projectDocument)
+        public MarkedStringContainer UnresolvedSdkImport(MSBuildUnresolvedSdkImport unresolvedSdkImport)
         {
             if (unresolvedSdkImport == null)
                 throw new ArgumentNullException(nameof(unresolvedSdkImport));
-
-            if (projectDocument == null)
-                throw new ArgumentNullException(nameof(projectDocument));
             
             string condition = unresolvedSdkImport.Condition;
-            string evaluatedCondition = projectDocument.MSBuildProject.ExpandString(condition);
+            string evaluatedCondition = _projectDocument.MSBuildProject.ExpandString(condition);
 
             StringBuilder descriptionContent = new StringBuilder();
             descriptionContent.AppendLine(

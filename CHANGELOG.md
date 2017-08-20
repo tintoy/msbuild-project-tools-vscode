@@ -1,5 +1,10 @@
 # Change Log
 
+## v0.1.5
+
+* Language server is now enabled by default.
+* Improve calculation of line / column offsets.
+
 ## v0.1.4
 
 * Provide intellisense for regular-style and SDK-style imports whose conditions evaluate to false.

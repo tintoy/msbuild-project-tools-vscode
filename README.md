@@ -2,17 +2,22 @@
 
 An extension for VS Code that provides intellisense for MSBuild project files, including auto-complete for `<PackageReference>` elements.
 
-![PackageReference completion](docs/images/extension-in-action.gif)
+![The extension in action](docs/images/extension-in-action.gif)
 
-**Note**: there are new features in the extension that use an out-of-process language server. This is disabled by default but you can enable it by setting `msbuildProjectFileTools.languageService.enable` to `true` in your VSCode preferences. You don't have to use it, but it does provide a lot of additional functionality.
+**Note**: there are features in the extension (marked "language service feature" below) that use an out-of-process language service; this is enabled by default but if all you want is `PackageReference` completion, you can disable the language service by setting `msbuildProjectFileTools.languageService.enable` to `false` in your VSCode preferences.
+
+You need .NET Core 2.0.0 or newer installed to use the language service (but your projects can target any version you have installed).
 
 ## Usage
 
 * When you're editing your project file, type `pr` then press `tab` to insert a `PackageReference` element.
 * Move to the `Include` or `Version` attribute of your `PackageReference` element and press `ctrl+space` to bring up a list of package Ids / versions.
-* Hover the mouse over imports, targets, items, and properties to see information about them (including evaluated conditions).
-* Document symbols are supported for imports, targets, items, and properties.
-* Go-to-definition is implemented for both SDK-style and regular project imports.
+* Hover the mouse over imports, targets, items, and properties to see information about them (including evaluated conditions).  
+  Language service feature.
+* Document symbols are supported for imports, targets, items, and properties.  
+  Language service feature.
+* Go-to-definition is implemented for both SDK-style and regular project imports.  
+  Language service feature.
 
 ## Installation
 
@@ -20,7 +25,7 @@ You can install this extension from the [VS marketplace](https://marketplace.vis
 
 ## Limitations
 
-* The new language server hasn't been tested extensively on Linux / MacOS (although I've verified that it works for common use-cases).
+* The new language service hasn't been tested extensively on Linux / MacOS (although I've verified that it works for common use-cases).
 * This extension uses the NuGet v3 API to resolve package names and versions. The API is pretty slow, unfortunately; I'll try to improve performance / result caching in a future release.
 
 **Note**: if you open more than one project at a time (or navigate to imported projects), subsequent projects will be loaded into the same MSBuild project collection as the first project. Once you have closed the last project file, the next project file you open will become the master project. The master project will become selectable in a later release.

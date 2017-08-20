@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace MSBuildProjectTools.LanguageServer.Utilities
 {
@@ -11,9 +12,9 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
     public sealed class TextPositions
     {
         /// <summary>
-        ///     The lengths of each line of the text.
+        ///     The absolution starting position, within the text, of each line.
         /// </summary>
-        readonly int[] _lineLengths;
+        readonly int[] _lineStartPositions;
 
         /// <summary>
         ///     Create a new <see cref="TextPositions"/> for the specified text.
@@ -26,48 +27,34 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
             if (text == null)
                 throw new ArgumentNullException(nameof(text));
 
-            HasWindowsLineEndings = text.Contains("\r\n") || !text.Contains("\n");
-            LineEnding = HasWindowsLineEndings ? "\r\n" : "\n";
-            
-            string[] lines = text.Split(
-                separator: new string[] { LineEnding },
-                options: StringSplitOptions.None
-            );
-            _lineLengths = new int[lines.Length];
-            for (int lineIndex = 0; lineIndex < lines.Length; lineIndex++)
-                _lineLengths[lineIndex] = lines[lineIndex].Length + LineEnding.Length;
+            _lineStartPositions = CalculateLineStartPositions(text);
         }
 
         /// <summary>
         ///     The number of lines in the text.
         /// </summary>
-        public int LineCount => _lineLengths.Length;
+        public int LineCount => _lineStartPositions.Length;
 
         /// <summary>
-        ///     Does the text have Windows-style line endines (CRLF)?
+        ///     The absolution starting position, within the text, of each line.
         /// </summary>
-        public bool HasWindowsLineEndings { get; }
-
-        /// <summary>
-        ///     The line ending used by the text.
-        /// </summary>
-        public string LineEnding { get; set; }
+        public IReadOnlyList<int> LineStartPositions => _lineStartPositions;
 
         /// <summary>
         ///     Convert a <see cref="Position"/> to an absolute position within the text.
         /// </summary>
         /// <param name="position">
-        ///     The target <see cref="Position"/>.
+        ///     The target <see cref="Position"/> (0-based or 1-based).
         /// </param>
         /// <returns>
-        ///     The equivalent absolute position within the text.
+        ///     The equivalent absolute position (0-based) within the text.
         /// </returns>
         public int GetAbsolutePosition(Position position)
         {
             if (position == null)
                 throw new ArgumentNullException(nameof(position));
 
-            position = position.ToOneBased();
+            position = position.ToZeroBased();
 
             return GetAbsolutePosition(position.LineNumber, position.ColumnNumber);
         }
@@ -76,44 +63,26 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         ///     Convert line and column numbers to an absolute position within the text.
         /// </summary>
         /// <param name="line">
-        ///     The target line (1-based).
+        ///     The target line (0-based).
         /// </param>
         /// <param name="column">
-        ///     The target column (1-based).
+        ///     The target column (0-based).
         /// </param>
         /// <returns>
         ///     The equivalent absolute position within the text.
         /// </returns>
         public int GetAbsolutePosition(int line, int column)
         {
-            if (line < 1)
-                throw new ArgumentOutOfRangeException(nameof(line), line, "Line cannot be less than 1.");
+            if (line < 0)
+                throw new ArgumentOutOfRangeException(nameof(line), line, "Line cannot be less than 0.");
 
-            if (column < 1)
-                throw new ArgumentOutOfRangeException(nameof(column), column, "Column cannot be less than 1.");
-
-            // Indexes are 0-based.
-            int targetLine = line - 1;
-            int targetColumn = column - 1;
-
-            if (targetLine >= _lineLengths.Length)
+            if (line >= _lineStartPositions.Length)
                 throw new ArgumentOutOfRangeException(nameof(line), line, "Line is past the end of the text.");
 
-            if (targetColumn >= _lineLengths[targetLine])
-                throw new ArgumentOutOfRangeException(nameof(column), column, "Column is past the end of the line.");
+            if (column < 0)
+                throw new ArgumentOutOfRangeException(nameof(column), column, "Column cannot be less than 0.");
 
-            if (targetLine == 0)
-                return targetColumn;
-
-            // Position up to preceding line.
-            int targetPosition = 0;
-            for (int lineIndex = 0; lineIndex < targetLine; lineIndex++)
-                targetPosition += _lineLengths[lineIndex];
-
-            // And the final line.
-            targetPosition += targetColumn;
-
-            return targetPosition;
+            return _lineStartPositions[line] + column;
         }
 
         /// <summary>
@@ -127,35 +96,61 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         /// </returns>
         public Position GetPosition(int absolutePosition)
         {
-            int targetLine = -1;
-            int targetColumn = -1;
+            int targetLine = Array.BinarySearch(_lineStartPositions, absolutePosition);
+            if (targetLine < 0)
+                targetLine = ~targetLine - 1; // No match, so BinarySearch returns 2's complement of the following line index.
 
-            int remaining = absolutePosition;
-            for (int lineIndex = 0; lineIndex < _lineLengths.Length; lineIndex++)
+            // Internally, we're 0-based, but lines and columns are (by convention) 1-based.
+            return Position.FromZeroBased(
+                lineNumber: targetLine,
+                columnNumber: absolutePosition - _lineStartPositions[targetLine]
+            ).ToOneBased();
+        }
+
+        /// <summary>
+        ///     Calculate the start position for each line in the text.
+        /// </summary>
+        /// <param name="text">
+        ///     The text to scan.
+        /// </param>
+        /// <returns>
+        ///     An array of line starting positions.
+        /// </returns>
+        int[] CalculateLineStartPositions(string text)
+        {
+            if (text == null)
+                throw new ArgumentNullException(nameof(text));
+
+            List<int> lineStarts = new List<int>();
+
+            int currentPosition = 0;
+            int currentLineStart = 0;
+            while (currentPosition < text.Length)
             {
-                int currentLineLength = _lineLengths[lineIndex];
+                char currentChar = text[currentPosition];
+                currentPosition++;
 
-                if (remaining + 1 < currentLineLength)
+                switch (currentChar)
                 {
-                    targetLine = lineIndex;
-                    targetColumn = remaining;
+                    case '\r':
+                        {
+                            if (currentPosition < text.Length && text[currentPosition] == '\n')
+                                currentPosition++;
 
-                    break;
-                }
+                            goto case '\n';
+                        }
+                    case '\n':
+                        {
+                            lineStarts.Add(currentLineStart);
+                            currentLineStart = currentPosition;
 
-                remaining -= currentLineLength;
-                if (remaining < 0)
-                {
-                    // BUG - this returns incorrect results for absolute positions at the end of the line.
-                    targetLine = lineIndex + 1;
-                    targetColumn = -1; // => 0
-
-                    break;
+                            break;
+                        }
                 }
             }
+            lineStarts.Add(currentLineStart);
 
-            // Lines and columns are 1-based.
-            return Position.FromZeroBased(targetLine, targetColumn).ToOneBased();
+            return lineStarts.ToArray();
         }
     }
 }

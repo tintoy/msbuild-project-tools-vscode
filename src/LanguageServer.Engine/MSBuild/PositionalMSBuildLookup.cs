@@ -403,7 +403,9 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
                 return;
 
             XmlAttributeSyntax sdkAttribute = importElement.AsSyntaxElement["Sdk"];
-            
+            if (sdkAttribute == null)
+                return;
+
             Range importRange = GetRange(sdkAttribute);
             _objectRanges.Add(importRange);
             _objectsByStartPosition.Add(importRange.Start,

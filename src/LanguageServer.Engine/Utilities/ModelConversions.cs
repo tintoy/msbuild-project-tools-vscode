@@ -8,7 +8,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
     /// <summary>
     ///     Extension methods for converting models between native and third-party representations.
     /// </summary>
-    public static class ModelExtensions
+    public static class ModelConversions
     {
         /// <summary>
         ///     Convert the <see cref="Position"/> to its Language Server Protocol equivalent.
@@ -112,8 +112,8 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
 
             Position startPosition = textPositions.GetPosition(span.Start);
             Position endPosition = textPositions.GetPosition(span.End);
-            if (endPosition.ColumnNumber == 0) // HACK! Workaround for line-ending bug in TextPositions.GetPosition.
-                endPosition = textPositions.GetPosition(span.End - textPositions.LineEnding.Length);
+            if (endPosition.ColumnNumber == 0)
+                throw new InvalidOperationException("Should not happen anymore");
 
             return new Range(startPosition, endPosition);
         }

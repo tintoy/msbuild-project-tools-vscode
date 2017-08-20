@@ -41,7 +41,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 string declarationFile = property.DeclaringXml.Location.File;
                 if (declarationFile != property.Property.Xml.Location.File)
                 {
-                    Uri declarationDocumentUri = UriHelper.CreateDocumentUri(declarationFile);
+                    Uri declarationDocumentUri = VSCodeDocumentUri.CreateFromFileSystemPath(declarationFile);
                     overrideDescription.AppendLine(
                         $"Value overridden at {overridingDeclarationPosition} in [{Path.GetFileName(declarationFile)}]({declarationDocumentUri})."
                     );
@@ -353,7 +353,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             StringBuilder imports = new StringBuilder("Imports:");
             imports.AppendLine();
             foreach (string projectFile in import.ImportedProjectFiles)
-                imports.AppendLine($"* [{Path.GetFileName(projectFile)}]({UriHelper.CreateDocumentUri(projectFile)})");
+                imports.AppendLine($"* [{Path.GetFileName(projectFile)}]({VSCodeDocumentUri.CreateFromFileSystemPath(projectFile)})");
 
             return new MarkedStringContainer(
                 $"Import: `{import.Name}`",
@@ -424,7 +424,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             StringBuilder imports = new StringBuilder("Imports:");
             imports.AppendLine();
             foreach (string projectFile in sdkImport.ImportedProjectFiles)
-                imports.AppendLine($"* [{Path.GetFileName(projectFile)}]({UriHelper.CreateDocumentUri(projectFile)})");
+                imports.AppendLine($"* [{Path.GetFileName(projectFile)}]({VSCodeDocumentUri.CreateFromFileSystemPath(projectFile)})");
 
             return new MarkedStringContainer(
                 $"SDK Import: {sdkImport.Name}",

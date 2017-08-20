@@ -72,7 +72,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
 
             DocumentUri = documentUri;
             ProjectFile = new FileInfo(
-                documentUri.GetFileSystemPath()
+                VSCodeDocumentUri.GetFileSystemPath(documentUri)
             );
 
             if (ProjectFile.Extension.EndsWith("proj", StringComparison.OrdinalIgnoreCase))

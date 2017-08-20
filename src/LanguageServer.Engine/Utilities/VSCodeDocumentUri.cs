@@ -4,29 +4,29 @@ using System.IO;
 namespace MSBuildProjectTools.LanguageServer.Utilities
 {
     /// <summary>
-    ///     Helper methods for <see cref="Uri"/>s.
+    ///     Helper methods for working with VSCode document <see cref="Uri"/>s.
     /// </summary>
-    static class UriHelper
+    static class VSCodeDocumentUri
     {
         /// <summary>
-        ///     Get the local file-system path for the specified URI.
+        ///     Get the local file-system path for the specified document URI.
         /// </summary>
-        /// <param name="uri">
-        ///     The URI.
+        /// <param name="documentUri">
+        ///     The document URI.
         /// </param>
         /// <returns>
         ///     The file-system path, or <c>null</c> if the URI does not represent a file-system path.
         /// </returns>
-        public static string GetFileSystemPath(this Uri uri)
+        public static string GetFileSystemPath(Uri documentUri)
         {
-            if (uri == null)
-                throw new ArgumentNullException(nameof(uri));
+            if (documentUri == null)
+                throw new ArgumentNullException(nameof(documentUri));
 
-            if (uri.Scheme != Uri.UriSchemeFile)
+            if (documentUri.Scheme != Uri.UriSchemeFile)
                 return null;
 
             // The language server protocol represents "C:\Foo\Bar" as "file:///c:/foo/bar".
-            string fileSystemPath = Uri.UnescapeDataString(uri.AbsolutePath);
+            string fileSystemPath = Uri.UnescapeDataString(documentUri.AbsolutePath);
             if (Path.DirectorySeparatorChar == '\\')
             {
                 if (fileSystemPath.StartsWith("/"))
@@ -47,7 +47,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         /// <returns>
         ///     The VSCode document URI.
         /// </returns>
-        public static Uri CreateDocumentUri(string fileSystemPath)
+        public static Uri CreateFromFileSystemPath(string fileSystemPath)
         {
             if (String.IsNullOrWhiteSpace(fileSystemPath))
                 throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'fileSystemPath'.", nameof(fileSystemPath));

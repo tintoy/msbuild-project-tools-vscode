@@ -105,7 +105,24 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 return;
             }
 
-            Log.Information("Successfully loaded project {ProjectFilePath}.", projectDocument.ProjectFile.FullName);
+            switch (projectDocument)
+            {
+                case MasterProjectDocument masterProjectDocument:
+                {
+                    Log.Information("Successfully loaded project {ProjectFilePath}.", projectDocument.ProjectFile.FullName);
+
+                    break;
+                }
+                case SubProjectDocument subProjectDocument:
+                {
+                    Log.Information("Successfully loaded project {ProjectFilePath} as a sub-project of {MasterProjectFileName}.",
+                        projectDocument.ProjectFile.FullName,
+                        subProjectDocument.MasterProjectDocument.ProjectFile.Name
+                    );
+
+                    break;
+                }
+            }
             
             Log.Verbose("===========================");
             foreach (PackageSource packageSource in projectDocument.ConfiguredPackageSources)
@@ -149,6 +166,10 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </returns>
         protected override async Task OnDidChangeTextDocument(DidChangeTextDocumentParams parameters)
         {
+            Log.Verbose("Reloading project {ProjectFile}...",
+                VSCodeDocumentUri.GetFileSystemPath(parameters.TextDocument.Uri)
+            );
+
             TextDocumentContentChangeEvent mostRecentChange = parameters.ContentChanges.LastOrDefault();
             if (mostRecentChange == null)
                 return;
@@ -160,7 +181,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             if (projectDocument.HasMSBuildProject)
             {
                 MSBuildObject[] msbuildObjects = projectDocument.MSBuildObjects.ToArray();
-                Log.Verbose("MSBuild project loaded ({MSBuildObjectCount} MSBuild objects).", msbuildObjects.Length);
+                Log.Verbose("MSBuild project reloaded ({MSBuildObjectCount} MSBuild objects).", msbuildObjects.Length);
 
                 foreach (MSBuildObject msbuildObject in msbuildObjects)
                 {
@@ -189,7 +210,10 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </returns>
         protected override async Task OnDidSaveTextDocument(DidSaveTextDocumentParams parameters)
         {
-            Log.Information("Reloading project...");
+            Log.Information("Reloading project {ProjectFile}...",
+                VSCodeDocumentUri.GetFileSystemPath(parameters.TextDocument.Uri)
+            );
+
             ProjectDocument projectDocument = await GetProjectDocument(parameters.TextDocument.Uri, reload: true);
             PublishDiagnostics(projectDocument);
 
@@ -259,18 +283,10 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 Position position = parameters.Position.ToNative();
 
-                Log.Verbose("OnHover at {Position}", position);
-                
                 // Try to match up the position with an element or attribute in the XML, then match that up with an MSBuild object.
                 SyntaxNode xmlNode = projectDocument.GetXmlAtPosition(position);
                 if (xmlNode == null)
                     return null;
-
-                Log.Verbose("OnHover: found node {Kind} at {Position} (spans {Range}",
-                    xmlNode.Kind,
-                    position,
-                    xmlNode.Span.ToNative(projectDocument.XmlPositions)
-                );
 
                 SyntaxNode elementOrAttribute = xmlNode.GetContainingElementOrAttribute();
                 if (elementOrAttribute == null)
@@ -278,22 +294,10 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 position = elementOrAttribute.Span.ToNative(projectDocument.XmlPositions).Start;
 
-                Log.Verbose("OnHover: found containing {Kind} at {Position} (spans {Range}",
-                    elementOrAttribute.Kind,
-                    position,
-                    elementOrAttribute.Span.ToNative(projectDocument.XmlPositions)
-                );
-
                 // Match up the MSBuild item / property with its corresponding XML element / attribute.
                 MSBuildObject msbuildObject = projectDocument.GetMSBuildObjectAtPosition(position);
                 if (msbuildObject == null)
                     return null;
-
-                Log.Verbose("OnHover: found MSBuild {Kind} at {Position}",
-                    msbuildObject.Kind,
-                    position,
-                    xmlNode.Span.ToNative(projectDocument.XmlPositions)
-                );
 
                 Range range = elementOrAttribute.Span.ToNative(projectDocument.XmlPositions);
                 Hover result = new Hover
@@ -588,7 +592,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                                 importedProjectRoot => new Location
                                 {
                                     Range = Range.Empty.ToLsp(),
-                                    Uri = UriHelper.CreateDocumentUri(importedProjectRoot.Location.File)
+                                    Uri = VSCodeDocumentUri.CreateFromFileSystemPath(importedProjectRoot.Location.File)
                                 }
                             )
                             .ToArray();
@@ -603,7 +607,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                                 importedProjectRoot => new Location
                             {
                                 Range = Range.Empty.ToLsp(),
-                                Uri = UriHelper.CreateDocumentUri(importedProjectRoot.Location.File)
+                                Uri = VSCodeDocumentUri.CreateFromFileSystemPath(importedProjectRoot.Location.File)
                             }
                         ));
                     }
@@ -627,7 +631,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </returns>
         async Task<ProjectDocument> GetProjectDocument(Uri documentUri, bool reload = false)
         {
-            string projectFilePath = documentUri.GetFileSystemPath();
+            string projectFilePath = VSCodeDocumentUri.GetFileSystemPath(documentUri);
 
             bool isNewProject = false;
             ProjectDocument projectDocument = _projectDocuments.GetOrAdd(documentUri, _ =>
@@ -635,7 +639,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 isNewProject = true;
 
                 if (MasterProject == null)
-                    return new MasterProjectDocument(documentUri, Log);
+                    return MasterProject = new MasterProjectDocument(documentUri, Log);
 
                 SubProjectDocument subProject = new SubProjectDocument(documentUri, Log, MasterProject);
                 MasterProject.AddSubProject(subProject);

@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.0
+VisualStudioVersion = 15.0.26730.3
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{1F2A0703-FB4A-42A9-8CD3-E2F64DF29C6C}"
 EndProject
@@ -10,7 +10,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LanguageServer.Engine", "sr
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{198F2A53-5FD7-4F6E-A718-DDD95EA1F192}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LanguageServer.Engine.Tests", "test\LanguageServer.Engine.Tests\LanguageServer.Engine.Tests.csproj", "{029E8D10-FEDC-4664-ABA9-0A09E9FE89AD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LanguageServer.Engine.Tests", "test\LanguageServer.Engine.Tests\LanguageServer.Engine.Tests.csproj", "{029E8D10-FEDC-4664-ABA9-0A09E9FE89AD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -48,16 +48,16 @@ Global
 		{2DF51EC6-ED83-4AEC-9C39-C22510DEBF02}.Release|x86.Build.0 = Release|Any CPU
 		{029E8D10-FEDC-4664-ABA9-0A09E9FE89AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{029E8D10-FEDC-4664-ABA9-0A09E9FE89AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{029E8D10-FEDC-4664-ABA9-0A09E9FE89AD}.Debug|x64.ActiveCfg = Debug|x64
-		{029E8D10-FEDC-4664-ABA9-0A09E9FE89AD}.Debug|x64.Build.0 = Debug|x64
-		{029E8D10-FEDC-4664-ABA9-0A09E9FE89AD}.Debug|x86.ActiveCfg = Debug|x86
-		{029E8D10-FEDC-4664-ABA9-0A09E9FE89AD}.Debug|x86.Build.0 = Debug|x86
+		{029E8D10-FEDC-4664-ABA9-0A09E9FE89AD}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{029E8D10-FEDC-4664-ABA9-0A09E9FE89AD}.Debug|x64.Build.0 = Debug|Any CPU
+		{029E8D10-FEDC-4664-ABA9-0A09E9FE89AD}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{029E8D10-FEDC-4664-ABA9-0A09E9FE89AD}.Debug|x86.Build.0 = Debug|Any CPU
 		{029E8D10-FEDC-4664-ABA9-0A09E9FE89AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{029E8D10-FEDC-4664-ABA9-0A09E9FE89AD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{029E8D10-FEDC-4664-ABA9-0A09E9FE89AD}.Release|x64.ActiveCfg = Release|x64
-		{029E8D10-FEDC-4664-ABA9-0A09E9FE89AD}.Release|x64.Build.0 = Release|x64
-		{029E8D10-FEDC-4664-ABA9-0A09E9FE89AD}.Release|x86.ActiveCfg = Release|x86
-		{029E8D10-FEDC-4664-ABA9-0A09E9FE89AD}.Release|x86.Build.0 = Release|x86
+		{029E8D10-FEDC-4664-ABA9-0A09E9FE89AD}.Release|x64.ActiveCfg = Release|Any CPU
+		{029E8D10-FEDC-4664-ABA9-0A09E9FE89AD}.Release|x64.Build.0 = Release|Any CPU
+		{029E8D10-FEDC-4664-ABA9-0A09E9FE89AD}.Release|x86.ActiveCfg = Release|Any CPU
+		{029E8D10-FEDC-4664-ABA9-0A09E9FE89AD}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

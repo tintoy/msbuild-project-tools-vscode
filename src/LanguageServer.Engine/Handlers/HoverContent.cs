@@ -333,10 +333,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
             return new MarkedStringContainer(
                 $"Unresolved Import (condition evaluates to `false`)",
-                descriptionContent.ToString(),
-                "abby",
-                "normal",
-                "oneday"
+                descriptionContent.ToString()
             );
         }
 

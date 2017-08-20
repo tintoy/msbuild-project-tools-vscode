@@ -150,16 +150,12 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
                 _objectRanges.Add(itemRange);
                 if (usedItems.Contains(itemsFromXml[0]))
                 {
-                    Serilog.Log.Information("{Name} item group spanning {Range}", itemsFromXml[0].ItemType, itemRange);
-
                     _objectsByStartPosition.Add(itemRange.Start,
                         new MSBuildItemGroup(itemsByXml[itemXml], itemXml, itemElement, itemRange)
                     );
                 }
                 else
                 {
-                    Serilog.Log.Information("Unused {Name} item group spanning {Range}", itemsFromXml[0].ItemType, itemRange);
-
                     _objectsByStartPosition.Add(itemRange.Start,
                         new MSBuildUnusedItemGroup(itemsByXml[itemXml], itemXml, itemElement, itemRange)
                     );

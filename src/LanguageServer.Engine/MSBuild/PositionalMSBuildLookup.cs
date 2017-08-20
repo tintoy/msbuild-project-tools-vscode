@@ -199,7 +199,6 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
                     var importsByImportingElement = importGroup.GroupBy(import => import.ImportingElement);
                     foreach (var importsForImportingElement in importsByImportingElement)
                     {
-                        Serilog.Log.Information("{HashCode} {@Location}", importsForImportingElement.Key.GetHashCode(), importsForImportingElement.Key.Location);
                         Position importStart = importsForImportingElement.Key.Location.ToNative();
                         
                         SyntaxNode xmlAtPosition = projectXml.FindNode(importStart, xmlPositions);
@@ -211,8 +210,6 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
                             continue;
 
                         Range importRange = importElement.Span.ToNative(xmlPositions);
-                        Serilog.Log.Information("{Start} vs {Range}", importStart, importRange);
-
                         _objectRanges.Add(importRange);
                         _objectsByStartPosition.Add(importRange.Start,
                             new MSBuildImport(importsForImportingElement.ToArray(), importElement, importRange)

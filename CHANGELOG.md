@@ -1,5 +1,10 @@
 # Change Log
 
+## v0.1.2
+
+* Initial support for master and sub projects.
+* Handle `Import` elements that give rise to multiple imported projects (this already worked correctly for SDK-style imports).
+
 ## v0.1.1
 
 * Use a patched version of `Microsoft.Language.Xml` that behaves correctly in non-windows environments (issues with CR vs CRLF line-endings).

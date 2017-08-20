@@ -80,6 +80,19 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         }
 
         /// <summary>
+        ///     Unload the project.
+        /// </summary>
+        public override void Unload()
+        {
+            // Unload sub-projects, if necessary.
+            Uri[] subProjectDocumentUris = SubProjects.Keys.ToArray();
+            foreach (Uri subProjectDocumentUri in subProjectDocumentUris)
+                RemoveSubProject(subProjectDocumentUri);
+
+            base.Unload();
+        }
+
+        /// <summary>
         ///     Attempt to load the underlying MSBuild project.
         /// </summary>
         /// <returns>

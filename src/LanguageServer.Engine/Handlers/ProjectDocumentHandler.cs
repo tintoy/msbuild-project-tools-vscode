@@ -229,6 +229,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 using (await projectDocument.Lock.WriterLockAsync())
                 {
                     ClearDiagnostics(projectDocument);
+
                     projectDocument.Unload();
                 }
             }

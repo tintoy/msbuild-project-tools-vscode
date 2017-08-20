@@ -81,7 +81,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         {
             if (undefinedProperty == null)
                 throw new ArgumentNullException(nameof(undefinedProperty));
-            
+ 
             string condition = undefinedProperty.PropertyElement.Condition;
             if (String.IsNullOrWhiteSpace(condition))
                 condition = undefinedProperty.PropertyElement.Parent.Condition; // Condition may be on parent element.
@@ -222,10 +222,15 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             if (import == null)
                 throw new ArgumentNullException(nameof(import));
             
-            string importedProject = import.ProjectImportElement.Project;
-            Uri projectFileUri = UriHelper.CreateDocumentUri(import.ImportedProjectRoot.Location.File);
+            StringBuilder imports = new StringBuilder("Imports:");
+            imports.AppendLine();
+            foreach (string projectFile in import.ImportedProjectFiles)
+                imports.AppendLine($"* [{Path.GetFileName(projectFile)}]({UriHelper.CreateDocumentUri(projectFile)})");
 
-            return $"Import: [{importedProject}]({projectFileUri})";
+            return new MarkedStringContainer(
+                $"Import: {import.Name}",
+                imports.ToString()
+            );
         }
 
         /// <summary>

@@ -195,10 +195,12 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
                 }
                 else
                 {
-                    // A regular import.
-                    foreach (ResolvedImport import in importGroup)
+                    // A regular import (each element may result in multiple imports).
+                    var importsByImportingElement = importGroup.GroupBy(import => import.ImportingElement);
+                    foreach (var importsForImportingElement in importsByImportingElement)
                     {
-                        Position importStart = import.ImportingElement.Location.ToNative();
+                        Serilog.Log.Information("{HashCode} {@Location}", importsForImportingElement.Key.GetHashCode(), importsForImportingElement.Key.Location);
+                        Position importStart = importsForImportingElement.Key.Location.ToNative();
                         
                         SyntaxNode xmlAtPosition = projectXml.FindNode(importStart, xmlPositions);
                         if (xmlAtPosition == null)
@@ -209,12 +211,14 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
                             continue;
 
                         Range importRange = importElement.Span.ToNative(xmlPositions);
-                            
+                        Serilog.Log.Information("{Start} vs {Range}", importStart, importRange);
+
                         _objectRanges.Add(importRange);
                         _objectsByStartPosition.Add(importRange.Start,
-                            new MSBuildImport(import, importElement, importRange)
+                            new MSBuildImport(importsForImportingElement.ToArray(), importElement, importRange)
                         );
                     }
+                    
                 }
             }
 

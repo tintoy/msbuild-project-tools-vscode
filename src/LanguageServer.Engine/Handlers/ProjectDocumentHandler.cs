@@ -77,6 +77,14 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         );
 
         /// <summary>
+        ///     The master project (if any).
+        /// </summary>
+        /// <remarks>
+        ///     TODO: Make this selectable from the editor (get the extension to show a pick-list of open projects).
+        /// </remarks>
+        MasterProjectDocument MasterProject { get; set; }
+
+        /// <summary>
         ///     Called when a text document is opened.
         /// </summary>
         /// <param name="parameters">
@@ -215,6 +223,9 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         {
             if (_projectDocuments.TryRemove(parameters.TextDocument.Uri, out ProjectDocument projectDocument))
             {
+                if (MasterProject == projectDocument)
+                    MasterProject = null;                
+
                 using (await projectDocument.Lock.WriterLockAsync())
                 {
                     ClearDiagnostics(projectDocument);
@@ -288,7 +299,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 {
                     Range = range.ToLsp()
                 };
-
+                
                 if (elementOrAttribute is IXmlElementSyntax element)
                 {
                     if (msbuildObject is MSBuildProperty propertyFromElement)
@@ -578,11 +589,14 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                     else if (msbuildObjectAtPosition is MSBuildImport importAtPosition)
                     {
                         // TODO: Parse imported project and determine location of root element (use that range instead).
-                        return new LocationOrLocations(new Location
-                        {
-                            Range = Range.Empty.ToLsp(),
-                            Uri = UriHelper.CreateDocumentUri(importAtPosition.ImportedProjectRoot.Location.File)
-                        });
+                        return new LocationOrLocations(
+                            importAtPosition.ImportedProjectRoots.Select(
+                                importedProjectRoot => new Location
+                            {
+                                Range = Range.Empty.ToLsp(),
+                                Uri = UriHelper.CreateDocumentUri(importedProjectRoot.Location.File)
+                            }
+                        ));
                     }
                 }
             }
@@ -611,7 +625,13 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             {
                 isNewProject = true;
 
-                return new ProjectDocument(documentUri, Log);
+                if (MasterProject == null)
+                    return new MasterProjectDocument(documentUri, Log);
+
+                SubProjectDocument subProject = new SubProjectDocument(documentUri, Log, MasterProject);
+                MasterProject.AddSubProject(subProject);
+
+                return subProject;
             });
 
             try

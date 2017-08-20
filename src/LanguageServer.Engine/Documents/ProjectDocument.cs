@@ -22,7 +22,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
     /// <summary>
     ///     Represents the document state for an MSBuild project.
     /// </summary>
-    public class ProjectDocument
+    public abstract class ProjectDocument
     {
         /// <summary>
         ///     Diagnostics (if any) for the project.
@@ -50,29 +50,14 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         readonly Dictionary<string, NuGetVersion[]> _packageVersionCache = new Dictionary<string, NuGetVersion[]>();
 
         /// <summary>
-        ///     The parsed project XML.
-        /// </summary>
-        XmlDocumentSyntax _xml;
-
-        /// <summary>
-        ///     Positional calculator for the project XML.
-        /// </summary>
-        TextPositions _xmlPositions;
-
-        /// <summary>
         ///     The underlying MSBuild project collection.
         /// </summary>
-        ProjectCollection _msbuildProjectCollection;
+        public virtual ProjectCollection MSBuildProjectCollection { get; protected set; }
 
         /// <summary>
         ///     The underlying MSBuild project.
         /// </summary>
-        Project _msbuildProject;
-
-        /// <summary>
-        ///     The lookup for MSBuild objects by position.
-        /// </summary>
-        PositionalMSBuildLookup _msbuildLookup;
+        public Project MSBuildProject { get; protected set; }
 
         /// <summary>
         ///     Create a new <see cref="ProjectDocument"/>.
@@ -80,7 +65,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <param name="documentUri">
         ///     The document URI.
         /// </param>
-        public ProjectDocument(Uri documentUri, ILogger logger)
+        protected ProjectDocument(Uri documentUri, ILogger logger)
         {
             if (documentUri == null)
                 throw new ArgumentNullException(nameof(documentUri));
@@ -133,30 +118,24 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         public IReadOnlyList<Lsp.Models.Diagnostic> Diagnostics => _diagnostics;
 
         /// <summary>
+        ///     The parsed project XML.
+        /// </summary>
+        public XmlDocumentSyntax Xml { get; protected set; }
+
+        /// <summary>
         ///     Is the project XML currently loaded?
         /// </summary>
-        public bool HasXml => _xml != null && _xmlPositions != null;
+        public bool HasXml => Xml != null && XmlPositions != null;
 
         /// <summary>
         ///     Is the underlying MSBuild project currently loaded?
         /// </summary>
-        public bool HasMSBuildProject => HasXml && _msbuildProject != null;
+        public bool HasMSBuildProject => HasXml && MSBuildProjectCollection != null && MSBuildProject != null;
 
         /// <summary>
         ///     Does the project have in-memory changes?
         /// </summary>
-        public bool IsDirty { get; private set; }
-
-        /// <summary>
-        ///     The parsed project XML.
-        /// </summary>
-        /// <exception cref="InvalidOperationException">
-        ///     The project is not loaded.
-        /// </exception>
-        /// <remarks>
-        ///     Do not modify this <see cref="XDocument"/>.
-        /// </remarks>
-        public XmlDocumentSyntax Xml => _xml ?? throw new InvalidOperationException("Project is not loaded.");
+        public bool IsDirty { get; protected set; }
 
         /// <summary>
         ///     The project XML object lookup facility.
@@ -164,7 +143,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <exception cref="InvalidOperationException">
         ///     The project is not loaded.
         /// </exception>
-        public TextPositions XmlPositions => _xmlPositions ?? throw new InvalidOperationException("Project is not loaded.");
+        public TextPositions XmlPositions { get; protected set; }
 
         /// <summary>
         ///     The project MSBuild object-lookup facility.
@@ -172,7 +151,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <exception cref="InvalidOperationException">
         ///     The project is not loaded.
         /// </exception>
-        public PositionalMSBuildLookup MSBuildLookup => _msbuildLookup ?? throw new InvalidOperationException("MSBuild project is not loaded.");
+        public PositionalMSBuildLookup MSBuildLookup { get; protected set; }
 
         /// <summary>
         ///     MSBuild objects in the project that correspond to locations in the file.
@@ -183,11 +162,6 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         public IEnumerable<MSBuildObject> MSBuildObjects => MSBuildLookup.AllObjects;
 
         /// <summary>
-        ///     The underlying MSBuild project (if any).
-        /// </summary>
-        public Project MSBuildProject => _msbuildProject;
-
-        /// <summary>
         ///     NuGet package sources configured for the current project.
         /// </summary>
         public IReadOnlyList<PackageSource> ConfiguredPackageSources => _configuredPackageSources;
@@ -195,7 +169,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <summary>
         ///     The document's logger.
         /// </summary>
-        ILogger Log { get; set; }
+        protected ILogger Log { get; set; }
 
         /// <summary>
         ///     Load and parse the project.
@@ -206,7 +180,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <returns>
         ///     A task representing the load operation.
         /// </returns>
-        public async Task Load(CancellationToken cancellationToken = default(CancellationToken))
+        public virtual async Task Load(CancellationToken cancellationToken = default(CancellationToken))
         {
             ClearDiagnostics();
 
@@ -215,13 +189,13 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             {
                 xml = await reader.ReadToEndAsync();
             }
-            _xml = Microsoft.Language.Xml.Parser.ParseText(xml);
-            _xmlPositions = new TextPositions(xml);
+            Xml = Microsoft.Language.Xml.Parser.ParseText(xml);
+            XmlPositions = new TextPositions(xml);
             
             IsDirty = false;
 
-            TryLoadMSBuildProject();
             await ConfigurePackageSources(cancellationToken);
+            TryLoadMSBuildProject();
         }
 
         /// <summary>
@@ -230,15 +204,15 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <param name="xml">
         ///     The project XML.
         /// </param>
-        public void Update(string xml)
+        public virtual void Update(string xml)
         {
             if (xml == null)
                 throw new ArgumentNullException(nameof(xml));
 
             ClearDiagnostics();
 
-            _xml = Microsoft.Language.Xml.Parser.ParseText(xml);
-            _xmlPositions = new TextPositions(xml);
+            Xml = Microsoft.Language.Xml.Parser.ParseText(xml);
+            XmlPositions = new TextPositions(xml);
             IsDirty = true;
             
             TryLoadMSBuildProject();
@@ -253,7 +227,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <returns>
         ///     <c>true</c>, if the package sources were loaded; otherwise, <c>false</c>.
         /// </returns>
-        public async Task<bool> ConfigurePackageSources(CancellationToken cancellationToken = default(CancellationToken))
+        public virtual async Task<bool> ConfigurePackageSources(CancellationToken cancellationToken = default(CancellationToken))
         {
             try
             {
@@ -290,7 +264,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <returns>
         ///     A task that resolves to a sorted set of suggested package Ids.
         /// </returns>
-        public async Task<SortedSet<string>> SuggestPackageIds(string packageIdPrefix, CancellationToken cancellationToken = default(CancellationToken))
+        public virtual async Task<SortedSet<string>> SuggestPackageIds(string packageIdPrefix, CancellationToken cancellationToken = default(CancellationToken))
         {
             // We don't actually need a working MSBuild project for this.
             if (!HasXml)
@@ -318,7 +292,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <returns>
         ///     A task that resolves to a sorted set of suggested package versions.
         /// </returns>
-        public async Task<SortedSet<NuGetVersion>> SuggestPackageVersions(string packageId, CancellationToken cancellationToken = default(CancellationToken))
+        public virtual async Task<SortedSet<NuGetVersion>> SuggestPackageVersions(string packageId, CancellationToken cancellationToken = default(CancellationToken))
         {
             // We don't actually need a working MSBuild project for this.
             if (!HasXml)
@@ -337,12 +311,12 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <summary>
         ///     Unload the project.
         /// </summary>
-        public void Unload()
+        public virtual void Unload()
         {
             TryUnloadMSBuildProject();
 
-            _xml = null;
-            _xmlPositions = null;
+            Xml = null;
+            XmlPositions = null;
             IsDirty = false;
         }
 
@@ -363,9 +337,9 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             if (!HasXml)
                 throw new InvalidOperationException($"XML for project '{ProjectFile.FullName}' is not loaded.");
 
-            int absolutePosition = _xmlPositions.GetAbsolutePosition(position);
+            int absolutePosition = XmlPositions.GetAbsolutePosition(position);
 
-            return _xml.FindNode(position, _xmlPositions);
+            return Xml.FindNode(position, XmlPositions);
         }
 
         /// <summary>
@@ -400,7 +374,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             if (!HasMSBuildProject)
                 throw new InvalidOperationException($"MSBuild project '{ProjectFile.FullName}' is not loaded.");
 
-            return _msbuildLookup.Find(position);
+            return MSBuildLookup.Find(position);
         }
 
         /// <summary>
@@ -409,58 +383,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <returns>
         ///     <c>true</c>, if the project was successfully loaded; otherwise, <c>false</c>.
         /// </returns>
-        bool TryLoadMSBuildProject()
-        {
-            try
-            {
-                if (HasMSBuildProject && !IsDirty)
-                    return true;
-
-                if (_msbuildProjectCollection == null)
-                    _msbuildProjectCollection = MSBuildHelper.CreateProjectCollection(ProjectFile.Directory.FullName);
-
-                if (HasMSBuildProject && IsDirty)
-                {
-                    using (StringReader reader = new StringReader(_xml.ToFullString()))
-                    using (XmlTextReader xmlReader = new XmlTextReader(reader))
-                    {
-                        _msbuildProject.Xml.ReloadFrom(xmlReader,
-                            throwIfUnsavedChanges: false,
-                            preserveFormatting: true
-                        );
-                    }
-
-                    _msbuildProject.ReevaluateIfNecessary();
-
-                    Log.Verbose("Successfully updated MSBuild project '{ProjectFileName}' from in-memory changes.");
-                }
-                else
-                    _msbuildProject = _msbuildProjectCollection.LoadProject(ProjectFile.FullName);
-
-                _msbuildLookup = new PositionalMSBuildLookup(_msbuildProject, _xml, _xmlPositions);
-
-                return true;
-            }
-            catch (InvalidProjectFileException invalidProjectFile)
-            {
-                AddErrorDiagnostic(invalidProjectFile.BaseMessage,
-                    range: invalidProjectFile.GetRange(),
-                    diagnosticCode: invalidProjectFile.ErrorCode
-                );
-
-                TryUnloadMSBuildProject();
-
-                return false;
-            }
-            catch (Exception loadError)
-            {
-                Log.Error(loadError, "Error loading MSBuild project '{ProjectFileName}'.", ProjectFile.FullName);
-
-                TryUnloadMSBuildProject();
-
-                return false;
-            }
-        }
+        protected abstract bool TryLoadMSBuildProject();
 
         /// <summary>
         ///     Attempt to unload the underlying MSBuild project.
@@ -468,34 +391,12 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <returns>
         ///     <c>true</c>, if the project was successfully unloaded; otherwise, <c>false</c>.
         /// </returns>
-        bool TryUnloadMSBuildProject()
-        {
-            try
-            {
-                if (!HasMSBuildProject)
-                    return true;
-
-                if (_msbuildProjectCollection == null)
-                    return true;
-
-                _msbuildLookup = null;
-                _msbuildProjectCollection.UnloadProject(_msbuildProject);
-                _msbuildProject = null;
-
-                return true;
-            }
-            catch (Exception unloadError)
-            {
-                Log.Error(unloadError, "Error unloading MSBuild project '{ProjectFileName}'.", ProjectFile.FullName);
-
-                return false;
-            }
-        }
+        protected abstract bool TryUnloadMSBuildProject();
 
         /// <summary>
         ///     Remove all diagnostics for the project file.
         /// </summary>
-        void ClearDiagnostics()
+        protected void ClearDiagnostics()
         {
             _diagnostics.Clear();
         }
@@ -515,7 +416,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <param name="diagnosticCode">
         ///     A code to identify the diagnostic type.
         /// </param>
-        void AddDiagnostic(Lsp.Models.DiagnosticSeverity severity, string message, Range range, string diagnosticCode)
+        protected void AddDiagnostic(Lsp.Models.DiagnosticSeverity severity, string message, Range range, string diagnosticCode)
         {
             if (String.IsNullOrWhiteSpace(message))
                 throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'message'.", nameof(message));
@@ -542,7 +443,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <param name="diagnosticCode">
         ///     A code to identify the diagnostic type.
         /// </param>
-        void AddErrorDiagnostic(string message, Range range, string diagnosticCode) => AddDiagnostic(Lsp.Models.DiagnosticSeverity.Error, message, range, diagnosticCode);
+        protected void AddErrorDiagnostic(string message, Range range, string diagnosticCode) => AddDiagnostic(Lsp.Models.DiagnosticSeverity.Error, message, range, diagnosticCode);
 
         /// <summary>
         ///     Add a warning diagnostic to be published for the project file.
@@ -556,7 +457,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <param name="diagnosticCode">
         ///     A code to identify the diagnostic type.
         /// </param>
-        void AddWarningDiagnostic(string message, Range range, string diagnosticCode) => AddDiagnostic(Lsp.Models.DiagnosticSeverity.Warning, message, range, diagnosticCode);
+        protected void AddWarningDiagnostic(string message, Range range, string diagnosticCode) => AddDiagnostic(Lsp.Models.DiagnosticSeverity.Warning, message, range, diagnosticCode);
 
         /// <summary>
         ///     Add an informational diagnostic to be published for the project file.
@@ -570,7 +471,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <param name="diagnosticCode">
         ///     A code to identify the diagnostic type.
         /// </param>
-        void AddInformationDiagnostic(string message, Range range, string diagnosticCode) => AddDiagnostic(Lsp.Models.DiagnosticSeverity.Information, message, range, diagnosticCode);
+        protected void AddInformationDiagnostic(string message, Range range, string diagnosticCode) => AddDiagnostic(Lsp.Models.DiagnosticSeverity.Information, message, range, diagnosticCode);
 
         /// <summary>
         ///     Add a hint diagnostic to be published for the project file.
@@ -584,6 +485,6 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <param name="diagnosticCode">
         ///     A code to identify the diagnostic type.
         /// </param>
-        void AddHintDiagnostic(string message, Range range, string diagnosticCode) => AddDiagnostic(Lsp.Models.DiagnosticSeverity.Hint, message, range, diagnosticCode);
+        protected void AddHintDiagnostic(string message, Range range, string diagnosticCode) => AddDiagnostic(Lsp.Models.DiagnosticSeverity.Hint, message, range, diagnosticCode);
     }
 }

@@ -309,6 +309,8 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                         result.Contents = HoverContent.UnusedProperty(unusedPropertyFromElement, projectDocument);
                     else if (msbuildObject is MSBuildItemGroup itemGroupFromElement)
                         result.Contents = HoverContent.ItemGroup(itemGroupFromElement);
+                    else if (msbuildObject is MSBuildUnusedItemGroup unusedItemGroupFromElement)
+                        result.Contents = HoverContent.UnusedItemGroup(unusedItemGroupFromElement);
                     else if (msbuildObject is MSBuildTarget targetFromElement)
                         result.Contents = HoverContent.Target(targetFromElement);
                     else if (msbuildObject is MSBuildImport importFromElement)

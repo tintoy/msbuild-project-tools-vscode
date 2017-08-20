@@ -24,23 +24,28 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         Item = 2,
 
         /// <summary>
-        ///     A property (<see cref="ProjectProperty"/>) in an MSBuild project.
+        ///     An item (<see cref="ProjectItem"/>) in an MSBuild project whose condition evaluates as <c>false</c>.
         /// </summary>
-        Property = 3,
+        UnusedItem = 3,
 
         /// <summary>
-        ///     An undefined property (<see cref="ProjectPropertyElement"/> without a corresponding <see cref="ProjectProperty"/>) in an MSBuild project.
+        ///     A property (<see cref="ProjectProperty"/>) in an MSBuild project.
         /// </summary>
-        UnusedProperty = 4,
+        Property = 4,
+
+        /// <summary>
+        ///     An unused property (<see cref="ProjectPropertyElement"/> without a corresponding <see cref="ProjectProperty"/>) in an MSBuild project.
+        /// </summary>
+        UnusedProperty = 5,
 
         /// <summary>
         ///     A project import (<see cref="ResolvedImport"/>) in an MSBuild project.
         /// </summary>
-        Import = 5,
+        Import = 6,
 
         /// <summary>
         ///     An SDK-style project import (<see cref="ResolvedImport"/>) in an MSBuild project.
         /// </summary>
-        SdkImport = 6
+        SdkImport = 7
     }
 }

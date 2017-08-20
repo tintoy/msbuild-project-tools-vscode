@@ -112,11 +112,10 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
                 }
             }
 
-            HashSet<ProjectItem> itemsExcludedByCondition = new HashSet<ProjectItem>(_project.ItemsIgnoringCondition);
-            itemsExcludedByCondition.ExceptWith(_project.Items);
-            
+            HashSet<ProjectItem> usedItems = new HashSet<ProjectItem>(_project.Items);
+
             var itemsByXml = new Dictionary<ProjectItemElement, List<ProjectItem>>();
-            foreach (ProjectItem item in _project.Items)
+            foreach (ProjectItem item in _project.ItemsIgnoringCondition)
             {
                 if (item.Xml == null || !String.Equals(item.Xml.Location.File, projectFilePath, StringComparison.OrdinalIgnoreCase))
                     continue; // Not declared in main project file.
@@ -145,13 +144,26 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
                 Range itemRange = itemElement.Span.ToNative(xmlPositions);
 
                 List<ProjectItem> itemsFromXml;
-                if (!itemsByXml.TryGetValue(itemXml, out itemsFromXml))
-                    continue; // TODO: Implement MSBuildUnevaluatedItemGroup representing items excluded by condition.
+                if (!itemsByXml.TryGetValue(itemXml, out itemsFromXml)) // AF: Should not happen.
+                    throw new InvalidOperationException($"Found item XML at {itemRange} with no corresponding items in the MSBuild project (irrespective of condition).");
 
                 _objectRanges.Add(itemRange);
-                _objectsByStartPosition.Add(itemRange.Start,
-                    new MSBuildItemGroup(itemsByXml[itemXml], itemXml, itemElement, itemRange)
-                );
+                if (usedItems.Contains(itemsFromXml[0]))
+                {
+                    Serilog.Log.Information("{Name} item group spanning {Range}", itemsFromXml[0].ItemType, itemRange);
+
+                    _objectsByStartPosition.Add(itemRange.Start,
+                        new MSBuildItemGroup(itemsByXml[itemXml], itemXml, itemElement, itemRange)
+                    );
+                }
+                else
+                {
+                    Serilog.Log.Information("Unused {Name} item group spanning {Range}", itemsFromXml[0].ItemType, itemRange);
+
+                    _objectsByStartPosition.Add(itemRange.Start,
+                        new MSBuildUnusedItemGroup(itemsByXml[itemXml], itemXml, itemElement, itemRange)
+                    );
+                }
             }
 
             var importsBySdk =

@@ -142,8 +142,65 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 itemIncludeContent.AppendLine("* ...");
 
             return new MarkedStringContainer(
-                $"Items Group: `{itemGroup.OriginatingElement.ItemType}`",
+                $"Item Group: `{itemGroup.OriginatingElement.ItemType}`",
                 itemIncludeContent.ToString()
+            );  
+        }
+
+        /// <summary>
+        ///     Get hover content for an <see cref="MSBuildUnusedItemGroup"/>.
+        /// </summary>
+        /// <param name="unusedItemGroup">
+        ///     The <see cref="MSBuildUnusedItemGroup"/>.
+        /// </param>
+        /// <returns>
+        ///     The content.
+        /// </returns>
+        public static MarkedStringContainer UnusedItemGroup(MSBuildUnusedItemGroup unusedItemGroup)
+        {
+            if (unusedItemGroup == null)
+                throw new ArgumentNullException(nameof(unusedItemGroup));
+            
+            string condition = unusedItemGroup.Condition;
+            string evaluatedCondition = unusedItemGroup.FirstItem.Project.ExpandString(condition);
+
+            StringBuilder descriptionContent = new StringBuilder();
+            descriptionContent.AppendLine(
+                $"Condition: `{condition}`"
+            );
+            descriptionContent.AppendLine();
+            descriptionContent.AppendLine(
+                $"Evaluated Condition: `{evaluatedCondition}`"
+            );
+            descriptionContent.AppendLine();
+            descriptionContent.AppendLine("---");
+            descriptionContent.AppendLine();
+
+            string[] includes = unusedItemGroup.Includes.ToArray();
+            descriptionContent.AppendLine(
+                $"Include: `{unusedItemGroup.OriginatingElement.Include}`  "
+            );
+            descriptionContent.AppendLine();
+            descriptionContent.Append(
+                $"Evaluates to {unusedItemGroup.Items.Count} item"
+            );
+            if (!unusedItemGroup.HasSingleItem)
+                descriptionContent.Append("s");
+            descriptionContent.AppendLine(".");
+
+            foreach (string include in includes.Take(5))
+            {
+                // TODO: Consider making hyperlinks for includes that map to files which exist.
+                descriptionContent.AppendLine(
+                    $"* `{include}`"
+                );
+            }
+            if (includes.Length > 5)
+                descriptionContent.AppendLine("* ...");
+
+            return new MarkedStringContainer(
+                $"Unused Item Group: `{unusedItemGroup.OriginatingElement.ItemType}` (condition evaluates to false)",
+                descriptionContent.ToString()
             );  
         }
 

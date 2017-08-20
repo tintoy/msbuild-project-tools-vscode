@@ -341,6 +341,7 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         /// </remarks>
         void AddImports()
         {
+            HashSet<ProjectImportElement> resolvedImportElements = new HashSet<ProjectImportElement>();
             var importsBySdk =
                 _project.Imports.Where(import =>
                     IsFromCurrentProject(import.ImportingElement)
@@ -357,6 +358,21 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
                     AddSdkImport(importGroup);
                 else
                     AddImport(importGroup);
+
+                resolvedImportElements.UnionWith(importGroup.Select(
+                    resolvedImport => resolvedImport.ImportingElement
+                ));
+            }
+
+            HashSet<ProjectImportElement> unresolvedImportElements = new HashSet<ProjectImportElement>(_project.Xml.Imports);
+            unresolvedImportElements.ExceptWith(resolvedImportElements);
+
+            foreach (ProjectImportElement importElement in unresolvedImportElements)
+            {
+                if (!String.IsNullOrWhiteSpace(importElement.Sdk))
+                    AddUnresolvedSdkImport(importElement);
+                else
+                    AddUnresolvedImport(importElement);
             }
         }
 
@@ -405,8 +421,7 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         {
             if (resolvedImports == null)
                 throw new ArgumentNullException(nameof(resolvedImports));
-            
-            // A regular import (each element may result in multiple imports).
+
             var importsByImportingElement = resolvedImports.GroupBy(import => import.ImportingElement);
             foreach (var importsForImportingElement in importsByImportingElement)
             {
@@ -426,6 +441,48 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
                     new MSBuildImport(importsForImportingElement.ToArray(), importElement, importRange)
                 );
             }
+        }
+
+        /// <summary>
+        ///     Add an unresolved SDK-style import (i.e. condition is false).
+        /// </summary>
+        /// <param name="import">
+        ///     The declaring import element.
+        /// </param>
+        void AddUnresolvedSdkImport(ProjectImportElement import)
+        {
+            if (import == null)
+                throw new ArgumentNullException(nameof(import));
+            
+            Serilog.Log.Information("Unresolved SDK-style import @ {@Location}", import.Location);
+        }
+
+        /// <summary>
+        ///     Add an unresolved regular-style import (i.e. condition is false).
+        /// </summary>
+        /// <param name="import">
+        ///     The declaring import element.
+        /// </param>
+        void AddUnresolvedImport(ProjectImportElement import)
+        {
+            if (import == null)
+                throw new ArgumentNullException(nameof(import));
+
+            Position importStart = import.Location.ToNative();
+
+            SyntaxNode xmlAtPosition = FindXmlAtPosition(importStart);
+            if (xmlAtPosition == null)
+                return;
+
+            XmlElementSyntaxBase importElement = xmlAtPosition.GetContainingElement();
+            if (importElement == null)
+                return;
+
+            Range importRange = GetRange(importElement);
+            _objectRanges.Add(importRange);
+            _objectsByStartPosition.Add(importRange.Start,
+                new MSBuildUnresolvedImport(import, importElement, importRange)
+            );            
         }
     }
 }

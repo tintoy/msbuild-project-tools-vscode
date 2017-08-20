@@ -10,6 +10,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
     using MSBuild;
     using Documents;
     using Utilities;
+    using Microsoft.Build.Evaluation;
 
     /// <summary>
     ///     Content for tooltips when hovering over nodes in the MSBuild XML.
@@ -89,7 +90,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             string expandedCondition = projectDocument.MSBuildProject.ExpandString(condition);
 
             return new MarkedStringContainer(
-                $"Property: `{undefinedProperty.Name}` (condition evaluates to false)",
+                $"Property: `{undefinedProperty.Name}` (condition evaluates to `false`)",
                 $"Unused value:\n* `{undefinedProperty.Value}`\n\nCondition:\n* Raw =`{condition}`\n* Evaluated = `{expandedCondition}`"
             );
         }
@@ -199,7 +200,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 descriptionContent.AppendLine("* ...");
 
             return new MarkedStringContainer(
-                $"Unused Item Group: `{unusedItemGroup.OriginatingElement.ItemType}` (condition evaluates to false)",
+                $"Unused Item Group: `{unusedItemGroup.OriginatingElement.ItemType}` (condition evaluates to `false`)",
                 descriptionContent.ToString()
             );  
         }
@@ -285,8 +286,57 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 imports.AppendLine($"* [{Path.GetFileName(projectFile)}]({UriHelper.CreateDocumentUri(projectFile)})");
 
             return new MarkedStringContainer(
-                $"Import: {import.Name}",
+                $"Import: `{import.Name}`",
                 imports.ToString()
+            );
+        }
+
+        /// <summary>
+        ///     Get hover content for an <see cref="MSBuildImport"/>.
+        /// </summary>
+        /// <param name="unresolvedImport">
+        ///     The <see cref="MSBuildImport"/>.
+        /// </param>
+        /// <returns>
+        ///     The content.
+        /// </returns>
+        public static MarkedStringContainer UnresolvedImport(MSBuildUnresolvedImport unresolvedImport, ProjectDocument projectDocument)
+        {
+            if (unresolvedImport == null)
+                throw new ArgumentNullException(nameof(unresolvedImport));
+
+            if (projectDocument == null)
+                throw new ArgumentNullException(nameof(projectDocument));
+            
+            string condition = unresolvedImport.Condition;
+            string evaluatedCondition = projectDocument.MSBuildProject.ExpandString(condition);
+
+            string project = unresolvedImport.Project;
+            string evaluatedProject = projectDocument.MSBuildProject.ExpandString(project);
+
+            StringBuilder descriptionContent = new StringBuilder();
+            descriptionContent.AppendLine(
+                $"Project: `{project}`"
+            );
+            descriptionContent.AppendLine();
+            descriptionContent.AppendLine(
+                $"Evaluated Project: `{evaluatedProject}`"
+            );
+            descriptionContent.AppendLine();
+            descriptionContent.AppendLine(
+                $"Condition: `{condition}`"
+            );
+            descriptionContent.AppendLine();
+            descriptionContent.AppendLine(
+                $"Evaluated Condition: `{evaluatedCondition}`"
+            );
+
+            return new MarkedStringContainer(
+                $"Unresolved Import (condition evaluates to `false`)",
+                descriptionContent.ToString(),
+                "abby",
+                "normal",
+                "oneday"
             );
         }
 

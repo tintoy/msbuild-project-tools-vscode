@@ -26,16 +26,20 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         /// <summary>
         ///     Get information about the current .NET Core runtime.
         /// </summary>
+        /// <param name="baseDirectory">
+        ///     An optional base directory where dotnet.exe should be run (this may affect the version it reports due to global.json).
+        /// </param>
         /// <returns>
         ///     A <see cref="DotNetRuntimeInfo"/> containing the runtime information.
         /// </returns>
-        public static DotNetRuntimeInfo GetCurrent()
+        public static DotNetRuntimeInfo GetCurrent(string baseDirectory = null)
         {
             DotNetRuntimeInfo runtimeInfo = new DotNetRuntimeInfo();
 
             Process dotnetInfoProcess = Process.Start(new ProcessStartInfo
             {
                 FileName = "dotnet",
+                WorkingDirectory = baseDirectory,
                 Arguments = "--info",
                 UseShellExecute = false,
                 RedirectStandardOutput = true

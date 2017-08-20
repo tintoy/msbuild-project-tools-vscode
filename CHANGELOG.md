@@ -1,5 +1,10 @@
 # Change Log
 
+## v0.1.4
+
+* Provide intellisense for regular-style imports whose conditions evaluate to false.
+* Respect the user's nominated version of the .NET Core tooling to use when loading master projects (run `dotnet --version` in the solution directory).
+
 ## v0.1.3
 
 * Provide intellisense for items whose conditions evaluate to `false`.

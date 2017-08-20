@@ -77,23 +77,7 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         /// <summary>
         ///     The (unevaluated) conditional expression which resulted in the item its item group not being included.
         /// </summary>
-        public string Condition
-        {
-            get
-            {
-                ProjectItemElement itemElement = FirstItem.Xml;
-                if (!String.IsNullOrWhiteSpace(itemElement.Condition))
-                    return itemElement.Condition;
-
-                ProjectElementContainer firstParentWithCondition = itemElement.AllParents.FirstOrDefault(
-                    parent => !String.IsNullOrWhiteSpace(parent.Condition)
-                );
-                if (firstParentWithCondition != null)
-                    return firstParentWithCondition.Condition;
-
-                return String.Empty; // AF: Should never happen.
-            }
-        }
+        public string Condition => FirstItem.Xml.FindCondition();
 
         /// <summary>
         ///     The evaluated values of the items' "Include" attributes.

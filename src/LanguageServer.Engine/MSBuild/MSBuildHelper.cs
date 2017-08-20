@@ -6,6 +6,7 @@ using System.IO;
 
 namespace MSBuildProjectTools.LanguageServer.MSBuild
 {
+    using Microsoft.Build.Construction;
     using Utilities;
 
     /// <summary>
@@ -25,7 +26,7 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         public static ProjectCollection CreateProjectCollection(string solutionDirectory)
         {
             return CreateProjectCollection(solutionDirectory,
-                DotNetRuntimeInfo.GetCurrent()
+                DotNetRuntimeInfo.GetCurrent(solutionDirectory)
             );
         }
 
@@ -154,6 +155,32 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
                 endPosition = startPosition;
             
             return new Range(startPosition, endPosition);
+        }
+
+        /// <summary>
+        ///     Get the condition (if any) declared on the element or one of its ancestors.
+        /// </summary>
+        /// <param name="projectElement">
+        ///     The element.
+        /// </param>
+        /// <returns>
+        ///     The condition, or an empty string if no condition is present on the element or one of its ancestors.
+        /// </returns>
+        public static string FindCondition(this ProjectElement projectElement)
+        {
+            if (projectElement == null)
+                throw new ArgumentNullException(nameof(projectElement));
+            
+            ProjectElement currentElement = projectElement;
+            while (currentElement != null)
+            {
+                if (!String.IsNullOrWhiteSpace(currentElement.Condition))
+                    return currentElement.Condition;
+
+                currentElement = currentElement.Parent;
+            }
+
+            return String.Empty;
         }
     }
 }

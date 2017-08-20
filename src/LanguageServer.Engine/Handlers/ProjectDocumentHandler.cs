@@ -315,6 +315,8 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                         result.Contents = HoverContent.Target(targetFromElement);
                     else if (msbuildObject is MSBuildImport importFromElement)
                         result.Contents = HoverContent.Import(importFromElement);
+                    else if (msbuildObject is MSBuildUnresolvedImport unresolvedImportFromElement)
+                        result.Contents = HoverContent.UnresolvedImport(unresolvedImportFromElement, projectDocument);
                     else
                         return null;
                 }

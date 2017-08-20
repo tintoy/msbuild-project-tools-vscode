@@ -51,6 +51,11 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         /// <summary>
         ///     An SDK-style project import (<see cref="ResolvedImport"/>) in an MSBuild project.
         /// </summary>
-        SdkImport = 8
+        SdkImport = 8,
+
+        /// <summary>
+        ///     An unresolved SDK-style import (<see cref="ProjectImportElement"/> without a corresponding <see cref="ResolvedImport"/>) in an MSBuild project.
+        /// </summary>
+        UnresolvedSdkImport = 9
     }
 }

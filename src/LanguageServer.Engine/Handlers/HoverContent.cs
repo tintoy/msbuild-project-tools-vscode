@@ -217,35 +217,103 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     The content.
         /// </returns>
-        public static MarkedStringContainer ItemGroup(MSBuildItemGroup itemGroup, XmlAttributeSyntax attribute)
+        public static MarkedStringContainer ItemGroupMetadata(MSBuildItemGroup itemGroup, string metadataName)
         {
             if (itemGroup == null)
                 throw new ArgumentNullException(nameof(itemGroup));
 
+            if (String.IsNullOrWhiteSpace(metadataName))
+                throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'metadataName'.", nameof(metadataName));
+
             if (itemGroup.Name == "PackageReference")
                 return ItemGroup(itemGroup);
 
-            // TODO: Handle the "Condition" attribute.
-            if (attribute.Name == "Condition")
-                return null;
+            if (metadataName == "Condition")
+                return null; // TODO: Handle the "Condition" attribute.
 
-            string metadataName = attribute.Name;
             if (String.Equals(metadataName, "Include"))
                 metadataName = "Identity";
 
-            StringBuilder metadataValues = new StringBuilder();
-            metadataValues.AppendLine("Values:");
+            string[] metadataValues =
+                itemGroup.GetMetadataValues(metadataName).Where(
+                    value => !String.IsNullOrWhiteSpace(value)
+                )
+                .Distinct()
+                .ToArray();
 
-            foreach (string metadataValue in itemGroup.GetMetadataValues(metadataName).Distinct())
+            StringBuilder metadataContent = new StringBuilder();
+            if (metadataValues.Length > 0)
             {
-                metadataValues.AppendLine(
-                    $"* `{metadataValue}`"
-                );
+                metadataContent.AppendLine("Values:");
+                foreach (string metadataValue in metadataValues)
+                {
+                    metadataContent.AppendLine(
+                        $"* `{metadataValue}`"
+                    );
+                }
             }
+            else
+                metadataContent.AppendLine("No values are present for this metadata.");
 
             return new MarkedStringContainer(
                 $"Item Metadata: `{itemGroup.Name}.{metadataName}`",
-                metadataValues.ToString()
+                metadataContent.ToString()
+            );
+        }
+
+        /// <summary>
+        ///     Get hover content for a metadata attribute of an <see cref="MSBuildUnusedItemGroup"/>.
+        /// </summary>
+        /// <param name="itemGroup">
+        ///     The <see cref="MSBuildUnusedItemGroup"/>.
+        /// </param>
+        /// <param name="metadataName">
+        ///     The name of the metadata attribute.
+        /// </param>
+        /// <returns>
+        ///     The content.
+        /// </returns>
+        public static MarkedStringContainer UnusedItemGroupMetadata(MSBuildUnusedItemGroup itemGroup, string metadataName)
+        {
+            if (itemGroup == null)
+                throw new ArgumentNullException(nameof(itemGroup));
+
+            if (String.IsNullOrWhiteSpace(metadataName))
+                throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'metadataName'.", nameof(metadataName));
+
+            if (itemGroup.Name == "PackageReference")
+                return UnusedItemGroup(itemGroup);
+
+            if (metadataName == "Condition")
+                return null; // TODO: Handle the "Condition" attribute.
+
+            if (String.Equals(metadataName, "Include"))
+                metadataName = "Identity";
+
+            string[] metadataValues =
+                itemGroup.GetMetadataValues(metadataName).Where(
+                    value => !String.IsNullOrWhiteSpace(value)
+                )
+                .Distinct()
+                .ToArray();
+
+            StringBuilder metadataContent = new StringBuilder();
+            if (metadataValues.Length > 0)
+            {
+                metadataContent.AppendLine("Values:");
+                foreach (string metadataValue in metadataValues)
+                {
+                    metadataContent.AppendLine(
+                        $"* `{metadataValue}`"
+                    );
+                }
+            }
+            else
+                metadataContent.AppendLine("No values are present for this metadata.");
+
+            return new MarkedStringContainer(
+                $"Unused Item Metadata: `{itemGroup.Name}.{metadataName}` (item condition evaluates to `false`)",
+                metadataContent.ToString()
             );
         }
 
@@ -359,6 +427,41 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             return new MarkedStringContainer(
                 $"SDK Import: {sdkImport.Name}",
                 imports.ToString()
+            );
+        }
+
+        /// <summary>
+        ///     Get hover content for an <see cref="MSBuildUnresolvedSdkImport"/>.
+        /// </summary>
+        /// <param name="unresolvedSdkImport">
+        ///     The <see cref="MSBuildUnresolvedSdkImport"/>.
+        /// </param>
+        /// <returns>
+        ///     The content.
+        /// </returns>
+        public static MarkedStringContainer UnresolvedSdkImport(MSBuildUnresolvedSdkImport unresolvedSdkImport, ProjectDocument projectDocument)
+        {
+            if (unresolvedSdkImport == null)
+                throw new ArgumentNullException(nameof(unresolvedSdkImport));
+
+            if (projectDocument == null)
+                throw new ArgumentNullException(nameof(projectDocument));
+            
+            string condition = unresolvedSdkImport.Condition;
+            string evaluatedCondition = projectDocument.MSBuildProject.ExpandString(condition);
+
+            StringBuilder descriptionContent = new StringBuilder();
+            descriptionContent.AppendLine(
+                $"Condition: `{condition}`"
+            );
+            descriptionContent.AppendLine();
+            descriptionContent.AppendLine(
+                $"Evaluated Condition: `{evaluatedCondition}`"
+            );
+
+            return new MarkedStringContainer(
+                $"Unresolved Import `{unresolvedSdkImport.Sdk}` (condition evaluates to `false`)",
+                descriptionContent.ToString()
             );
         }
     }

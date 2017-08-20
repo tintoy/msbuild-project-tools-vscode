@@ -454,7 +454,23 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
             if (import == null)
                 throw new ArgumentNullException(nameof(import));
             
-            Serilog.Log.Information("Unresolved SDK-style import @ {@Location}", import.Location);
+            Position importStart = import.Location.ToNative();
+
+            SyntaxNode xmlAtPosition = FindXmlAtPosition(importStart);
+            if (xmlAtPosition == null)
+                return;
+
+            XmlElementSyntaxBase importElement = xmlAtPosition.GetContainingElement();
+            if (importElement == null)
+                return;
+
+            XmlAttributeSyntax sdkAttribute = importElement.AsSyntaxElement["Sdk"];
+
+            Range importRange = GetRange(importElement);
+            _objectRanges.Add(importRange);
+            _objectsByStartPosition.Add(importRange.Start,
+                new MSBuildUnresolvedSdkImport(import, sdkAttribute, importRange)
+            );
         }
 
         /// <summary>

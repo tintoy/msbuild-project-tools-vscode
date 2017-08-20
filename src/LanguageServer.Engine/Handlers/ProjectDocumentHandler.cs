@@ -323,9 +323,13 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 else if (elementOrAttribute is XmlAttributeSyntax attribute)
                 {
                     if (msbuildObject is MSBuildItemGroup itemGroupFromAttribute)
-                        result.Contents = HoverContent.ItemGroup(itemGroupFromAttribute, attribute);
+                        result.Contents = HoverContent.ItemGroupMetadata(itemGroupFromAttribute, attribute.Name);
+                    else if (msbuildObject is MSBuildUnusedItemGroup unusedItemGroupFromAttribute)
+                        result.Contents = HoverContent.UnusedItemGroupMetadata(unusedItemGroupFromAttribute, attribute.Name);
                     else if (msbuildObject is MSBuildSdkImport sdkImportFromAttribute)
                         result.Contents = HoverContent.SdkImport(sdkImportFromAttribute);
+                    else if (msbuildObject is MSBuildUnresolvedSdkImport unresolvedSdkImportFromAttribute)
+                        result.Contents = HoverContent.UnresolvedSdkImport(unresolvedSdkImportFromAttribute, projectDocument);
                     else if (msbuildObject is MSBuildImport importFromAttribute)
                         result.Contents = HoverContent.Import(importFromAttribute);
                     else

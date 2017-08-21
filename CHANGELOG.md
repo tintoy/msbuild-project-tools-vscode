@@ -3,6 +3,7 @@
 ## v0.1.8
 
 * Add basic syntax-highlighting for expressions in MSBuild projects (currently only supported in attribute values).
+* Improve delay on first completion of PackageReference by asynchronously warming up the NuGet client.
 
 ## v0.1.7
 

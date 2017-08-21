@@ -327,7 +327,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         ///     The target position.
         /// </param>
         /// <returns>
-        ///     The object, or <c>null</c> no object was found at the specified position.
+        ///     The object, or <c>null</c> if no object was found at the specified position.
         /// </returns>
         public SyntaxNode GetXmlAtPosition(Position position)
         {

@@ -93,6 +93,22 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         }
 
         /// <summary>
+        ///     Load the project document.
+        /// </summary>
+        /// <param name="cancellationToken">
+        ///     A cancellation token that can be used to cancel the load.
+        /// </param>
+        /// <returns>
+        ///     A <see cref="Task"/> representing the operation.
+        /// </returns>
+        public override async Task Load(CancellationToken cancellationToken)
+        {
+            await base.Load(cancellationToken);
+
+            WarmUpNuGetClient();
+        }
+
+        /// <summary>
         ///     Attempt to load the underlying MSBuild project.
         /// </summary>
         /// <returns>
@@ -179,6 +195,19 @@ namespace MSBuildProjectTools.LanguageServer.Documents
 
                 return false;
             }
+        }
+
+        /// <summary>
+        ///     Warm up the project's NuGet client.
+        /// </summary>
+        void WarmUpNuGetClient()
+        {
+            SuggestPackageIds("Newtonsoft.Json").ContinueWith(task =>
+            {
+                Log.Error(task.Exception.Flatten().InnerExceptions[0],
+                     "Error initialising NuGet client."
+                );
+            }, TaskContinuationOptions.OnlyOnFaulted);
         }
     }
 }

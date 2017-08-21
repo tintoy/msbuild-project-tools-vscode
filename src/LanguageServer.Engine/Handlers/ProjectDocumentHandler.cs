@@ -439,12 +439,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                     return null;
 
                 // Are we on the attribute's value?
-                Range attributeValueRange = attribute.ValueNode.Span
-                    .ToNative(projectDocument.XmlPositions)
-                    .Transform( // Trim off leading and trailing quotes.
-                        moveStartColumns: 1,
-                        moveEndColumns: -1
-                    );
+                Range attributeValueRange = attribute.GetValueRange(projectDocument.XmlPositions);
                 if (!attributeValueRange.Contains(position))
                     return null;
 

@@ -61,8 +61,12 @@ namespace MSBuildProjectTools.LanguageServer
 
             ConfigureLogging(server, configuration.Configuration);
 
+            Workspace workspace = new Workspace(server, configuration.Configuration, Log.Logger);
             server.AddHandler(
-                new ProjectDocumentHandler(server, configuration.Configuration, Log.Logger)
+                new DocumentSyncHandler(server, workspace, Log.Logger)
+            );
+            server.AddHandler(
+                new ProjectDocumentHandler(server, workspace, configuration.Configuration, Log.Logger)
             );
 
             await server.Initialize();

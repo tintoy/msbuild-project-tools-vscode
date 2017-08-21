@@ -17,7 +17,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
     ///     The base class for language server text-document event handlers.
     /// </summary>
     public abstract class TextDocumentHandler
-        : Handler, ITextDocumentSyncHandler, IHoverHandler, ICompletionHandler, IDocumentSymbolHandler, IDefinitionHandler
+        : Handler, IHoverHandler, ICompletionHandler, IDocumentSymbolHandler, IDefinitionHandler
     {
         /// <summary>
         ///     Create a new <see cref="TextDocumentHandler"/>.
@@ -34,29 +34,9 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         }
 
         /// <summary>
-        ///     Options that control synchronisation.
-        /// </summary>
-        public TextDocumentSyncOptions Options { get; } = new TextDocumentSyncOptions
-        {
-            WillSaveWaitUntil = false,
-            WillSave = true,
-            Change = TextDocumentSyncKind.Full,
-            Save = new SaveOptions
-            {
-                IncludeText = true
-            },
-            OpenClose = true
-        };
-
-        /// <summary>
         ///     The document selector that describes documents targeted by the handler.
         /// </summary>
         protected abstract DocumentSelector DocumentSelector { get; }
-
-        /// <summary>
-        ///     The server's synchronisation capabilities.
-        /// </summary>
-        protected SynchronizationCapability SynchronizationCapabilities { get; private set; }
 
         /// <summary>
         ///     The server's hover capabilities.
@@ -77,50 +57,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         ///     The server's definition capabilities.
         /// </summary>
         protected DefinitionCapability DefinitionCapabilities { get; private set; }
-
-        /// <summary>
-        ///     Called when a text document is opened.
-        /// </summary>
-        /// <param name="parameters">
-        ///     The notification parameters.
-        /// </param>
-        /// <returns>
-        ///     A <see cref="Task"/> representing the operation.
-        /// </returns>
-        protected virtual Task OnDidOpenTextDocument(DidOpenTextDocumentParams parameters) => Task.CompletedTask;
-
-        /// <summary>
-        ///     Called when a text document is closed.
-        /// </summary>
-        /// <param name="parameters">
-        ///     The notification parameters.
-        /// </param>
-        /// <returns>
-        ///     A <see cref="Task"/> representing the operation.
-        /// </returns>
-        protected virtual Task OnDidCloseTextDocument(DidCloseTextDocumentParams parameters) => Task.CompletedTask;
-        
-        /// <summary>
-        ///     Called when a text document is saved.
-        /// </summary>
-        /// <param name="parameters">
-        ///     The notification parameters.
-        /// </param>
-        /// <returns>
-        ///     A <see cref="Task"/> representing the operation.
-        /// </returns>
-        protected virtual Task OnDidSaveTextDocument(DidSaveTextDocumentParams parameters) => Task.CompletedTask;
-
-        /// <summary>
-        ///     Called when a text document is changed.
-        /// </summary>
-        /// <param name="parameters">
-        ///     The notification parameters.
-        /// </param>
-        /// <returns>
-        ///     A <see cref="Task"/> representing the operation.
-        /// </returns>
-        protected virtual Task OnDidChangeTextDocument(DidChangeTextDocumentParams parameters) => Task.CompletedTask;
 
         /// <summary>
         ///     Called when the mouse pointer hovers over text.
@@ -190,30 +126,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         }
 
         /// <summary>
-        ///     Get registration options for handling document-change events.
-        /// </summary>
-        protected virtual TextDocumentChangeRegistrationOptions DocumentChangeRegistrationOptions
-        {
-            get => new TextDocumentChangeRegistrationOptions
-            {
-                DocumentSelector = DocumentSelector,
-                SyncKind = Options.Change
-            };
-        }
-
-        /// <summary>
-        ///     Get registration options for handling document save events.
-        /// </summary>
-        protected virtual TextDocumentSaveRegistrationOptions DocumentSaveRegistrationOptions
-        {
-            get => new TextDocumentSaveRegistrationOptions
-            {
-                DocumentSelector = DocumentSelector,
-                IncludeText = Options.Save.IncludeText
-            };
-        }
-
-        /// <summary>
         ///     Get registration options for handling completion requests events.
         /// </summary>
         protected virtual CompletionRegistrationOptions CompletionRegistrationOptions
@@ -235,102 +147,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         ///     The document attributes.
         /// </returns>
         protected virtual TextDocumentAttributes GetTextDocumentAttributes(Uri documentUri) => new TextDocumentAttributes(documentUri, "xml");
-
-        /// <summary>
-        ///     Handle a document being opened.
-        /// </summary>
-        /// <param name="parameters">
-        ///     The notification parameters.
-        /// </param>
-        /// <returns>
-        ///     A <see cref="Task"/> representing the operation.
-        /// </returns>
-        async Task INotificationHandler<DidOpenTextDocumentParams>.Handle(DidOpenTextDocumentParams parameters)
-        {
-            if (parameters == null)
-                throw new ArgumentNullException(nameof(parameters));
-            
-            try
-            {
-                await OnDidOpenTextDocument(parameters);
-            }
-            catch (Exception unexpectedError)
-            {
-                Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDidOpenTextDocument");
-            }
-        }
-
-        /// <summary>
-        ///     Handle a document being closed.
-        /// </summary>
-        /// <param name="parameters">
-        ///     The notification parameters.
-        /// </param>
-        /// <returns>
-        ///     A <see cref="Task"/> representing the operation.
-        /// </returns>
-        async Task INotificationHandler<DidCloseTextDocumentParams>.Handle(DidCloseTextDocumentParams parameters)
-        {
-            if (parameters == null)
-                throw new ArgumentNullException(nameof(parameters));
-
-            try
-            {
-                await OnDidCloseTextDocument(parameters);
-            }
-            catch (Exception unexpectedError)
-            {
-                Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDidCloseTextDocument");
-            }
-        }
-
-        /// <summary>
-        ///     Handle a change in document text.
-        /// </summary>
-        /// <param name="parameters">
-        ///     The notification parameters.
-        /// </param>
-        /// <returns>
-        ///     A <see cref="Task"/> representing the operation.
-        /// </returns>
-        async Task INotificationHandler<DidChangeTextDocumentParams>.Handle(DidChangeTextDocumentParams parameters)
-        {
-            if (parameters == null)
-                throw new ArgumentNullException(nameof(parameters));
-
-            try
-            {
-                await OnDidChangeTextDocument(parameters);
-            }
-            catch (Exception unexpectedError)
-            {
-                Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDidChangeTextDocument");
-            }
-        }
-
-        /// <summary>
-        ///     Handle a document being saved.
-        /// </summary>
-        /// <param name="parameters">
-        ///     The notification parameters.
-        /// </param>
-        /// <returns>
-        ///     A <see cref="Task"/> representing the operation.
-        /// </returns>
-        async Task INotificationHandler<DidSaveTextDocumentParams>.Handle(DidSaveTextDocumentParams parameters)
-        {
-            if (parameters == null)
-                throw new ArgumentNullException(nameof(parameters));
-
-            try
-            {
-                await OnDidSaveTextDocument(parameters);
-            }
-            catch (Exception unexpectedError)
-            {
-                Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDidSaveTextDocument");
-            }
-        }
 
         /// <summary>
         ///     Handle a request for hover information.
@@ -457,42 +273,12 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         TextDocumentRegistrationOptions IRegistration<TextDocumentRegistrationOptions>.GetRegistrationOptions() => DocumentRegistrationOptions;
 
         /// <summary>
-        ///     Get registration options for handling document-change events.
-        /// </summary>
-        /// <returns>
-        ///     The registration options.
-        /// </returns>
-        TextDocumentChangeRegistrationOptions IRegistration<TextDocumentChangeRegistrationOptions>.GetRegistrationOptions() => DocumentChangeRegistrationOptions;
-
-        /// <summary>
-        ///     Get registration options for handling document save events.
-        /// </summary>
-        /// <returns>
-        ///     The registration options.
-        /// </returns>
-        TextDocumentSaveRegistrationOptions IRegistration<TextDocumentSaveRegistrationOptions>.GetRegistrationOptions() => DocumentSaveRegistrationOptions;
-
-        /// <summary>
         ///     Get registration options for handling completion requests.
         /// </summary>
         /// <returns>
         ///     The registration options.
         /// </returns>
         CompletionRegistrationOptions IRegistration<CompletionRegistrationOptions>.GetRegistrationOptions() => CompletionRegistrationOptions;
-        
-        /// <summary>
-        ///     Called to inform the handler of the language server's document-synchronisation capabilities.
-        /// </summary>
-        /// <param name="capabilities">
-        ///     A <see cref="SynchronizationCapability"/> data structure representing the capabilities.
-        /// </param>
-        void ICapability<SynchronizationCapability>.SetCapability(SynchronizationCapability capabilities)
-        {
-            if (capabilities == null)
-                throw new ArgumentNullException(nameof(capabilities));
-
-            SynchronizationCapabilities = capabilities;
-        }
 
         /// <summary>
         ///     Called to inform the handler of the language server's hover capabilities.
@@ -548,23 +334,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 throw new ArgumentNullException(nameof(capabilities));
             
             DefinitionCapabilities = capabilities;
-        }
-
-        /// <summary>
-        ///     Get attributes for the specified text document.
-        /// </summary>
-        /// <param name="documentUri">
-        ///     The document URI.
-        /// </param>
-        /// <returns>
-        ///     The document attributes.
-        /// </returns>
-        TextDocumentAttributes ITextDocumentSyncHandler.GetTextDocumentAttributes(Uri documentUri)
-        {
-            if (documentUri == null)
-                throw new ArgumentNullException(nameof(documentUri));
-
-            return GetTextDocumentAttributes(documentUri);
         }
     }
 }

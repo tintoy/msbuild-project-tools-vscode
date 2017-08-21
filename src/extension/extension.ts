@@ -32,7 +32,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         });
 
         loadConfiguration();
-    
         let canEnableLanguageService = false;
         if (enableLanguageService) {
             const dotnetVersion = await dotnet.getVersion();

@@ -1,40 +1,32 @@
+using JsonRpc;
 using Lsp;
-using Lsp.Capabilities.Server;
+using Lsp.Capabilities.Client;
 using Lsp.Models;
 using Lsp.Protocol;
-using Microsoft.Build.Evaluation;
 using Microsoft.Language.Xml;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using NuGet.Configuration;
 using NuGet.Versioning;
 using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.IO;
-using System.Text;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Linq;
-using System.Xml;
-using System.Xml.Linq;
-
+    
 namespace MSBuildProjectTools.LanguageServer.Handlers
 {
+    using MSBuild;
     using ContentProviders;
     using Documents;
-    using MSBuild;
     using Utilities;
 
     /// <summary>
-    ///     Handler for project file document events.
+    ///     Handler for symbol definition requests.
     /// </summary>
-    public class ProjectDocumentHandler
-        : TextDocumentHandler
+    public sealed class DefinitionHandler
+        : Handler, IDefinitionHandler
     {
         /// <summary>
-        ///     Create a new <see cref="ProjectDocumentHandler"/>.
+        ///     Create a new <see cref="DefinitionHandler"/>.
         /// </summary>
         /// <param name="server">
         ///     The language server.
@@ -42,29 +34,32 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <param name="workspace">
         ///     The document workspace.
         /// </param>
-        /// <param name="configuration">
-        ///     The language server configuration.
-        /// </param>
         /// <param name="logger">
         ///     The application logger.
         /// </param>
-        public ProjectDocumentHandler(ILanguageServer server, Workspace workspace, Configuration configuration, ILogger logger)
+        public DefinitionHandler(ILanguageServer server, Workspace workspace, ILogger logger)
             : base(server, logger)
         {
-            if (configuration == null)
-                throw new ArgumentNullException(nameof(configuration));
-
             if (workspace == null)
                 throw new ArgumentNullException(nameof(workspace));
 
             Workspace = workspace;
-            Configuration = configuration;
         }
 
         /// <summary>
-        ///     The document selector that describes documents targeted by the handler.
+        ///     The document workspace.
         /// </summary>
-        protected override DocumentSelector DocumentSelector => new DocumentSelector(
+        Workspace Workspace { get; }
+
+        /// <summary>
+        ///     The language server configuration.
+        /// </summary>
+        Configuration Configuration { get; }
+
+        /// <summary>
+        ///     The document selector that describes documents to synchronise.
+        /// </summary>
+        DocumentSelector DocumentSelector { get; } = new DocumentSelector(
             new DocumentFilter
             {
                 Pattern = "**/*.*",
@@ -88,49 +83,20 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         );
 
         /// <summary>
-        ///     The document workspace.
+        ///     Get registration options for handling document events.
         /// </summary>
-        Workspace Workspace { get; }
-
-        /// <summary>
-        ///     The language server configuration.
-        /// </summary>
-        Configuration Configuration { get; }
-
-        /// <summary>
-        ///     Get attributes for the specified text document.
-        /// </summary>
-        /// <param name="documentUri">
-        ///     The document URI.
-        /// </param>
-        /// <returns>
-        ///     The document attributes.
-        /// </returns>
-        protected override TextDocumentAttributes GetTextDocumentAttributes(Uri documentUri)
+        TextDocumentRegistrationOptions DocumentRegistrationOptions
         {
-            string documentFilePath = VSCodeDocumentUri.GetFileSystemPath(documentUri);
-            if (documentFilePath == null)
-                return base.GetTextDocumentAttributes(documentUri);
-
-            string extension = Path.GetExtension(documentFilePath).ToLower();
-            switch (extension)
+            get => new TextDocumentRegistrationOptions
             {
-                case "props":
-                case "targets":
-                {
-                    break;
-                }
-                default:
-                {
-                    if (extension.EndsWith("proj"))
-                        break;
-
-                    return base.GetTextDocumentAttributes(documentUri);
-                }
-            }
-
-            return new TextDocumentAttributes(documentUri, "msbuild");
+                DocumentSelector = DocumentSelector
+            };
         }
+
+        /// <summary>
+        ///     The server's symbol definition capabilities.
+        /// </summary>
+        DefinitionCapability DefinitionCapabilities { get; set; }
 
         /// <summary>
         ///     Called when a definition is requested.
@@ -144,7 +110,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     A <see cref="Task"/> representing the operation whose result is the definition location or <c>null</c> if no definition is provided.
         /// </returns>
-        protected override async Task<LocationOrLocations> OnDefinition(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
+        async Task<LocationOrLocations> OnDefinition(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
         {
             ProjectDocument projectDocument = await Workspace.GetProjectDocument(parameters.TextDocument.Uri);
 
@@ -168,7 +134,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                                 importedProjectRoot => new Location
                                 {
                                     Range = Range.Empty.ToLsp(),
-                                    Uri = VSCodeDocumentUri.CreateFromFileSystemPath(importedProjectRoot.Location.File)
+                                    Uri = VSCodeDocumentUri.FromFileSystemPathForDefinition(importedProjectRoot.Location.File)
                                 }
                             )
                             .ToArray();
@@ -183,7 +149,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                                 importedProjectRoot => new Location
                             {
                                 Range = Range.Empty.ToLsp(),
-                                Uri = VSCodeDocumentUri.CreateFromFileSystemPath(importedProjectRoot.Location.File)
+                                Uri = VSCodeDocumentUri.FromFileSystemPathForDefinition(importedProjectRoot.Location.File)
                             }
                         ));
                     }
@@ -191,6 +157,57 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             }
 
             return null;
+        }
+
+        /// <summary>
+        ///     Handle a request for a definition.
+        /// </summary>
+        /// <param name="parameters">
+        ///     The request parameters.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///     A <see cref="CancellationToken"/> that can be used to cancel the request.
+        /// </param>
+        /// <returns>
+        ///     A <see cref="Task"/> representing the operation whose result is definition location or <c>null</c> if no definition is provided.
+        /// </returns>
+        async Task<LocationOrLocations> IRequestHandler<TextDocumentPositionParams, LocationOrLocations>.Handle(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
+        {
+            if (parameters == null)
+                throw new ArgumentNullException(nameof(parameters));
+            
+            try
+            {
+                return await OnDefinition(parameters, cancellationToken);
+            }
+            catch (Exception unexpectedError)
+            {
+                Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDefinition");
+
+                return null;
+            }
+        }
+
+        /// <summary>
+        ///     Get registration options for handling document events.
+        /// </summary>
+        /// <returns>
+        ///     The registration options.
+        /// </returns>
+        TextDocumentRegistrationOptions IRegistration<TextDocumentRegistrationOptions>.GetRegistrationOptions() => DocumentRegistrationOptions;
+
+        /// <summary>
+        ///     Called to inform the handler of the language server's symbol definition capabilities.
+        /// </summary>
+        /// <param name="capabilities">
+        ///     A <see cref="DefinitionCapability"/> data structure representing the capabilities.
+        /// </param>
+        void ICapability<DefinitionCapability>.SetCapability(DefinitionCapability capabilities)
+        {
+            if (capabilities == null)
+                throw new ArgumentNullException(nameof(capabilities));
+
+            DefinitionCapabilities = capabilities;
         }
     }
 }

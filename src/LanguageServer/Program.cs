@@ -76,7 +76,7 @@ namespace MSBuildProjectTools.LanguageServer
                 new CompletionHandler(server, workspace, Log.Logger)
             );
             server.AddHandler(
-                new ProjectDocumentHandler(server, workspace, configuration, Log.Logger)
+                new DefinitionHandler(server, workspace, Log.Logger)
             );
 
             await server.Initialize();

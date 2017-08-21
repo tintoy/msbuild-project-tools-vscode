@@ -78,7 +78,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         );
 
         /// <summary>
-        ///     Get global registration options for handling document events.
+        ///     Get registration options for handling document events.
         /// </summary>
         TextDocumentRegistrationOptions DocumentRegistrationOptions
         {
@@ -191,7 +191,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         }
 
         /// <summary>
-        ///     Get global registration options for handling document events.
+        ///     Get registration options for handling document events.
         /// </summary>
         /// <returns>
         ///     The registration options.

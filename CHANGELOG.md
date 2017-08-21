@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.1.6
+
+* Actually enable the language server by default (sorry about that).
+
 ## v0.1.5
 
 * Language server is now enabled by default.

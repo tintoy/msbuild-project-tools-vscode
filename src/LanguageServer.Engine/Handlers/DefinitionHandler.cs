@@ -134,7 +134,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                                 importedProjectRoot => new Location
                                 {
                                     Range = Range.Empty.ToLsp(),
-                                    Uri = VSCodeDocumentUri.FromFileSystemPathForDefinition(importedProjectRoot.Location.File)
+                                    Uri = VSCodeDocumentUri.FromFileSystemPath(importedProjectRoot.Location.File)
                                 }
                             )
                             .ToArray();
@@ -149,7 +149,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                                 importedProjectRoot => new Location
                             {
                                 Range = Range.Empty.ToLsp(),
-                                Uri = VSCodeDocumentUri.FromFileSystemPathForDefinition(importedProjectRoot.Location.File)
+                                Uri = VSCodeDocumentUri.FromFileSystemPath(importedProjectRoot.Location.File)
                             }
                         ));
                     }

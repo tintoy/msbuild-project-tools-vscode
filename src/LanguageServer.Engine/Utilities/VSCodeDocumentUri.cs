@@ -47,7 +47,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         /// <returns>
         ///     The VSCode document URI.
         /// </returns>
-        public static Uri CreateFromFileSystemPath(string fileSystemPath)
+        public static Uri FromFileSystemPath(string fileSystemPath)
         {
             if (String.IsNullOrWhiteSpace(fileSystemPath))
                 throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'fileSystemPath'.", nameof(fileSystemPath));
@@ -56,42 +56,9 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
                 throw new ArgumentException($"Path '{fileSystemPath}' is not an absolute path.", nameof(fileSystemPath));
 
             if (Path.DirectorySeparatorChar == '\\')
-                fileSystemPath = fileSystemPath.Replace('\\', '/');
+                return new Uri("file:///" + fileSystemPath.Replace('\\', '/'));
 
-            UriBuilder documentUriBuilder = new UriBuilder
-            {
-                Scheme = Uri.UriSchemeFile,
-                Host = "", // Needed to get the leading triple-slash in the URI
-                Path = fileSystemPath
-            };
-
-            return documentUriBuilder.Uri;
-        }
-
-        /// <summary>
-        ///     Convert a file-system path to a go-to-definition-compatible VSCode document URI.
-        /// </summary>
-        /// <param name="fileSystemPath">
-        ///     The file-system path.
-        /// </param>
-        /// <returns>
-        ///     The VSCode document URI.
-        /// </returns>
-        /// <remarks>
-        ///     I don't actually understand why the definition API works differently but I suspect it's due to a bug in Lsp.Protocol or JsonRpc.
-        /// </remarks>
-        public static Uri FromFileSystemPathForDefinition(string fileSystemPath)
-        {
-            if (String.IsNullOrWhiteSpace(fileSystemPath))
-                throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'fileSystemPath'.", nameof(fileSystemPath));
-
-            if (!Path.IsPathRooted(fileSystemPath))
-                throw new ArgumentException($"Path '{fileSystemPath}' is not an absolute path.", nameof(fileSystemPath));
-
-            if (Path.DirectorySeparatorChar == '\\')
-                fileSystemPath = fileSystemPath.Replace('\\', '/');
-
-            return new Uri("file:///" + fileSystemPath);
+            return new Uri("file://" + fileSystemPath);
         }
     }
 }

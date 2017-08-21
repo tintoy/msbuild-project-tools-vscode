@@ -23,7 +23,7 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
         readonly ProjectDocument _projectDocument;
 
         /// <summary>
-        ///     Create a new <see cref="HoverContent"/>.
+        ///     Create a new <see cref="HoverContentProvider"/>.
         /// </summary>
         /// <param name="projectDocument">
         ///     The project document for which hover content is provided.
@@ -225,13 +225,13 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
         }
 
         /// <summary>
-        ///     Get hover content for an attribute of an <see cref="MSBuildItemGroup"/>.
+        ///     Get hover content for metadata of an <see cref="MSBuildItemGroup"/>.
         /// </summary>
         /// <param name="itemGroup">
         ///     The <see cref="MSBuildItemGroup"/>.
         /// </param>
-        /// <param name="attribute">
-        ///     The attribute.
+        /// <param name="metadataName">
+        ///     The metadata name.
         /// </param>
         /// <returns>
         ///     The content.

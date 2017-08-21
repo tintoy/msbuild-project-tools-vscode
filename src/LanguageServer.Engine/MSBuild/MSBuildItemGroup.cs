@@ -25,7 +25,7 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         /// <param name="originatingElement">
         ///     The MSBuild <see cref="ProjectItemElement"/> from where the items originate.
         /// </param>
-        /// <param name="element">
+        /// <param name="itemElement">
         ///     An <see cref="XmlElementSyntax"/> representing the item's XML element.
         /// </param>
         /// <param name="xmlRange">
@@ -50,7 +50,7 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         public override string Name { get; }
 
         /// <summary>
-        ///     The kind of MSBuild object represented by the <see cref="MSBuildItem"/>.
+        ///     The kind of MSBuild object represented by the <see cref="MSBuildItemGroup"/>.
         /// </summary>
         public override MSBuildObjectKind Kind => MSBuildObjectKind.Item;
 

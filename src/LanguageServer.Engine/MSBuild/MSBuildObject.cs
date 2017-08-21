@@ -61,7 +61,7 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         ///     The target position.
         /// </param>
         /// <returns>
-        ///     <c>true<c>, if the the specified position lies within the object's XML span; otherwise, <c>false<c>.
+        ///     <c>true</c>, if the the specified position lies within the object's XML span; otherwise, <c>false</c>.
         /// </returns>
         public bool XmlContains(Position position)
         {
@@ -87,14 +87,14 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         /// <param name="underlyingObject">
         ///     The underlying MSBuild object.
         /// </param>
-        /// <param name="xml">
-        ///     A <see cref="SyntaxNode"/> representing the item's corresponding XML.
+        /// <param name="declaringXml">
+        ///     A <see cref="SyntaxNode"/> representing the object's declaring XML.
         /// </param>
         /// <param name="xmlRange">
         ///     A <see cref="Range"/> representing the span of text covered by the item's XML.
         /// </param>
-        protected MSBuildObject(TUnderlyingObject underlyingObject, SyntaxNode xml, Range xmlRange)
-            : base(xml, xmlRange)
+        protected MSBuildObject(TUnderlyingObject underlyingObject, SyntaxNode declaringXml, Range xmlRange)
+            : base(declaringXml, xmlRange)
         {
             if (underlyingObject == null)
                 throw new ArgumentNullException(nameof(underlyingObject));

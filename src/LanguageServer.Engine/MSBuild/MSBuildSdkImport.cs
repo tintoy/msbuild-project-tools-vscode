@@ -16,7 +16,7 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         /// <summary>
         ///     Create a new <see cref="MSBuildImport"/>.
         /// </summary>
-        /// <param name="target">
+        /// <param name="imports">
         ///     A read-only list of underlying MSBuild <see cref="ResolvedImport"/>s representing the imports resulting from the SDK import.
         /// </param>
         /// <param name="sdkAttribute">

@@ -65,6 +65,9 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <param name="documentUri">
         ///     The document URI.
         /// </param>
+        /// <param name="logger">
+        ///     The application logger.
+        /// </param>
         protected ProjectDocument(Uri documentUri, ILogger logger)
         {
             if (documentUri == null)
@@ -175,7 +178,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         ///     Load and parse the project.
         /// </summary>
         /// <param name="cancellationToken">
-        ///     An optional <see cref="CancellationToken"> that can be used to cancel the operation.
+        ///     An optional <see cref="CancellationToken"/> that can be used to cancel the operation.
         /// </param>
         /// <returns>
         ///     A task representing the load operation.
@@ -222,7 +225,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         ///     Determine the NuGet package sources configured for the current project and create clients for them.
         /// </summary>
         /// <param name="cancellationToken">
-        ///     An optional <see cref="CancellationToken"> that can be used to cancel the operation.
+        ///     An optional <see cref="CancellationToken"/> that can be used to cancel the operation.
         /// </param>
         /// <returns>
         ///     <c>true</c>, if the package sources were loaded; otherwise, <c>false</c>.
@@ -259,7 +262,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         ///     The package Id prefix.
         /// </param>
         /// <param name="cancellationToken">
-        ///     An optional <see cref="CancellationToken"> that can be used to cancel the operation.
+        ///     An optional <see cref="CancellationToken"/> that can be used to cancel the operation.
         /// </param>
         /// <returns>
         ///     A task that resolves to a sorted set of suggested package Ids.
@@ -287,7 +290,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         ///     The package Id.
         /// </param>
         /// <param name="cancellationToken">
-        ///     An optional <see cref="CancellationToken"> that can be used to cancel the operation.
+        ///     An optional <see cref="CancellationToken"/> that can be used to cancel the operation.
         /// </param>
         /// <returns>
         ///     A task that resolves to a sorted set of suggested package versions.

@@ -47,7 +47,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <param name="logger">
         ///     The application logger.
         /// </param>
-        /// <param name="configuration"/>
+        /// <param name="configuration">
         ///     The server configuration handler.
         /// </param>
         public ProjectDocumentHandler(ILanguageServer server, ConfigurationHandler configuration, ILogger logger)
@@ -727,8 +727,8 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <param name="documentUri">
         ///     The project document URI.
         /// </param>
-        /// <param name="reload">
-        ///     Reload the project if it is already loaded?
+        /// <param name="documentText">
+        ///     The new document text.
         /// </param>
         /// <returns>
         ///     The project document.

@@ -54,10 +54,10 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         }
 
         /// <summary>
-        ///     Convert the MSBuild <see cref="MSBuild.ElementPosition"/> to its native equivalent.
+        ///     Convert the MSBuild <see cref="ElementLocation"/> to its native equivalent.
         /// </summary>
         /// <param name="location">
-        ///     The <see cref="MSBuild.ElementPosition"/> to convert.
+        ///     The <see cref="ElementLocation"/> to convert.
         /// </param>
         /// <returns>
         ///     The equivalent <see cref="Position"/>.
@@ -76,7 +76,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         /// <summary>
         ///     Convert the <see cref="Range"/> to its Language Server Protocol equivalent.
         /// </summary>
-        /// <param name="position">
+        /// <param name="range">
         ///     The <see cref="Range"/> to convert.
         /// </param>
         /// <returns>
@@ -94,14 +94,14 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         }
 
         /// <summary>
-        ///     Convert the <see cref="MXML.TextRange"/> to its native equivalent.
+        ///     Convert the <see cref="MLXML.TextSpan"/> to its native equivalent.
         /// </summary>
         /// <param name="span">
-        ///     The <see cref="MXML.TextSpan"/> to convert.
+        ///     The <see cref="MLXML.TextSpan"/> to convert.
         /// </param>
         /// <param name="textPositions">
         ///     The textual position lookup used to map absolute positions to lines and columns.
-        /// </span>
+        /// </param>
         /// <returns>
         ///     The equivalent <see cref="Range"/>.
         /// </returns>
@@ -121,7 +121,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         /// <summary>
         ///     Convert the Language Server Protocol <see cref="Lsp.Models.Range"/> to its native equivalent.
         /// </summary>
-        /// <param name="position">
+        /// <param name="range">
         ///     The <see cref="Lsp.Models.Range"/> to convert.
         /// </param>
         /// <returns>

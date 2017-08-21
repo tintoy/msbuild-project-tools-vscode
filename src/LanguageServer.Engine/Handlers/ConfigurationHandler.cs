@@ -19,7 +19,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         : Handler, IDidChangeConfigurationHandler
     {
         /// <summary>
-        ///     Create a new <see cref="LoggingConfigurationHandler"/>.
+        ///     Create a new <see cref="ConfigurationHandler"/>.
         /// </summary>
         /// <param name="server">
         ///     The language server that hosts the handler.

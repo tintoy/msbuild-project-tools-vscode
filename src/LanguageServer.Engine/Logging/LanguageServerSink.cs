@@ -36,6 +36,9 @@ namespace MSBuildProjectTools.LanguageServer.Logging
         /// <param name="languageServer">
         ///     The language server to which events will be logged.
         /// </param>
+        /// <param name="configuration">
+        ///     The configuration handler.
+        /// </param>
         public LanguageServerLoggingSink(Lsp.LanguageServer languageServer, ConfigurationHandler configuration)
         {
             if (languageServer == null)

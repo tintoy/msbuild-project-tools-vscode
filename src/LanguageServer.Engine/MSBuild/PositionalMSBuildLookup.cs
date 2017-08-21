@@ -239,7 +239,7 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         /// <summary>
         ///     Add a property.
         /// </summary>
-        /// <param name="target">
+        /// <param name="property">
         ///     The property's declaring <see cref="ProjectPropertyElement"/>.
         /// </param>
         void AddProperty(ProjectPropertyElement property)

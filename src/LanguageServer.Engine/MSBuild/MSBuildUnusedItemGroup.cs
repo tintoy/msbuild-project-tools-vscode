@@ -25,11 +25,11 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         /// <param name="originatingElement">
         ///     The MSBuild <see cref="ProjectItemElement"/> from where the items originate.
         /// </param>
-        /// <param name="element">
-        ///     An <see cref="XmlElementSyntax"/> representing the item's XML element.
+        /// <param name="itemElement">
+        ///     An <see cref="XmlElementSyntax"/> representing the item's declaring XML element.
         /// </param>
         /// <param name="xmlRange">
-        ///     A <see cref="Range"/> representing the span of the item's XML element.
+        ///     A <see cref="Range"/> representing the span of the item's declaring XML element.
         /// </param>
         public MSBuildUnusedItemGroup(IReadOnlyList<ProjectItem> items, ProjectItemElement originatingElement, XmlElementSyntaxBase itemElement, Range xmlRange)
             : base(items, itemElement, xmlRange)
@@ -50,7 +50,7 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         public override string Name { get; }
 
         /// <summary>
-        ///     The kind of MSBuild object represented by the <see cref="MSBuildItem"/>.
+        ///     The kind of MSBuild object represented by the <see cref="MSBuildUnusedItemGroup"/>.
         /// </summary>
         public override MSBuildObjectKind Kind => MSBuildObjectKind.Item;
 

@@ -2,6 +2,8 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
         <AssetTargetFallback>dnxcore50</AssetTargetFallback>
+
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
     
     <ItemGroup>

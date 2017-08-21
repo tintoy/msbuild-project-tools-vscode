@@ -19,7 +19,7 @@ namespace MSBuildProjectTools.LanguageServer
         /// <param name="start">
         ///     The range's starting position.
         /// </param>
-        /// <param name="columnNumber">
+        /// <param name="end">
         ///     The range's ending position.
         /// </param>
         public Range(Position start, Position end)

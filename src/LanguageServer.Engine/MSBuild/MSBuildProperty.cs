@@ -20,7 +20,7 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         /// <param name="declaringXml">
         ///     The <see cref="ProjectPropertyElement"/> that results in the underlying MSBuild <see cref="ProjectProperty"/>'s current value.
         /// </param>
-        /// <param name="element">
+        /// <param name="propertyElement">
         ///     An <see cref="XmlElementSyntax"/> representing the property's XML element.
         /// </param>
         /// <param name="xmlRange">

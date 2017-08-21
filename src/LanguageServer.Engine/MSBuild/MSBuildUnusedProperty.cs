@@ -13,17 +13,17 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         /// <summary>
         ///     Create a new <see cref="MSBuildProperty"/>.
         /// </summary>
-        /// <param name="element">
+        /// <param name="propertyElement">
         ///     An <see cref="ProjectPropertyElement"/> representing the MSBuild property.
         /// </param>
-        /// <param name="element">
-        ///     An <see cref="XmlElementSyntax"/> representing the property's XML element.
+        /// <param name="declaringElement">
+        ///     An <see cref="XmlElementSyntax"/> representing the property's declaring XML element.
         /// </param>
         /// <param name="xmlRange">
-        ///     A <see cref="Range"/> representing the span of the property's XML element.
+        ///     A <see cref="Range"/> representing the span of the property's declaring XML element.
         /// </param>
-        public MSBuildUnusedProperty(ProjectPropertyElement property, XmlElementSyntaxBase propertyElement, Range xmlRange)
-            : base(property, propertyElement, xmlRange)
+        public MSBuildUnusedProperty(ProjectPropertyElement propertyElement, XmlElementSyntaxBase declaringElement, Range xmlRange)
+            : base(propertyElement, declaringElement, xmlRange)
         {
         }
 

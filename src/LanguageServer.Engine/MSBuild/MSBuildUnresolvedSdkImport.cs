@@ -22,9 +22,6 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         /// <param name="sdkAttribute">
         ///     An <see cref="XmlAttributeSyntax"/> representing the import's "Sdk" attribute.
         /// </param>
-        /// <param name="importElement">
-        ///     An <see cref="XmlElementSyntaxBase"/> representing the import's XML element.
-        /// </param>
         /// <param name="xmlRange">
         ///     A <see cref="Range"/> representing the span of the item's XML element.
         /// </param>

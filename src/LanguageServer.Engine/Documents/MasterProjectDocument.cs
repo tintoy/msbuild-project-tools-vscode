@@ -36,6 +36,9 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <param name="documentUri">
         ///     The document URI.
         /// </param>
+        /// <param name="logger">
+        ///     The application logger.
+        /// </param>
         public MasterProjectDocument(Uri documentUri, ILogger logger)
             : base(documentUri, logger)
         {

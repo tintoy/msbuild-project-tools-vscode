@@ -78,7 +78,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         ///     The package sources.
         /// </param>
         /// <param name="cancellationToken">
-        ///     An optional <see cref="CancellationToken"> that can be used to cancel the operation.
+        ///     An optional <see cref="CancellationToken"/> that can be used to cancel the operation.
         /// </param>
         /// <returns>
         ///     A task that resolves to a list of <see cref="AutoCompleteResource"/>s.

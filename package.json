@@ -36,9 +36,20 @@
                 "msbuildProjectFileTools.languageService.enable": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Enable the MSBuild language server (if false, then the simple completion provider will be used instead)."
+                    "description": "Enable the MSBuild language service (if false, then the simple completion provider will be used instead)."
                 },
-                "msbuildProjectFileTools.trace.server": {
+                "msbuildProjectFileTools.languageService.logLevel": {
+                    "type": "string",
+                    "enum": [
+                        "Verbose",
+                        "Information",
+                        "Warning",
+                        "Error"
+                    ],
+                    "default": "Information",
+                    "description": "The logging level for the MSBuild language service."
+                },
+                "msbuildProjectFileTools.languageService.traceLevel": {
                     "type": "string",
                     "enum": [
                         "off",

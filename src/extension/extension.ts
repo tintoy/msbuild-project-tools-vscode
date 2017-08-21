@@ -101,8 +101,7 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<L
             pattern: '*.csproj'
         }],
         synchronize: {
-            configurationSection: 'msbuildProjectFileTools.languageService.enable',
-            fileEvents: vscode.workspace.createFileSystemWatcher('**/.clientrc')
+            configurationSection: 'msbuildProjectFileTools.languageService'
         },
         errorHandler: {
             error: (error, message, count) =>

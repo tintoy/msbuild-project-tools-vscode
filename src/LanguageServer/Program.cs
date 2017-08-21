@@ -78,7 +78,7 @@ namespace MSBuildProjectTools.LanguageServer
                 throw new ArgumentNullException(nameof(languageServer));
             
             Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Information()
+                .MinimumLevel.Verbose()
                 .WriteTo.LanguageServer(languageServer)
                 .CreateLogger();
         }

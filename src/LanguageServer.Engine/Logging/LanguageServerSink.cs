@@ -19,6 +19,11 @@ namespace MSBuildProjectTools.LanguageServer.Logging
         readonly Lsp.LanguageServer _languageServer;
 
         /// <summary>
+        ///     The handler that captures changes to logging configuration.
+        /// </summary>
+        readonly LoggingConfigurationHandler _configurationHandler;
+
+        /// <summary>
         ///     Has the language server shut down?
         /// </summary>
         bool _hasServerShutDown;
@@ -33,8 +38,11 @@ namespace MSBuildProjectTools.LanguageServer.Logging
         {
             if (languageServer == null)
                 throw new ArgumentNullException(nameof(languageServer));
-            
+
             _languageServer = languageServer;
+            _configurationHandler = new LoggingConfigurationHandler(_languageServer);
+            _languageServer.AddHandler(_configurationHandler);
+
             _languageServer.Shutdown += shutDownRequested =>
             {
                 Log.CloseAndFlush();
@@ -52,6 +60,9 @@ namespace MSBuildProjectTools.LanguageServer.Logging
         public void Emit(LogEvent logEvent)
         {
             if (_hasServerShutDown)
+                return;
+
+            if (logEvent.Level < _configurationHandler.LogLevel)
                 return;
 
             LogMessageParams logParameters = new LogMessageParams

@@ -17,7 +17,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
     ///     The base class for language server text-document event handlers.
     /// </summary>
     public abstract class TextDocumentHandler
-        : Handler, ITextDocumentSyncHandler, IHoverHandler, ICompletionHandler, IDocumentSymbolHandler, IDefinitionHandler
+        : Handler, ITextDocumentSyncHandler, IHoverHandler, ICompletionHandler, IDocumentSymbolHandler, IDefinitionHandler, IDidChangeConfigurationHandler
     {
         /// <summary>
         ///     Create a new <see cref="TextDocumentHandler"/>.

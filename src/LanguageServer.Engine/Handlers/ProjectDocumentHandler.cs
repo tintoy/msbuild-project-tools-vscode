@@ -86,6 +86,24 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         MasterProjectDocument MasterProject { get; set; }
 
         /// <summary>
+        ///     Called when configuration has changed.
+        /// </summary>
+        /// <param name="parameters">
+        ///     The notification parameters.
+        /// </param>
+        /// <returns>
+        ///     A <see cref="Task"/> representing the operation.
+        /// </returns>
+        protected override Task OnDidChangeConfiguration(DidChangeConfigurationParams parameters)
+        {
+            // Log.Information("Got configuration: {@Config}", parameters.Settings);
+            foreach (string settingName in parameters.Settings.Keys)
+                Log.Information("Setting {Name} = {Setting}", settingName, parameters.Settings[settingName].Value);
+
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
         ///     Called when a text document is opened.
         /// </summary>
         /// <param name="parameters">

@@ -31,23 +31,16 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <param name="workspace">
         ///     The document workspace.
         /// </param>
-        /// <param name="configuration">
-        ///     The language server configuration.
-        /// </param>
         /// <param name="logger">
         ///     The application logger.
         /// </param>
-        public HoverHandler(ILanguageServer server, Workspace workspace, Configuration configuration, ILogger logger)
+        public HoverHandler(ILanguageServer server, Workspace workspace, ILogger logger)
             : base(server, logger)
         {
-            if (configuration == null)
-                throw new ArgumentNullException(nameof(configuration));
-
             if (workspace == null)
                 throw new ArgumentNullException(nameof(workspace));
 
             Workspace = workspace;
-            Configuration = configuration;
         }
 
         /// <summary>

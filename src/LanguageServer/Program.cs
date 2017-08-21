@@ -67,7 +67,10 @@ namespace MSBuildProjectTools.LanguageServer
                 new DocumentSyncHandler(server, workspace, Log.Logger)
             );
             server.AddHandler(
-                new HoverHandler(server, workspace, configuration, Log.Logger)
+                new HoverHandler(server, workspace, Log.Logger)
+            );
+            server.AddHandler(
+                new CompletionHandler(server, workspace, Log.Logger)
             );
             server.AddHandler(
                 new ProjectDocumentHandler(server, workspace, configuration, Log.Logger)

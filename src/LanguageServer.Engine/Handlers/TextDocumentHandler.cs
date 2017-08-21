@@ -17,7 +17,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
     ///     The base class for language server text-document event handlers.
     /// </summary>
     public abstract class TextDocumentHandler
-        : Handler, ICompletionHandler, IDocumentSymbolHandler, IDefinitionHandler
+        : Handler, IDocumentSymbolHandler, IDefinitionHandler
     {
         /// <summary>
         ///     Create a new <see cref="TextDocumentHandler"/>.
@@ -52,20 +52,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         ///     The server's definition capabilities.
         /// </summary>
         protected DefinitionCapability DefinitionCapabilities { get; private set; }
-
-        /// <summary>
-        ///     Called when completions are requested.
-        /// </summary>
-        /// <param name="parameters">
-        ///     The request parameters.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///     A <see cref="CancellationToken"/> that can be used to cancel the request.
-        /// </param>
-        /// <returns>
-        ///     A <see cref="Task"/> representing the operation whose result is the completion list or <c>null</c> if no completions are provided.
-        /// </returns>
-        protected virtual Task<CompletionList> OnCompletion(TextDocumentPositionParams parameters, CancellationToken cancellationToken) => Task.FromResult<CompletionList>(null);
 
         /// <summary>
         ///     Called when document symbols are requested.
@@ -107,18 +93,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         }
 
         /// <summary>
-        ///     Get registration options for handling completion requests events.
-        /// </summary>
-        protected virtual CompletionRegistrationOptions CompletionRegistrationOptions
-        {
-            get => new CompletionRegistrationOptions
-            {
-                DocumentSelector = DocumentSelector,
-                ResolveProvider = false
-            };
-        }
-
-        /// <summary>
         ///     Get attributes for the specified text document.
         /// </summary>
         /// <param name="documentUri">
@@ -128,35 +102,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         ///     The document attributes.
         /// </returns>
         protected virtual TextDocumentAttributes GetTextDocumentAttributes(Uri documentUri) => new TextDocumentAttributes(documentUri, "xml");
-
-        /// <summary>
-        ///     Handle a request for completion.
-        /// </summary>
-        /// <param name="parameters">
-        ///     The request parameters.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///     A <see cref="CancellationToken"/> that can be used to cancel the request.
-        /// </param>
-        /// <returns>
-        ///     A <see cref="Task"/> representing the operation whose result is the completion list or <c>null</c> if no completions are provided.
-        /// </returns>
-        async Task<CompletionList> IRequestHandler<TextDocumentPositionParams, CompletionList>.Handle(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
-        {
-            if (parameters == null)
-                throw new ArgumentNullException(nameof(parameters));
-            
-            try
-            {
-                return await OnCompletion(parameters, cancellationToken);
-            }
-            catch (Exception unexpectedError)
-            {
-                Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnCompletion");
-
-                return null;
-            }
-        }
 
         /// <summary>
         ///     Handle a request for document symbols.
@@ -223,28 +168,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         ///     The registration options.
         /// </returns>
         TextDocumentRegistrationOptions IRegistration<TextDocumentRegistrationOptions>.GetRegistrationOptions() => DocumentRegistrationOptions;
-
-        /// <summary>
-        ///     Get registration options for handling completion requests.
-        /// </summary>
-        /// <returns>
-        ///     The registration options.
-        /// </returns>
-        CompletionRegistrationOptions IRegistration<CompletionRegistrationOptions>.GetRegistrationOptions() => CompletionRegistrationOptions;
-
-        /// <summary>
-        ///     Called to inform the handler of the language server's completion capabilities.
-        /// </summary>
-        /// <param name="capabilities">
-        ///     A <see cref="CompletionCapability"/> data structure representing the capabilities.
-        /// </param>
-        void ICapability<CompletionCapability>.SetCapability(CompletionCapability capabilities)
-        {
-            if (capabilities == null)
-                throw new ArgumentNullException(nameof(capabilities));
-
-            CompletionCapabilities = capabilities;
-        }
 
         /// <summary>
         ///     Called to inform the handler of the language server's document symbol capabilities.

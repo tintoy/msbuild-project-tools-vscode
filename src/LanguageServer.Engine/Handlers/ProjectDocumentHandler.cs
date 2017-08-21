@@ -34,9 +34,9 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         : TextDocumentHandler
     {
         /// <summary>
-        ///     Documents for loaded project, keyed by document URI.
+        ///     The local workspace.
         /// </summary>
-        readonly ConcurrentDictionary<Uri, ProjectDocument> _projectDocuments = new ConcurrentDictionary<Uri, ProjectDocument>();
+        readonly Workspace _workspace;
 
         /// <summary>
         ///     Create a new <see cref="ProjectDocumentHandler"/>.
@@ -44,18 +44,19 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <param name="server">
         ///     The language server.
         /// </param>
+        /// <param name="configuration">
+        ///     The language server configuration.
+        /// </param>
         /// <param name="logger">
         ///     The application logger.
         /// </param>
-        /// <param name="configuration">
-        ///     The server configuration handler.
-        /// </param>
-        public ProjectDocumentHandler(ILanguageServer server, ConfigurationHandler configuration, ILogger logger)
+        public ProjectDocumentHandler(ILanguageServer server, Configuration configuration, ILogger logger)
             : base(server, logger)
         {
             if (configuration == null)
                 throw new ArgumentNullException(nameof(configuration));
 
+            _workspace = new Workspace(server, configuration, logger);
             Configuration = configuration;
             Options.Change = TextDocumentSyncKind.Full;
         }
@@ -64,6 +65,11 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         ///     The document selector that describes documents targeted by the handler.
         /// </summary>
         protected override DocumentSelector DocumentSelector => new DocumentSelector(
+            new DocumentFilter
+            {
+                Pattern = "**/*.*",
+                Language = "msbuild"
+            },
             new DocumentFilter
             {
                 Pattern = "**/*.*proj",
@@ -78,26 +84,13 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             {
                 Pattern = "**/*.targets",
                 Language = "xml"
-            },
-            new DocumentFilter
-            {
-                Pattern = "**/*.*",
-                Language = "msbuild"
             }
         );
 
         /// <summary>
-        ///     The master project (if any).
+        ///     The language server configuration.
         /// </summary>
-        /// <remarks>
-        ///     TODO: Make this selectable from the editor (get the extension to show a pick-list of open projects).
-        /// </remarks>
-        MasterProjectDocument MasterProject { get; set; }
-
-        /// <summary>
-        ///     The server configuration handler.
-        /// </summary>
-        ConfigurationHandler Configuration { get; }
+        Configuration Configuration { get; }
 
         /// <summary>
         ///     Get attributes for the specified text document.
@@ -145,8 +138,8 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </returns>
         protected override async Task OnDidOpenTextDocument(DidOpenTextDocumentParams parameters)
         {
-            ProjectDocument projectDocument = await GetProjectDocument(parameters.TextDocument.Uri);
-            PublishDiagnostics(projectDocument);
+            ProjectDocument projectDocument = await _workspace.GetProjectDocument(parameters.TextDocument.Uri);
+            _workspace.PublishDiagnostics(projectDocument);
 
             if (!projectDocument.HasXml)
             {
@@ -225,8 +218,8 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 return;
 
             string updatedDocumentText = mostRecentChange.Text;
-            ProjectDocument projectDocument = await TryUpdateProjectDocument(parameters.TextDocument.Uri, updatedDocumentText);
-            PublishDiagnostics(projectDocument);
+            ProjectDocument projectDocument = await _workspace.TryUpdateProjectDocument(parameters.TextDocument.Uri, updatedDocumentText);
+            _workspace.PublishDiagnostics(projectDocument);
 
             if (projectDocument.HasMSBuildProject)
             {
@@ -264,8 +257,8 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 VSCodeDocumentUri.GetFileSystemPath(parameters.TextDocument.Uri)
             );
 
-            ProjectDocument projectDocument = await GetProjectDocument(parameters.TextDocument.Uri, reload: true);
-            PublishDiagnostics(projectDocument);
+            ProjectDocument projectDocument = await _workspace.GetProjectDocument(parameters.TextDocument.Uri, reload: true);
+            _workspace.PublishDiagnostics(projectDocument);
 
             if (!projectDocument.HasXml)
             {
@@ -295,18 +288,11 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </returns>
         protected override async Task OnDidCloseTextDocument(DidCloseTextDocumentParams parameters)
         {
-            if (_projectDocuments.TryRemove(parameters.TextDocument.Uri, out ProjectDocument projectDocument))
-            {
-                if (MasterProject == projectDocument)
-                    MasterProject = null;                
+            await _workspace.RemoveProjectDocument(parameters.TextDocument.Uri);
 
-                using (await projectDocument.Lock.WriterLockAsync())
-                {
-                    ClearDiagnostics(projectDocument);
-
-                    projectDocument.Unload();
-                }
-            }
+            Log.Information("Unloaded project {ProjectFile}.",
+                VSCodeDocumentUri.GetFileSystemPath(parameters.TextDocument.Uri)
+            );
         }
 
         /// <summary>
@@ -326,7 +312,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             if (Configuration.DisableHover)
                 return null;
 
-            ProjectDocument projectDocument = await GetProjectDocument(parameters.TextDocument.Uri);
+            ProjectDocument projectDocument = await _workspace.GetProjectDocument(parameters.TextDocument.Uri);
             
             using (await projectDocument.Lock.ReaderLockAsync(cancellationToken))
             {
@@ -414,7 +400,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </returns>
         protected override async Task<CompletionList> OnCompletion(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
         {
-            ProjectDocument projectDocument = await GetProjectDocument(parameters.TextDocument.Uri);
+            ProjectDocument projectDocument = await _workspace.GetProjectDocument(parameters.TextDocument.Uri);
 
             List<CompletionItem> completionItems = new List<CompletionItem>();
             using (await projectDocument.Lock.ReaderLockAsync(cancellationToken))
@@ -522,7 +508,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </returns>
         protected override async Task<SymbolInformationContainer> OnDocumentSymbols(DocumentSymbolParams parameters, CancellationToken cancellationToken)
         {
-            ProjectDocument projectDocument = await GetProjectDocument(parameters.TextDocument.Uri);
+            ProjectDocument projectDocument = await _workspace.GetProjectDocument(parameters.TextDocument.Uri);
 
             List<SymbolInformation> symbols = new List<SymbolInformation>();
             using (await projectDocument.Lock.ReaderLockAsync(cancellationToken))
@@ -619,7 +605,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </returns>
         protected override async Task<LocationOrLocations> OnDefinition(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
         {
-            ProjectDocument projectDocument = await GetProjectDocument(parameters.TextDocument.Uri);
+            ProjectDocument projectDocument = await _workspace.GetProjectDocument(parameters.TextDocument.Uri);
 
             using (await projectDocument.Lock.ReaderLockAsync(cancellationToken))
             {
@@ -664,137 +650,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             }
 
             return null;
-        }
-
-        /// <summary>
-        ///     Try to retrieve the current state for the specified project document.
-        /// </summary>
-        /// <param name="documentUri">
-        ///     The project document URI.
-        /// </param>
-        /// <param name="reload">
-        ///     Reload the project if it is already loaded?
-        /// </param>
-        /// <returns>
-        ///     The project document.
-        /// </returns>
-        async Task<ProjectDocument> GetProjectDocument(Uri documentUri, bool reload = false)
-        {
-            string projectFilePath = VSCodeDocumentUri.GetFileSystemPath(documentUri);
-
-            bool isNewProject = false;
-            ProjectDocument projectDocument = _projectDocuments.GetOrAdd(documentUri, _ =>
-            {
-                isNewProject = true;
-
-                if (MasterProject == null)
-                    return MasterProject = new MasterProjectDocument(documentUri, Log);
-
-                SubProjectDocument subProject = new SubProjectDocument(documentUri, Log, MasterProject);
-                MasterProject.AddSubProject(subProject);
-
-                return subProject;
-            });
-
-            try
-            {
-                if (isNewProject || reload)
-                {
-                    using (await projectDocument.Lock.WriterLockAsync())
-                    {
-                        await projectDocument.Load();
-                    }
-                }
-            }
-            catch (XmlException invalidXml)
-            {
-                Log.Error("Error parsing project file {ProjectFilePath}: {ErrorMessage:l}",
-                    projectFilePath,
-                    invalidXml.Message
-                );
-            }
-            catch (Exception loadError)
-            {
-                Log.Error(loadError, "Unexpected error loading file {ProjectFilePath}.", projectFilePath);
-            }
-
-            return projectDocument;
-        }
-
-        /// <summary>
-        ///     Try to retrieve the current state for the specified project document.
-        /// </summary>
-        /// <param name="documentUri">
-        ///     The project document URI.
-        /// </param>
-        /// <param name="documentText">
-        ///     The new document text.
-        /// </param>
-        /// <returns>
-        ///     The project document.
-        /// </returns>
-        async Task<ProjectDocument> TryUpdateProjectDocument(Uri documentUri, string documentText)
-        {
-            ProjectDocument projectDocument;
-            if (!_projectDocuments.TryGetValue(documentUri, out projectDocument))
-            {
-                Log.Error("Tried to update non-existent project with document URI {DocumentUri}.", documentUri);
-
-                throw new InvalidOperationException($"Project with document URI '{documentUri}' is not loaded.");
-            }
-
-            try
-            {
-                using (await projectDocument.Lock.WriterLockAsync())
-                {
-                    projectDocument.Update(documentText);
-                }
-            }
-            catch (Exception updateError)
-            {
-                Log.Error(updateError, "Failed to update project {ProjectFile}.", projectDocument.ProjectFile.FullName);
-            }
-
-            return projectDocument;
-        }
-
-        /// <summary>
-        ///     Publish current diagnostics (if any) for the specified project document.
-        /// </summary>
-        /// <param name="projectDocument">
-        ///     The project document.
-        /// </param>
-        void PublishDiagnostics(ProjectDocument projectDocument)
-        {
-            if (projectDocument == null)
-                throw new ArgumentNullException(nameof(projectDocument));
-
-            Server.PublishDiagnostics(new PublishDiagnosticsParams
-            {
-                Uri = projectDocument.DocumentUri,
-                Diagnostics = projectDocument.Diagnostics.ToArray()
-            });   
-        }
-
-        /// <summary>
-        ///     Clear current diagnostics (if any) for the specified project document.
-        /// </summary>
-        /// <param name="projectDocument">
-        ///     The project document.
-        /// </param>
-        void ClearDiagnostics(ProjectDocument projectDocument)
-        {
-            if (projectDocument == null)
-                throw new ArgumentNullException(nameof(projectDocument));
-
-            if (!projectDocument.HasDiagnostics)
-                return;
-
-            Server.PublishDiagnostics(new PublishDiagnosticsParams
-            {
-                Uri = projectDocument.DocumentUri,
-                Diagnostics = new Lsp.Models.Diagnostic[0] // Overwrites existing diagnostics for this document with an empty list
-            });   
         }
     }
 }

@@ -25,6 +25,7 @@
     ],
     "activationEvents": [
         "workspaceContains:NuGet.config",
+        "onLanguage:msbuild",
         "onLanguage:xml"
     ],
     "main": "./out/src/extension/extension",

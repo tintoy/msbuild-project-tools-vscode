@@ -16,28 +16,19 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
     ///     Language Server message handler that tracks configuration.
     /// </summary>
     public sealed class ConfigurationHandler
-        : Handler, IDidChangeConfigurationHandler
+        : IDidChangeConfigurationHandler
     {
         /// <summary>
         ///     Create a new <see cref="ConfigurationHandler"/>.
         /// </summary>
-        /// <param name="server">
-        ///     The language server that hosts the handler.
-        /// </param>
-        public ConfigurationHandler(ILanguageServer server)
-            : base(server, Serilog.Log.Logger)
+        public ConfigurationHandler()
         {
         }
 
         /// <summary>
-        ///     The currently-configured minimum log level.
+        ///     The language server configuration.
         /// </summary>
-        public LogEventLevel LogLevel { get; private set; } = LogEventLevel.Information;
-
-        /// <summary>
-        ///     Disable tooltips when hovering on XML in MSBuild project files?
-        /// </summary>
-        public bool DisableHover { get; private set; } = false;
+        public Configuration Configuration { get; } = new Configuration();
 
         /// <summary>
         ///     The server's configuration capabilities.
@@ -61,11 +52,11 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 if (!Enum.TryParse(logLevelValue.String, true, out configuredLogLevel))
                     configuredLogLevel = LogEventLevel.Information;
                 
-                LogLevel = configuredLogLevel;
+                Configuration.LogLevel = configuredLogLevel;
             }
             
             if (parameters.Settings.TryGetValue("disableHover", out Lsp.Models.BooleanNumberString disableHover) && disableHover.IsBool)
-                DisableHover = disableHover.Bool;
+                Configuration.DisableHover = disableHover.Bool;
 
             return Task.CompletedTask;
         }

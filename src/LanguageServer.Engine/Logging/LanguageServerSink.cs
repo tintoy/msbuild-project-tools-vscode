@@ -21,9 +21,9 @@ namespace MSBuildProjectTools.LanguageServer.Logging
         readonly Lsp.LanguageServer _languageServer;
 
         /// <summary>
-        ///     The handler that captures changes to logging configuration.
+        ///     The language server configuration.
         /// </summary>
-        readonly ConfigurationHandler _configuration;
+        readonly Configuration _configuration;
 
         /// <summary>
         ///     Has the language server shut down?
@@ -37,9 +37,9 @@ namespace MSBuildProjectTools.LanguageServer.Logging
         ///     The language server to which events will be logged.
         /// </param>
         /// <param name="configuration">
-        ///     The configuration handler.
+        ///     The language server configuration.
         /// </param>
-        public LanguageServerLoggingSink(Lsp.LanguageServer languageServer, ConfigurationHandler configuration)
+        public LanguageServerLoggingSink(Lsp.LanguageServer languageServer, Configuration configuration)
         {
             if (languageServer == null)
                 throw new ArgumentNullException(nameof(languageServer));

@@ -56,13 +56,13 @@ namespace MSBuildProjectTools.LanguageServer
                 output: Console.OpenStandardOutput()
             );
 
-            ConfigurationHandler configuration = new ConfigurationHandler(server);
+            ConfigurationHandler configuration = new ConfigurationHandler();
             server.AddHandler(configuration);
 
-            ConfigureLogging(server, configuration);
+            ConfigureLogging(server, configuration.Configuration);
 
             server.AddHandler(
-                new ProjectDocumentHandler(server, configuration, Log.Logger)
+                new ProjectDocumentHandler(server, configuration.Configuration, Log.Logger)
             );
 
             await server.Initialize();
@@ -75,7 +75,10 @@ namespace MSBuildProjectTools.LanguageServer
         /// <param name="languageServer">
         ///     The language server.
         /// </param>
-        static void ConfigureLogging(Lsp.LanguageServer languageServer, ConfigurationHandler configuration)
+        /// <param name="configuration">
+        ///     The language server configuration.
+        /// </param>
+        static void ConfigureLogging(Lsp.LanguageServer languageServer, Configuration configuration)
         {
             if (languageServer == null)
                 throw new ArgumentNullException(nameof(languageServer));

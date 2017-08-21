@@ -21,12 +21,12 @@ namespace MSBuildProjectTools.LanguageServer.Logging
         ///     The language server to which events will be logged.
         /// </param>
         /// <param name="configuration">
-        ///     The language server configuration handler.
+        ///     The language server configuration.
         /// </param>
         /// <returns>
         ///     The logger configuration.
         /// </returns>
-        public static LoggerConfiguration LanguageServer(this LoggerSinkConfiguration loggerSinkConfiguration, Lsp.LanguageServer languageServer, ConfigurationHandler configuration)
+        public static LoggerConfiguration LanguageServer(this LoggerSinkConfiguration loggerSinkConfiguration, Lsp.LanguageServer languageServer, Configuration configuration)
         {
             if (loggerSinkConfiguration == null)
                 throw new ArgumentNullException(nameof(loggerSinkConfiguration));

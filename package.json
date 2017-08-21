@@ -35,7 +35,7 @@
             "properties": {
                 "msbuildProjectFileTools.languageService.enable": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Enable the MSBuild language server (if false, then the simple completion provider will be used instead)."
                 },
                 "msbuildProjectFileTools.trace.server": {

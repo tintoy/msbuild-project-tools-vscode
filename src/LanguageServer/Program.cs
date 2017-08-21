@@ -70,6 +70,9 @@ namespace MSBuildProjectTools.LanguageServer
                 new HoverHandler(server, workspace, Log.Logger)
             );
             server.AddHandler(
+                new DocumentSymbolHandler(server, workspace, Log.Logger)
+            );
+            server.AddHandler(
                 new CompletionHandler(server, workspace, Log.Logger)
             );
             server.AddHandler(

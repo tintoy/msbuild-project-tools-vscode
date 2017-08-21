@@ -17,7 +17,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
     ///     The base class for language server text-document event handlers.
     /// </summary>
     public abstract class TextDocumentHandler
-        : Handler, IDocumentSymbolHandler, IDefinitionHandler
+        : Handler, IDefinitionHandler
     {
         /// <summary>
         ///     Create a new <see cref="TextDocumentHandler"/>.
@@ -44,28 +44,9 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         protected CompletionCapability CompletionCapabilities { get; private set; }
 
         /// <summary>
-        ///     The server's document symbol capabilities.
-        /// </summary>
-        protected DocumentSymbolCapability DocumentSymbolCapabilities { get; private set; }
-
-        /// <summary>
         ///     The server's definition capabilities.
         /// </summary>
         protected DefinitionCapability DefinitionCapabilities { get; private set; }
-
-        /// <summary>
-        ///     Called when document symbols are requested.
-        /// </summary>
-        /// <param name="parameters">
-        ///     The request parameters.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///     A <see cref="CancellationToken"/> that can be used to cancel the request.
-        /// </param>
-        /// <returns>
-        ///     A <see cref="Task"/> representing the operation whose result is the symbol container or <c>null</c> if no symbols are provided.
-        /// </returns>
-        protected virtual Task<SymbolInformationContainer> OnDocumentSymbols(DocumentSymbolParams parameters, CancellationToken cancellationToken) => Task.FromResult<SymbolInformationContainer>(null);
 
         /// <summary>
         ///     Called when a definition is requested.
@@ -104,35 +85,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         protected virtual TextDocumentAttributes GetTextDocumentAttributes(Uri documentUri) => new TextDocumentAttributes(documentUri, "xml");
 
         /// <summary>
-        ///     Handle a request for document symbols.
-        /// </summary>
-        /// <param name="parameters">
-        ///     The request parameters.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///     A <see cref="CancellationToken"/> that can be used to cancel the request.
-        /// </param>
-        /// <returns>
-        ///     A <see cref="Task"/> representing the operation whose result is the symbol container or <c>null</c> if no symbols are provided.
-        /// </returns>
-        async Task<SymbolInformationContainer> IRequestHandler<DocumentSymbolParams, SymbolInformationContainer>.Handle(DocumentSymbolParams parameters, CancellationToken cancellationToken)
-        {
-            if (parameters == null)
-                throw new ArgumentNullException(nameof(parameters));
-            
-            try
-            {
-                return await OnDocumentSymbols(parameters, cancellationToken);
-            }
-            catch (Exception unexpectedError)
-            {
-                Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDocumentSymbols");
-
-                return null;
-            }
-        }
-
-        /// <summary>
         ///     Handle a request for a definition.
         /// </summary>
         /// <param name="parameters">
@@ -168,20 +120,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         ///     The registration options.
         /// </returns>
         TextDocumentRegistrationOptions IRegistration<TextDocumentRegistrationOptions>.GetRegistrationOptions() => DocumentRegistrationOptions;
-
-        /// <summary>
-        ///     Called to inform the handler of the language server's document symbol capabilities.
-        /// </summary>
-        /// <param name="capabilities">
-        ///     A <see cref="DocumentSymbolCapability"/> data structure representing the capabilities.
-        /// </param>
-        void ICapability<DocumentSymbolCapability>.SetCapability(DocumentSymbolCapability capabilities)
-        {
-            if (capabilities == null)
-                throw new ArgumentNullException(nameof(capabilities));
-
-            DocumentSymbolCapabilities = capabilities;
-        }
 
         /// <summary>
         ///     Called to inform the handler of the language server's definition capabilities.

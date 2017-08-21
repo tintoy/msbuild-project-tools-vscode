@@ -45,6 +45,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                 throw new ArgumentNullException(nameof(logger));
             
             Server = server;
+            Configuration = configuration;
             Log = logger.ForContext<Workspace>();
         }
 
@@ -52,6 +53,11 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         ///     The root directory for the workspace.
         /// </summary>
         public string RootDirectory => Server.Client.RootPath;
+
+        /// <summary>
+        ///     The language server configuration.
+        /// </summary>
+        public Configuration Configuration { get; }
 
         /// <summary>
         ///     The master project (if any).
@@ -65,11 +71,6 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         ///     The language server.
         /// </summary>
         Lsp.ILanguageServer Server { get; }
-
-        /// <summary>
-        ///     The language server configuration.
-        /// </summary>
-        Configuration Configuration { get; }
 
         /// <summary>
         ///     The workspace logger.

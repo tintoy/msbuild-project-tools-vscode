@@ -49,11 +49,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         Workspace Workspace { get; }
 
         /// <summary>
-        ///     The language server configuration.
-        /// </summary>
-        Configuration Configuration { get; }
-
-        /// <summary>
         ///     The document selector that describes documents to synchronise.
         /// </summary>
         DocumentSelector DocumentSelector { get; } = new DocumentSelector(
@@ -109,7 +104,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </returns>
         async Task<Hover> OnHover(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
         {
-            if (Configuration.DisableHover)
+            if (Workspace.Configuration.DisableHover)
                 return null;
 
             ProjectDocument projectDocument = await Workspace.GetProjectDocument(parameters.TextDocument.Uri);

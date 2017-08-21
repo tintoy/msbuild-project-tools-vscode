@@ -2,7 +2,7 @@
     "name": "msbuild-project-tools",
     "displayName": "MSBuild project tools",
     "description": "Tools for working with MSBuild project files (such as auto-complete for package Ids / versions).",
-    "version": "0.1.7",
+    "version": "0.1.8",
     "publisher": "tintoy",
     "license": "MIT",
     "repository": {
@@ -70,6 +70,34 @@
             {
                 "language": "xml",
                 "path": "./snippets/msbuild-project.json"
+            }
+        ],
+        "grammars": [
+            {
+                "scopeName": "text.xml.msbuild.expression",
+                "injectTo": [
+                    "text.xml.msbuild"
+                ],
+                "path": "./syntaxes/msbuild.expression.tmLanguage.json"
+            },
+            {
+                "language": "msbuild",
+                "scopeName": "text.xml.msbuild",
+                "path": "./syntaxes/msbuild.json"
+            }
+        ],
+        "languages": [
+            {
+                "id": "msbuild",
+                "aliases": [
+                    "MSBuild"
+                ],
+                "extensions": [
+                    "csproj",
+                    "props",
+                    "targets"
+                ],
+                "configuration": "./language-configuration.json"
             }
         ]
     },

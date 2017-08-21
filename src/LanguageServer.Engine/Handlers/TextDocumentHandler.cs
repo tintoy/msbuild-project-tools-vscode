@@ -226,6 +226,17 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         }
 
         /// <summary>
+        ///     Get attributes for the specified text document.
+        /// </summary>
+        /// <param name="documentUri">
+        ///     The document URI.
+        /// </param>
+        /// <returns>
+        ///     The document attributes.
+        /// </returns>
+        protected virtual TextDocumentAttributes GetTextDocumentAttributes(Uri documentUri) => new TextDocumentAttributes(documentUri, "xml");
+
+        /// <summary>
         ///     Handle a document being opened.
         /// </summary>
         /// <param name="parameters">
@@ -553,7 +564,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             if (documentUri == null)
                 throw new ArgumentNullException(nameof(documentUri));
 
-            return new TextDocumentAttributes(documentUri, "xml");
+            return GetTextDocumentAttributes(documentUri);
         }
     }
 }

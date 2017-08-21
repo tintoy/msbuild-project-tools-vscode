@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.1.8
+
+* Add basic syntax-highlighting for expressions in MSBuild projects (currently only supported in attribute values).
+
 ## v0.1.7
 
 * Add configuration setting to disable tooltip-on-hover.

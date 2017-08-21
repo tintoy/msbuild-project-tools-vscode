@@ -78,6 +78,11 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             {
                 Pattern = "**/*.targets",
                 Language = "xml"
+            },
+            new DocumentFilter
+            {
+                Pattern = "**/*.*",
+                Language = "msbuild"
             }
         );
 
@@ -93,6 +98,41 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         ///     The server configuration handler.
         /// </summary>
         ConfigurationHandler Configuration { get; }
+
+        /// <summary>
+        ///     Get attributes for the specified text document.
+        /// </summary>
+        /// <param name="documentUri">
+        ///     The document URI.
+        /// </param>
+        /// <returns>
+        ///     The document attributes.
+        /// </returns>
+        protected override TextDocumentAttributes GetTextDocumentAttributes(Uri documentUri)
+        {
+            string documentFilePath = VSCodeDocumentUri.GetFileSystemPath(documentUri);
+            if (documentFilePath == null)
+                return base.GetTextDocumentAttributes(documentUri);
+
+            string extension = Path.GetExtension(documentFilePath).ToLower();
+            switch (extension)
+            {
+                case "props":
+                case "targets":
+                {
+                    break;
+                }
+                default:
+                {
+                    if (extension.EndsWith("proj"))
+                        break;
+
+                    return base.GetTextDocumentAttributes(documentUri);
+                }
+            }
+
+            return new TextDocumentAttributes(documentUri, "msbuild");
+        }
 
         /// <summary>
         ///     Called when a text document is opened.

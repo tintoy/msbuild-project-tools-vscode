@@ -1,0 +1,174 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "injectionSelector": "string",
+    "name": "MSBuildExpression",
+    "scopeName": "text.xml.msbuild.expression",
+    "patterns": [{
+            "include": "#singleQuotedString"
+        },
+        {
+            "include": "#expressions"
+        },
+        {
+            "include": "#itemSeparator"
+        }
+    ],
+    "repository": {
+        "operators": {
+            "patterns": [{
+                    "match": "(==)",
+                    "captures": {
+                        "1": {
+                            "name": "keyword.operator"
+                        }
+                    }
+                },
+                {
+                    "match": "(!=)",
+                    "captures": {
+                        "1": {
+                            "name": "keyword.operator"
+                        }
+                    }
+                }
+            ]
+        },
+        "expressions": {
+            "patterns": [{
+                    "comment": "Property expression",
+                    "match": "(\\$\\()([\\w_]+)(\\))",
+                    "captures": {
+                        "1": {
+                            "name": "keyword.operator"
+                        },
+                        "2": {
+                            "name": "variable.name"
+                        },
+                        "3": {
+                            "name": "keyword.operator"
+                        }
+                    }
+                },
+                {
+                    "comment": "Item group transform expression",
+                    "match": "(@\\()([\\w_]+)(->)(')([^']+)(')(\\))",
+                    "captures": {
+                        "1": {
+                            "name": "keyword.operator"
+                        },
+                        "2": {
+                            "name": "variable.name"
+                        },
+                        "3": {
+                            "name": "keyword.operator"
+                        },
+                        "4": {
+                            "name": "markup.quote"
+                        },
+                        "5": {
+                            "patterns": [{
+                                    "include": "#expressions"
+                                },
+                                {
+                                    "include": "#directItemMetadataExpression"
+                                }
+                            ]
+                        },
+                        "6": {
+                            "name": "markup.quote"
+                        },
+                        "7": {
+                            "name": "keyword.operator"
+                        }
+                    }
+                },
+                {
+                    "comment": "Item group expression",
+                    "match": "(@\\()([\\w_]+)(\\))",
+                    "captures": {
+                        "1": {
+                            "name": "keyword.operator"
+                        },
+                        "2": {
+                            "name": "variable.name"
+                        },
+                        "3": {
+                            "name": "keyword.operator"
+                        }
+                    }
+                },
+                {
+                    "comment": "Item group metadata expression",
+                    "match": "(%\\()([\\w_]+)(\\.)([\\w_]+)(\\))",
+                    "captures": {
+                        "1": {
+                            "name": "keyword.operator"
+                        },
+                        "2": {
+                            "name": "variable.name"
+                        },
+                        "3": {
+                            "name": "keyword.operator"
+                        },
+                        "4": {
+                            "name": "storage"
+                        },
+                        "5": {
+                            "name": "keyword.operator"
+                        }
+                    }
+                }
+            ]
+        },
+        "itemSeparator": {
+            "patterns": [{
+                "match": "(;)",
+                "captures": {
+                    "1": {
+                        "name": "keyword.operator"
+                    }
+                }
+            }]
+        },
+        "directItemMetadataExpression": {
+            "patterns": [{
+                "comment": "Direct item metadata expression",
+                "match": "(%\\()([\\w_]+)(\\))",
+                "captures": {
+                    "1": {
+                        "name": "keyword.operator"
+                    },
+                    "2": {
+                        "name": "variable.name"
+                    },
+                    "3": {
+                        "name": "keyword.operator"
+                    }
+                }
+            }]
+        },
+        "singleQuotedString": {
+            "patterns": [{
+                "match": "(')([^']*)(')",
+                "captures": {
+                    "1": {
+                        "name": "markup.quote"
+                    },
+                    "2": {
+                        "name": "string.quoted.single",
+                        "patterns": [{
+                                "include": "#operators"
+                            },
+                            {
+                                "include": "#expressions"
+                            }
+                        ]
+                    },
+                    "3": {
+                        "name": "markup.quote"
+                    }
+                }
+            }]
+        }
+    }
+}

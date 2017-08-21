@@ -47,12 +47,16 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <param name="logger">
         ///     The application logger.
         /// </param>
-        /// <param name="projectDocuments"/>
-        ///     Documents for loaded project files.
+        /// <param name="configuration"/>
+        ///     The server configuration handler.
         /// </param>
-        public ProjectDocumentHandler(ILanguageServer server, ILogger logger)
+        public ProjectDocumentHandler(ILanguageServer server, ConfigurationHandler configuration, ILogger logger)
             : base(server, logger)
         {
+            if (configuration == null)
+                throw new ArgumentNullException(nameof(configuration));
+
+            Configuration = configuration;
             Options.Change = TextDocumentSyncKind.Full;
         }
 
@@ -86,22 +90,9 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         MasterProjectDocument MasterProject { get; set; }
 
         /// <summary>
-        ///     Called when configuration has changed.
+        ///     The server configuration handler.
         /// </summary>
-        /// <param name="parameters">
-        ///     The notification parameters.
-        /// </param>
-        /// <returns>
-        ///     A <see cref="Task"/> representing the operation.
-        /// </returns>
-        protected override Task OnDidChangeConfiguration(DidChangeConfigurationParams parameters)
-        {
-            // Log.Information("Got configuration: {@Config}", parameters.Settings);
-            foreach (string settingName in parameters.Settings.Keys)
-                Log.Information("Setting {Name} = {Setting}", settingName, parameters.Settings[settingName].Value);
-
-            return Task.CompletedTask;
-        }
+        ConfigurationHandler Configuration { get; }
 
         /// <summary>
         ///     Called when a text document is opened.
@@ -292,6 +283,9 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </returns>
         protected override async Task<Hover> OnHover(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
         {
+            if (Configuration.DisableHover)
+                return null;
+
             ProjectDocument projectDocument = await GetProjectDocument(parameters.TextDocument.Uri);
             
             using (await projectDocument.Lock.ReaderLockAsync(cancellationToken))

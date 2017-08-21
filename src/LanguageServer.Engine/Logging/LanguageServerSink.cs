@@ -7,6 +7,8 @@ using Lsp.Models;
 
 namespace MSBuildProjectTools.LanguageServer.Logging
 {
+    using Handlers;
+
     /// <summary>
     ///     A Serilog logging sink that sends log events to the language server logging facility.
     /// </summary>
@@ -21,7 +23,7 @@ namespace MSBuildProjectTools.LanguageServer.Logging
         /// <summary>
         ///     The handler that captures changes to logging configuration.
         /// </summary>
-        readonly LoggingConfigurationHandler _configurationHandler;
+        readonly ConfigurationHandler _configuration;
 
         /// <summary>
         ///     Has the language server shut down?
@@ -34,14 +36,16 @@ namespace MSBuildProjectTools.LanguageServer.Logging
         /// <param name="languageServer">
         ///     The language server to which events will be logged.
         /// </param>
-        public LanguageServerLoggingSink(Lsp.LanguageServer languageServer)
+        public LanguageServerLoggingSink(Lsp.LanguageServer languageServer, ConfigurationHandler configuration)
         {
             if (languageServer == null)
                 throw new ArgumentNullException(nameof(languageServer));
 
+            if (configuration == null)
+                throw new ArgumentNullException(nameof(configuration));
+
             _languageServer = languageServer;
-            _configurationHandler = new LoggingConfigurationHandler(_languageServer);
-            _languageServer.AddHandler(_configurationHandler);
+            _configuration = configuration;
 
             _languageServer.Shutdown += shutDownRequested =>
             {
@@ -62,7 +66,7 @@ namespace MSBuildProjectTools.LanguageServer.Logging
             if (_hasServerShutDown)
                 return;
 
-            if (logEvent.Level < _configurationHandler.LogLevel)
+            if (logEvent.Level < _configuration.LogLevel)
                 return;
 
             LogMessageParams logParameters = new LogMessageParams

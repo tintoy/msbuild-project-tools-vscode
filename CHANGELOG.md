@@ -1,5 +1,10 @@
 # Change Log
 
+## v0.1.7
+
+* Add configuration setting to disable tooltip-on-hover.
+* Add configuration setting to control logging verbosity.
+
 ## v0.1.6
 
 * Actually enable the language server by default (sorry about that).

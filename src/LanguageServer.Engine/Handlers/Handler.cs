@@ -17,7 +17,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
     ///     The base class for language server event handlers.
     /// </summary>
     public abstract class Handler
-        : IDidChangeConfigurationHandler
     {
         /// <summary>
         ///     Create a new <see cref="Handler"/>.
@@ -45,71 +44,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <summary>
         ///     The language server.
         /// </summary>
-        protected ILanguageServer Server { get; }
-
-        /// <summary>
-        ///     The server's configuration capabilities.
-        /// </summary>
-        public DidChangeConfigurationCapability ConfigurationCapabilities { get; private set; }
-
-        /// <summary>
-        ///     Called when configuration has changed.
-        /// </summary>
-        /// <param name="parameters">
-        ///     The notification parameters.
-        /// </param>
-        /// <returns>
-        ///     A <see cref="Task"/> representing the operation.
-        /// </returns>
-        protected virtual Task OnDidChangeConfiguration(DidChangeConfigurationParams parameters) => Task.CompletedTask;
-
-        /// <summary>
-        ///     Called to inform the handler of the language server's configuration capabilities.
-        /// </summary>
-        /// <param name="capabilities">
-        ///     A <see cref="SynchronizationCapability"/> data structure representing the capabilities.
-        /// </param>
-        void ICapability<DidChangeConfigurationCapability>.SetCapability(DidChangeConfigurationCapability capabilities)
-        {
-            if (capabilities == null)
-                throw new ArgumentNullException(nameof(capabilities));
-
-            ConfigurationCapabilities = capabilities;
-        }
-
-        /// <summary>
-        ///     Handle a change in configuration.
-        /// </summary>
-        /// <param name="parameters">
-        ///     The notification parameters.
-        /// </param>
-        /// <returns>
-        ///     A <see cref="Task"/> representing the operation.
-        /// </returns>
-        async Task INotificationHandler<DidChangeConfigurationParams>.Handle(DidChangeConfigurationParams parameters)
-        {
-            if (parameters == null)
-                throw new ArgumentNullException(nameof(parameters));
-            
-            try
-            {
-                await OnDidChangeConfiguration(parameters);
-            }
-            catch (Exception unexpectedError)
-            {
-                Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDidChangeConfiguration");
-            }
-        }
-
-        /// <summary>
-        ///     Unused.
-        /// </summary>
-        /// <returns>
-        ///     <c>null</c>
-        /// </returns>
-        object IRegistration<object>.GetRegistrationOptions()
-        {
-            return null;
-        }        
+        protected ILanguageServer Server { get; }      
     }
 }

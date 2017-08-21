@@ -2,7 +2,7 @@
     "name": "msbuild-project-tools",
     "displayName": "MSBuild project tools",
     "description": "Tools for working with MSBuild project files (such as auto-complete for package Ids / versions).",
-    "version": "0.1.6",
+    "version": "0.1.7",
     "publisher": "tintoy",
     "license": "MIT",
     "repository": {
@@ -33,6 +33,11 @@
             "type": "object",
             "title": "MSBuild project file tools",
             "properties": {
+                "msbuildProjectFileTools.languageService.disableHover": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Disable tooltips when hovering on XML in MSBuild project files."
+                },
                 "msbuildProjectFileTools.languageService.enable": {
                     "type": "boolean",
                     "default": true,

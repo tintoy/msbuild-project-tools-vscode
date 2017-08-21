@@ -21,14 +21,26 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <summary>
         ///     Create a new <see cref="ConfigurationHandler"/>.
         /// </summary>
-        public ConfigurationHandler()
+        /// <param name="configuration">
+        ///     The language server configuration.
+        /// </param>
+        public ConfigurationHandler(Configuration configuration)
         {
+            if (configuration == null)
+                throw new ArgumentNullException(nameof(configuration));
+
+            Configuration = configuration;
         }
+
+        /// <summary>
+        ///     Raised when configuration has changed.
+        /// </summary>
+        public event EventHandler<EventArgs> ConfigurationChanged;
 
         /// <summary>
         ///     The language server configuration.
         /// </summary>
-        public Configuration Configuration { get; } = new Configuration();
+        public Configuration Configuration { get; }
 
         /// <summary>
         ///     The server's configuration capabilities.
@@ -57,6 +69,9 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             
             if (parameters.Settings.TryGetValue("disableHover", out Lsp.Models.BooleanNumberString disableHover) && disableHover.IsBool)
                 Configuration.DisableHover = disableHover.Bool;
+
+            if (ConfigurationChanged != null)
+                ConfigurationChanged(this, EventArgs.Empty);
 
             return Task.CompletedTask;
         }

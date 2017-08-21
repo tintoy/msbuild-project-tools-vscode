@@ -17,7 +17,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
     ///     The base class for language server text-document event handlers.
     /// </summary>
     public abstract class TextDocumentHandler
-        : Handler, IHoverHandler, ICompletionHandler, IDocumentSymbolHandler, IDefinitionHandler
+        : Handler, ICompletionHandler, IDocumentSymbolHandler, IDefinitionHandler
     {
         /// <summary>
         ///     Create a new <see cref="TextDocumentHandler"/>.
@@ -39,11 +39,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         protected abstract DocumentSelector DocumentSelector { get; }
 
         /// <summary>
-        ///     The server's hover capabilities.
-        /// </summary>
-        protected HoverCapability HoverCapabilities { get; private set; }
-
-        /// <summary>
         ///     The server's completion capabilities.
         /// </summary>
         protected CompletionCapability CompletionCapabilities { get; private set; }
@@ -57,20 +52,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         ///     The server's definition capabilities.
         /// </summary>
         protected DefinitionCapability DefinitionCapabilities { get; private set; }
-
-        /// <summary>
-        ///     Called when the mouse pointer hovers over text.
-        /// </summary>
-        /// <param name="parameters">
-        ///     The request parameters.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///     A <see cref="CancellationToken"/> that can be used to cancel the operation.
-        /// </param>
-        /// <returns>
-        ///     A <see cref="Task{TResult}"/> whose result is the hover details, or <c>null</c> if no hover details are provided by the handler.
-        /// </returns>
-        protected virtual Task<Hover> OnHover(TextDocumentPositionParams parameters, CancellationToken cancellationToken) => Task.FromResult<Hover>(null);
 
         /// <summary>
         ///     Called when completions are requested.
@@ -147,35 +128,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         ///     The document attributes.
         /// </returns>
         protected virtual TextDocumentAttributes GetTextDocumentAttributes(Uri documentUri) => new TextDocumentAttributes(documentUri, "xml");
-
-        /// <summary>
-        ///     Handle a request for hover information.
-        /// </summary>
-        /// <param name="parameters">
-        ///     The request parameters.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///     A <see cref="CancellationToken"/> that can be used to cancel the request.
-        /// </param>
-        /// <returns>
-        ///     A <see cref="Task"/> representing the operation whose result is the hover details or <c>null</c> if no hover details are provided.
-        /// </returns>
-        async Task<Hover> IRequestHandler<TextDocumentPositionParams, Hover>.Handle(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
-        {
-            if (parameters == null)
-                throw new ArgumentNullException(nameof(parameters));
-            
-            try
-            {
-                return await OnHover(parameters, cancellationToken);
-            }
-            catch (Exception unexpectedError)
-            {
-                Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnHover");
-
-                return null;
-            }
-        }
 
         /// <summary>
         ///     Handle a request for completion.
@@ -279,20 +231,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         ///     The registration options.
         /// </returns>
         CompletionRegistrationOptions IRegistration<CompletionRegistrationOptions>.GetRegistrationOptions() => CompletionRegistrationOptions;
-
-        /// <summary>
-        ///     Called to inform the handler of the language server's hover capabilities.
-        /// </summary>
-        /// <param name="capabilities">
-        ///     A <see cref="HoverCapability"/> data structure representing the capabilities.
-        /// </param>
-        void ICapability<HoverCapability>.SetCapability(HoverCapability capabilities)
-        {
-            if (capabilities == null)
-                throw new ArgumentNullException(nameof(capabilities));
-
-            HoverCapabilities = capabilities;
-        }
 
         /// <summary>
         ///     Called to inform the handler of the language server's completion capabilities.

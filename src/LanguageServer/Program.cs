@@ -56,17 +56,21 @@ namespace MSBuildProjectTools.LanguageServer
                 output: Console.OpenStandardOutput()
             );
 
-            ConfigurationHandler configuration = new ConfigurationHandler();
-            server.AddHandler(configuration);
+            Configuration configuration = new Configuration();
+            ConfigureLogging(server, configuration);
 
-            ConfigureLogging(server, configuration.Configuration);
-
-            Workspace workspace = new Workspace(server, configuration.Configuration, Log.Logger);
+            Workspace workspace = new Workspace(server, configuration, Log.Logger);
+            server.AddHandler(
+                new ConfigurationHandler(configuration)
+            );
             server.AddHandler(
                 new DocumentSyncHandler(server, workspace, Log.Logger)
             );
             server.AddHandler(
-                new ProjectDocumentHandler(server, workspace, configuration.Configuration, Log.Logger)
+                new HoverHandler(server, workspace, configuration, Log.Logger)
+            );
+            server.AddHandler(
+                new ProjectDocumentHandler(server, workspace, configuration, Log.Logger)
             );
 
             await server.Initialize();

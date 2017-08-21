@@ -1,6 +1,6 @@
 {
     "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-	"version": "https://github.com/atom/language-xml/commit/27352842917b911383122bdcf98ed0d69d55c179",
+	"version": "https://github.com/tintoy/msbuild-project-tools-vscode/blob/980a97501456a61a0741575403ed1c5b90a0c545/syntaxes/msbuild.json",
 	"scopeName": "text.xml.msbuild",
 	"name": "MSBuild",
 	"patterns": [

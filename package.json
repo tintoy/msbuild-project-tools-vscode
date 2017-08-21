@@ -78,7 +78,7 @@
                 "injectTo": [
                     "text.xml.msbuild"
                 ],
-                "path": "./syntaxes/msbuild.expression.tmLanguage.json"
+                "path": "./syntaxes/msbuild.expression.json"
             },
             {
                 "language": "msbuild",

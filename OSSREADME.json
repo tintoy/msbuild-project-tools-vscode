@@ -1,0 +1,9 @@
+// ATTENTION - THIS DIRECTORY CONTAINS THIRD PARTY OPEN SOURCE MATERIALS:
+
+[{
+	"name": "atom/language-xml",
+	"version": "0.0.0",
+	"license": "MIT",
+	"repositoryURL": "https://github.com/atom/language-xml",
+	"description": "The file 'syntaxes/msbuild.json' was derived from the file 'syntaxes/xml.json' in the VSCode XML extension (https://github.com/Microsoft/vscode/blob/master/extensions/xml), which derived it from the Atom XML package (https://github.com/atom/language-xml), which was originally converted from the TextMate bundle https://github.com/textmate/xml.tmbundle."
+}]

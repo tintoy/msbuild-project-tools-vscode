@@ -15,7 +15,7 @@ import { handleBusyNotifications } from './notifications';
  * Enable the MSBuild language service?
  */
 let enableLanguageService = false;
-
+let statusBarItem: vscode.StatusBarItem;
 let outputChannel: vscode.OutputChannel;
 
 /**
@@ -40,6 +40,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         }
     
         if (enableLanguageService && canEnableLanguageService) {
+            statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 50);
+            context.subscriptions.push(statusBarItem);
+
+            statusBarItem.text = '$(check) MSBuild Project';
+            statusBarItem.tooltip = 'MSBuild Project Tools';
+            statusBarItem.hide();
+
             const languageClient = await createLanguageClient(context);
             
             outputChannel = languageClient.outputChannel;
@@ -123,7 +130,7 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<L
     };
 
     let languageClient = new LanguageClient('MSBuild Project Tools', serverOptions, clientOptions);
-    handleBusyNotifications(languageClient);
+    handleBusyNotifications(languageClient, statusBarItem);
 
     return languageClient;
 }

@@ -26,45 +26,17 @@ export namespace NotificationTypes {
  * 
  * @param languageClient The MSBuild language client.
  */
-export function handleBusyNotifications(languageClient: LanguageClient): void {
+export function handleBusyNotifications(languageClient: LanguageClient, statusBarItem: vscode.StatusBarItem): void {
     languageClient.onReady().then(() => {
-
-        // AF: A little ugly due to interaction with VSCode's withProgress API, but it works.
-
-        let onBusyDone: () => void;
-        let busyPromise: Thenable<void>;
-        let busyProgress: vscode.Progress<{message: string}>;
-
         languageClient.onNotification(NotificationTypes.busy, notification => {
             if (notification.isBusy) {
-                if (!busyPromise) {
-                    const progressOptions: vscode.ProgressOptions = { location: vscode.ProgressLocation.Window };
-                    busyPromise = vscode.window.withProgress(progressOptions, progress => new Promise((accept, reject) => {
-                        onBusyDone = accept; // Cache it so we can complete this promise later.
-                        busyProgress = progress;
-                    }));
-                } else if (!busyProgress) {
-                    // Race.
-                    console.log(notification.message);
-
-                    return; 
-                }
-                
-                busyProgress.report({
-                    message: notification.message
-                });
-            } else if (onBusyDone) {
-                if (busyProgress && notification.message) {
-                    busyProgress.report({
-                        message: notification.message
-                    });
-                }
-
-                onBusyDone();
-
-                onBusyDone = null;
-                busyPromise = null;
-                busyProgress = null;
+                statusBarItem.text = '$(watch) MSBuild Project';
+                statusBarItem.tooltip = 'MSBuild Project Tools: ' + notification.message;
+                statusBarItem.show();
+            } else {
+                statusBarItem.text = '$(check) MSBuild Project';
+                statusBarItem.tooltip = 'MSBuild Project Tools';
+                statusBarItem.hide();
             }
         });
     });

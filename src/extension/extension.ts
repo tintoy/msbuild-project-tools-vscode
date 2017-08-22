@@ -9,6 +9,7 @@ import { LanguageClient, ServerOptions, LanguageClientOptions, ErrorAction, Clos
 import * as dotnet from './utils/dotnet';
 import * as executables from './utils/executables';
 import { PackageReferenceCompletionProvider, getNuGetV3AutoCompleteEndPoints } from './providers/package-reference-completion';
+import { handleBusyNotifications } from './notifications';
 
 /**
  * Enable the MSBuild language service?
@@ -121,5 +122,8 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<L
         args: [ serverAssembly ],
     };
 
-    return new LanguageClient('MSBuild Project Tools', serverOptions, clientOptions);
+    let languageClient = new LanguageClient('MSBuild Project Tools', serverOptions, clientOptions);
+    handleBusyNotifications(languageClient);
+
+    return languageClient;
 }

@@ -14,6 +14,7 @@ using JsonRpc;
 
 namespace MSBuildProjectTools.LanguageServer.Handlers
 {
+    using CustomProtocol;
     using Documents;
     using MSBuild;
     using Utilities;
@@ -142,8 +143,12 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </returns>
         async Task OnDidOpenTextDocument(DidOpenTextDocumentParams parameters)
         {
+            Server.NotifyBusy("Loading project...");
+
             ProjectDocument projectDocument = await Workspace.GetProjectDocument(parameters.TextDocument.Uri);
             Workspace.PublishDiagnostics(projectDocument);
+
+            Server.ClearBusy("Project loaded.");
 
             if (!projectDocument.HasXml)
             {

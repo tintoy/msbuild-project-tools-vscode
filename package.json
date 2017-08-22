@@ -69,9 +69,13 @@
         },
         "snippets": [
             {
+                "language": "msbuild",
+                "path": "./snippets/msbuild-project.json"
+            },
+            {
                 "language": "xml",
                 "path": "./snippets/msbuild-project.json"
-            }
+            }            
         ],
         "grammars": [
             {

@@ -102,15 +102,9 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
             if (undefinedProperty == null)
                 throw new ArgumentNullException(nameof(undefinedProperty));
  
-            string condition = undefinedProperty.PropertyElement.Condition;
-            if (String.IsNullOrWhiteSpace(condition))
-                condition = undefinedProperty.PropertyElement.Parent.Condition; // Condition may be on parent element.
-
-            string expandedCondition = _projectDocument.MSBuildProject.ExpandString(condition);
-
             return new MarkedStringContainer(
-                $"Property: `{undefinedProperty.Name}` (condition evaluates to `false`)",
-                $"Unused value:\n* `{undefinedProperty.Value}`\n\nCondition:\n* Raw =`{condition}`\n* Evaluated = `{expandedCondition}`"
+                $"Unused Property: `{undefinedProperty.Name}` (condition evaluates to `false`)",
+                $"Value would have been: `{undefinedProperty.Value}`"
             );
         }
 
@@ -133,7 +127,7 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
                 string packageVersion = itemGroup.GetFirstMetadataValue("Version");
                 
                 return new MarkedStringContainer(
-                    $"NuGet Package: `{itemGroup.FirstInclude}`",
+                    $"NuGet Package: [{itemGroup.FirstInclude}](https://nuget.org/packages/{itemGroup.FirstInclude}/{packageVersion})",
                     $"Version: {packageVersion}"
                 );
             }
@@ -185,28 +179,18 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
             string evaluatedCondition = _projectDocument.MSBuildProject.ExpandString(condition);
 
             StringBuilder descriptionContent = new StringBuilder();
-            descriptionContent.AppendLine(
-                $"Condition: `{condition}`"
-            );
-            descriptionContent.AppendLine();
-            descriptionContent.AppendLine(
-                $"Evaluated Condition: `{evaluatedCondition}`"
-            );
-            descriptionContent.AppendLine();
-            descriptionContent.AppendLine("---");
-            descriptionContent.AppendLine();
-
+            
             string[] includes = unusedItemGroup.Includes.ToArray();
             descriptionContent.AppendLine(
                 $"Include: `{unusedItemGroup.OriginatingElement.Include}`  "
             );
             descriptionContent.AppendLine();
             descriptionContent.Append(
-                $"Evaluates to {unusedItemGroup.Items.Count} item"
+                $"Would have evaluated to {unusedItemGroup.Items.Count} item"
             );
             if (!unusedItemGroup.HasSingleItem)
                 descriptionContent.Append("s");
-            descriptionContent.AppendLine(".");
+            descriptionContent.AppendLine(":");
 
             foreach (string include in includes.Take(5))
             {

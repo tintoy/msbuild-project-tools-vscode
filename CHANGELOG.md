@@ -1,5 +1,10 @@
 # Change Log
 
+## v0.1.10
+
+* Improve tooltip content when hovering on MSBuild XML.
+* Enable jumping from PackageReference element to package on NuGet.org.
+
 ## v0.1.9
 
 * Add specific hover tooltip for Condition attributes.

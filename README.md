@@ -25,7 +25,6 @@ You can install this extension from the [VS marketplace](https://marketplace.vis
 ## Limitations
 
 * The new language service hasn't been tested extensively on Linux / MacOS (although I've verified that it works for common use-cases).
-* This extension uses the NuGet v3 API to resolve package names and versions. The API is pretty slow, unfortunately; I'll try to improve performance / result caching in a future release.
 
 **Note**: if you open more than one project at a time (or navigate to imported projects), subsequent projects will be loaded into the same MSBuild project collection as the first project. Once you have closed the last project file, the next project file you open will become the master project. The master project will become selectable in a later release.
 

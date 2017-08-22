@@ -12,7 +12,7 @@ You need .NET Core 2.0.0 or newer installed to use the language service (but you
 
 * When you're editing your project file, type `pr` then press `tab` to insert a `PackageReference` element.
 * Move to the `Include` or `Version` attribute of your `PackageReference` element and press `ctrl+space` to bring up a list of package Ids / versions.
-* _Language service feature:_ Hover the mouse over imports, targets, items, and properties to see information about them (including evaluated conditions).
+* _Language service feature:_ Hover the mouse over imports, targets, items, properties, and conditions to see information about them.
 * _Language service feature:_ Document symbols are supported for imports, targets, items, and properties.
 * _Language service feature:_ Go-to-definition is implemented for both SDK-style and regular project imports.
 * Basic syntax highlighting of MSBuild expressions in attribute values.  

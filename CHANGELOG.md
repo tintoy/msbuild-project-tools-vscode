@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.1.9
+
+* Add specific hover tooltip for Condition attributes.
+
 ## v0.1.8
 
 * Add basic syntax-highlighting for expressions in MSBuild projects (currently only supported in attribute values).

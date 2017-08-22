@@ -39,6 +39,11 @@
                     "default": false,
                     "description": "Disable tooltips when hovering on XML in MSBuild project files."
                 },
+                "msbuildProjectFileTools.languageService.disableNuGetPreFetch": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Don't automatically initialise the NuGet API client when opening a project (this is done to make the first PackageReference completion faster)."
+                },
                 "msbuildProjectFileTools.languageService.enable": {
                     "type": "boolean",
                     "default": true,

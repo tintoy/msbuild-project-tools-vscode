@@ -33,14 +33,17 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <summary>
         ///     Create a new <see cref="MasterProjectDocument"/>.
         /// </summary>
+        /// <param name="workspace">
+        ///     The document workspace.
+        /// </param>
         /// <param name="documentUri">
         ///     The document URI.
         /// </param>
         /// <param name="logger">
         ///     The application logger.
         /// </param>
-        public MasterProjectDocument(Uri documentUri, ILogger logger)
-            : base(documentUri, logger)
+        public MasterProjectDocument(Workspace workspace, Uri documentUri, ILogger logger)
+            : base(workspace, documentUri, logger)
         {
         }
 
@@ -108,7 +111,8 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         {
             await base.Load(cancellationToken);
 
-            WarmUpNuGetClient();
+            if (!Workspace.Configuration.DisableNuGetPreFetch)
+                WarmUpNuGetClient();
         }
 
         /// <summary>

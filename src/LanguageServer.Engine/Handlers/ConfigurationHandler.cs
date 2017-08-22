@@ -70,6 +70,9 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             if (parameters.Settings.TryGetValue("disableHover", out Lsp.Models.BooleanNumberString disableHover) && disableHover.IsBool)
                 Configuration.DisableHover = disableHover.Bool;
 
+            if (parameters.Settings.TryGetValue("disableNuGetPreFetch", out Lsp.Models.BooleanNumberString disableNuGetPreFetch) && disableHover.IsBool)
+                Configuration.DisableNuGetPreFetch = disableNuGetPreFetch.Bool;
+
             if (ConfigurationChanged != null)
                 ConfigurationChanged(this, EventArgs.Empty);
 

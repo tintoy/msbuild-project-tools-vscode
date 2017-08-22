@@ -24,5 +24,10 @@ namespace MSBuildProjectTools.LanguageServer
         ///     Disable tooltips when hovering on XML in MSBuild project files?
         /// </summary>
         public bool DisableHover { get; set; } = false;
+
+        /// <summary>
+        ///     Disable automatic warm-up of the NuGet API client?
+        /// </summary>
+        public bool DisableNuGetPreFetch { get; set; } = false;
     }
 }

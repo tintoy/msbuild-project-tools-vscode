@@ -28,6 +28,9 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <summary>
         ///     Create a new <see cref="SubProjectDocument"/>.
         /// </summary>
+        /// <param name="workspace">
+        ///     The document workspace.
+        /// </param>
         /// <param name="documentUri">
         ///     The document URI.
         /// </param>
@@ -37,8 +40,8 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <param name="masterProjectDocument">
         ///     The master project document that owns the sub-project.
         /// </param>
-        public SubProjectDocument(Uri documentUri, ILogger logger, MasterProjectDocument masterProjectDocument)
-            : base(documentUri, logger)
+        public SubProjectDocument(Workspace workspace, Uri documentUri, ILogger logger, MasterProjectDocument masterProjectDocument)
+            : base(workspace, documentUri, logger)
         {
             if (masterProjectDocument == null)
                 throw new ArgumentNullException(nameof(masterProjectDocument));

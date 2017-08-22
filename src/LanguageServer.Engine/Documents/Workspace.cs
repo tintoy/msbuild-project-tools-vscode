@@ -99,9 +99,9 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                 isNewProject = true;
 
                 if (MasterProject == null)
-                    return MasterProject = new MasterProjectDocument(documentUri, Log);
+                    return MasterProject = new MasterProjectDocument(this, documentUri, Log);
 
-                SubProjectDocument subProject = new SubProjectDocument(documentUri, Log, MasterProject);
+                SubProjectDocument subProject = new SubProjectDocument(this, documentUri, Log, MasterProject);
                 MasterProject.AddSubProject(subProject);
 
                 return subProject;

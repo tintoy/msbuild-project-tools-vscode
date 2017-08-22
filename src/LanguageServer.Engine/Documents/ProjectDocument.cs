@@ -62,17 +62,24 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <summary>
         ///     Create a new <see cref="ProjectDocument"/>.
         /// </summary>
+        /// <param name="workspace">
+        ///     The document workspace.
+        /// </param>
         /// <param name="documentUri">
         ///     The document URI.
         /// </param>
         /// <param name="logger">
         ///     The application logger.
         /// </param>
-        protected ProjectDocument(Uri documentUri, ILogger logger)
+        protected ProjectDocument(Workspace workspace, Uri documentUri, ILogger logger)
         {
+            if (workspace == null)
+                throw new ArgumentNullException(nameof(workspace));
+
             if (documentUri == null)
                 throw new ArgumentNullException(nameof(documentUri));
 
+            Workspace = workspace;
             DocumentUri = documentUri;
             ProjectFile = new FileInfo(
                 VSCodeDocumentUri.GetFileSystemPath(documentUri)
@@ -89,6 +96,11 @@ namespace MSBuildProjectTools.LanguageServer.Documents
 
             Log = logger.ForContext("ProjectDocument", ProjectFile.FullName);
         }
+
+        /// <summary>
+        ///     The document workspace.
+        /// </summary>
+        public Workspace Workspace { get; }
 
         /// <summary>
         ///     The project document URI.

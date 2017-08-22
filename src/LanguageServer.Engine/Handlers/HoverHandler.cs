@@ -130,8 +130,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 // Match up the MSBuild item / property with its corresponding XML element / attribute.
                 MSBuildObject msbuildObject = projectDocument.GetMSBuildObjectAtPosition(position);
-                if (msbuildObject == null)
-                    return null;
 
                 Range range = elementOrAttribute.Span.ToNative(projectDocument.XmlPositions);
                 Hover result = new Hover
@@ -171,6 +169,8 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                         result.Contents = contentProvider.UnresolvedSdkImport(unresolvedSdkImportFromAttribute);
                     else if (msbuildObject is MSBuildImport importFromAttribute)
                         result.Contents = contentProvider.Import(importFromAttribute);
+                    else if (attribute.Name == "Condition")
+                        result.Contents = contentProvider.Condition(attribute.ParentElement.Name, attribute.Value);
                     else
                         return null;
                 }

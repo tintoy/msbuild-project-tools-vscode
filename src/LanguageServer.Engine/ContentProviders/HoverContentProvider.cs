@@ -43,7 +43,7 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
         ///     The <see cref="MSBuildProperty"/>.
         /// </param>
         /// <returns>
-        ///     The content.
+        ///     The content, or <c>null</c> if no content is provided.
         /// </returns>
         public MarkedStringContainer Property(MSBuildProperty property)
         {
@@ -95,7 +95,7 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
         ///     The <see cref="MSBuildUnusedProperty"/>.
         /// </param>
         /// <returns>
-        ///     The content.
+        ///     The content, or <c>null</c> if no content is provided.
         /// </returns>
         public MarkedStringContainer UnusedProperty(MSBuildUnusedProperty undefinedProperty)
         {
@@ -121,7 +121,7 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
         ///     The <see cref="MSBuildItemGroup"/>.
         /// </param>
         /// <returns>
-        ///     The content.
+        ///     The content, or <c>null</c> if no content is provided.
         /// </returns>
         public MarkedStringContainer ItemGroup(MSBuildItemGroup itemGroup)
         {
@@ -174,7 +174,7 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
         ///     The <see cref="MSBuildUnusedItemGroup"/>.
         /// </param>
         /// <returns>
-        ///     The content.
+        ///     The content, or <c>null</c> if no content is provided.
         /// </returns>
         public MarkedStringContainer UnusedItemGroup(MSBuildUnusedItemGroup unusedItemGroup)
         {
@@ -225,6 +225,34 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
         }
 
         /// <summary>
+        ///     Get hover content for an MSBuild condition.
+        /// </summary>
+        /// <param name="elementName">
+        ///     The name of the element that contains the Condition attribute.
+        /// </param>
+        /// <param name="condition">
+        ///     The raw (unevaluated) condition.
+        /// </param>
+        /// <returns>
+        ///     The content, or <c>null</c> if no content is provided.
+        /// </returns>
+        public MarkedStringContainer Condition(string elementName, string condition)
+        {
+            if (String.IsNullOrWhiteSpace(elementName))
+                throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'elementName'.", nameof(elementName));
+
+            if (String.IsNullOrWhiteSpace(condition))
+                return null;
+
+            string evaluatedCondition = _projectDocument.MSBuildProject.ExpandString(condition);
+            
+            return new MarkedStringContainer(
+                "Condition",
+                $"Evaluated: `{evaluatedCondition}`"
+            );
+        }
+
+        /// <summary>
         ///     Get hover content for metadata of an <see cref="MSBuildItemGroup"/>.
         /// </summary>
         /// <param name="itemGroup">
@@ -234,7 +262,7 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
         ///     The metadata name.
         /// </param>
         /// <returns>
-        ///     The content.
+        ///     The content, or <c>null</c> if no content is provided.
         /// </returns>
         public MarkedStringContainer ItemGroupMetadata(MSBuildItemGroup itemGroup, string metadataName)
         {
@@ -248,7 +276,7 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
                 return ItemGroup(itemGroup);
 
             if (metadataName == "Condition")
-                return null; // TODO: Handle the "Condition" attribute.
+                return Condition(itemGroup.Name, itemGroup.FirstItem.Xml.Condition);
 
             if (String.Equals(metadataName, "Include"))
                 metadataName = "Identity";
@@ -290,7 +318,7 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
         ///     The name of the metadata attribute.
         /// </param>
         /// <returns>
-        ///     The content.
+        ///     The content, or <c>null</c> if no content is provided.
         /// </returns>
         public MarkedStringContainer UnusedItemGroupMetadata(MSBuildUnusedItemGroup itemGroup, string metadataName)
         {
@@ -304,7 +332,7 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
                 return UnusedItemGroup(itemGroup);
 
             if (metadataName == "Condition")
-                return null; // TODO: Handle the "Condition" attribute.
+                return Condition(itemGroup.Name, itemGroup.FirstItem.Xml.Condition);
 
             if (String.Equals(metadataName, "Include"))
                 metadataName = "Identity";
@@ -343,7 +371,7 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
         ///     The <see cref="MSBuildTarget"/>.
         /// </param>
         /// <returns>
-        ///     The content.
+        ///     The content, or <c>null</c> if no content is provided.
         /// </returns>
         public MarkedStringContainer Target(MSBuildTarget target)
         {
@@ -360,7 +388,7 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
         ///     The <see cref="MSBuildImport"/>.
         /// </param>
         /// <returns>
-        ///     The content.
+        ///     The content, or <c>null</c> if no content is provided.
         /// </returns>
         public MarkedStringContainer Import(MSBuildImport import)
         {
@@ -385,7 +413,7 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
         ///     The <see cref="MSBuildImport"/>.
         /// </param>
         /// <returns>
-        ///     The content.
+        ///     The content, or <c>null</c> if no content is provided.
         /// </returns>
         public MarkedStringContainer UnresolvedImport(MSBuildUnresolvedImport unresolvedImport)
         {
@@ -428,7 +456,7 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
         ///     The <see cref="MSBuildSdkImport"/>.
         /// </param>
         /// <returns>
-        ///     The content.
+        ///     The content, or <c>null</c> if no content is provided.
         /// </returns>
         public MarkedStringContainer SdkImport(MSBuildSdkImport sdkImport)
         {
@@ -453,7 +481,7 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
         ///     The <see cref="MSBuildUnresolvedSdkImport"/>.
         /// </param>
         /// <returns>
-        ///     The content.
+        ///     The content, or <c>null</c> if no content is provided.
         /// </returns>
         public MarkedStringContainer UnresolvedSdkImport(MSBuildUnresolvedSdkImport unresolvedSdkImport)
         {

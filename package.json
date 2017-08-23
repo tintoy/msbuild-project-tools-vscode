@@ -25,50 +25,89 @@
     ],
     "activationEvents": [
         "workspaceContains:NuGet.config",
+        "workspaceContains:**/*.*proj",
+        "workspaceContains:**/*.props",
+        "workspaceContains:**/*.targets",
         "onLanguage:msbuild",
         "onLanguage:xml"
     ],
     "main": "./out/src/extension/extension",
     "contributes": {
         "configuration": {
+            "title": "MSBuild project tools",
             "type": "object",
-            "title": "MSBuild project file tools",
             "properties": {
-                "msbuildProjectFileTools.languageService.disableHover": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Disable tooltips when hovering on XML in MSBuild project files."
-                },
-                "msbuildProjectFileTools.languageService.disableNuGetPreFetch": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Don't automatically initialise the NuGet API client when opening a project (this is done to make the first PackageReference completion faster)."
-                },
-                "msbuildProjectFileTools.languageService.enable": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Enable the MSBuild language service (if false, then the simple completion provider will be used instead)."
-                },
-                "msbuildProjectFileTools.languageService.logLevel": {
-                    "type": "string",
-                    "enum": [
-                        "Verbose",
-                        "Information",
-                        "Warning",
-                        "Error"
-                    ],
-                    "default": "Information",
-                    "description": "The logging level for the MSBuild language service."
-                },
-                "msbuildProjectFileTools.languageService.traceLevel": {
-                    "type": "string",
-                    "enum": [
-                        "off",
-                        "messages",
-                        "verbose"
-                    ],
-                    "default": "messages",
-                    "description": "Trace the communication between VSCode and the MSBuild language service."
+                "msbuildProjectTools": {
+                    "type": "object",
+                    "description": "Configuration for MSBuild project tools.",
+                    "default": {
+                        "language": {
+                            "enable": true,
+                            "disableHover": false,
+                            "logLevel": "Information",
+                            "trace": false
+                        },
+                        "nuget": {
+                            "disablePrefetch": false
+                        }
+                    },
+                    "properties": {
+                        "language": {
+                            "description": "Configuration for the MSBuild language service.",
+                            "type": "object",
+                            "default": {
+                                "enable": true,
+                                "disableHover": false,
+                                "logLevel": "Information",
+                                "trace": false
+                            },
+                            "properties": {
+                                "enable": {
+                                    "title": "Enable language service?",
+                                    "type": "boolean",
+                                    "default": true,
+                                    "description": "Enable the language service?"
+                                },
+                                "disableHover": {
+                                    "title": "Disable hover?",
+                                    "type": "boolean",
+                                    "default": false,
+                                    "description": "Disable tooltips when hovering on XML in MSBuild project files?"
+                                },
+                                "logLevel": {
+                                    "title": "Language service logging level.",
+                                    "type": "string",
+                                    "enum": [
+                                        "Verbose",
+                                        "Information",
+                                        "Warning",
+                                        "Error"
+                                    ],
+                                    "default": "Information",
+                                    "description": "The logging level for the MSBuild language service."
+                                },
+                                "trace": {
+                                    "type": "boolean",
+                                    "default": false,
+                                    "description": "Trace all communication between VSCode and the MSBuild language service?"
+                                }
+                            }
+                        },
+                        "nuget": {
+                            "description": "Configuration for the MSBuild language service.",
+                            "type": "object",
+                            "default": {
+                                "disablePreFetch": false
+                            },
+                            "properties": {
+                                "disablePreFetch": {
+                                    "type": "boolean",
+                                    "default": false,
+                                    "description": "Don't automatically initialise the NuGet API client when opening a project (this is done to make the first PackageReference completion faster)?"
+                                }
+                            }
+                        }
+                    }
                 }
             }
         },

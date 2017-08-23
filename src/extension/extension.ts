@@ -14,7 +14,8 @@ import { handleBusyNotifications } from './notifications';
 /**
  * Enable the MSBuild language service?
  */
-let enableLanguageService = false;
+let configuration: Settings;
+let legacySettingsPresent = false;
 let statusBarItem: vscode.StatusBarItem;
 let outputChannel: vscode.OutputChannel;
 
@@ -32,14 +33,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             message: 'Initialising MSBuild project tools...'
         });
 
-        loadConfiguration();
+        await loadConfiguration();
         let canEnableLanguageService = false;
-        if (enableLanguageService) {
+        if (configuration.language.enable) {
             const dotnetVersion = await dotnet.getVersion();
             canEnableLanguageService = dotnetVersion && semver.gte(dotnetVersion, '2.0.0');
         }
     
-        if (enableLanguageService && canEnableLanguageService) {
+        if (configuration.language.enable && canEnableLanguageService) {
             statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 50);
             context.subscriptions.push(statusBarItem);
 
@@ -59,7 +60,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         } else {
             outputChannel = vscode.window.createOutputChannel('MSBuild Project Tools');
             
-            if (enableLanguageService && !canEnableLanguageService)
+            if (configuration.language.enable && !canEnableLanguageService)
                 outputChannel.appendLine('Cannot enable the MSBuild language service because .NET Core >= 2.0.0 was not found on the system path.');
         
             outputChannel.appendLine('MSBuild language service disabled; using the classic completion provider.');
@@ -76,6 +77,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     
             outputChannel.appendLine('Classic completion provider is now enabled.');
         }
+
+        if (legacySettingsPresent) {
+            outputChannel.appendLine(
+                'Warning: legacy settings detected.'
+            );
+            outputChannel.appendLine(
+                `The "msbuildProjectFileTools" section in settings is now called "msbuildProjectTools"; these legacy settings will override the extension's current settings until you remove them.`
+            );
+        }
     });
 }
 
@@ -89,10 +99,60 @@ export function deactivate(): void {
 /**
  * Load extension configuration from the workspace.
  */
-function loadConfiguration(): void {
-    const configuration = vscode.workspace.getConfiguration();
+async function loadConfiguration(): Promise<void> {
+    const workspaceConfiguration = vscode.workspace.getConfiguration();
 
-    enableLanguageService = configuration.get<boolean>('msbuildProjectFileTools.languageService.enable');
+    configuration = workspaceConfiguration.get<Settings>('msbuildProjectTools');
+    
+    // Use settings in old format, if present.
+    const legacyConfiguration = workspaceConfiguration.msbuildProjectFileTools;
+    if (legacyConfiguration) {
+        legacySettingsPresent = true;
+
+        configuration.language.enable = legacyConfiguration.languageService.enable || true;
+        configuration.language.disableHover = legacyConfiguration.languageService.disableHover || false;
+        await workspaceConfiguration.update('msbuildProjectTools', configuration, true);
+    }
+}
+
+/**
+ * Settings for the MSBuild Project Tools extension.
+ */
+interface Settings {
+    /**
+     * Language service settings.
+     */
+    language: LanguageSettings;
+
+    /**
+     * NuGet settings.
+     */
+    nuget: NuGetSettings;
+}
+
+/**
+ * Language service settings.
+ */
+interface LanguageSettings {
+    /**
+     * Enable the language service?
+     */
+    enable: boolean;
+
+    /**
+     * Disable tooltips when hovering over XML in MSBuild project files.
+     */
+    disableHover: boolean;
+}
+
+/**
+ * NuGet settings.
+ */
+interface NuGetSettings {
+    /**
+     * Disable automatic warm-up of the NuGet client when opening a project?
+     */
+    disablePreFetch: boolean;
 }
 
 /**
@@ -108,7 +168,7 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<L
             pattern: '*.csproj'
         }],
         synchronize: {
-            configurationSection: 'msbuildProjectFileTools.languageService'
+            configurationSection: 'msbuildProjectTools'
         },
         errorHandler: {
             error: (error, message, count) =>

@@ -3,6 +3,9 @@ using Lsp;
 using Lsp.Capabilities.Client;
 using Lsp.Models;
 using Lsp.Protocol;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using Serilog;
 using Serilog.Events;
 using System;
@@ -16,8 +19,14 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
     ///     Language Server message handler that tracks configuration.
     /// </summary>
     public sealed class ConfigurationHandler
-        : IDidChangeConfigurationHandler
+        : IDidChangeConfigurationSettingsHandler
     {
+        /// <summary>
+        ///     The JSON serialiser used to read settings from LSP notifications.
+        /// </summary>
+        /// <returns></returns>
+        readonly JsonSerializer _settingsSerializer = new JsonSerializer();
+
         /// <summary>
         ///     Create a new <see cref="ConfigurationHandler"/>.
         /// </summary>
@@ -56,22 +65,30 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     A <see cref="Task"/> representing the operation.
         /// </returns>
-        Task OnDidChangeConfiguration(Lsp.Models.DidChangeConfigurationParams parameters)
+        Task OnDidChangeConfiguration(DidChangeConfigurationObjectParams parameters)
         {
-            if (parameters.Settings.TryGetValue("logLevel", out Lsp.Models.BooleanNumberString logLevelValue) && logLevelValue.IsString)
+            JObject languageConfiguration = parameters.Settings.SelectToken("msbuildProjectTools.language") as JObject;
+            if (languageConfiguration != null)
             {
-                LogEventLevel configuredLogLevel;
-                if (!Enum.TryParse(logLevelValue.String, true, out configuredLogLevel))
-                    configuredLogLevel = LogEventLevel.Information;
+                if (languageConfiguration.TryGetValue("logLevel", out JToken logLevel) && logLevel.Type == JTokenType.String)
+                {
+                    LogEventLevel configuredLogLevel;
+                    if (!Enum.TryParse(logLevel.Value<string>(), true, out configuredLogLevel))
+                        configuredLogLevel = LogEventLevel.Information;
                 
-                Configuration.LogLevel = configuredLogLevel;
-            }
-            
-            if (parameters.Settings.TryGetValue("disableHover", out Lsp.Models.BooleanNumberString disableHover) && disableHover.IsBool)
-                Configuration.DisableHover = disableHover.Bool;
+                    Configuration.LogLevel = configuredLogLevel;
+                }
 
-            if (parameters.Settings.TryGetValue("disableNuGetPreFetch", out Lsp.Models.BooleanNumberString disableNuGetPreFetch) && disableHover.IsBool)
-                Configuration.DisableNuGetPreFetch = disableNuGetPreFetch.Bool;
+                if (languageConfiguration.TryGetValue("disableHover", out JToken disableHover) && disableHover.Type == JTokenType.Boolean)
+                    Configuration.DisableHover = disableHover.Value<bool>();
+            }
+
+            JObject nugetConfiguration = parameters.Settings.SelectToken("msbuildProjectTools.nuget") as JObject;
+            if (nugetConfiguration != null)
+            {
+                if (nugetConfiguration.TryGetValue("disablePreFetch", out JToken disablePrefetch) && disablePrefetch.Type == JTokenType.Boolean)
+                    Configuration.DisableNuGetPreFetch = disablePrefetch.Value<bool>();
+            }
 
             if (ConfigurationChanged != null)
                 ConfigurationChanged(this, EventArgs.Empty);
@@ -102,7 +119,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     A <see cref="Task"/> representing the operation.
         /// </returns>
-        async Task INotificationHandler<DidChangeConfigurationParams>.Handle(DidChangeConfigurationParams parameters)
+        async Task INotificationHandler<DidChangeConfigurationObjectParams>.Handle(DidChangeConfigurationObjectParams parameters)
         {
             if (parameters == null)
                 throw new ArgumentNullException(nameof(parameters));
@@ -127,5 +144,26 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         {
             return null;
         }
+    }
+
+    /// <summary>
+    ///     Custom handler for "workspace/didChangeConfiguration" with the configuration as a <see cref="JObject"/>.
+    /// </summary>
+    [Method("workspace/didChangeConfiguration")]
+    interface IDidChangeConfigurationSettingsHandler
+        : INotificationHandler<DidChangeConfigurationObjectParams>, IJsonRpcHandler, IRegistration<object>, ICapability<DidChangeConfigurationCapability>
+    {
+    }
+
+    /// <summary>
+    ///     Notification parameters for "workspace/didChangeConfiguration".
+    /// </summary>
+    class DidChangeConfigurationObjectParams
+    {
+        /// <summary>
+        ///     The current settings.
+        /// </summary>
+        [JsonProperty("settings")]
+        public JObject Settings;
     }
 }

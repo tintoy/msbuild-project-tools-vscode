@@ -68,7 +68,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             const nugetEndPointURLs = await getNuGetV3AutoCompleteEndPoints();
             context.subscriptions.push(
                 vscode.languages.registerCompletionItemProvider(
-                    { language: 'xml', pattern: '**/*.*proj' }, 
+                    [
+                        { language: 'xml', pattern: '**/*.*proj' },
+                        { language: 'msbuild', pattern: '**/*.*' }
+                    ], 
                     new PackageReferenceCompletionProvider(
                         nugetEndPointURLs[0] // For now, just default to using the primary.
                     )

@@ -34,49 +34,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         });
 
         await loadConfiguration();
-        let canEnableLanguageService = false;
+        let couldEnableLanguageService = false;
         if (configuration.language.enable) {
             const dotnetVersion = await dotnet.getVersion();
-            canEnableLanguageService = dotnetVersion && semver.gte(dotnetVersion, '2.0.0');
+            couldEnableLanguageService = dotnetVersion && semver.gte(dotnetVersion, '2.0.0');
         }
     
-        if (configuration.language.enable && canEnableLanguageService) {
-            statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 50);
-            context.subscriptions.push(statusBarItem);
-
-            statusBarItem.text = '$(check) MSBuild Project';
-            statusBarItem.tooltip = 'MSBuild Project Tools';
-            statusBarItem.hide();
-
-            const languageClient = await createLanguageClient(context);
-            
-            outputChannel = languageClient.outputChannel;
-            outputChannel.appendLine('Starting MSBuild language service...');
-            context.subscriptions.push(
-                languageClient.start()
-            );
-            await languageClient.onReady();
-            outputChannel.appendLine('MSBuild language service is running.');
+        if (configuration.language.enable && couldEnableLanguageService) {
+            await createLanguageClient(context);
         } else {
-            outputChannel = vscode.window.createOutputChannel('MSBuild Project Tools');
-            
-            if (configuration.language.enable && !canEnableLanguageService)
-                outputChannel.appendLine('Cannot enable the MSBuild language service because .NET Core >= 2.0.0 was not found on the system path.');
-        
-            outputChannel.appendLine('MSBuild language service disabled; using the classic completion provider.');
-            
-            const nugetEndPointURLs = await getNuGetV3AutoCompleteEndPoints();
-            context.subscriptions.push(
-                vscode.languages.registerCompletionItemProvider(
-                    [
-                        { language: 'xml', pattern: '**/*.*proj' },
-                        { language: 'msbuild', pattern: '**/*.*' }
-                    ], 
-                    new PackageReferenceCompletionProvider(
-                        nugetEndPointURLs[0] // For now, just default to using the primary.
-                    )
-                )
-            );
+            await createClassicCompletionProvider(context, couldEnableLanguageService);
     
             outputChannel.appendLine('Classic completion provider is now enabled.');
         }
@@ -159,12 +126,47 @@ interface NuGetSettings {
 }
 
 /**
+ * Create the classic completion provider for PackageReferences.
+ * 
+ * @param context The current extension context.
+ * @param canEnableLanguageService Could the language service be enabled if we wanted to?
+ */
+async function createClassicCompletionProvider(context: vscode.ExtensionContext, canEnableLanguageService: boolean): Promise<void> {
+    outputChannel = vscode.window.createOutputChannel('MSBuild Project Tools');
+    
+    if (configuration.language.enable && !canEnableLanguageService)
+        outputChannel.appendLine('Cannot enable the MSBuild language service because .NET Core >= 2.0.0 was not found on the system path.');
+
+    outputChannel.appendLine('MSBuild language service disabled; using the classic completion provider.');
+
+    const nugetEndPointURLs = await getNuGetV3AutoCompleteEndPoints();
+    context.subscriptions.push(
+        vscode.languages.registerCompletionItemProvider(
+            [
+                { language: 'xml', pattern: '**/*.*proj' },
+                { language: 'msbuild', pattern: '**/*.*' }
+            ], 
+            new PackageReferenceCompletionProvider(
+                nugetEndPointURLs[0] // For now, just default to using the primary.
+            )
+        )
+    );
+}
+
+/**
  * Create the MSBuild language client.
  * 
  * @param context The current extension context.
  * @returns A promise that resolves to the language client.
  */
-async function createLanguageClient(context: vscode.ExtensionContext): Promise<LanguageClient> {
+async function createLanguageClient(context: vscode.ExtensionContext): Promise<void> {
+    statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 50);
+    context.subscriptions.push(statusBarItem);
+
+    statusBarItem.text = '$(check) MSBuild Project';
+    statusBarItem.tooltip = 'MSBuild Project Tools';
+    statusBarItem.hide();
+
     const clientOptions: LanguageClientOptions = {
         documentSelector: [{
             language: 'xml',
@@ -195,5 +197,11 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<L
     let languageClient = new LanguageClient('MSBuild Project Tools', serverOptions, clientOptions);
     handleBusyNotifications(languageClient, statusBarItem);
 
-    return languageClient;
+    outputChannel = languageClient.outputChannel;
+    outputChannel.appendLine('Starting MSBuild language service...');
+    context.subscriptions.push(
+        languageClient.start()
+    );
+    await languageClient.onReady();
+    outputChannel.appendLine('MSBuild language service is running.');
 }

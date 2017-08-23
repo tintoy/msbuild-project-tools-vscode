@@ -1,7 +1,7 @@
 using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
 
-namespace MSBuildProjectTools.LanguageServer.MSBuild
+namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
     /// <summary>
     ///     A type of MSBuild object.

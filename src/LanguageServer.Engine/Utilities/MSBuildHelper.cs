@@ -1,12 +1,12 @@
+using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace MSBuildProjectTools.LanguageServer.MSBuild
+namespace MSBuildProjectTools.LanguageServer.Utilities
 {
-    using Microsoft.Build.Construction;
     using Utilities;
 
     /// <summary>
@@ -96,13 +96,13 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
 
             return new Dictionary<string, string>
             {
-                [MSBuildPropertyNames.DesignTimeBuild] = "true",
-                [MSBuildPropertyNames.BuildProjectReferences] = "false",
-                [MSBuildPropertyNames.ResolveReferenceDependencies] = "true",
-                [MSBuildPropertyNames.SolutionDir] = solutionDirectory,
-                [MSBuildPropertyNames.MSBuildExtensionsPath] = runtimeInfo.BaseDirectory,
-                [MSBuildPropertyNames.MSBuildSDKsPath] = Path.Combine(runtimeInfo.BaseDirectory, "Sdks"),
-                [MSBuildPropertyNames.RoslynTargetsPath] = Path.Combine(runtimeInfo.BaseDirectory, "Roslyn")
+                [WellKnownPropertyNames.DesignTimeBuild] = "true",
+                [WellKnownPropertyNames.BuildProjectReferences] = "false",
+                [WellKnownPropertyNames.ResolveReferenceDependencies] = "true",
+                [WellKnownPropertyNames.SolutionDir] = solutionDirectory,
+                [WellKnownPropertyNames.MSBuildExtensionsPath] = runtimeInfo.BaseDirectory,
+                [WellKnownPropertyNames.MSBuildSDKsPath] = Path.Combine(runtimeInfo.BaseDirectory, "Sdks"),
+                [WellKnownPropertyNames.RoslynTargetsPath] = Path.Combine(runtimeInfo.BaseDirectory, "Roslyn")
             };
         }
 
@@ -119,12 +119,12 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
 
             // Kinda sucks that the simplest way to get MSBuild to resolve SDKs correctly is using environment variables, but there you go.
             Environment.SetEnvironmentVariable(
-                MSBuildPropertyNames.MSBuildExtensionsPath,
-                globalMSBuildProperties[MSBuildPropertyNames.MSBuildExtensionsPath]
+                WellKnownPropertyNames.MSBuildExtensionsPath,
+                globalMSBuildProperties[WellKnownPropertyNames.MSBuildExtensionsPath]
             );
             Environment.SetEnvironmentVariable(
-                MSBuildPropertyNames.MSBuildSDKsPath,
-                globalMSBuildProperties[MSBuildPropertyNames.MSBuildSDKsPath]
+                WellKnownPropertyNames.MSBuildSDKsPath,
+                globalMSBuildProperties[WellKnownPropertyNames.MSBuildSDKsPath]
             );
         }
 
@@ -182,5 +182,46 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
 
             return String.Empty;
         }
+
+        /// <summary>
+    ///     The names of well-known MSBuild properties.
+    /// </summary>
+    public static class WellKnownPropertyNames
+    {
+        /// <summary>
+        ///     The "MSBuildExtensionsPath" property.
+        /// </summary>
+        public static readonly string MSBuildExtensionsPath = "MSBuildExtensionsPath";
+
+        /// <summary>
+        ///     The "MSBuildSDKsPath" property.
+        /// </summary>
+        public static readonly string MSBuildSDKsPath = "MSBuildSDKsPath";
+
+        /// <summary>
+        ///     The "SolutionDir" property.
+        /// </summary>
+        public static readonly string SolutionDir = "SolutionDir";
+
+        /// <summary>
+        ///     The "_ResolveReferenceDependencies" property.
+        /// </summary>
+        public static readonly string ResolveReferenceDependencies = "_ResolveReferenceDependencies";
+
+        /// <summary>
+        ///     The "DesignTimeBuild" property.
+        /// </summary>
+        public static readonly string DesignTimeBuild = "DesignTimeBuild";
+
+        /// <summary>
+        ///     The "BuildProjectReferences" property.
+        /// </summary>
+        public static readonly string BuildProjectReferences = "BuildProjectReferences";
+
+        /// <summary>
+        ///     The "RoslynTargetsPath" property.
+        /// </summary>
+        public static readonly string RoslynTargetsPath = "RoslynTargetsPath";
+    }
     }
 }

@@ -11,9 +11,9 @@ using System.Threading.Tasks;
     
 namespace MSBuildProjectTools.LanguageServer.Handlers
 {
-    using MSBuild;
     using ContentProviders;
     using Documents;
+    using SemanticModel;
     using Utilities;
 
     /// <summary>

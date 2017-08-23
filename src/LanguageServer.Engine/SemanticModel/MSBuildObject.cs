@@ -1,7 +1,7 @@
 using Microsoft.Language.Xml;
 using System;
 
-namespace MSBuildProjectTools.LanguageServer.MSBuild
+namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
     /// <summary>
     ///     An object in an MSBuild project.

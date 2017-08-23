@@ -16,7 +16,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 {
     using CustomProtocol;
     using Documents;
-    using MSBuild;
+    using SemanticModel;
     using Utilities;
 
     /// <summary>

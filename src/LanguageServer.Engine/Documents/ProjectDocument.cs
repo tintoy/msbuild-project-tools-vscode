@@ -16,7 +16,7 @@ using System.Xml;
 
 namespace MSBuildProjectTools.LanguageServer.Documents
 {
-    using MSBuild;
+    using SemanticModel;
     using Utilities;
 
     /// <summary>
@@ -166,7 +166,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <exception cref="InvalidOperationException">
         ///     The project is not loaded.
         /// </exception>
-        public PositionalMSBuildLookup MSBuildLookup { get; protected set; }
+        public MSBuildLocator MSBuildLookup { get; protected set; }
 
         /// <summary>
         ///     MSBuild objects in the project that correspond to locations in the file.

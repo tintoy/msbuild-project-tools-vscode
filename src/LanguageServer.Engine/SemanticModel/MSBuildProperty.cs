@@ -3,7 +3,7 @@ using Microsoft.Build.Evaluation;
 using Microsoft.Language.Xml;
 using System;
 
-namespace MSBuildProjectTools.LanguageServer.MSBuild
+namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
     /// <summary>
     ///     A property in an MSBuild project.

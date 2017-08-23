@@ -5,8 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MSBuildProjectTools.LanguageServer.MSBuild
+namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
+    using Utilities;
+
     /// <summary>
     ///     An unresolved regular-style import in an MSBuild project.
     /// </summary>

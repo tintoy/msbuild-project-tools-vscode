@@ -8,8 +8,8 @@ using System.Linq;
 
 namespace MSBuildProjectTools.LanguageServer.ContentProviders
 {
-    using MSBuild;
     using Documents;
+    using SemanticModel;
     using Utilities;
 
     /// <summary>
@@ -103,7 +103,7 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
                 throw new ArgumentNullException(nameof(undefinedProperty));
  
             return new MarkedStringContainer(
-                $"Unused Property: `{undefinedProperty.Name}` (condition evaluates to `false`)",
+                $"Unused Property: `{undefinedProperty.Name}` (condition is false)",
                 $"Value would have been: `{undefinedProperty.Value}`"
             );
         }
@@ -203,7 +203,7 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
                 descriptionContent.AppendLine("* ...");
 
             return new MarkedStringContainer(
-                $"Unused Item Group: `{unusedItemGroup.OriginatingElement.ItemType}` (condition evaluates to `false`)",
+                $"Unused Item Group: `{unusedItemGroup.OriginatingElement.ItemType}` (condition is false)",
                 descriptionContent.ToString()
             );  
         }
@@ -343,7 +343,7 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
                 metadataContent.AppendLine("No values are present for this metadata.");
 
             return new MarkedStringContainer(
-                $"Unused Item Metadata: `{itemGroup.Name}.{metadataName}` (item condition evaluates to `false`)",
+                $"Unused Item Metadata: `{itemGroup.Name}.{metadataName}` (item condition is false)",
                 metadataContent.ToString()
             );
         }
@@ -428,7 +428,7 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
             );
 
             return new MarkedStringContainer(
-                $"Unresolved Import (condition evaluates to `false`)",
+                $"Unresolved Import (condition is false)",
                 descriptionContent.ToString()
             );
         }
@@ -485,7 +485,7 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
             );
 
             return new MarkedStringContainer(
-                $"Unresolved Import `{unresolvedSdkImport.Sdk}` (condition evaluates to `false`)",
+                $"Unresolved Import `{unresolvedSdkImport.Sdk}` (condition is false)",
                 descriptionContent.ToString()
             );
         }

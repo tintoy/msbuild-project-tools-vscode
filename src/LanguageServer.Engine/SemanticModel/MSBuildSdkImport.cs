@@ -5,40 +5,40 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MSBuildProjectTools.LanguageServer.MSBuild
+namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
     /// <summary>
-    ///     An import in an MSBuild project.
+    ///     An SDK-style import in an MSBuild project.
     /// </summary>
-    public class MSBuildImport
+    public class MSBuildSdkImport
         : MSBuildObject<IReadOnlyList<ResolvedImport>>
     {
         /// <summary>
         ///     Create a new <see cref="MSBuildImport"/>.
         /// </summary>
         /// <param name="imports">
-        ///     The underlying MSBuild <see cref="ResolvedImport"/>.
+        ///     A read-only list of underlying MSBuild <see cref="ResolvedImport"/>s representing the imports resulting from the SDK import.
         /// </param>
-        /// <param name="importElement">
-        ///     An <see cref="XmlElementSyntaxBase"/> representing the import's XML element.
+        /// <param name="sdkAttribute">
+        ///     An <see cref="XmlAttributeSyntax"/> representing the import's "Sdk" attribute.
         /// </param>
         /// <param name="xmlRange">
         ///     A <see cref="Range"/> representing the span of the item's XML element.
         /// </param>
-        public MSBuildImport(IReadOnlyList<ResolvedImport> imports, XmlElementSyntaxBase importElement, Range xmlRange)
-            : base(imports, importElement, xmlRange)
+        public MSBuildSdkImport(IReadOnlyList<ResolvedImport> imports, XmlAttributeSyntax sdkAttribute, Range xmlRange)
+            : base(imports, sdkAttribute, xmlRange)
         {
         }
 
         /// <summary>
         ///     The import name.
         /// </summary>
-        public override string Name => Imports[0].ImportingElement.Project;
+        public override string Name => Imports[0].ImportingElement.Sdk;
 
         /// <summary>
         ///     The kind of MSBuild object represented by the <see cref="MSBuildImport"/>.
         /// </summary>
-        public override MSBuildObjectKind Kind => MSBuildObjectKind.Import;
+        public override MSBuildObjectKind Kind => MSBuildObjectKind.SdkImport;
 
         /// <summary>
         ///     The full path of the file where the import is declared.
@@ -46,14 +46,14 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         public override string SourceFile => Imports[0].ImportingElement.Location.File;
 
         /// <summary>
-        ///     The underlying <see cref="ResolvedImport"/>.
+        ///     The import's "Sdk" attribute.
         /// </summary>
-        public IReadOnlyList<ResolvedImport> Imports => UnderlyingObject;
+        public XmlAttributeSyntax SdkAttribute => (XmlAttributeSyntax)Xml;
 
         /// <summary>
-        ///     The import's "Project" attribute.
+        ///     The underlying <see cref="ResolvedImport"/>s.
         /// </summary>
-        public XmlAttributeSyntax ProjectAttribute => ((XmlElementSyntaxBase)Xml).AsSyntaxElement["Project"];
+        public IReadOnlyList<ResolvedImport> Imports => UnderlyingObject;
 
         /// <summary>
         ///     The underlying <see cref="ProjectImportElement"/>.

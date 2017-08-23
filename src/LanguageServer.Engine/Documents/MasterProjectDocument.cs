@@ -16,7 +16,7 @@ using System.Xml;
 
 namespace MSBuildProjectTools.LanguageServer.Documents
 {
-    using MSBuild;
+    using SemanticModel;
     using Utilities;
 
     /// <summary>
@@ -149,7 +149,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                 else
                     MSBuildProject = MSBuildProjectCollection.LoadProject(ProjectFile.FullName);
 
-                MSBuildLookup = new PositionalMSBuildLookup(MSBuildProject, Xml, XmlPositions);
+                MSBuildLookup = new MSBuildLocator(MSBuildProject, Xml, XmlPositions);
 
                 return true;
             }

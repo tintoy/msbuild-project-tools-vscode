@@ -5,19 +5,21 @@ using System.Collections.Generic;
 using System;
 using System.Linq;
 
-namespace MSBuildProjectTools.LanguageServer.MSBuild
+namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
+    using Utilities;
+ 
     /// <summary>
-    ///     An item group declaration in an MSBuild project.
+    ///     An unused item group declaration in an MSBuild project (condition evaluates to <c>false</c>).
     /// </summary>
     /// <remarks>
-    ///     An item in an MSBuild project can actually derive from one of several <see cref="MSBuildItemGroup"/>s, depending on where it was declared.
+    ///     An item in an MSBuild project can actually derive from one of several <see cref="MSBuildUnusedItemGroup"/>s, depending on where it was declared.
     /// </remarks>
-    public sealed class MSBuildItemGroup
+    public sealed class MSBuildUnusedItemGroup
         : MSBuildObject<IReadOnlyList<ProjectItem>>
     {
         /// <summary>
-        ///     Create a new <see cref="MSBuildItemGroup"/>.
+        ///     Create a new <see cref="MSBuildUnusedItemGroup"/>.
         /// </summary>
         /// <param name="items">
         ///     The underlying MSBuild <see cref="ProjectItem"/>s.
@@ -26,12 +28,12 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         ///     The MSBuild <see cref="ProjectItemElement"/> from where the items originate.
         /// </param>
         /// <param name="itemElement">
-        ///     An <see cref="XmlElementSyntax"/> representing the item's XML element.
+        ///     An <see cref="XmlElementSyntax"/> representing the item's declaring XML element.
         /// </param>
         /// <param name="xmlRange">
-        ///     A <see cref="Range"/> representing the span of the item's XML element.
+        ///     A <see cref="Range"/> representing the span of the item's declaring XML element.
         /// </param>
-        public MSBuildItemGroup(IReadOnlyList<ProjectItem> items, ProjectItemElement originatingElement, XmlElementSyntaxBase itemElement, Range xmlRange)
+        public MSBuildUnusedItemGroup(IReadOnlyList<ProjectItem> items, ProjectItemElement originatingElement, XmlElementSyntaxBase itemElement, Range xmlRange)
             : base(items, itemElement, xmlRange)
         {
             if (Items.Count == 0)
@@ -50,7 +52,7 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         public override string Name { get; }
 
         /// <summary>
-        ///     The kind of MSBuild object represented by the <see cref="MSBuildItemGroup"/>.
+        ///     The kind of MSBuild object represented by the <see cref="MSBuildUnusedItemGroup"/>.
         /// </summary>
         public override MSBuildObjectKind Kind => MSBuildObjectKind.Item;
 
@@ -73,6 +75,11 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         ///     The MSBuild <see cref="ProjectItemElement"/> from where the items originate.
         /// </summary>
         public ProjectItemElement OriginatingElement { get; }
+
+        /// <summary>
+        ///     The (unevaluated) conditional expression which resulted in the item its item group not being included.
+        /// </summary>
+        public string Condition => FirstItem.Xml.FindCondition();
 
         /// <summary>
         ///     The evaluated values of the items' "Include" attributes.

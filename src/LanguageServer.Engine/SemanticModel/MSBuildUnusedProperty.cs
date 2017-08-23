@@ -2,7 +2,7 @@ using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
 using Microsoft.Language.Xml;
 
-namespace MSBuildProjectTools.LanguageServer.MSBuild
+namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
     /// <summary>
     ///     An unused property (i.e. a <see cref="ProjectPropertyElement"/> with no corresponding <see cref="ProjectProperty"/>) in an MSBuild project, usually because the condition evaluates to <c>false</c>.

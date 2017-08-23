@@ -3,17 +3,17 @@ using Microsoft.Build.Evaluation;
 using Microsoft.Language.Xml;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
-namespace MSBuildProjectTools.LanguageServer.MSBuild
+namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
-    using System.Linq;
     using Utilities;
 
     /// <summary>
     ///     A facility for looking up MSBuild project members by textual location.
     /// </summary>
-    public class PositionalMSBuildLookup
+    public class MSBuildLocator
     {
         /// <summary>
         ///     The ranges for all XML objects in the document with positional annotations.
@@ -52,7 +52,7 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         readonly TextPositions _xmlPositions;
 
         /// <summary>
-        ///     Create a new <see cref="PositionalMSBuildLookup"/>.
+        ///     Create a new <see cref="MSBuildLocator"/>.
         /// </summary>
         /// <param name="project">
         ///     The MSBuild project.
@@ -63,7 +63,7 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
         /// <param name="xmlPositions">
         ///     The position-lookup for the project XML.
         /// </param>
-        public PositionalMSBuildLookup(Project project, XmlDocumentSyntax projectXml, TextPositions xmlPositions)
+        public MSBuildLocator(Project project, XmlDocumentSyntax projectXml, TextPositions xmlPositions)
         {
             if (project == null)
                 throw new ArgumentNullException(nameof(project));
@@ -109,7 +109,7 @@ namespace MSBuildProjectTools.LanguageServer.MSBuild
             // Internally, we always use 1-based indexing because this is what the System.Xml APIs (and I'd rather keep things simple).
             position = position.ToOneBased();
             
-            // TODO: Consider if using binary search here would be worth the effort.
+            // TODO: Use binary search.
 
             Range lastMatchingRange = null;
             foreach (Range objectRange in _objectRanges)

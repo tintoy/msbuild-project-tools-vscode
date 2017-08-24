@@ -297,5 +297,79 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
             // Trim off leading and trailing quotes.
             return valueRange.Transform(moveStartColumns: 1, moveEndColumns: -1);
         }
+
+        /// <summary>
+        ///     Determine whether the element lies before the specified position.
+        /// </summary>
+        /// <param name="element">
+        ///     The element.
+        /// </param>
+        /// <param name="position">
+        ///     The target position.
+        /// </param>
+        /// <param name="xmlPositions">
+        ///     The XML position lookup.
+        /// </param>
+        /// <returns>
+        ///     <c>true</c>, if the element's final closing tag ("/&gt;" or "&gt;") lies after the specified position; otherwise, <c>false</c>.
+        /// </returns>
+        public static bool IsAfterPosition(this XmlElementSyntaxBase element, Position position, TextPositions xmlPositions)
+        {
+            if (element == null)
+                throw new ArgumentNullException(nameof(element));
+
+            if (position == null)
+                throw new ArgumentNullException(nameof(position));
+
+            if (xmlPositions == null)
+                throw new ArgumentNullException(nameof(xmlPositions));
+
+            Range endTokenRange;
+            if (element is XmlEmptyElementSyntax emptyElement)
+                endTokenRange = emptyElement.SlashGreaterThanToken.Span.ToNative(xmlPositions);
+            else if (element is XmlElementSyntax elementWithContent)
+                endTokenRange = elementWithContent.EndTag.GreaterThanToken.Span.ToNative(xmlPositions);
+            else
+                throw new ArgumentException($"Unexpected element kind '{element.Kind}'.", nameof(element));
+
+            return position >= endTokenRange;
+        }
+
+        /// <summary>
+        ///     Determine whether the element lies after the specified position.
+        /// </summary>
+        /// <param name="element">
+        ///     The element.
+        /// </param>
+        /// <param name="position">
+        ///     The target position.
+        /// </param>
+        /// <param name="xmlPositions">
+        ///     The XML position lookup.
+        /// </param>
+        /// <returns>
+        ///     <c>true</c>, if the element's opening tag ("&lt;") lies after the specified position; otherwise, <c>false</c>.
+        /// </returns>
+        public static bool IsAfter(this XmlElementSyntaxBase element, Position position, TextPositions xmlPositions)
+        {
+            if (element == null)
+                throw new ArgumentNullException(nameof(element));
+
+            if (position == null)
+                throw new ArgumentNullException(nameof(position));
+
+            if (xmlPositions == null)
+                throw new ArgumentNullException(nameof(xmlPositions));
+
+            Range startTokenRange;
+            if (element is XmlEmptyElementSyntax emptyElement)
+                startTokenRange = emptyElement.LessThanToken.Span.ToNative(xmlPositions);
+            else if (element is XmlElementSyntax elementWithContent)
+                startTokenRange = elementWithContent.StartTag.LessThanToken.Span.ToNative(xmlPositions);
+            else
+                throw new ArgumentException($"Unexpected element kind '{element.Kind}'.", nameof(element));
+
+            return position <= startTokenRange; // We're still before the element when the element "at" the position is the opening tag.
+        }
     }
 }

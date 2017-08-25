@@ -1,27 +1,28 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
-        <AssetTargetFallback>dnxcore50</AssetTargetFallback>
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssetTargetFallback>dnxcore50</AssetTargetFallback>
 
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    </PropertyGroup>
-    
-    <ItemGroup>
-        <PackageReference Include="JsonRpc" Version="1.0.0" />
-        <PackageReference Include="LSP" Version="1.0.0" />
-        <PackageReference Include="Microsoft.Build" Version="15.3.409" />
-        <PackageReference Include="Microsoft.Language.Xml" Version="1.1.14" />
-        <PackageReference Include="Microsoft.Build.Runtime" Version="15.3.409" />
-        <PackageReference Include="Nito.AsyncEx.Tasks" Version="1.0.1" />
-        <PackageReference Include="Nito.AsyncEx.Coordination" Version="1.0.1" />
-        <PackageReference Include="NuGet.Client" Version="4.0.0" />
-        <PackageReference Include="NuGet.Configuration" Version="4.0.0" />
-        <PackageReference Include="NuGet.PackageManagement" Version="4.0.0" NoWarn="NU1701" />
-        <PackageReference Include="NuGet.Packaging" Version="4.0.0" NoWarn="NU1701" />
-        <PackageReference Include="NuGet.Protocol.Core.Types" Version="4.0.0" NoWarn="NU1701" />
-        <PackageReference Include="NuGet.Protocol.Core.V2" Version="4.0.0-rtm-2265" NoWarn="NU1701" />
-        <PackageReference Include="NuGet.Protocol.Core.V3" Version="4.0.0" NoWarn="NU1701" />
-        <PackageReference Include="NuGet.Versioning" Version="4.0.0" />
-        <PackageReference Include="Serilog" Version="2.5.0" />
-    </ItemGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>IDE0016</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JsonRpc" Version="1.0.0" />
+    <PackageReference Include="LSP" Version="1.0.0" />
+    <PackageReference Include="Microsoft.Build" Version="15.3.409" />
+    <PackageReference Include="Microsoft.Language.Xml" Version="1.1.14" />
+    <PackageReference Include="Microsoft.Build.Runtime" Version="15.3.409" />
+    <PackageReference Include="Nito.AsyncEx.Tasks" Version="1.0.1" />
+    <PackageReference Include="Nito.AsyncEx.Coordination" Version="1.0.1" />
+    <PackageReference Include="NuGet.Client" Version="4.0.0" />
+    <PackageReference Include="NuGet.Configuration" Version="4.0.0" />
+    <PackageReference Include="NuGet.PackageManagement" Version="4.0.0" NoWarn="NU1701" />
+    <PackageReference Include="NuGet.Packaging" Version="4.0.0" NoWarn="NU1701" />
+    <PackageReference Include="NuGet.Protocol.Core.Types" Version="4.0.0" NoWarn="NU1701" />
+    <PackageReference Include="NuGet.Protocol.Core.V2" Version="4.0.0-rtm-2265" NoWarn="NU1701" />
+    <PackageReference Include="NuGet.Protocol.Core.V3" Version="4.0.0" NoWarn="NU1701" />
+    <PackageReference Include="NuGet.Versioning" Version="4.0.0" />
+    <PackageReference Include="Serilog" Version="2.5.0" />
+  </ItemGroup>
 </Project>

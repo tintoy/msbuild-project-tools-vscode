@@ -28,9 +28,9 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// <param name="column">
         ///     The target column.
         /// </param>
-        [Theory]
         [InlineData(2, 5)]
         [InlineData(3, 9)]
+        [Theory(DisplayName = "Expect line and column to be inside element ")]
         public void Line_Col_ListInsideElement1(int line, int column)
         {
             Position testPosition = new Position(line, column);
@@ -64,8 +64,8 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// <param name="column">
         ///     The target column.
         /// </param>
-        [Theory]
-        [InlineData(3, 21)]
+        [InlineData(3, 21)] // AF: Known to not currently pass. The new XSNode model will hopefully make it easier to handle this type of behaviour.
+        [Theory(DisplayName = "Expect line and column to be after element ")]
         public void Line_Col_AfterElement(int line, int column)
         {
             string testXml = LoadTestFile("TestFiles", "Test1.xml");

@@ -113,6 +113,23 @@ namespace MSBuildProjectTools.LanguageServer
         }
 
         /// <summary>
+        ///     Determine whether the range entirely contains another range.
+        /// </summary>
+        /// <param name="range">
+        ///     The target range.
+        /// </param>
+        /// <returns>
+        ///     <c>true></c>, if the range entirely contains the target range; otherwise, <c>false</c>.
+        /// </returns>
+        public bool Contains(Range range)
+        {
+            if (range == null)
+                throw new ArgumentNullException(nameof(range));
+
+            return range.Start >= Start && range.End <= End;
+        }
+
+        /// <summary>
         ///     Determine whether the range is equal to another object.
         /// </summary>
         /// <param name="other">

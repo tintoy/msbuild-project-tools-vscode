@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.3
+VisualStudioVersion = 15.0.26730.10
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{1F2A0703-FB4A-42A9-8CD3-E2F64DF29C6C}"
 EndProject
@@ -11,6 +11,19 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{198F2A53-5FD7-4F6E-A718-DDD95EA1F192}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LanguageServer.Engine.Tests", "test\LanguageServer.Engine.Tests\LanguageServer.Engine.Tests.csproj", "{029E8D10-FEDC-4664-ABA9-0A09E9FE89AD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2E8EA64C-7860-4431-927A-75DFE40A1D4B}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitignore = .gitignore
+		CHANGELOG.md = CHANGELOG.md
+		language-configuration.json = language-configuration.json
+		LICENSE = LICENSE
+		MSBuildProjectTools.ruleset = MSBuildProjectTools.ruleset
+		NuGet.config = NuGet.config
+		OSSREADME.json = OSSREADME.json
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

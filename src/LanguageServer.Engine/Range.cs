@@ -9,7 +9,7 @@ namespace MSBuildProjectTools.LanguageServer
         : IEquatable<Range>, IComparable<Range>
     {
         /// <summary>
-        ///     An empty range (1,1-1,1).
+        ///     An empty range [1,1..1,1].
         /// </summary>
         public static readonly Range Empty = new Range(start: Position.Origin, end: Position.Origin);
 
@@ -196,9 +196,9 @@ namespace MSBuildProjectTools.LanguageServer
         ///     Get a string representation of the range.
         /// </summary>
         /// <returns>
-        ///     The string representation "Start-End".
+        ///     The string representation "[Start..End]".
         /// </returns>
-        public override string ToString() => String.Format("{0}-{1}", Start, End);
+        public override string ToString() => String.Format("[{0}..{1}]", Start, End);
 
         /// <summary>
         ///     Create an empty range from the specified position.

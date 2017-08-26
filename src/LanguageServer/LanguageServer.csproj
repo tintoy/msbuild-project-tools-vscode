@@ -2,6 +2,8 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>netcoreapp2.0</TargetFramework>
+        <AssemblyName>MSBuildProjectTools.LanguageServer.Host</AssemblyName>
+        <RootNamespace>MSBuildProjectTools.LanguageServer.Host</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

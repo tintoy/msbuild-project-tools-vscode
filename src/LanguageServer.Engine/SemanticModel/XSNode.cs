@@ -10,6 +10,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
     /// </summary>
     public abstract class XSNode
     {
+        // TODO: Consider storing TextPositions here to allow XSNode and friends to calculate Positions and Ranges as-needed.
+
         /// <summary>
         ///     Create a new <see cref="XSNode"/>.
         /// </summary>

@@ -1,6 +1,7 @@
 using Microsoft.Language.Xml;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
@@ -11,6 +12,36 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
     /// </summary>
     public static class XSParser
     {
+        /// <summary>
+        ///     Parse the syntax model to derive a semantic model.
+        /// </summary>
+        /// <param name="document">
+        ///     The <see cref="XmlDocumentSyntax"/> to parse.
+        /// </param>
+        /// <param name="xmlPositions">
+        ///     The lookup for document positions.
+        /// </param>
+        /// <returns>
+        ///     A list of <see cref="XSNode"/>s, sorted by <see cref="XSNode.Range"/>.
+        /// </returns>
+        public static List<XSNode> GetSemanticModel(this XmlDocumentSyntax document, TextPositions xmlPositions)
+        {
+            if (document == null)
+                throw new ArgumentNullException(nameof(document));
+
+            if (xmlPositions == null)
+                throw new ArgumentNullException(nameof(xmlPositions));
+
+            XSParserVisitor parserVisitor = new XSParserVisitor(xmlPositions);
+            parserVisitor.Visit(document);
+
+            return new List<XSNode>(
+                parserVisitor.DiscoveredNodes
+                    .OrderBy(discoveredNode => discoveredNode.Range.Start)
+                    .ThenBy(discoveredNode => discoveredNode.Range.End)
+            );
+        }
+
         /// <summary>
         ///     Parse the syntax model to derive a semantic model.
         /// </summary>
@@ -34,11 +65,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             XSParserVisitor parserVisitor = new XSParserVisitor(xmlPositions);
             parserVisitor.Visit(node);
 
-            parserVisitor.DiscoveredNodes.Sort(
-                (node1, node2) => node1.Range.CompareTo(node2.Range)
+            return new List<XSNode>(
+                parserVisitor.DiscoveredNodes
+                    .OrderBy(discoveredNode => discoveredNode.Range.Start)
+                    .ThenBy(discoveredNode => discoveredNode.Range.End)
             );
-            
-            return parserVisitor.DiscoveredNodes;
         }
 
         /// <summary>
@@ -87,6 +118,23 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             XSElement CurrentElement => HaveCurrentElement ? _elementStack.Peek() : null;
 
             /// <summary>
+            ///     Visit an <see cref="XmlDocumentSyntax"/>.
+            /// </summary>
+            /// <param name="document">
+            ///     The <see cref="XmlDocumentSyntax"/>.
+            /// </param>
+            /// <returns>
+            ///     The <see cref="XmlDocumentSyntax"/> (unchanged).
+            /// </returns>
+            public override SyntaxNode VisitXmlDocument(XmlDocumentSyntax document)
+            {
+                foreach (XmlElementSyntaxBase element in document.Elements.OfType<XmlElementSyntaxBase>())
+                    Visit(element);
+
+                return document;
+            }
+
+            /// <summary>
             ///     Visit an <see cref="XmlElementSyntax"/>.
             /// </summary>
             /// <param name="element">
@@ -99,11 +147,17 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             {
                 Range elementRange = element.Span.ToNative(_textPositions);
                 Range openingTagRange = element.StartTag?.Span.ToNative(_textPositions) ?? elementRange;
-                Range closingTagRange = element.EndTag?.Span.ToNative(_textPositions) ?? openingTagRange;
-                Range contentRange = new Range(
-                    start: openingTagRange.End,
-                    end: closingTagRange.Start
-                );
+                Range closingTagRange = element.EndTag?.Span.ToNative(_textPositions) ?? elementRange;
+                Range contentRange;
+                if (openingTagRange.End <= closingTagRange.Start)
+                {
+                    contentRange = new Range(
+                        start: openingTagRange.End,
+                        end: closingTagRange.Start
+                    );
+                }
+                else
+                    contentRange = elementRange;
 
                 XSElement xsElement;
                 if (String.IsNullOrWhiteSpace(element.Name) || openingTagRange == elementRange || contentRange == elementRange || closingTagRange == elementRange)
@@ -114,10 +168,16 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 DiscoveredNodes.Add(xsElement);
 
                 PushElement(xsElement);
-                SyntaxNode result = base.VisitXmlElement(element);
+
+                foreach (XmlAttributeSyntax attribute in element.AsSyntaxElement.Attributes)
+                    Visit(attribute);
+
+                foreach (XmlElementSyntaxBase childElement in element.Elements.OfType<XmlElementSyntaxBase>())
+                    Visit(childElement);
+
                 PopElement();
 
-                return result;
+                return element;
             }
 
             /// <summary>
@@ -142,10 +202,16 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 DiscoveredNodes.Add(xsElement);
 
                 PushElement(xsElement);
-                SyntaxNode result = base.VisitXmlEmptyElement(emptyElement);
+
+                foreach (XmlAttributeSyntax attribute in emptyElement.AsSyntaxElement.Attributes)
+                    Visit(attribute);
+
+                foreach (XmlElementSyntaxBase childElement in emptyElement.Elements.OfType<XmlElementSyntaxBase>())
+                    Visit(childElement);
+
                 PopElement();
 
-                return result;
+                return emptyElement;
             }
 
             /// <summary>

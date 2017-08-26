@@ -5,6 +5,8 @@
 
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>IDE0016</NoWarn>
+    <AssemblyName>MSBuildProjectTools.LanguageServer.Engine</AssemblyName>
+    <RootNamespace>MSBuildProjectTools.LanguageServer.Engine</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

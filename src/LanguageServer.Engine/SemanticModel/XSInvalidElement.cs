@@ -17,11 +17,14 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="range">
         ///     The <see cref="Range"/>, within the source text, spanned by the element.
         /// </param>
+        /// <param name="parent">
+        ///     The <see cref="XSInvalidElement"/>'s parent element (if any).
+        /// </param>
         /// <param name="hasContent">
         ///     Does the <see cref="XSInvalidElement"/> have any content (besides attributes)?
         /// </param>
-        public XSInvalidElement(XmlElementSyntaxBase element, Range range, bool hasContent)
-            : base(element, range)
+        public XSInvalidElement(XmlElementSyntaxBase element, Range range, XSElement parent, bool hasContent)
+            : base(element, range, parent)
         {
             HasContent = hasContent;
         }
@@ -35,5 +38,13 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     Does the <see cref="XSElement"/> have any content (besides attributes)?
         /// </summary>
         public override bool HasContent { get; }
+
+        /// <summary>
+        ///     Clone the <see cref="XSInvalidElement"/>.
+        /// </summary>
+        /// <returns>
+        ///     The clone.
+        /// </returns>
+        protected override XSNode Clone() => new XSInvalidElement(ElementNode, Range, ParentElement, HasContent);
     }
 }

@@ -89,6 +89,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             readonly TextPositions _textPositions;
 
             /// <summary>
+            ///     The index of the current element (if any) in the list of discovered nodes.
+            /// </summary>
+            int _currentElementIndex = -1;
+
+            /// <summary>
             ///     Create a new <see cref="XSParserVisitor"/>.
             /// </summary>
             /// <param name="textPositions">
@@ -161,11 +166,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
 
                 XSElement xsElement;
                 if (String.IsNullOrWhiteSpace(element.Name) || openingTagRange == elementRange || contentRange == elementRange || closingTagRange == elementRange)
-                    xsElement = new XSInvalidElement(element, elementRange, hasContent: true);
+                    xsElement = new XSInvalidElement(element, elementRange, parent: CurrentElement, hasContent: true);
                 else
-                    xsElement = new XSElementWithContent(element, elementRange, openingTagRange, contentRange, closingTagRange);
-
-                DiscoveredNodes.Add(xsElement);
+                    xsElement = new XSElementWithContent(element, elementRange, openingTagRange, contentRange, closingTagRange, parent: CurrentElement);
 
                 PushElement(xsElement);
 
@@ -195,19 +198,14 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 XSElement xsElement;
 
                 if (String.IsNullOrWhiteSpace(emptyElement.Name))
-                    xsElement = new XSInvalidElement(emptyElement, elementRange, hasContent: false);
+                    xsElement = new XSInvalidElement(emptyElement, elementRange, parent: CurrentElement, hasContent: false);
                 else
-                    xsElement = new XSEmptyElement(emptyElement, elementRange);
-
-                DiscoveredNodes.Add(xsElement);
+                    xsElement = new XSEmptyElement(emptyElement, elementRange, parent: CurrentElement);
 
                 PushElement(xsElement);
 
                 foreach (XmlAttributeSyntax attribute in emptyElement.AsSyntaxElement.Attributes)
                     Visit(attribute);
-
-                foreach (XmlElementSyntaxBase childElement in emptyElement.Elements.OfType<XmlElementSyntaxBase>())
-                    Visit(childElement);
 
                 PopElement();
 
@@ -238,7 +236,12 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 else
                     xsAttribute = new XSAttribute(attribute, attributeRange, nameRange, valueRange, CurrentElement);
 
-                CurrentElement.AddAttribute(xsAttribute);
+                ModifyCurrentElement(
+                    currentElement => currentElement.WithAttribute(xsAttribute)
+                );
+
+                // Add the re-parented attribute, not the original.
+                xsAttribute = CurrentElement.Attributes[CurrentElement.Attributes.Count - 1];
                 DiscoveredNodes.Add(xsAttribute);
 
                 return base.VisitXmlAttribute(attribute);
@@ -267,6 +270,28 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             }
 
             /// <summary>
+            ///     Modify the current element.
+            /// </summary>
+            /// <param name="modification">
+            ///     A delegate that takes the current element, and returns a modified element.
+            /// </param>
+            void ModifyCurrentElement(Func<XSElement, XSElement> modification)
+            {
+                if (modification == null)
+                    throw new ArgumentNullException(nameof(modification));
+
+                if (!HaveCurrentElement)
+                    throw new InvalidOperationException("No current element.");
+                
+                XSElement modified = modification(
+                    _elementStack.Pop()
+                );
+                _elementStack.Push(modified);
+
+                DiscoveredNodes[_currentElementIndex] = modified;
+            }
+
+            /// <summary>
             ///     Push an <see cref="XSElement"/> onto the stack.
             /// </summary>
             /// <param name="element">
@@ -282,13 +307,21 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
 
                 _elementStack.Push(element);
 
+                DiscoveredNodes.Add(element);
+                _currentElementIndex = DiscoveredNodes.Count - 1;                
+
                 return element;
             }
 
             /// <summary>
             ///     Pop an element from the stack.
             /// </summary>
-            void PopElement() => _elementStack.Pop();
+            void PopElement()
+            {
+                _elementStack.Pop();
+
+                _currentElementIndex = DiscoveredNodes.Count - 1;
+            }
         }
     }
 }

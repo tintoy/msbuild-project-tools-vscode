@@ -17,8 +17,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="range">
         ///     The <see cref="Range"/>, within the source text, spanned by the whitespace.
         /// </param>
-        protected XSWhitespace(SyntaxTrivia triviaNode, Range range)
-            : base(triviaNode, range)
+        /// <param name="parent">
+        ///     The <see cref="XSNode"/> that contains the whitespace.
+        /// </param>
+        protected XSWhitespace(SyntaxTrivia triviaNode, Range range, XSNode parent)
+            : base(triviaNode, range, parent)
         {
         }
 
@@ -36,5 +39,13 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     Does the <see cref="XSNode"/> represent valid XML?
         /// </summary>
         public override bool IsValid => true;
+
+        /// <summary>
+        ///     Clone the <see cref="XSWhitespace"/>.
+        /// </summary>
+        /// <returns>
+        ///     The clone.
+        /// </returns>
+        protected override XSNode Clone() => new XSWhitespace(Trivia, Range, Parent);
     }
 }

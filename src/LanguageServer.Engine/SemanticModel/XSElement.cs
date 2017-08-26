@@ -2,6 +2,7 @@ using Microsoft.Language.Xml;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
@@ -12,14 +13,6 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         : XSNode<XmlElementSyntaxBase>
     {
         /// <summary>
-        ///     The element's attributes (if any).
-        /// </summary>
-        /// <remarks>
-        ///     TODO: Revisit this; make the field read-only once the XSParser can come back to the element and replace it using .WithAttribute().
-        /// </remarks>
-        ImmutableList<XSAttribute> _attributes = ImmutableList<XSAttribute>.Empty;
-
-        /// <summary>
         ///     Create a new <see cref="XSElement"/>.
         /// </summary>
         /// <param name="element">
@@ -28,8 +21,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="range">
         ///     The range, within the source text, spanned by the node.
         /// </param>
-        protected XSElement(XmlElementSyntaxBase element, Range range)
-            : base(element, range)
+        /// <param name="parent">
+        ///     The <see cref="XSElement"/>'s parent element (if any).
+        /// </param>
+        protected XSElement(XmlElementSyntaxBase element, Range range, XSElement parent)
+            : base(element, range, parent)
         {
         }
 
@@ -44,6 +40,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         public XmlElementSyntaxBase ElementNode => SyntaxNode;
 
         /// <summary>
+        ///     The <see cref="XSElement"/>'s parent element (if any).
+        /// </summary>
+        public XSElement ParentElement => (XSElement)Parent;
+
+        /// <summary>
         ///     The kind of XML node represented by the <see cref="XSNode"/>.
         /// </summary>
         public override XSNodeKind Kind => XSNodeKind.Element;
@@ -51,7 +52,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <summary>
         ///     The element's attributes (if any).
         /// </summary>
-        public IReadOnlyList<XSAttribute> Attributes => _attributes;
+        public ImmutableList<XSAttribute> Attributes { get; private set; } = ImmutableList<XSAttribute>.Empty;
 
         /// <summary>
         ///     Does the <see cref="XSNode"/> represent valid XML?
@@ -79,24 +80,68 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// </returns>
         public XSAttribute this[string attributeName]
         {
-            get => _attributes.FirstOrDefault(attribute => attribute.Name == attributeName);
+            get => Attributes.FirstOrDefault(attribute => attribute.Name == attributeName);
         }
 
         /// <summary>
-        ///     Add an attribute to the element.
+        ///     Create a copy of the <see cref="XSElement"/>, adding the specified attribute.
         /// </summary>
         /// <param name="attribute">
         ///     The attribute to add.
         /// </param>
-        /// <remarks>
-        ///     TODO: Revisit this; make <see cref="XSElement"/> truly immutable and replace this method with .WithAttribute().
-        /// </remarks>
-        internal void AddAttribute(XSAttribute attribute)
+        /// <returns>
+        ///     The new <see cref="XSElement"/>.
+        /// </returns>
+        public XSElement WithAttribute(XSAttribute attribute)
         {
             if (attribute == null)
-                throw new System.ArgumentNullException(nameof(attribute));
+                throw new ArgumentNullException(nameof(attribute));
+            
+            XSElement clone = (XSElement)Clone();
+            clone.Attributes = clone.Attributes.Add(
+                attribute.WithElement(clone)
+            );
 
-            _attributes = _attributes.Add(attribute);
+            return clone;
         }
+
+        /// <summary>
+        ///     Create a copy of the <see cref="XSElement"/>, but with the specified attributes.
+        /// </summary>
+        /// <param name="attributes">
+        ///     The attributes (if any).
+        /// </param>
+        /// <returns>
+        ///     The new <see cref="XSElement"/>.
+        /// </returns>
+        public XSElement WithAttributes(IEnumerable<XSAttribute> attributes)
+        {
+            XSElement clone = (XSElement)Clone();
+
+            if (attributes != null)
+            {
+                // AF: Super-ugly, FIXME.
+                clone.Attributes = ImmutableList.CreateRange(
+                    attributes.Select(
+                        attribute => attribute.WithElement(clone)
+                    )
+                );
+            }
+            else
+                clone.Attributes = ImmutableList<XSAttribute>.Empty;
+
+            return clone;
+        }
+
+        /// <summary>
+        ///     Create a copy of the <see cref="XSElement"/>, but with the specified parent element.
+        /// </summary>
+        /// <param name="parentElement">
+        ///     The parent <see cref="XSElement"/>, or <c>null</c> if the new element will have no parent element.
+        /// </param>
+        /// <returns>
+        ///     The new <see cref="XSElement"/>.
+        /// </returns>
+        public XSElement WithParentElement(XSElement parentElement) => (XSElement)base.WithParent(parentElement);
     }
 }

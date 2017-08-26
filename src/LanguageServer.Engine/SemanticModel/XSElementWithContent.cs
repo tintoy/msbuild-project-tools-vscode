@@ -26,8 +26,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="closingTagRange">
         ///     The <see cref="Range"/>, within the source text, spanned by the element's closing tag.
         /// </param>
-        public XSElementWithContent(XmlElementSyntax element, Range range, Range openingTagRange, Range contentRange, Range closingTagRange)
-            : base(element, range)
+        /// <param name="parent">
+        ///     The <see cref="XSElementWithContent"/>'s parent element (if any).
+        /// </param>
+        public XSElementWithContent(XmlElementSyntax element, Range range, Range openingTagRange, Range contentRange, Range closingTagRange, XSElement parent)
+            : base(element, range, parent)
         {
             if (openingTagRange == null)
                 throw new System.ArgumentNullException(nameof(openingTagRange));
@@ -77,5 +80,13 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     Does the <see cref="XSElement"/> have any content (besides attributes)?
         /// </summary>
         public override bool HasContent => true;
+
+        /// <summary>
+        ///     Clone the <see cref="XSElementWithContent"/>.
+        /// </summary>
+        /// <returns>
+        ///     The clone.
+        /// </returns>
+        protected override XSNode Clone() => new XSElementWithContent(ElementNode, Range, OpeningTagRange, ContentRange, ClosingTagRange, ParentElement);
     }
 }

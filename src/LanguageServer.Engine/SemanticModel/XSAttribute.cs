@@ -27,7 +27,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The element that contains the attribute.
         /// </param>
         public XSAttribute(XmlAttributeSyntax attribute, Range range, Range nameRange, Range valueRange, XSElement element)
-            : base(attribute, range)
+            : base(attribute, range, element)
         {
             if (nameRange == null)
                 throw new System.ArgumentNullException(nameof(nameRange));
@@ -35,12 +35,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (valueRange == null)
                 throw new System.ArgumentNullException(nameof(valueRange));
 
-            if (element == null)
-                throw new System.ArgumentNullException(nameof(element));
-
             NameRange = nameRange;
             ValueRange = valueRange;
-            Element = element;
         }
 
         /// <summary>
@@ -61,7 +57,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <summary>
         ///     The element that contains the attribute.
         /// </summary>
-        public XSElement Element { get; }
+        public XSElement Element => (XSElement)Parent;
 
         /// <summary>
         ///     The <see cref="Range"/>, within the source text, spanned by the attribute's name.
@@ -82,5 +78,24 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     Does the <see cref="XSNode"/> represent valid XML?
         /// </summary>
         public override bool IsValid => true;
+
+        /// <summary>
+        ///     Create a copy of the <see cref="XSAttribute"/>, but with the specified parent element.
+        /// </summary>
+        /// <param name="element">
+        ///     The parent element, or <c>null</c> if the new node should have no parent.
+        /// </param>
+        /// <returns>
+        ///     The new node.
+        /// </returns>
+        public XSAttribute WithElement(XSElement element) => (XSAttribute)base.WithParent(element);
+
+        /// <summary>
+        ///     Clone the <see cref="XSAttribute"/>.
+        /// </summary>
+        /// <returns>
+        ///     The clone.
+        /// </returns>
+        protected override XSNode Clone() => new XSAttribute(AttributeNode, Range, NameRange, ValueRange, Element);
     }
 }

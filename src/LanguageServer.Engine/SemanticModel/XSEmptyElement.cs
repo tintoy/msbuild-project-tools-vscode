@@ -17,8 +17,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="range">
         ///     The <see cref="Range"/>, within the source text, spanned by the node.
         /// </param>
-        public XSEmptyElement(XmlEmptyElementSyntax emptyElement, Range range)
-            : base(emptyElement, range)
+        /// <param name="parent">
+        ///     The <see cref="XSEmptyElement"/>'s parent element (if any).
+        /// </param>
+        public XSEmptyElement(XmlEmptyElementSyntax emptyElement, Range range, XSElement parent)
+            : base(emptyElement, range, parent)
         {
         }
 
@@ -41,5 +44,13 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     Does the <see cref="XSElement"/> have any content (besides attributes)?
         /// </summary>
         public override bool HasContent => false;
+
+        /// <summary>
+        ///     Clone the <see cref="XSEmptyElement"/>.
+        /// </summary>
+        /// <returns>
+        ///     The clone.
+        /// </returns>
+        protected override XSNode Clone() => new XSEmptyElement(ElementNode, Range, ParentElement);
     }
 }

@@ -88,6 +88,9 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             {
                 if (nugetConfiguration.TryGetValue("disablePreFetch", out JToken disablePrefetch) && disablePrefetch.Type == JTokenType.Boolean)
                     Configuration.DisableNuGetPreFetch = disablePrefetch.Value<bool>();
+
+                if (nugetConfiguration.TryGetValue("newestVersionsFirst", out JToken newestVersionsFirst) && newestVersionsFirst.Type == JTokenType.Boolean)
+                    Configuration.ShowNewestNuGetVersionsFirst = newestVersionsFirst.Value<bool>();
             }
 
             if (ConfigurationChanged != null)

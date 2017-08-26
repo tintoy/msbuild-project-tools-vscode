@@ -2,7 +2,7 @@
     "name": "msbuild-project-tools",
     "displayName": "MSBuild project tools",
     "description": "Tools for working with MSBuild project files (such as auto-complete for package Ids / versions).",
-    "version": "0.1.10",
+    "version": "0.1.11",
     "publisher": "tintoy",
     "license": "MIT",
     "repository": {
@@ -48,6 +48,7 @@
                             "trace": false
                         },
                         "nuget": {
+                            "newestVersionsFirst": true,
                             "disablePrefetch": false
                         }
                     },
@@ -97,9 +98,15 @@
                             "description": "Configuration for the MSBuild language service.",
                             "type": "object",
                             "default": {
+                                "newestVersionsFirst": true,
                                 "disablePreFetch": false
                             },
                             "properties": {
+                                "newestVersionsFirst": {
+                                    "type": "boolean",
+                                    "default": true,
+                                    "description": "Sort package versions in descending order (i.e. newest versions first)? Set this to false to revert to the old behaviour (VSCode decides how to sort the completion list)."
+                                },
                                 "disablePreFetch": {
                                     "type": "boolean",
                                     "default": false,

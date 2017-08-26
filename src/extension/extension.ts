@@ -120,6 +120,11 @@ interface LanguageSettings {
  */
 interface NuGetSettings {
     /**
+     * Sort package versions in descending order (i.e. newest versions first)?
+     */
+    newestVersionsFirst: boolean;
+
+    /**
      * Disable automatic warm-up of the NuGet client when opening a project?
      */
     disablePreFetch: boolean;

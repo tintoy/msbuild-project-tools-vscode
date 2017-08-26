@@ -1,5 +1,10 @@
 # Change Log
 
+## v0.1.11
+
+* Sort package versions in descending order.  
+  If you prefer the old behaviour, you can set `msbuildProjectTools.nuget.newestVersionsFirst` to `false`.
+
 ## v0.1.10
 
 * Improve tooltip content when hovering on MSBuild XML.

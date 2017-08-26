@@ -29,5 +29,10 @@ namespace MSBuildProjectTools.LanguageServer
         ///     Disable automatic warm-up of the NuGet API client?
         /// </summary>
         public bool DisableNuGetPreFetch { get; set; } = false;
+
+        /// <summary>
+        ///     Sort package versions in descending order (i.e. newest versions first)?
+        /// </summary>
+        public bool ShowNewestNuGetVersionsFirst { get; set; } = true;
     }
 }

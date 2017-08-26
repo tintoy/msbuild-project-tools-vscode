@@ -180,16 +180,21 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                             return null;
 
                         string packageId = includeAttribute.Value;
-                        SortedSet<NuGetVersion> packageVersions = await projectDocument.SuggestPackageVersions(packageId, cancellationToken);
+                        IEnumerable<NuGetVersion> packageVersions = await projectDocument.SuggestPackageVersions(packageId, cancellationToken);
+                        if (Workspace.Configuration.ShowNewestNuGetVersionsFirst)
+                            packageVersions = packageVersions.Reverse();
+                            
+                        Lsp.Models.Range replacementRange = attributeValueRange.ToLsp();
                         
                         completionItems.AddRange(
-                            packageVersions.Select(packageVersion => new CompletionItem
+                            packageVersions.Select((packageVersion, index) => new CompletionItem
                             {
                                 Label = packageVersion.ToNormalizedString(),
+                                SortText = Workspace.Configuration.ShowNewestNuGetVersionsFirst ? $"NuGet{index:00}" : null, // Override default sort order if configured to do so.
                                 Kind = CompletionItemKind.Field,
                                 TextEdit = new TextEdit
                                 {
-                                    Range = attributeValueRange.ToLsp(),
+                                    Range = replacementRange,
                                     NewText = packageVersion.ToNormalizedString()
                                 }
                             })

@@ -120,6 +120,11 @@ interface LanguageSettings {
  */
 interface NuGetSettings {
     /**
+     * Sort package versions in descending order (i.e. newest versions first)?
+     */
+    newestVersionsFirst: boolean;
+
+    /**
      * Disable automatic warm-up of the NuGet client when opening a project?
      */
     disablePreFetch: boolean;
@@ -147,7 +152,8 @@ async function createClassicCompletionProvider(context: vscode.ExtensionContext,
                 { language: 'msbuild', pattern: '**/*.*' }
             ], 
             new PackageReferenceCompletionProvider(
-                nugetEndPointURLs[0] // For now, just default to using the primary.
+                nugetEndPointURLs[0], // For now, just default to using the primary.
+                configuration.nuget.newestVersionsFirst
             )
         )
     );

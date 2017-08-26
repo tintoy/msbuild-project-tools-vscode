@@ -1,9 +1,7 @@
-using Microsoft.Language.Xml;
 using System;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
-    using System.Linq;
     /// <summary>
     ///     Information about a position in XML.
     /// </summary>
@@ -18,16 +16,13 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="absolutePosition">
         ///     The (0-based) absolute position.
         /// </param>
+        /// <param name="node">
+        ///     The <see cref="XSNode"/> closest to the position.
+        /// </param>
         /// <param name="flags">
         ///     <see cref="XmlPositionFlags"/> value(s) describing the position.
         /// </param>
-        /// <param name="node">
-        ///     The <see cref="SyntaxNode"/> closest to the position.
-        /// </param>
-        /// <param name="elementOrAttribute">
-        ///     The <paramref name="node"/>'s containing element or attribute.
-        /// </param>
-        public XmlPosition(Position position, int absolutePosition, XmlPositionFlags flags, SyntaxNode node, SyntaxNode elementOrAttribute)
+        public XmlPosition(Position position, int absolutePosition, XSNode node, XmlPositionFlags flags)
         {
             if (position == null)
                 throw new ArgumentNullException(nameof(position));
@@ -39,7 +34,6 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             AbsolutePosition = absolutePosition;
             Flags = flags;
             Node = node;
-            ElementOrAttribute = elementOrAttribute ?? node;
         }
 
         /// <summary>
@@ -53,19 +47,49 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         public int AbsolutePosition { get; }
 
         /// <summary>
+        ///     The <see cref="XSNode"/> closest to the position.
+        /// </summary>
+        public XSNode Node { get; }
+
+        /// <summary>
         ///     <see cref="XmlPositionFlags"/> value(s) describing the position.
         /// </summary>
         public XmlPositionFlags Flags { get; }
 
         /// <summary>
-        ///     The <see cref="SyntaxNode"/> closest to the position.
+        ///     Is the position within a name?
         /// </summary>
-        public SyntaxNode Node { get; }
+        public bool IsName => Flags.HasFlag(XmlPositionFlags.Name);
 
         /// <summary>
-        ///     The <see cref="Node"/>'s containing element or attribute.
+        ///     Is the position within an attribute value or element content?
         /// </summary>
-        public SyntaxNode ElementOrAttribute { get; }
+        public bool IsValue => Flags.HasFlag(XmlPositionFlags.Value);
+
+        /// <summary>
+        ///     Is the position within text content?
+        /// </summary>
+        public bool IsText => Flags.HasFlag(XmlPositionFlags.Text);
+
+        /// <summary>
+        ///     Is the position within whitespace?
+        /// </summary>
+        public bool IsWhitespace => Flags.HasFlag(XmlPositionFlags.Whitespace);
+
+        /// <summary>
+        ///     Is the position within an attribute?
+        /// </summary>
+        public bool IsAttribute => Flags.HasFlag(XmlPositionFlags.Attribute);
+
+        /// <summary>
+        ///     Is the position within an attribute's name?
+        /// </summary>
+        public bool IsAttributeName => IsAttribute && IsName;
+
+        /// <summary>
+        ///     Is the position within an attribute's name?
+        /// </summary>
+        public bool IsAttributeValue => IsAttribute && IsValue;
 
         /// <summary>
         ///     Is the position within an element?
@@ -75,22 +99,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <summary>
         ///     Is the position within element content?
         /// </summary>
-        public bool IsElementContent => Flags.HasFlag(XmlPositionFlags.ElementContent);
-
-        /// <summary>
-        ///     Is the position within an element attributes?
-        /// </summary>
-        public bool IsElementAttributes => Flags.HasFlag(XmlPositionFlags.ElementAttributes);
-
-        /// <summary>
-        ///     Is the position within an attribute?
-        /// </summary>
-        public bool IsAttribute => Flags.HasFlag(XmlPositionFlags.Attribute);
-
-        /// <summary>
-        ///     Is the position within a name?
-        /// </summary>
-        public bool IsName => Flags.HasFlag(XmlPositionFlags.Name);
+        public bool IsElementContent => IsElement && IsValue;
 
         /// <summary>
         ///     Is the position within an element's opening tag?
@@ -105,31 +114,16 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <summary>
         ///     Is the position before the nearest <see cref="Node"/>?
         /// </summary>
-        public bool IsPositionBeforeNode => AbsolutePosition < Node.Span.Start;
+        public bool IsPositionBeforeNode => Position < Node.Range;
 
         /// <summary>
         ///     Is the position within the nearest <see cref="Node"/>?
         /// </summary>
-        public bool IsPositionWithinNode => Node.Span.Contains(AbsolutePosition);
+        public bool IsPositionWithinNode => Node.Range.Contains(Position);
 
         /// <summary>
         ///     Is the position after the nearest <see cref="Node"/>?
         /// </summary>
-        public bool IsPositionAfterNode => AbsolutePosition > Node.Span.End;
-
-        /// <summary>
-        ///     Is the position before the nearest <see cref="ElementOrAttribute"/>?
-        /// </summary>
-        public bool IsPositionBeforeElementOrAttribute => AbsolutePosition < ElementOrAttribute.Span.Start;
-
-        /// <summary>
-        ///     Is the position within the nearest <see cref="ElementOrAttribute"/>?
-        /// </summary>
-        public bool IsPositionWithinElementOrAttribute => ElementOrAttribute.Span.Contains(AbsolutePosition);
-
-        /// <summary>
-        ///     Is the position after the nearest <see cref="ElementOrAttribute"/>?
-        /// </summary>
-        public bool IsPositionAfterElementOrAttribute => AbsolutePosition > ElementOrAttribute.Span.End;
+        public bool IsPositionAfterNode => Position > Node.Range;
     }
 }

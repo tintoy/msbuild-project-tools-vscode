@@ -117,17 +117,17 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// <param name="nodeKind">
         ///     The node kind.
         /// </param>
-        [InlineData("Test1", 0, 1, 1, 7, 12)]
+        [InlineData("Test1", 0, 1, 1, 7, 11)]
         [InlineData("Test1", 1, 1, 11, 2, 5)]
-        [InlineData("Test1", 2, 2, 5, 5, 16)]
-        [InlineData("Test1", 3, 2, 15, 2, 34)]
+        [InlineData("Test1", 2, 2, 5, 5, 15)]
+        [InlineData("Test1", 3, 2, 15, 2, 33)]
         [InlineData("Test1", 4, 2, 35, 3, 9)]
-        [InlineData("Test1", 5, 3, 9, 3, 21)]
+        [InlineData("Test1", 5, 3, 9, 3, 20)]
         [InlineData("Test1", 6, 3, 21, 4, 9)]
-        [InlineData("Test1", 7, 4, 9, 4, 21)]
+        [InlineData("Test1", 7, 4, 9, 4, 20)]
         [InlineData("Test1", 8, 4, 21, 5, 5)]
         [InlineData("Test1", 9, 5, 16, 6, 5)]
-        [InlineData("Test1", 10, 6, 5, 6, 26)]
+        [InlineData("Test1", 10, 6, 5, 6, 25)]
         [InlineData("Test1", 11, 6, 26, 7, 1)]
         [Theory(DisplayName = "XSParser discovers node with range ")]
         void NodeRange(string testFileName, int index, int startLine, int startColumn, int endLine, int endColumn)

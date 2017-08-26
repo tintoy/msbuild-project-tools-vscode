@@ -111,7 +111,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
                 throw new ArgumentNullException(nameof(textPositions));
 
             Position startPosition = textPositions.GetPosition(span.Start);
-            Position endPosition = textPositions.GetPosition(span.End);
+            Position endPosition = textPositions.GetPosition(span.End - 1); // End position is non-inclusive.
             if (endPosition.ColumnNumber == 0)
                 throw new InvalidOperationException("Should not happen anymore");
 

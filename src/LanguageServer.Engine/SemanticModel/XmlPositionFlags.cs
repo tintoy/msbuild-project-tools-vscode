@@ -39,23 +39,23 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         Name = 16,
 
         /// <summary>
-        ///     Position is on element content.
+        ///     Position is on element content / attribute value.
         /// </summary>
-        ElementContent = 32,
+        Value = 32,
 
         /// <summary>
-        ///     Position is on element attributes.
+        ///     Position is on text.
         /// </summary>
-        ElementAttributes = 64,
+        Text = 64,
 
         /// <summary>
-        ///     Position is on attribute content.
+        ///     Position is on whitespace.
         /// </summary>
-        AttributeContent = 128,
+        Whitespace = 128,
 
         /// <summary>
         ///     Element or attribute has no content.
         /// </summary>
-        Empty = 256
+        Empty = 1024
     }
 }

@@ -5,6 +5,7 @@ using Xunit;
 
 namespace MSBuildProjectTools.LanguageServer.Tests
 {
+    using SemanticModel;
     using Utilities;
 
     /// <summary>
@@ -22,21 +23,24 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// <summary>
         ///     Verify that the target line and column lie on a <see cref="SyntaxList"/> inside element 1.
         /// </summary>
+        /// <param name="testFileName">
+        ///     The name of the test file, without the extension.
+        /// </param>
         /// <param name="line">
         ///     The target line.
         /// </param>
         /// <param name="column">
         ///     The target column.
         /// </param>
-        [InlineData(2, 5)]
-        [InlineData(3, 9)]
+        [InlineData("Test1", 2, 5)]
+        [InlineData("Test1", 3, 9)]
         [Theory(DisplayName = "Expect line and column to be inside element ")]
-        public void Line_Col_ListInsideElement1(int line, int column)
+        public void Line_Col_ListInsideElement1(string testFileName, int line, int column)
         {
             Position testPosition = new Position(line, column);
             Console.WriteLine("Test Position: {0}", testPosition);
 
-            string testXml = LoadTestFile("TestFiles", "Test1.xml");
+            string testXml = LoadTestFile("TestFiles", testFileName + ".xml");
             TextPositions positions = new TextPositions(testXml);
             XmlDocumentSyntax xmlDocument = Parser.ParseText(testXml);
 
@@ -56,45 +60,33 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         }
 
         /// <summary>
-        ///     Verify that the target line and column lie after an element inside element 2.
+        ///     Verify that the target line and column lie after within an element's content.
         /// </summary>
+        /// <param name="testFileName">
+        ///     The name of the test file, without the extension.
+        /// </param>
         /// <param name="line">
         ///     The target line.
         /// </param>
         /// <param name="column">
         ///     The target column.
         /// </param>
-        [InlineData(3, 21)] // AF: Known to not currently pass. The new XSNode model will hopefully make it easier to handle this type of behaviour.
-        [Theory(DisplayName = "Expect line and column to be after element ")]
-        public void Line_Col_AfterElement(int line, int column)
+        [InlineData("Test1", 3, 21)]
+        [Theory(DisplayName = "Expect line and column to be within element content ")]
+        public void Line_Col_InElementContent(string testFileName, int line, int column)
         {
-            string testXml = LoadTestFile("TestFiles", "Test1.xml");
-            TextPositions positions = new TextPositions(testXml);
-            XmlDocumentSyntax xmlDocument = Parser.ParseText(testXml);
-
             Position testPosition = new Position(line, column);
-            int absolutePosition = positions.GetAbsolutePosition(testPosition);
-            SyntaxNode foundNode = xmlDocument.FindNode(absolutePosition,
-                descendIntoChildren: node => true
-            );
-            Assert.NotNull(foundNode);
 
-            Range nodeSpan = foundNode.FullSpan.ToNative(positions);
-            Assert.True(nodeSpan.Contains(testPosition),
-                $"Test position {testPosition} must lie within {foundNode.Kind} full-span {nodeSpan}."
-            );
+            string testXml = LoadTestFile("TestFiles", testFileName + ".xml");
+            TextPositions positions = new TextPositions(testXml);
+            XmlDocumentSyntax document = Parser.ParseText(testXml);
 
-            XmlElementSyntaxBase element = foundNode.GetContainingElement();
-            Assert.NotNull(element);
+            XmlLocator locator = new XmlLocator(document, positions);
 
-            Assert.Equal("Element4", element.Name);
-
-            Range elementSpan = element.Span.ToNative(positions);
-            Assert.True(elementSpan.Contains(testPosition),
-                $"Test position {testPosition} must lie after {element.Name} span {elementSpan}."
-            );
-
-            Assert.Equal("Element1", element.Name);
+            XmlPosition result = locator.Inspect(testPosition);
+            Assert.NotNull(result);
+            Assert.True(result.IsElementContent, "IsElementContent");
+            Assert.True(result.IsPositionWithinNode, "IsPositionWithinNode");
         }
 
         /// <summary>

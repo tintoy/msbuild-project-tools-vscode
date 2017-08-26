@@ -48,6 +48,11 @@ namespace MSBuildProjectTools.LanguageServer
         public Position End { get; }
 
         /// <summary>
+        ///     Is the range empty?
+        /// </summary>
+        public bool IsEmpty => Start == End;
+
+        /// <summary>
         ///     Create a copy of the <see cref="Range"/> with the specified starting position.
         /// </summary>
         /// <param name="start">

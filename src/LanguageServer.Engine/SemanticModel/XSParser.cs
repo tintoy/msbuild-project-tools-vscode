@@ -34,6 +34,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
 
             XSParserVisitor parserVisitor = new XSParserVisitor(xmlPositions);
             parserVisitor.Visit(document);
+            parserVisitor.CalculateWhitespace();
 
             return new List<XSNode>(
                 parserVisitor.DiscoveredNodes
@@ -64,6 +65,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
 
             XSParserVisitor parserVisitor = new XSParserVisitor(xmlPositions);
             parserVisitor.Visit(node);
+            parserVisitor.CalculateWhitespace();
 
             return new List<XSNode>(
                 parserVisitor.DiscoveredNodes
@@ -78,6 +80,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         class XSParserVisitor
             : SyntaxVisitor
         {
+            /// <summary>
+            ///     Spans for whitespace that has already been processed.
+            /// </summary>
+            readonly SortedSet<TextSpan> _whitespaceSpans = new SortedSet<TextSpan>();
+
             /// <summary>
             ///     The stack of <see cref="XSElement"/>s being processed.
             /// </summary>
@@ -121,6 +128,42 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             ///     The element (if any) being processed.
             /// </summary>
             XSElement CurrentElement => HaveCurrentElement ? _elementStack.Peek() : null;
+
+            /// <summary>
+            ///     Find the spaces between elements and use that to infer whitespace.
+            /// </summary>
+            public void CalculateWhitespace()
+            {
+                Queue<XSElement> discoveredElements = new Queue<XSElement>(
+                    DiscoveredNodes.OfType<XSElement>()
+                        .OrderBy(discoveredNode => discoveredNode.Range.Start)
+                        .ThenBy(discoveredNode => discoveredNode.Range.End)
+                );
+
+                while (discoveredElements.Count > 1) // AF: What about the last one?
+                {
+                    XSElement element1 = discoveredElements.Dequeue();
+                    XSElement element2 = discoveredElements.Peek();
+
+                    int charsBetweenElements;
+                    if (element2.ParentElement == element1)
+                    {
+                        XSElementWithContent element1WithContent = (XSElementWithContent)element1;
+
+                        int element1OpeningTagEnd = element1WithContent.ElementNode.StartTag.End;
+                        charsBetweenElements = element2.ElementNode.Start - element1OpeningTagEnd; 
+
+                        continue;
+                    }
+
+                    discoveredElements.Dequeue();
+
+                    charsBetweenElements = element2.ElementNode.Start - element1.ElementNode.End;
+                    if (charsBetweenElements != 0)
+                        System.Diagnostics.Debugger.Break();
+                    
+                }
+            }
 
             /// <summary>
             ///     Visit an <see cref="XmlDocumentSyntax"/>.
@@ -175,8 +218,22 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 foreach (XmlAttributeSyntax attribute in element.AsSyntaxElement.Attributes)
                     Visit(attribute);
 
+                Position previousTagEnd = _textPositions.GetPosition(element.StartTag.End);
                 foreach (XmlElementSyntaxBase childElement in element.Elements.OfType<XmlElementSyntaxBase>())
+                {
+                    Range leadingWhitespaceRange = new Range(
+                        start: previousTagEnd,
+                        end: _textPositions.GetPosition(childElement.Start)
+                    );
+                    if (!leadingWhitespaceRange.IsEmpty)
+                    {
+                        DiscoveredNodes.Add(
+                            new XSWhitespace(leadingWhitespaceRange, xsElement)
+                        );
+                    }
+
                     Visit(childElement);
+                }
 
                 PopElement();
 
@@ -195,8 +252,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             public override SyntaxNode VisitXmlEmptyElement(XmlEmptyElementSyntax emptyElement)
             {
                 Range elementRange = emptyElement.Span.ToNative(_textPositions);
-                XSElement xsElement;
 
+                XSElement xsElement;
                 if (String.IsNullOrWhiteSpace(emptyElement.Name))
                     xsElement = new XSInvalidElement(emptyElement, elementRange, parent: CurrentElement, hasContent: false);
                 else
@@ -260,13 +317,13 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             {
                 Range textRange = text.Span.ToNative(_textPositions);
                 if (CurrentElement == null || !CurrentElement.Range.Contains(textRange))
-                    return base.VisitXmlText(text);
+                    return text;
 
                 DiscoveredNodes.Add(
                     new XSElementText(text, textRange, CurrentElement)
                 );
 
-                return base.VisitXmlText(text);
+                return text;
             }
 
             /// <summary>

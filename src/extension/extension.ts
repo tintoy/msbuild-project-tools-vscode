@@ -152,7 +152,8 @@ async function createClassicCompletionProvider(context: vscode.ExtensionContext,
                 { language: 'msbuild', pattern: '**/*.*' }
             ], 
             new PackageReferenceCompletionProvider(
-                nugetEndPointURLs[0] // For now, just default to using the primary.
+                nugetEndPointURLs[0], // For now, just default to using the primary.
+                configuration.nuget.newestVersionsFirst
             )
         )
     );

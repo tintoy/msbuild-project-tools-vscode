@@ -1,3 +1,4 @@
+import * as semver from 'semver';
 import * as vscode from 'vscode';
 import * as xmldom from 'xmldom';
 
@@ -35,8 +36,9 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
      * Create a new {@link PackageReferenceCompletionProvider}.
      * 
      * @param nugetAutoCompleteUrls The URL of the NuGet API end-point to use.
+     * @param showNewestVersionsFirst Show newest package versions first?
      */
-    constructor(private nugetAutoCompleteUrl: string) {}
+    constructor(private nugetAutoCompleteUrl: string, private showNewestVersionsFirst: boolean) {}
 
     /**
      * Provide completion items for the specified document position.
@@ -123,8 +125,14 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
             );
 
             const availablePackageVersions = response.data.data as string[];
-            availablePackageVersions.sort();
+            availablePackageVersions.sort(
+                (version1, version2) => semver.compare(version1, version2)
+            );
+            if (this.showNewestVersionsFirst)
+                availablePackageVersions.reverse();
+
             if (availablePackageVersions) {
+                let sortKey = 0;
                 for (const availablePackageVersion of availablePackageVersions) {
                     if (packageVersion && !availablePackageVersion.startsWith(packageVersion)) {
                         isLocallyFiltered = true;
@@ -133,7 +141,14 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
                     }
 
                     const completionItem = new vscode.CompletionItem(availablePackageVersion, vscode.CompletionItemKind.Value);
-                    completionItems.push(completionItem);  
+                    if (this.showNewestVersionsFirst) {
+                        let sortText = sortKey.toString();
+                        completionItem.sortText = 'NuGet' + ('000' + sortText).substring(sortText.length);
+                    }
+
+                    completionItems.push(completionItem);
+
+                    sortKey++;
                 }
             }
         }

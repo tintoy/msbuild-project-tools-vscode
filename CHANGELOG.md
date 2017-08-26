@@ -1,5 +1,10 @@
 # Change Log
 
+## v0.1.12
+
+* Sort package versions in descending order for classic completion provider, too.  
+  If you prefer the old behaviour, you can set `msbuildProjectTools.nuget.newestVersionsFirst` to `false`.
+
 ## v0.1.11
 
 * Sort package versions in descending order.  

@@ -18,16 +18,12 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="range">
         ///     The <see cref="Range"/>, within the source text, spanned by the node.
         /// </param>
-        /// <param name="parent">
-        ///     The node's parent (if any).
-        /// </param>
-        protected XSNode(Range range, XSNode parent)
+        protected XSNode(Range range)
         {
             if (range == null)
                 throw new ArgumentNullException(nameof(range));
             
             Range = range;
-            Parent = parent;
         }
 
         /// <summary>
@@ -44,39 +40,6 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     Does the <see cref="XSNode"/> represent valid XML?
         /// </summary>
         public abstract bool IsValid { get; }
-
-        /// <summary>
-        ///     The node's parent (if any).
-        /// </summary>
-        public XSNode Parent { get; private set; }
-
-        /// <summary>
-        ///     Create a copy of the <see cref="XSNode"/>, but with the specified parent node.
-        /// </summary>
-        /// <param name="parent">
-        ///     The parent node, or <c>null</c> if the new node should have no parent.
-        /// </param>
-        /// <returns>
-        ///     The new node.
-        /// </returns>
-        protected XSNode WithParent(XSNode parent)
-        {
-            if (ReferenceEquals(Parent, parent))
-                return this;
-
-            XSNode clone = Clone();
-            clone.Parent = parent;
-
-            return clone;
-        }
-
-        /// <summary>
-        ///     Clone the <see cref="XSNode"/>.
-        /// </summary>
-        /// <returns>
-        ///     The clone.
-        /// </returns>
-        protected abstract XSNode Clone();
     }
 
     /// <summary>
@@ -98,11 +61,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="range">
         ///     The <see cref="Range"/>, within the source text, spanned by the node.
         /// </param>
-        /// <param name="parent">
-        ///     The node's parent (if any).
-        /// </param>
-        protected XSNode(TSyntax syntaxNode, Range range, XSNode parent)
-            : base(range, parent)
+        protected XSNode(TSyntax syntaxNode, Range range)
+            : base(range)
         {
             if (syntaxNode == null)
                 throw new ArgumentNullException(nameof(syntaxNode));

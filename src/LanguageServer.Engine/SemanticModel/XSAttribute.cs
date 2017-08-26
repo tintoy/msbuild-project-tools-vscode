@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Language.Xml;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
@@ -14,7 +15,10 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="attribute">
         ///     The <see cref="XmlAttributeSyntax"/> represented by the <see cref="XSAttribute"/>.
         /// </param>
-        /// <param name="range">
+        /// <param name="element">
+        ///     The element that contains the attribute.
+        /// </param>
+        /// <param name="attributeRange">
         ///     The <see cref="Range"/>, within the source text, spanned by the attribute.
         /// </param>
         /// <param name="nameRange">
@@ -23,20 +27,21 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="valueRange">
         ///     The <see cref="Range"/>, within the source text, spanned by the attribute's value.
         /// </param>
-        /// <param name="element">
-        ///     The element that contains the attribute.
-        /// </param>
-        public XSAttribute(XmlAttributeSyntax attribute, Range range, Range nameRange, Range valueRange, XSElement element)
-            : base(attribute, range, element)
+        public XSAttribute(XmlAttributeSyntax attribute, XSElement element, Range attributeRange, Range nameRange, Range valueRange)
+            : base(attribute, attributeRange)
         {
             if (nameRange == null)
-                throw new System.ArgumentNullException(nameof(nameRange));
+                throw new ArgumentNullException(nameof(nameRange));
 
             if (valueRange == null)
-                throw new System.ArgumentNullException(nameof(valueRange));
+                throw new ArgumentNullException(nameof(valueRange));
+                
+            if (element == null)
+                throw new ArgumentNullException(nameof(element));
 
             NameRange = nameRange;
             ValueRange = valueRange;
+            Element = element;
         }
 
         /// <summary>
@@ -57,7 +62,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <summary>
         ///     The element that contains the attribute.
         /// </summary>
-        public XSElement Element => (XSElement)Parent;
+        public XSElement Element { get; }
 
         /// <summary>
         ///     The <see cref="Range"/>, within the source text, spanned by the attribute's name.
@@ -78,24 +83,5 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     Does the <see cref="XSNode"/> represent valid XML?
         /// </summary>
         public override bool IsValid => true;
-
-        /// <summary>
-        ///     Create a copy of the <see cref="XSAttribute"/>, but with the specified parent element.
-        /// </summary>
-        /// <param name="element">
-        ///     The parent element, or <c>null</c> if the new node should have no parent.
-        /// </param>
-        /// <returns>
-        ///     The new node.
-        /// </returns>
-        public XSAttribute WithElement(XSElement element) => (XSAttribute)base.WithParent(element);
-
-        /// <summary>
-        ///     Clone the <see cref="XSAttribute"/>.
-        /// </summary>
-        /// <returns>
-        ///     The clone.
-        /// </returns>
-        protected override XSNode Clone() => new XSAttribute(AttributeNode, Range, NameRange, ValueRange, Element);
     }
 }

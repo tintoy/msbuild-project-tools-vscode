@@ -1,4 +1,5 @@
 using Microsoft.Language.Xml;
+using System;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
@@ -21,8 +22,12 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The element whose content includes the text.
         /// </param>
         public XSElementText(XmlTextSyntax textNode, Range range, XSElement element)
-            : base(textNode, range, element)
+            : base(textNode, range)
         {
+            if (element == null)
+                throw new ArgumentNullException(nameof(element));
+            
+            Element = element;
         }
 
         /// <summary>
@@ -33,7 +38,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <summary>
         ///     The element whose content includes the text.
         /// </summary>
-        public XSElement Element => (XSElement)Parent;
+        public XSElement Element { get; }
 
         /// <summary>
         ///     The kind of XML node represented by the <see cref="XSNode"/>.
@@ -44,13 +49,5 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     Does the <see cref="XSNode"/> represent valid XML?
         /// </summary>
         public override bool IsValid => true;
-
-        /// <summary>
-        ///     Clone the <see cref="XSElementText"/>.
-        /// </summary>
-        /// <returns>
-        ///     The clone.
-        /// </returns>
-        protected override XSNode Clone() => new XSElementText(TextNode, Range, Element);
     }
 }

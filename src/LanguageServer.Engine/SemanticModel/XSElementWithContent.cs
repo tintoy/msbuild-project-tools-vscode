@@ -1,4 +1,7 @@
 using Microsoft.Language.Xml;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
@@ -33,13 +36,13 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             : base(element, range, parent)
         {
             if (openingTagRange == null)
-                throw new System.ArgumentNullException(nameof(openingTagRange));
+                throw new ArgumentNullException(nameof(openingTagRange));
 
             if (contentRange == null)
-                throw new System.ArgumentNullException(nameof(contentRange));
+                throw new ArgumentNullException(nameof(contentRange));
 
             if (closingTagRange == null)
-                throw new System.ArgumentNullException(nameof(closingTagRange));
+                throw new ArgumentNullException(nameof(closingTagRange));
 
             OpeningTagRange = openingTagRange;
             ContentRange = contentRange;
@@ -79,14 +82,6 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <summary>
         ///     Does the <see cref="XSElement"/> have any content (besides attributes)?
         /// </summary>
-        public override bool HasContent => true;
-
-        /// <summary>
-        ///     Clone the <see cref="XSElementWithContent"/>.
-        /// </summary>
-        /// <returns>
-        ///     The clone.
-        /// </returns>
-        protected override XSNode Clone() => new XSElementWithContent(ElementNode, Range, OpeningTagRange, ContentRange, ClosingTagRange, ParentElement);
+        public override bool HasContent => Content.Count > 0;
     }
 }

@@ -42,40 +42,113 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// </summary>
         ITestOutputHelper TestOutput { get; }
 
-        [Fact]
-        public void DumpSemanticModel()
+        /// <summary>
+        ///     XSParser should discover the specified number of nodes.
+        /// </summary>
+        /// <param name="testFileName">
+        ///     The name of the test file, without the extension.
+        /// </param>
+        /// <param name="expectedNodeCount">
+        ///     The expected number of nodes to be 
+        /// </param>
+        [InlineData("Test1", 12)]
+        [Theory(DisplayName = "XSParser discovers node count ")]
+        void NodeCount(string testFileName, int expectedNodeCount)
         {
-            string testXml = LoadTestFile("TestFiles", "Test1.xml");
+            string testXml = LoadTestFile("TestFiles", testFileName + ".xml");
             TextPositions xmlPositions = new TextPositions(testXml);
             XmlDocumentSyntax xmlDocument = Parser.ParseText(testXml);
 
-            List<XSNode> semanticModel = xmlDocument.GetSemanticModel(xmlPositions);
-            Assert.NotNull(semanticModel);
-            TestOutput.WriteLine("{0} nodes discovered.", semanticModel.Count);
+            List<XSNode> nodes = xmlDocument.GetSemanticModel(xmlPositions);
+            Assert.NotNull(nodes);
+            Assert.Equal(expectedNodeCount, nodes.Count);
+        }
 
-            foreach (XSNode node in semanticModel)
-            {
-                string nodeName = "";
-                switch (node)
-                {
-                    case XSElement element:
-                    {
-                        nodeName = element.Name;
+        /// <summary>
+        ///     XSParser should discover a node of the specified kind at the specified index.
+        /// </summary>
+        /// <param name="testFileName">
+        ///     The name of the test file, without the extension.
+        /// </param>
+        /// <param name="index">
+        ///     The node index.
+        /// </param>
+        /// <param name="nodeKind">
+        ///     The node kind.
+        /// </param>
+        [InlineData("Test1", 0, XSNodeKind.Element)]
+        [InlineData("Test1", 1, XSNodeKind.Whitespace)]
+        [InlineData("Test1", 2, XSNodeKind.Element)]
+        [InlineData("Test1", 3, XSNodeKind.Attribute)]
+        [InlineData("Test1", 4, XSNodeKind.Whitespace)]
+        [InlineData("Test1", 5, XSNodeKind.Element)]
+        [InlineData("Test1", 6, XSNodeKind.Whitespace)]
+        [InlineData("Test1", 7, XSNodeKind.Element)]
+        [InlineData("Test1", 8, XSNodeKind.Whitespace)]
+        [InlineData("Test1", 9, XSNodeKind.Whitespace)]
+        [InlineData("Test1", 10, XSNodeKind.Element)]
+        [InlineData("Test1", 11, XSNodeKind.Whitespace)]
+        [Theory(DisplayName = "XSParser discovers node of kind ")]
+        void NodeKind(string testFileName, int index, XSNodeKind nodeKind)
+        {
+            string testXml = LoadTestFile("TestFiles", testFileName + ".xml");
+            TextPositions xmlPositions = new TextPositions(testXml);
+            XmlDocumentSyntax xmlDocument = Parser.ParseText(testXml);
 
-                        break;
-                    }
-                    case XSAttribute attribute:
-                    {
-                        nodeName = attribute.Name;
+            List<XSNode> nodes = xmlDocument.GetSemanticModel(xmlPositions);
+            Assert.NotNull(nodes);
+            Assert.InRange(index, 0, nodes.Count - 1);
 
-                        break;
-                    }
-                }
+            XSNode node = nodes[index];
+            Assert.NotNull(node);
 
-                TestOutput.WriteLine("{0} '{1}' spanning {2}",
-                    node.Kind, nodeName, node.Range
-                );
-            }
+            Assert.Equal(nodeKind, node.Kind);
+        }
+
+        /// <summary>
+        ///     XSParser should discover nodes of the specified type at the specified index.
+        /// </summary>
+        /// <param name="testFileName">
+        ///     The name of the test file, without the extension.
+        /// </param>
+        /// <param name="index">
+        ///     The node index.
+        /// </param>
+        /// <param name="nodeKind">
+        ///     The node kind.
+        /// </param>
+        [InlineData("Test1", 0, 1, 1, 7, 12)]
+        [InlineData("Test1", 1, 1, 11, 2, 5)]
+        [InlineData("Test1", 2, 2, 5, 5, 16)]
+        [InlineData("Test1", 3, 2, 15, 2, 34)]
+        [InlineData("Test1", 4, 2, 35, 3, 9)]
+        [InlineData("Test1", 5, 3, 9, 3, 21)]
+        [InlineData("Test1", 6, 3, 21, 4, 9)]
+        [InlineData("Test1", 7, 4, 9, 4, 21)]
+        [InlineData("Test1", 8, 4, 21, 5, 5)]
+        [InlineData("Test1", 9, 5, 16, 6, 5)]
+        [InlineData("Test1", 10, 6, 5, 6, 26)]
+        [InlineData("Test1", 11, 6, 26, 7, 1)]
+        [Theory(DisplayName = "XSParser discovers node with range ")]
+        void NodeRange(string testFileName, int index, int startLine, int startColumn, int endLine, int endColumn)
+        {
+            string testXml = LoadTestFile("TestFiles", testFileName + ".xml");
+            TextPositions xmlPositions = new TextPositions(testXml);
+            XmlDocumentSyntax xmlDocument = Parser.ParseText(testXml);
+
+            List<XSNode> nodes = xmlDocument.GetSemanticModel(xmlPositions);
+            Assert.NotNull(nodes);
+            Assert.InRange(index, 0, nodes.Count - 1);
+
+            XSNode node = nodes[index];
+            Assert.NotNull(node);
+
+            Range expectedRange = new Range(
+                start: new Position(startLine, startColumn),
+                end: new Position(endLine, endColumn)
+            );
+
+            Assert.Equal(expectedRange, node.Range);
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
 using Microsoft.Language.Xml;
+using System;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
@@ -15,11 +16,15 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The <see cref="Range"/>, within the source text, spanned by the whitespace.
         /// </param>
         /// <param name="parent">
-        ///     The <see cref="XSNode"/> that contains the whitespace.
+        ///     The <see cref="XSElement"/> that contains the whitespace.
         /// </param>
-        public XSWhitespace(Range range, XSNode parent)
-            : base(range, parent)
+        public XSWhitespace(Range range, XSElement parent)
+            : base(range)
         {
+            if (parent == null)
+                throw new ArgumentNullException(nameof(parent));
+            
+            Parent = parent;
         }
 
         /// <summary>
@@ -28,16 +33,13 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         public override XSNodeKind Kind => XSNodeKind.Whitespace;
 
         /// <summary>
+        ///     The <see cref="XSElement"/> that contains the whitespace.
+        /// </summary>
+        public XSElement Parent { get; }
+
+        /// <summary>
         ///     Does the <see cref="XSNode"/> represent valid XML?
         /// </summary>
         public override bool IsValid => true;
-
-        /// <summary>
-        ///     Clone the <see cref="XSWhitespace"/>.
-        /// </summary>
-        /// <returns>
-        ///     The clone.
-        /// </returns>
-        protected override XSNode Clone() => new XSWhitespace(Range, Parent);
     }
 }

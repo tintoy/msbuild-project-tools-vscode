@@ -14,6 +14,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="attribute">
         ///     The <see cref="XmlAttributeSyntax"/> represented by the <see cref="XSInvalidAttribute"/>.
         /// </param>
+        /// <param name="element">
+        ///     The element that contains the attribute.
+        /// </param>
         /// <param name="range">
         ///     The <see cref="Range"/>, within the source text, spanned by the attribute.
         /// </param>
@@ -23,11 +26,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="valueRange">
         ///     The <see cref="Range"/>, within the source text, spanned by the attribute's value.
         /// </param>
-        /// <param name="element">
-        ///     The element that contains the attribute.
-        /// </param>
-        public XSInvalidAttribute(XmlAttributeSyntax attribute, Range range, Range nameRange, Range valueRange, XSElement element)
-            : base(attribute, range, nameRange, valueRange, element)
+        public XSInvalidAttribute(XmlAttributeSyntax attribute, XSElement element, Range range, Range nameRange, Range valueRange)
+            : base(attribute, element, range, nameRange, valueRange)
         {
         }
 

@@ -25,8 +25,8 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// <param name="expectedChar">
         ///     The character whose (0-based) absolute position in the source text will be used as the basis for the test.
         /// </param>
-        [Theory]
         [MemberData(nameof(GetAbsolutePosition_WindowsLineEndings_Data))]
+        [Theory(DisplayName = "Get absolute position from line and column with Windows line-endings ")]
         public void GetAbsolutePosition_WindowsLineEndings(int line, int column, char expectedChar)
         {
             const string text = TestData.TextWithWindowsLineEndings.Text;
@@ -53,8 +53,8 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// <param name="expectedColumn">
         ///     The (1-based) expected column number.
         /// </param>
-        [Theory]
         [MemberData(nameof(GetPosition_WindowsLineEndings_Data))]
+        [Theory(DisplayName = "Get line and column from absolute position with Windows line-endings ")]
         public void GetPosition_WindowsLineEndings(char forChar, int expectedLine, int expectedColumn)
         {
             const string text = TestData.TextWithWindowsLineEndings.Text;

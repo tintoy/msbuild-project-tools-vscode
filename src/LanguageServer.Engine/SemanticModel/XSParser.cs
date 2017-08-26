@@ -7,6 +7,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
     using Utilities;
 
+    // TODO: Consider defining and capturing XSElementEndTag.
+
     /// <summary>
     ///     Parses the syntax model to derive a semantic model.
     /// </summary>
@@ -34,7 +36,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
 
             XSParserVisitor parserVisitor = new XSParserVisitor(xmlPositions);
             parserVisitor.Visit(document);
-            parserVisitor.CalculateWhitespace();
+            parserVisitor.InferWhitespace();
 
             return new List<XSNode>(
                 parserVisitor.DiscoveredNodes
@@ -65,7 +67,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
 
             XSParserVisitor parserVisitor = new XSParserVisitor(xmlPositions);
             parserVisitor.Visit(node);
-            parserVisitor.CalculateWhitespace();
+            parserVisitor.InferWhitespace();
 
             return new List<XSNode>(
                 parserVisitor.DiscoveredNodes
@@ -94,11 +96,6 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             ///     Lookup for document text positions.
             /// </summary>
             readonly TextPositions _textPositions;
-
-            /// <summary>
-            ///     The index of the current element (if any) in the list of discovered nodes.
-            /// </summary>
-            int _currentElementIndex = -1;
 
             /// <summary>
             ///     Create a new <see cref="XSParserVisitor"/>.
@@ -132,36 +129,57 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             /// <summary>
             ///     Find the spaces between elements and use that to infer whitespace.
             /// </summary>
-            public void CalculateWhitespace()
+            public void InferWhitespace()
             {
+                // TODO: Merge contiguous whitespace.
+
                 Queue<XSElement> discoveredElements = new Queue<XSElement>(
                     DiscoveredNodes.OfType<XSElement>()
                         .OrderBy(discoveredNode => discoveredNode.Range.Start)
                         .ThenBy(discoveredNode => discoveredNode.Range.End)
                 );
 
-                while (discoveredElements.Count > 1) // AF: What about the last one?
+                while (discoveredElements.Count > 0)
                 {
-                    XSElement element1 = discoveredElements.Dequeue();
-                    XSElement element2 = discoveredElements.Peek();
-
-                    int charsBetweenElements;
-                    if (element2.ParentElement == element1)
-                    {
-                        XSElementWithContent element1WithContent = (XSElementWithContent)element1;
-
-                        int element1OpeningTagEnd = element1WithContent.ElementNode.StartTag.End;
-                        charsBetweenElements = element2.ElementNode.Start - element1OpeningTagEnd; 
-
+                    XSElementWithContent element = discoveredElements.Dequeue() as XSElementWithContent;
+                    if (element == null)
                         continue;
+
+                    int startOfNextNode, endOfNode, whitespaceLength;
+
+                    endOfNode = element.ElementNode.StartTag.Span.End;
+                    foreach (XSElement childElement in element.ChildElements)
+                    {
+                        startOfNextNode = childElement.ElementNode.Span.Start;
+
+                        whitespaceLength = startOfNextNode - endOfNode;
+                        if (whitespaceLength > 0)
+                        {
+                            DiscoveredNodes.Add(new XSWhitespace(
+                                range: new Range(
+                                    start: _textPositions.GetPosition(endOfNode),
+                                    end: _textPositions.GetPosition(startOfNextNode)
+                                ),
+                                parent: element
+                            ));
+                        }
+
+                        endOfNode = childElement.ElementNode.Span.End;
                     }
 
-                    discoveredElements.Dequeue();
-
-                    charsBetweenElements = element2.ElementNode.Start - element1.ElementNode.End;
-                    if (charsBetweenElements != 0)
-                        System.Diagnostics.Debugger.Break();
-                    
+                    // Any trailing whitespace before the closing tag?
+                    startOfNextNode = element.ElementNode.EndTag.Span.Start;
+                    whitespaceLength = startOfNextNode - endOfNode;
+                    if (whitespaceLength > 0)
+                    {
+                        DiscoveredNodes.Add(new XSWhitespace(
+                            range: new Range(
+                                start: _textPositions.GetPosition(endOfNode),
+                                end: _textPositions.GetPosition(startOfNextNode)
+                            ),
+                            parent: element
+                        ));
+                    }
                 }
             }
 
@@ -213,27 +231,16 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 else
                     xsElement = new XSElementWithContent(element, elementRange, openingTagRange, contentRange, closingTagRange, parent: CurrentElement);
 
+                if (xsElement.ParentElement is XSElementWithContent parentElement)
+                    parentElement.Content.Add(xsElement);
+
                 PushElement(xsElement);
 
                 foreach (XmlAttributeSyntax attribute in element.AsSyntaxElement.Attributes)
                     Visit(attribute);
 
-                Position previousTagEnd = _textPositions.GetPosition(element.StartTag.End);
                 foreach (XmlElementSyntaxBase childElement in element.Elements.OfType<XmlElementSyntaxBase>())
-                {
-                    Range leadingWhitespaceRange = new Range(
-                        start: previousTagEnd,
-                        end: _textPositions.GetPosition(childElement.Start)
-                    );
-                    if (!leadingWhitespaceRange.IsEmpty)
-                    {
-                        DiscoveredNodes.Add(
-                            new XSWhitespace(leadingWhitespaceRange, xsElement)
-                        );
-                    }
-
                     Visit(childElement);
-                }
 
                 PopElement();
 
@@ -258,6 +265,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                     xsElement = new XSInvalidElement(emptyElement, elementRange, parent: CurrentElement, hasContent: false);
                 else
                     xsElement = new XSEmptyElement(emptyElement, elementRange, parent: CurrentElement);
+
+                if (xsElement.ParentElement is XSElementWithContent parentElement)
+                    parentElement.Content.Add(xsElement);
 
                 PushElement(xsElement);
 
@@ -289,19 +299,14 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
 
                 XSAttribute xsAttribute;
                 if (String.IsNullOrWhiteSpace(attribute.Name) || nameRange == attributeRange || valueRange == attributeRange)
-                    xsAttribute = new XSInvalidAttribute(attribute, attributeRange, nameRange, valueRange, CurrentElement);
+                    xsAttribute = new XSInvalidAttribute(attribute, CurrentElement, attributeRange, nameRange, valueRange);
                 else
-                    xsAttribute = new XSAttribute(attribute, attributeRange, nameRange, valueRange, CurrentElement);
+                    xsAttribute = new XSAttribute(attribute, CurrentElement, attributeRange, nameRange, valueRange);
 
-                ModifyCurrentElement(
-                    currentElement => currentElement.WithAttribute(xsAttribute)
-                );
-
-                // Add the re-parented attribute, not the original.
-                xsAttribute = CurrentElement.Attributes[CurrentElement.Attributes.Count - 1];
+                CurrentElement.Attributes.Add(xsAttribute);
                 DiscoveredNodes.Add(xsAttribute);
 
-                return base.VisitXmlAttribute(attribute);
+                return attribute;
             }
 
             /// <summary>
@@ -327,28 +332,6 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             }
 
             /// <summary>
-            ///     Modify the current element.
-            /// </summary>
-            /// <param name="modification">
-            ///     A delegate that takes the current element, and returns a modified element.
-            /// </param>
-            void ModifyCurrentElement(Func<XSElement, XSElement> modification)
-            {
-                if (modification == null)
-                    throw new ArgumentNullException(nameof(modification));
-
-                if (!HaveCurrentElement)
-                    throw new InvalidOperationException("No current element.");
-                
-                XSElement modified = modification(
-                    _elementStack.Pop()
-                );
-                _elementStack.Push(modified);
-
-                DiscoveredNodes[_currentElementIndex] = modified;
-            }
-
-            /// <summary>
             ///     Push an <see cref="XSElement"/> onto the stack.
             /// </summary>
             /// <param name="element">
@@ -365,7 +348,6 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 _elementStack.Push(element);
 
                 DiscoveredNodes.Add(element);
-                _currentElementIndex = DiscoveredNodes.Count - 1;                
 
                 return element;
             }
@@ -376,8 +358,6 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             void PopElement()
             {
                 _elementStack.Pop();
-
-                _currentElementIndex = DiscoveredNodes.Count - 1;
             }
         }
     }

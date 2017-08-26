@@ -38,13 +38,5 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     Does the <see cref="XSElement"/> have any content (besides attributes)?
         /// </summary>
         public override bool HasContent { get; }
-
-        /// <summary>
-        ///     Clone the <see cref="XSInvalidElement"/>.
-        /// </summary>
-        /// <returns>
-        ///     The clone.
-        /// </returns>
-        protected override XSNode Clone() => new XSInvalidElement(ElementNode, Range, ParentElement, HasContent);
     }
 }

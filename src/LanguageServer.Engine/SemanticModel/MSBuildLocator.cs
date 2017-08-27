@@ -188,13 +188,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// </summary>
         void SortObjectRanges()
         {
-            Range[] unsortedRanges = _objectRanges.ToArray();
-            _objectRanges.Clear();
-            _objectRanges.AddRange(
-                unsortedRanges
-                    .OrderBy(range => range.Start)
-                    .ThenBy(range => range.End)
-            );
+            _objectRanges.Sort();
         }
 
         /// <summary>

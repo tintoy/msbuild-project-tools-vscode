@@ -199,6 +199,8 @@ namespace MSBuildProjectTools.LanguageServer
             if (comparison < 0)
                 return comparison;
 
+            // AF: This comparison is may now be suspect - remember that .Contains no longer includes the end position.
+
             comparison = CompareTo(range.End);
             if (comparison > 0)
                 return comparison;

@@ -37,6 +37,8 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         [Theory(DisplayName = "Expect line and column to be inside element ")]
         public void Line_Col_ListInsideElement1(string testFileName, int line, int column)
         {
+            // TODO: Change this test to use XmlLocator.
+
             Position testPosition = new Position(line, column);
             Console.WriteLine("Test Position: {0}", testPosition);
 

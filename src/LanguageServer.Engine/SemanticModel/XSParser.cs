@@ -124,15 +124,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             public void FinaliseModel()
             {
                 ComputeWhitespace();
-
-                XSNode[] sortedNodes =
-                    DiscoveredNodes
-                        .OrderBy(discoveredNode => discoveredNode.Range.Start)
-                        .ThenBy(discoveredNode => discoveredNode.Range.End)
-                        .ToArray();
-                DiscoveredNodes.Clear();
-                DiscoveredNodes.AddRange(sortedNodes);
-
+                DiscoveredNodes.Sort(
+                    (node1, node2) => node1.Range.CompareTo(node2.Range)
+                );
                 ConnectSiblings();
             }
 

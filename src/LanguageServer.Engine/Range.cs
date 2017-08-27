@@ -21,6 +21,26 @@ namespace MSBuildProjectTools.LanguageServer
         /// <summary>
         ///     Create a new <see cref="Range"/>.
         /// </summary>
+        /// <param name="startLine">
+        ///     The range's (1-based) starting line number.
+        /// </param>
+        /// <param name="startColumn">
+        ///     The range's (1-based) starting column number.
+        /// </param>
+        /// <param name="endLine">
+        ///     The range's (1-based) ending line number.
+        /// </param>
+        /// <param name="endColumn">
+        ///     The range's (1-based) ending column number.
+        /// </param>
+        public Range(int startLine, int startColumn, int endLine, int endColumn)
+            : this(start: new Position(startLine, startColumn), end: new Position(endLine, endColumn))
+        {
+        }
+
+        /// <summary>
+        ///     Create a new <see cref="Range"/>.
+        /// </summary>
         /// <param name="start">
         ///     The range's starting position.
         /// </param>
@@ -199,11 +219,8 @@ namespace MSBuildProjectTools.LanguageServer
                 throw new ArgumentNullException(nameof(other));
             
             int startComparison = Start.CompareTo(other.Start);
-            if (startComparison < 0)
+            if (startComparison != 0)
                 return startComparison;
-
-            if (startComparison == 0)
-                return -End.CompareTo(other.End);
 
             return End.CompareTo(other.End);
         }

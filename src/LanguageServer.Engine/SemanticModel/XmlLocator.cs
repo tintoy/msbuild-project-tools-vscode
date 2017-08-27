@@ -151,11 +151,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             Range lastMatchingRange = null;
             foreach (Range objectRange in _nodeRanges)
             {
-                if (position < objectRange)
-                    break;
-
-                if (lastMatchingRange != null && objectRange > lastMatchingRange)
-                    break; // No match.
+                if (lastMatchingRange != null && objectRange.End > lastMatchingRange.End)
+                    break; // We've moved past the end of the last matching range.
 
                 if (objectRange.Contains(position))
                     lastMatchingRange = objectRange;

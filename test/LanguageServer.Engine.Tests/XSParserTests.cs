@@ -71,7 +71,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         ///     The name of the test file, without the extension.
         /// </param>
         /// <param name="index">
-        ///     The node index.
+        ///     The node's index within the semantic model.
         /// </param>
         /// <param name="nodeKind">
         ///     The node kind.
@@ -88,6 +88,19 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         [InlineData("Test1", 9, XSNodeKind.Whitespace)]
         [InlineData("Test1", 10, XSNodeKind.Element)]
         [InlineData("Test1", 11, XSNodeKind.Whitespace)]
+        [InlineData("Invalid.EmptyOpeningTag", 0, XSNodeKind.Element)]
+        [InlineData("Invalid.EmptyOpeningTag", 1, XSNodeKind.Whitespace)]
+        [InlineData("Invalid.EmptyOpeningTag", 2, XSNodeKind.Element)]
+        [InlineData("Invalid.EmptyOpeningTag", 3, XSNodeKind.Attribute)]
+        [InlineData("Invalid.EmptyOpeningTag", 4, XSNodeKind.Whitespace)]
+        [InlineData("Invalid.EmptyOpeningTag", 5, XSNodeKind.Element)]
+        [InlineData("Invalid.EmptyOpeningTag", 6, XSNodeKind.Whitespace)]
+        [InlineData("Invalid.EmptyOpeningTag", 7, XSNodeKind.Element)]
+        [InlineData("Invalid.EmptyOpeningTag", 8, XSNodeKind.Whitespace)]
+        [InlineData("Invalid.EmptyOpeningTag", 9, XSNodeKind.Element)] // Invalid element
+        [InlineData("Invalid.EmptyOpeningTag", 10, XSNodeKind.Whitespace)]
+        [InlineData("Invalid.EmptyOpeningTag", 11, XSNodeKind.Whitespace)]
+        [InlineData("Invalid.EmptyOpeningTag", 12, XSNodeKind.Element)]
         [Theory(DisplayName = "XSParser discovers node of kind ")]
         void NodeKind(string testFileName, int index, XSNodeKind nodeKind)
         {
@@ -103,6 +116,35 @@ namespace MSBuildProjectTools.LanguageServer.Tests
             Assert.NotNull(node);
 
             Assert.Equal(nodeKind, node.Kind);
+        }
+
+        /// <summary>
+        ///     XSParser should discover an invalid element at the specified index.
+        /// </summary>
+        /// <param name="testFileName">
+        ///     The name of the test file, without the extension.
+        /// </param>
+        /// <param name="index">
+        ///     The element node's index within the semantic model.
+        /// </param>
+        [InlineData("Invalid.EmptyOpeningTag", 9)]
+        [InlineData("Invalid.DoubleOpeningTag", 7)]
+        [Theory(DisplayName = "XSParser discovers invalid element ")]
+        void InvalidElement(string testFileName, int index)
+        {
+            string testXml = LoadTestFile("TestFiles", testFileName + ".xml");
+            TextPositions xmlPositions = new TextPositions(testXml);
+            XmlDocumentSyntax xmlDocument = Parser.ParseText(testXml);
+
+            List<XSNode> nodes = xmlDocument.GetSemanticModel(xmlPositions);
+            Assert.NotNull(nodes);
+            Assert.InRange(index, 0, nodes.Count - 1);
+
+            XSNode node = nodes[index];
+            Assert.NotNull(node);
+
+            Assert.Equal(XSNodeKind.Element, node.Kind);
+            Assert.False(node.IsValid, "IsValid");
         }
 
         /// <summary>

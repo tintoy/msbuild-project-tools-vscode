@@ -3,8 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MSBuildProjectTools.LanguageServer.Utilities
+namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
+    using Utilities;
+
     /// <summary>
     ///     Extension methods for working with types from Microsoft.Language.Xml.
     /// </summary>

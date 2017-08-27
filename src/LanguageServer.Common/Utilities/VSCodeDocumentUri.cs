@@ -6,7 +6,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
     /// <summary>
     ///     Helper methods for working with VSCode document <see cref="Uri"/>s.
     /// </summary>
-    static class VSCodeDocumentUri
+    public static class VSCodeDocumentUri
     {
         /// <summary>
         ///     Get the local file-system path for the specified document URI.

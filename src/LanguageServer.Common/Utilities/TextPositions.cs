@@ -133,19 +133,19 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
                 switch (currentChar)
                 {
                     case '\r':
-                        {
-                            if (currentPosition < text.Length && text[currentPosition] == '\n')
-                                currentPosition++;
+                    {
+                        if (currentPosition < text.Length && text[currentPosition] == '\n')
+                            currentPosition++;
 
-                            goto case '\n';
-                        }
+                        goto case '\n';
+                    }
                     case '\n':
-                        {
-                            lineStarts.Add(currentLineStart);
-                            currentLineStart = currentPosition;
+                    {
+                        lineStarts.Add(currentLineStart);
+                        currentLineStart = currentPosition;
 
-                            break;
-                        }
+                        break;
+                    }
                 }
             }
             lineStarts.Add(currentLineStart);

@@ -1,10 +1,10 @@
 using Microsoft.Language.Xml;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
-    using System.Linq;
     using Utilities;
 
     /// <summary>
@@ -93,7 +93,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             {
                 if (position == nodeAtPosition.Range.End && position == nodeAtPosition.NextSibling.Range.Start)
                 {
-                    Serilog.Log.Logger.Information("XmlLocator.Inspect moves to next sibling ({NodeKind} @ {NodeRange} -> {NextSiblingKind} @ {NextSiblingRange}).",
+                    Serilog.Log.Logger.Debug("XmlLocator.Inspect moves to next sibling ({NodeKind} @ {NodeRange} -> {NextSiblingKind} @ {NextSiblingRange}).",
                         nodeAtPosition.Kind,
                         nodeAtPosition.Range,
                         nodeAtPosition.NextSibling.Kind,

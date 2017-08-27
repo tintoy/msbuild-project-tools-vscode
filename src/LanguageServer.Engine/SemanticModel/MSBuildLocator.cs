@@ -106,23 +106,24 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (position == null)
                 throw new ArgumentNullException(nameof(position));
 
-            // Internally, we always use 1-based indexing because this is what the System.Xml APIs (and I'd rather keep things simple).
+            // Internally, we always use 1-based indexing because this is what the System.Xml APIs use (and I'd rather keep things simple).
             position = position.ToOneBased();
-            
+
+            // Short-circuit.
+            if (_objectsByStartPosition.TryGetValue(position, out MSBuildObject exactMatch))
+                return exactMatch;
+
             // TODO: Use binary search.
 
             Range lastMatchingRange = null;
             foreach (Range objectRange in _objectRanges)
             {
-                if (position < objectRange)
-                    continue;
-
-                if (lastMatchingRange != null && objectRange > lastMatchingRange)
-                    break; // No match.
+                if (lastMatchingRange != null && objectRange.End > lastMatchingRange.End)
+                    break; // We've moved past the end of the last matching range.
 
                 if (objectRange.Contains(position))
                     lastMatchingRange = objectRange;
-            }   
+            }
             if (lastMatchingRange == null)
                 return null;
 

@@ -144,7 +144,12 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (position == null)
                 throw new ArgumentNullException(nameof(position));
 
+            // Internally, we always use 1-based indexing because this is what the MSBuild APIs use (and I'd rather keep things simple).
             position = position.ToOneBased();
+
+            // Short-circuit.
+            if (_nodesByStartPosition.TryGetValue(position, out XSNode exactMatch))
+                return exactMatch;
 
             // TODO: Use binary search.
 

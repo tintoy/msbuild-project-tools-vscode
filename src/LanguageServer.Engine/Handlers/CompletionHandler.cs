@@ -3,7 +3,6 @@ using Lsp;
 using Lsp.Capabilities.Client;
 using Lsp.Models;
 using Lsp.Protocol;
-using Microsoft.Language.Xml;
 using NuGet.Versioning;
 using Serilog;
 using System;
@@ -14,7 +13,6 @@ using System.Threading.Tasks;
     
 namespace MSBuildProjectTools.LanguageServer.Handlers
 {
-    using ContentProviders;
     using Documents;
     using SemanticModel;
     using Utilities;
@@ -134,23 +132,17 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 Position position = parameters.Position.ToNative();
 
-                // Try to match up the position with an element or attribute in the XML.
-                SyntaxNode xml = projectDocument.GetXmlAtPosition(position);
-                if (xml == null)
-                    return null;
-
-                // Are we on an attribute?
-                XmlAttributeSyntax attribute = xml.GetContainingAttribute();
-                if (attribute == null)
-                    return null;
-
-                // Must be a PackageReference element.
-                if (!String.Equals(attribute.ParentElement.Name, "PackageReference", StringComparison.OrdinalIgnoreCase))
+                XSAttribute attribute;
+                XmlLocation location = projectDocument.XmlLocator.Inspect(position);
+                if (!location.IsAttribute(out attribute))
                     return null;
 
                 // Are we on the attribute's value?
-                Range attributeValueRange = attribute.GetValueRange(projectDocument.XmlPositions);
-                if (!attributeValueRange.Contains(position))
+                if (!location.IsAttributeValue())
+                    return null;
+
+                // Must be a PackageReference element.
+                if (!String.Equals(attribute.Element.Name, "PackageReference", StringComparison.OrdinalIgnoreCase))
                     return null;
 
                 try
@@ -167,7 +159,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                                 Kind = CompletionItemKind.Module,
                                 TextEdit = new TextEdit
                                 {
-                                    Range = attributeValueRange.ToLsp(),
+                                    Range = attribute.ValueRange.ToLsp(),
                                     NewText = packageId
                                 }
                             })
@@ -175,7 +167,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                     }
                     else if (attribute.Name == "Version")
                     {
-                        XmlAttributeSyntax includeAttribute = attribute.ParentElement.AsSyntaxElement["Include"];
+                        XSAttribute includeAttribute = attribute.Element["Include"];
                         if (includeAttribute == null)
                             return null;
 
@@ -184,7 +176,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                         if (Workspace.Configuration.ShowNewestNuGetVersionsFirst)
                             packageVersions = packageVersions.Reverse();
                             
-                        Lsp.Models.Range replacementRange = attributeValueRange.ToLsp();
+                        Lsp.Models.Range replacementRange = attribute.ValueRange.ToLsp();
                         
                         completionItems.AddRange(
                             packageVersions.Select((packageVersion, index) => new CompletionItem
@@ -217,7 +209,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             }
 
             CompletionList completionList = new CompletionList(completionItems,
-                isIncomplete: completionItems.Count >= 20 // Default page size.
+                isIncomplete: completionItems.Count >= 10 // Default page size.
             );
 
             return completionList;

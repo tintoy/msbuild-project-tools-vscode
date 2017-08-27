@@ -40,16 +40,6 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         readonly List<AutoCompleteResource> _autoCompleteResources = new List<AutoCompleteResource>();
 
         /// <summary>
-        ///     Cached package Ids, keyed by partial package Id.
-        /// </summary>
-        readonly Dictionary<string, string[]> _packageIdCache = new Dictionary<string, string[]>();
-
-        /// <summary>
-        ///     Cached package versions, keyed by package Id.
-        /// </summary>
-        readonly Dictionary<string, NuGetVersion[]> _packageVersionCache = new Dictionary<string, NuGetVersion[]>();
-
-        /// <summary>
         ///     The underlying MSBuild project collection.
         /// </summary>
         public virtual ProjectCollection MSBuildProjectCollection { get; protected set; }
@@ -231,6 +221,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
 
             Xml = Microsoft.Language.Xml.Parser.ParseText(xml);
             XmlPositions = new TextPositions(xml);
+            XmlLocator = new XmlLocator(Xml, XmlPositions);
             IsDirty = true;
             
             TryLoadMSBuildProject();
@@ -288,13 +279,8 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             if (!HasXml)
                 throw new InvalidOperationException("Project is not currently loaded.");
 
-            if (_packageIdCache.TryGetValue(packageIdPrefix, out string[] cachedPackageIds))
-                return new SortedSet<string>(cachedPackageIds);
-
             SortedSet<string> packageIds = await _autoCompleteResources.SuggestPackageIds(packageIdPrefix, includePrerelease: true, cancellationToken: cancellationToken);
-            if (packageIds.Count > 0)
-                _packageIdCache[packageIdPrefix] = packageIds.ToArray();
-
+            
             return packageIds;
         }
 
@@ -316,12 +302,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             if (!HasXml)
                 throw new InvalidOperationException("Project is not currently loaded.");
 
-            if (_packageVersionCache.TryGetValue(packageId, out NuGetVersion[] cachedPackageVersions))
-                return new SortedSet<NuGetVersion>(cachedPackageVersions);
-
             SortedSet<NuGetVersion> packageVersions = await _autoCompleteResources.SuggestPackageVersions(packageId, includePrerelease: true, cancellationToken: cancellationToken);
-            if (packageVersions.Count > 0)
-                _packageVersionCache[packageId] = packageVersions.ToArray();
 
             return packageVersions;
         }

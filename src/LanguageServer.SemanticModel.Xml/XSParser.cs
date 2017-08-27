@@ -364,7 +364,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
 
                 Range attributeRange = attribute.Span.ToNative(_textPositions);
                 Range nameRange = attribute.NameNode?.Span.ToNative(_textPositions) ?? attributeRange;
-                Range valueRange = attribute.ValueNode?.Span.ToNative(_textPositions) ?? nameRange;
+                Range valueRange = attribute.ValueNode?.Span.ToNative(_textPositions);
+                if (valueRange != null)
+                    valueRange = valueRange.Transform(moveStartColumns: 1, moveEndColumns: -1); // Trim off quotes.
+                else
+                    valueRange = nameRange;
 
                 XSAttribute xsAttribute;
                 if (String.IsNullOrWhiteSpace(attribute.Name) || nameRange == attributeRange || valueRange == attributeRange)

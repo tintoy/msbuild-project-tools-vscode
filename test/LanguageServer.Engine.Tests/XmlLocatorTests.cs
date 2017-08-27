@@ -111,8 +111,8 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// <param name="column">
         ///     The target column.
         /// </param>
-        /// <param name="expectedNodeKind">
-        ///     The kind of node expected at the position.
+        /// <param name="expectedElementName">
+        ///     The expected element name.
         /// </param>
         [InlineData("Test2", 11, 10, "PackageReference")]
         [InlineData("Test2", 12, 18, "PackageReference")]
@@ -139,6 +139,50 @@ namespace MSBuildProjectTools.LanguageServer.Tests
             Assert.True(result.IsName(), "IsName");
 
             Assert.False(result.IsElementContent(), "IsElementContent");
+
+            // TODO: Verify Parent, PreviousSibling, and NextSibling.
+        }
+
+        /// <summary>
+        ///     Verify that the target line and column lie within an attribute's value (excluding the enclosing quotes).
+        /// </summary>
+        /// <param name="testFileName">
+        ///     The name of the test file, without the extension.
+        /// </param>
+        /// <param name="line">
+        ///     The target line.
+        /// </param>
+        /// <param name="column">
+        ///     The target column.
+        /// </param>
+        /// <param name="expectedAttributeName">
+        ///     The expected attribute name.
+        /// </param>
+        [InlineData("Test2", 11, 36, "Include")]
+        [InlineData("Test2", 11, 37, "Include")]
+        [InlineData("Test2", 11, 51, "Include")]
+        [InlineData("Test2", 11, 62, "Version")]
+        [InlineData("Test2", 11, 63, "Version")]
+        [InlineData("Test2", 11, 68, "Version")]
+        [Theory(DisplayName = "Expect line and column to be within attribute's value ")]
+        public void Line_Col_InAttributeValue(string testFileName, int line, int column, string expectedAttributeName)
+        {
+            Position testPosition = new Position(line, column);
+
+            string testXml = LoadTestFile("TestFiles", testFileName + ".xml");
+            TextPositions positions = new TextPositions(testXml);
+            XmlDocumentSyntax document = Parser.ParseText(testXml);
+
+            XmlLocator locator = new XmlLocator(document, positions);
+            XmlLocation result = locator.Inspect(testPosition);
+
+            Assert.NotNull(result);
+
+            XSAttribute attribute;
+            Assert.True(result.IsAttribute(out attribute), "IsAttribute");
+            Assert.True(result.IsAttributeValue(), "IsAttributeValue");
+
+            Assert.Equal(expectedAttributeName, attribute.Name);
 
             // TODO: Verify Parent, PreviousSibling, and NextSibling.
         }

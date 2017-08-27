@@ -191,6 +191,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// </returns>
         XmlLocationFlags ComputeLocationFlags(XSNode node, int absolutePosition)
         {
+            if (node == null)
+                throw new ArgumentNullException(nameof(node));
+
             XmlLocationFlags flags = XmlLocationFlags.None;
 
             switch (node)
@@ -241,7 +244,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                         flags |= XmlLocationFlags.Name;
 
                     TextSpan valueSpan = syntaxNode.ValueNode?.Span ?? new TextSpan();
-                    if (valueSpan.Contains(absolutePosition))
+                    if (absolutePosition >= valueSpan.Start + 1 && absolutePosition <= valueSpan.End - 1)
                         flags |= XmlLocationFlags.Value;
 
                     break;

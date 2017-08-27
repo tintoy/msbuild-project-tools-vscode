@@ -3,10 +3,10 @@ using System;
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
     /// <summary>
-    ///     Flags describing a position in the XML.
+    ///     Flags describing a location in XML.
     /// </summary>
     [Flags]
-    public enum XmlPositionFlags
+    public enum XmlLocationFlags
     {
         /// <summary>
         ///     No flags.

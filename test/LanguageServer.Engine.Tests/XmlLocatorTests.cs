@@ -90,11 +90,11 @@ namespace MSBuildProjectTools.LanguageServer.Tests
             XmlDocumentSyntax document = Parser.ParseText(testXml);
 
             XmlLocator locator = new XmlLocator(document, positions);
-            XmlPosition result = locator.Inspect(testPosition);
+            XmlLocation result = locator.Inspect(testPosition);
 
             Assert.NotNull(result);
             Assert.Equal(expectedNodeKind, result.Node.Kind);
-            Assert.True(result.IsElementContent, "IsElementContent");
+            Assert.True(result.IsElementContent(), "IsElementContent");
 
             // TODO: Verify Parent, PreviousSibling, and NextSibling.
         }
@@ -126,19 +126,19 @@ namespace MSBuildProjectTools.LanguageServer.Tests
             XmlDocumentSyntax document = Parser.ParseText(testXml);
 
             XmlLocator locator = new XmlLocator(document, positions);
-            XmlPosition result = locator.Inspect(testPosition);
+            XmlLocation result = locator.Inspect(testPosition);
 
             Assert.NotNull(result);
             Assert.Equal(XSNodeKind.Element, result.Node.Kind);
-            Assert.True(result.IsElement, "IsElement");
+            Assert.True(result.IsElement(), "IsElement");
 
             XSElement element = (XSElement)result.Node;
             Assert.Equal(expectedElementName, element.Name);
 
-            Assert.True(result.IsEmptyElement, "IsEmptyElement");
-            Assert.True(result.IsName, "IsName");
+            Assert.True(result.IsEmptyElement(), "IsEmptyElement");
+            Assert.True(result.IsName(), "IsName");
 
-            Assert.False(result.IsElementContent, "IsElementContent");
+            Assert.False(result.IsElementContent(), "IsElementContent");
 
             // TODO: Verify Parent, PreviousSibling, and NextSibling.
         }

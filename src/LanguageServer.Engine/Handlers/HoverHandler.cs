@@ -117,11 +117,11 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 Position position = parameters.Position.ToNative();
 
-                XmlPosition xmlPosition = projectDocument.XmlLocator.Inspect(position);
+                XmlLocation xmlPosition = projectDocument.XmlLocator.Inspect(position);
                 if (xmlPosition == null)
                     return null;
 
-                if (!xmlPosition.IsElement && !xmlPosition.IsAttribute)
+                if (!xmlPosition.IsElementOrAttribute())
                     return null;
 
                 // Match up the MSBuild item / property with its corresponding XML element / attribute.
@@ -129,10 +129,8 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 MarkedStringContainer hoverContent = null;
                 HoverContentProvider contentProvider = new HoverContentProvider(projectDocument);
-                if (xmlPosition.IsElement && !xmlPosition.IsElementContent)
+                if (xmlPosition.IsElement(out XSElement element))
                 {
-                    XSElement element = (XSElement)xmlPosition.Node;
-
                     if (msbuildObject is MSBuildProperty propertyFromElement)
                         hoverContent = contentProvider.Property(propertyFromElement);
                     else if (msbuildObject is MSBuildUnusedProperty unusedPropertyFromElement)
@@ -148,10 +146,8 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                     else if (msbuildObject is MSBuildUnresolvedImport unresolvedImportFromElement)
                         hoverContent = contentProvider.UnresolvedImport(unresolvedImportFromElement);
                 }
-                else if (xmlPosition.IsAttribute)
+                else if (xmlPosition.IsAttribute(out XSAttribute attribute))
                 {
-                    XSAttribute attribute = (XSAttribute)xmlPosition.Node;
-
                     if (msbuildObject is MSBuildItemGroup itemGroupFromAttribute)
                         hoverContent = contentProvider.ItemGroupMetadata(itemGroupFromAttribute, attribute.Name);
                     else if (msbuildObject is MSBuildUnusedItemGroup unusedItemGroupFromAttribute)

@@ -68,15 +68,15 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         public IEnumerable<XSNode> AllNodes => _nodesByStartPosition.Values;
 
         /// <summary>
-        ///     Inspect the specified position in the XML.
+        ///     Inspect the specified location in the XML.
         /// </summary>
         /// <param name="position">
-        ///     The target position.
+        ///     The location's position.
         /// </param>
         /// <returns>
-        ///     An <see cref="XmlPosition"/> representing the result of the inspection.
+        ///     An <see cref="XmlLocation"/> representing the result of the inspection.
         /// </returns>
-        public XmlPosition Inspect(Position position)
+        public XmlLocation Inspect(Position position)
         {
             if (position == null)
                 throw new ArgumentNullException(nameof(position));
@@ -88,7 +88,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (nodeAtPosition == null)
                 return null;
 
-            // If we're on the (seamless) boundary between 2 nodes, select the next node.
+            // If we're on the (seamless, i.e. overlapping) boundary between 2 nodes, select the next node.
             if (nodeAtPosition.NextSibling != null)
             {
                 if (position == nodeAtPosition.Range.End && position == nodeAtPosition.NextSibling.Range.Start)
@@ -106,7 +106,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
 
             int absolutePosition = _documentPositions.GetAbsolutePosition(position);
 
-            XmlPosition inspectionResult = new XmlPosition(position, absolutePosition, nodeAtPosition);
+            XmlLocationFlags flags = ComputeLocationFlags(nodeAtPosition, absolutePosition);
+            XmlLocation inspectionResult = new XmlLocation(position, absolutePosition, nodeAtPosition, flags);
 
             return inspectionResult;
         }
@@ -118,9 +119,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The target position (0-based).
         /// </param>
         /// <returns>
-        ///     An <see cref="XmlPosition"/> representing the result of the inspection.
+        ///     An <see cref="XmlLocation"/> representing the result of the inspection.
         /// </returns>
-        public XmlPosition Inspect(int absolutePosition)
+        public XmlLocation Inspect(int absolutePosition)
         {
             if (absolutePosition < 0)
                 throw new ArgumentOutOfRangeException(nameof(absolutePosition), absolutePosition, "Absolute position cannot be less than 0.");
@@ -180,6 +181,86 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                     .OrderBy(range => range.Start)
                     .ThenBy(range => range.End)
             );
+        }
+
+        /// <summary>
+        ///     Determine <see cref="XmlLocationFlags"/> for the current position.
+        /// </summary>
+        /// <returns>
+        ///     <see cref="XmlLocationFlags"/> describing the position.
+        /// </returns>
+        XmlLocationFlags ComputeLocationFlags(XSNode node, int absolutePosition)
+        {
+            XmlLocationFlags flags = XmlLocationFlags.None;
+
+            switch (node)
+            {
+                case XSEmptyElement element:
+                {
+                    flags |= XmlLocationFlags.Element | XmlLocationFlags.Empty;
+
+                    XmlEmptyElementSyntax syntaxNode = element.ElementNode;
+
+                    TextSpan nameSpan = syntaxNode.NameNode?.Span ?? new TextSpan();
+                    if (nameSpan.Contains(absolutePosition))
+                        flags |= XmlLocationFlags.Name;
+
+                    break;
+                }
+                case XSElementWithContent elementWithContent:
+                {
+                    flags |= XmlLocationFlags.Element;
+
+                    XmlElementSyntax syntaxNode = elementWithContent.ElementNode;
+
+                    TextSpan nameSpan = syntaxNode.NameNode?.Span ?? new TextSpan();
+                    if (nameSpan.Contains(absolutePosition))
+                        flags |= XmlLocationFlags.Name;
+
+                    TextSpan startTagSpan = syntaxNode.StartTag?.Span ?? new TextSpan();
+                    if (startTagSpan.Contains(absolutePosition))
+                        flags |= XmlLocationFlags.OpeningTag;
+
+                    TextSpan endTagSpan = syntaxNode.EndTag?.Span ?? new TextSpan();
+                    if (endTagSpan.Contains(absolutePosition))
+                        flags |= XmlLocationFlags.ClosingTag;
+
+                    if (absolutePosition >= startTagSpan.End && absolutePosition <= endTagSpan.Start)
+                        flags |= XmlLocationFlags.Value;
+
+                    break;
+                }
+                case XSAttribute attribute:
+                {
+                    flags |= XmlLocationFlags.Attribute;
+
+                    XmlAttributeSyntax syntaxNode = attribute.AttributeNode;
+
+                    TextSpan nameSpan = syntaxNode.NameNode?.Span ?? new TextSpan();
+                    if (nameSpan.Contains(absolutePosition))
+                        flags |= XmlLocationFlags.Name;
+
+                    TextSpan valueSpan = syntaxNode.ValueNode?.Span ?? new TextSpan();
+                    if (valueSpan.Contains(absolutePosition))
+                        flags |= XmlLocationFlags.Value;
+
+                    break;
+                }
+                case XSElementText text:
+                {
+                    flags |= XmlLocationFlags.Text | XmlLocationFlags.Element | XmlLocationFlags.Value;
+
+                    break;
+                }
+                case XSWhitespace whitespace:
+                {
+                    flags |= XmlLocationFlags.Whitespace | XmlLocationFlags.Element | XmlLocationFlags.Value;
+
+                    break;
+                }
+            }
+
+            return flags;
         }
     }
 }

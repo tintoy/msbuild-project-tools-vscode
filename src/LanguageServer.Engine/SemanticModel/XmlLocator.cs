@@ -84,6 +84,22 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (nodeAtPosition == null)
                 return null;
 
+            // If we're on the (seamless) boundary between 2 nodes, select the next node.
+            if (nodeAtPosition.NextSibling != null)
+            {
+                if (position == nodeAtPosition.Range.End && position == nodeAtPosition.NextSibling.Range.Start)
+                {
+                    Serilog.Log.Logger.Information("XmlLocator.Inspect moves to next sibling ({NodeKind} @ {NodeRange} -> {NextSiblingKind} @ {NextSiblingRange}).",
+                        nodeAtPosition.Kind,
+                        nodeAtPosition.Range,
+                        nodeAtPosition.NextSibling.Kind,
+                        nodeAtPosition.NextSibling.Range
+                    );
+                    
+                    nodeAtPosition = nodeAtPosition.NextSibling;
+                }
+            }
+
             int absolutePosition = _documentPositions.GetAbsolutePosition(position);
 
             XmlPosition inspectionResult = new XmlPosition(position, absolutePosition, nodeAtPosition);

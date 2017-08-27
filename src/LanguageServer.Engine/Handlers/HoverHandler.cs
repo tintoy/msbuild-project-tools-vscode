@@ -145,7 +145,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 Hover result = new Hover
                 {
-                    Range = inspectionResult.Node.Range.Transform(moveEndColumns: 1).ToLsp()
+                    Range = inspectionResult.Node.Range.ToLsp()
                 };
 
                 result.Contents = $"Result: {inspectionResult.Node.Kind} ({inspectionResult.Flags})";

@@ -5,11 +5,14 @@ namespace MSBuildProjectTools.LanguageServer
     /// <summary>
     ///     Represents a range in a text document.
     /// </summary>
+    /// <remarks>
+    ///     The range includes the start position, but does not (for the purposes of <see cref="Contains(Position)"/> include the end position.
+    /// </remarks>
     public class Range
         : IEquatable<Range>, IComparable<Range>
     {
         /// <summary>
-        ///     An empty range [1,1..1,1].
+        ///     An empty range [1,1..1,1).
         /// </summary>
         public static readonly Range Empty = new Range(start: Position.Origin, end: Position.Origin);
 
@@ -109,12 +112,15 @@ namespace MSBuildProjectTools.LanguageServer
         /// <returns>
         ///     <c>true></c>, if the range contains the target position; otherwise, <c>false</c>.
         /// </returns>
+        /// <remarks>
+        ///     The range includes the start position, but does not (for the purposes of <see cref="Contains(Position)"/> include the end position.
+        /// </remarks>
         public bool Contains(Position position)
         {
             if (position == null)
                 throw new ArgumentNullException(nameof(position));
             
-            return position >= Start && position <= End;
+            return position >= Start && position < End;
         }
 
         /// <summary>
@@ -194,6 +200,9 @@ namespace MSBuildProjectTools.LanguageServer
             if (startComparison < 0)
                 return startComparison;
 
+            if (startComparison == 0)
+                return -End.CompareTo(other.End);
+
             return End.CompareTo(other.End);
         }
 
@@ -203,7 +212,7 @@ namespace MSBuildProjectTools.LanguageServer
         /// <returns>
         ///     The string representation "[Start..End]".
         /// </returns>
-        public override string ToString() => String.Format("[{0}..{1}]", Start, End);
+        public override string ToString() => String.Format("[{0}..{1})", Start, End);
 
         /// <summary>
         ///     Create an empty range from the specified position.

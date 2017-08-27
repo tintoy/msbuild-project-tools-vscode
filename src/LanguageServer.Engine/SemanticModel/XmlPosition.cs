@@ -1,11 +1,13 @@
 using Microsoft.Language.Xml;
 using System;
+using System.Diagnostics;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
     /// <summary>
     ///     Information about a position in XML.
     /// </summary>
+    [DebuggerDisplay("{GetDebuggerDisplayString()}")]
     public class XmlPosition
     {
         /// <summary>
@@ -139,6 +141,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         public bool IsElement => Flags.HasFlag(XmlPositionFlags.Element);
 
         /// <summary>
+        ///     Is the position within an empty element?
+        /// </summary>
+        public bool IsEmptyElement => IsElement && Flags.HasFlag(XmlPositionFlags.Empty);
+
+        /// <summary>
         ///     Is the position within element content?
         /// </summary>
         public bool IsElementContent => IsElement && IsValue;
@@ -154,21 +161,6 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         public bool IsClosingTag => Flags.HasFlag(XmlPositionFlags.ClosingTag);
 
         /// <summary>
-        ///     Is the position before the nearest <see cref="Node"/>?
-        /// </summary>
-        public bool IsPositionBeforeNode => Position < Node.Range.Start;
-
-        /// <summary>
-        ///     Is the position within the nearest <see cref="Node"/>?
-        /// </summary>
-        public bool IsPositionWithinNode => Position >= Node.Range.Start && Position < Node.Range.End;
-
-        /// <summary>
-        ///     Is the position after the nearest <see cref="Node"/>?
-        /// </summary>
-        public bool IsPositionAfterNode => Position >= Node.Range.End;
-
-        /// <summary>
         ///     Determine <see cref="XmlPositionFlags"/> for the current position.
         /// </summary>
         /// <returns>
@@ -178,15 +170,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         {
             XmlPositionFlags flags = XmlPositionFlags.None;
 
-            XSNode node;
-            if (IsPositionBeforeNode)
-                node = PreviousSibling ?? Parent;
-            else if (IsPositionAfterNode)
-                node = NextSibling ?? Parent;
-            else
-                node = Node;
-
-            switch (node)
+            switch (Node)
             {
                 case XSEmptyElement element:
                 {
@@ -254,6 +238,21 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             }
 
             return flags;
+        }
+
+        string GetDebuggerDisplayString()
+        {
+            string nodeDescription = Node.Kind.ToString();
+            if (Node is XSElement element)
+                nodeDescription += $" '{element.Name}'";
+            else if (Node is XSAttribute attribute)
+                nodeDescription += $" '{attribute.Name}'";
+
+            return String.Format("XmlPosition({0}) -> {1} @ {2}",
+                Position,
+                nodeDescription,
+                Node.Range
+            );
         }
     }
 }

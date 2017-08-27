@@ -210,9 +210,9 @@ namespace MSBuildProjectTools.LanguageServer
         ///     Get a string representation of the position.
         /// </summary>
         /// <returns>
-        ///     The string representation "(LineNumber,ColumnNumber)".
+        ///     The string representation "LineNumber,ColumnNumber".
         /// </returns>
-        public override string ToString() => String.Format("({0},{1})", LineNumber, ColumnNumber);
+        public override string ToString() => String.Format("{0},{1}", LineNumber, ColumnNumber);
 
         /// <summary>
         ///     Convert the position to a one-based position.

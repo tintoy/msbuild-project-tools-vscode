@@ -123,7 +123,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             /// </summary>
             public void FinaliseModel()
             {
-                InferWhitespace();
+                ComputeWhitespace();
 
                 XSNode[] sortedNodes =
                     DiscoveredNodes
@@ -139,7 +139,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             /// <summary>
             ///     Find the spaces between elements and use that to infer whitespace.
             /// </summary>
-            void InferWhitespace()
+            void ComputeWhitespace()
             {
                 // TODO: Merge contiguous whitespace.
 
@@ -155,27 +155,47 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                     endOfNode = element.ElementNode.StartTag.Span.End;
                     for (int contentIndex = 0; contentIndex < element.Content.Count; contentIndex++)
                     {
-                        XSElement childElement = element.Content[contentIndex] as XSElement;
-                        if (childElement == null)
-                            continue;
-
-                        startOfNextNode = childElement.ElementNode.Span.Start;
-
-                        whitespaceLength = startOfNextNode - endOfNode;
-                        if (whitespaceLength > 0)
+                        if (element.Content[contentIndex] is XSElementText text)
                         {
-                            whitespace = new XSWhitespace(
-                                range: new Range(
-                                    start: _textPositions.GetPosition(endOfNode),
-                                    end: _textPositions.GetPosition(startOfNextNode)
-                                ),
-                                parent: element
-                            );
-                            element.Content.Insert(contentIndex, whitespace);
-                            DiscoveredNodes.Add(whitespace);
+                            startOfNextNode = _textPositions.GetAbsolutePosition(text.Range.Start);
+
+                            whitespaceLength = startOfNextNode - endOfNode;
+                            if (whitespaceLength > 0)
+                            {
+                                whitespace = new XSWhitespace(
+                                    range: new Range(
+                                        start: _textPositions.GetPosition(endOfNode),
+                                        end: _textPositions.GetPosition(startOfNextNode)
+                                    ),
+                                    parent: element
+                                );
+                                element.Content.Insert(contentIndex, whitespace);
+                                DiscoveredNodes.Add(whitespace);
+                            }
+
+                            endOfNode = _textPositions.GetAbsolutePosition(text.Range.End);
                         }
 
-                        endOfNode = childElement.ElementNode.Span.End;
+                        if (element.Content[contentIndex] is XSElement childElement)
+                        {
+                            startOfNextNode = childElement.ElementNode.Span.Start;
+
+                            whitespaceLength = startOfNextNode - endOfNode;
+                            if (whitespaceLength > 0)
+                            {
+                                whitespace = new XSWhitespace(
+                                    range: new Range(
+                                        start: _textPositions.GetPosition(endOfNode),
+                                        end: _textPositions.GetPosition(startOfNextNode)
+                                    ),
+                                    parent: element
+                                );
+                                element.Content.Insert(contentIndex, whitespace);
+                                DiscoveredNodes.Add(whitespace);
+                            }
+
+                            endOfNode = childElement.ElementNode.Span.End;
+                        }
                     }
 
                     // Any trailing whitespace before the closing tag?
@@ -287,8 +307,15 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 foreach (XmlAttributeSyntax attribute in element.AsSyntaxElement.Attributes)
                     Visit(attribute);
 
-                foreach (XmlElementSyntaxBase childElement in element.Elements.OfType<XmlElementSyntaxBase>())
-                    Visit(childElement);
+                if (element.Content is SyntaxList childElements)
+                {
+                    foreach (XmlElementSyntaxBase childElement in childElements.ChildNodes.OfType<XmlElementSyntaxBase>())
+                        Visit(childElement);
+                }
+                else if (element.Content is XmlElementSyntaxBase singleChildElement)
+                    Visit(singleChildElement);
+                else if (element.Content is XmlTextSyntax text)
+                    VisitXmlText(text);
 
                 PopElement();
 
@@ -372,11 +399,10 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 if (CurrentElement == null || !CurrentElement.Range.Contains(textRange))
                     return text;
 
-                // TODO: Capture previous / next sibling for XSElementText.
+                XSElementText elementText = new XSElementText(text, textRange, CurrentElement);
+                CurrentElement.Content.Add(elementText);
 
-                DiscoveredNodes.Add(
-                    new XSElementText(text, textRange, CurrentElement)
-                );
+                DiscoveredNodes.Add(elementText);
 
                 return text;
             }

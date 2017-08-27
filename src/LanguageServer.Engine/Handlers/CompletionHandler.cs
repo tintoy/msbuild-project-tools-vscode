@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-    
+
 namespace MSBuildProjectTools.LanguageServer.Handlers
 {
     using Documents;
@@ -124,7 +124,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         {
             ProjectDocument projectDocument = await Workspace.GetProjectDocument(parameters.TextDocument.Uri);
 
-            List<CompletionItem> completionItems = new List<CompletionItem>();
+            List<CompletionItem> completionItems = null;
             using (await projectDocument.Lock.ReaderLockAsync(cancellationToken))
             {
                 if (!projectDocument.HasXml)
@@ -142,77 +142,105 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                     return null;
 
                 // Must be a PackageReference element.
-                if (!String.Equals(attribute.Element.Name, "PackageReference", StringComparison.OrdinalIgnoreCase))
-                    return null;
-
-                try
-                {
-                    if (attribute.Name == "Include")
-                    {
-                        string packageIdPrefix = attribute.Value;
-                        SortedSet<string> packageIds = await projectDocument.SuggestPackageIds(packageIdPrefix, cancellationToken);
-                        
-                        completionItems.AddRange(
-                            packageIds.Select(packageId => new CompletionItem
-                            {
-                                Label = packageId,
-                                Kind = CompletionItemKind.Module,
-                                TextEdit = new TextEdit
-                                {
-                                    Range = attribute.ValueRange.ToLsp(),
-                                    NewText = packageId
-                                }
-                            })
-                        );
-                    }
-                    else if (attribute.Name == "Version")
-                    {
-                        XSAttribute includeAttribute = attribute.Element["Include"];
-                        if (includeAttribute == null)
-                            return null;
-
-                        string packageId = includeAttribute.Value;
-                        IEnumerable<NuGetVersion> packageVersions = await projectDocument.SuggestPackageVersions(packageId, cancellationToken);
-                        if (Workspace.Configuration.ShowNewestNuGetVersionsFirst)
-                            packageVersions = packageVersions.Reverse();
-                            
-                        Lsp.Models.Range replacementRange = attribute.ValueRange.ToLsp();
-                        
-                        completionItems.AddRange(
-                            packageVersions.Select((packageVersion, index) => new CompletionItem
-                            {
-                                Label = packageVersion.ToNormalizedString(),
-                                SortText = Workspace.Configuration.ShowNewestNuGetVersionsFirst ? $"NuGet{index:00}" : null, // Override default sort order if configured to do so.
-                                Kind = CompletionItemKind.Field,
-                                TextEdit = new TextEdit
-                                {
-                                    Range = replacementRange,
-                                    NewText = packageVersion.ToNormalizedString()
-                                }
-                            })
-                        );
-                    }
-                    else
-                        return null; // No completions.
-                }
-                catch (AggregateException aggregateSuggestionError)
-                {
-                    foreach (Exception suggestionError in aggregateSuggestionError.Flatten().InnerExceptions)
-                    {
-                        Log.Error(suggestionError, "Failed to provide completions.");
-                    }
-                }
-                catch (Exception suggestionError)
-                {
-                    Log.Error(suggestionError, "Failed to provide completions.");
-                }
+                if (attribute.Element.Name == "PackageReference")
+                    completionItems = await HandlePackageReferenceCompletion(projectDocument, attribute, cancellationToken);
             }
+            if (completionItems == null)
+                return null;
 
             CompletionList completionList = new CompletionList(completionItems,
                 isIncomplete: completionItems.Count >= 10 // Default page size.
             );
 
             return completionList;
+        }
+
+        /// <summary>
+        ///     Handle completion for an attribute of a PackageReference element.
+        /// </summary>
+        /// <param name="projectDocument">
+        ///     The current project document.
+        /// </param>
+        /// <param name="attribute">
+        ///     The attribute for which completion is being requested.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///     A <see cref="CancellationToken"/> that can be used to cancel the operation.
+        /// </param>
+        /// <returns>
+        ///     A <see cref="Task"/> representing the operation.
+        /// </returns>
+        async Task<List<CompletionItem>> HandlePackageReferenceCompletion(ProjectDocument projectDocument, XSAttribute attribute, CancellationToken cancellationToken)
+        {
+            try
+            {
+                if (attribute.Name == "Include")
+                {
+                    string packageIdPrefix = attribute.Value;
+                    SortedSet<string> packageIds = await projectDocument.SuggestPackageIds(packageIdPrefix, cancellationToken);
+
+                    var completionItems = new List<CompletionItem>(
+                        packageIds.Select(packageId => new CompletionItem
+                        {
+                            Label = packageId,
+                            Kind = CompletionItemKind.Module,
+                            TextEdit = new TextEdit
+                            {
+                                Range = attribute.ValueRange.ToLsp(),
+                                NewText = packageId
+                            }
+                        })
+                    );
+                    
+                    return completionItems;
+                }
+                
+                if (attribute.Name == "Version")
+                {
+                    XSAttribute includeAttribute = attribute.Element["Include"];
+                    if (includeAttribute == null)
+                        return null;
+
+                    string packageId = includeAttribute.Value;
+                    IEnumerable<NuGetVersion> packageVersions = await projectDocument.SuggestPackageVersions(packageId, cancellationToken);
+                    if (Workspace.Configuration.ShowNewestNuGetVersionsFirst)
+                        packageVersions = packageVersions.Reverse();
+
+                    Lsp.Models.Range replacementRange = attribute.ValueRange.ToLsp();
+
+                    var completionItems = new List<CompletionItem>(
+                        packageVersions.Select((packageVersion, index) => new CompletionItem
+                        {
+                            Label = packageVersion.ToNormalizedString(),
+                            SortText = Workspace.Configuration.ShowNewestNuGetVersionsFirst ? $"NuGet{index:00}" : null, // Override default sort order if configured to do so.
+                                Kind = CompletionItemKind.Field,
+                            TextEdit = new TextEdit
+                            {
+                                Range = replacementRange,
+                                NewText = packageVersion.ToNormalizedString()
+                            }
+                        })
+                    );
+
+                    return completionItems;
+                }
+
+                // No completions.
+                return null;
+            }
+            catch (AggregateException aggregateSuggestionError)
+            {
+                foreach (Exception suggestionError in aggregateSuggestionError.Flatten().InnerExceptions)
+                    Log.Error(suggestionError, "Failed to provide completions.");
+                
+                return null;
+            }
+            catch (Exception suggestionError)
+            {
+                Log.Error(suggestionError, "Failed to provide completions.");
+
+                return null;
+            }
         }
 
         /// <summary>
@@ -231,7 +259,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         {
             if (parameters == null)
                 throw new ArgumentNullException(nameof(parameters));
-            
+
             try
             {
                 return await OnCompletion(parameters, cancellationToken);

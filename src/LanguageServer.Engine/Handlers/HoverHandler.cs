@@ -117,20 +117,22 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 Position position = parameters.Position.ToNative();
 
-                XmlLocation xmlPosition = projectDocument.XmlLocator.Inspect(position);
-                if (xmlPosition == null)
+                XmlLocation location = projectDocument.XmlLocator.Inspect(position);
+                if (location == null)
                     return null;
 
-                if (!xmlPosition.IsElementOrAttribute())
+                if (!location.IsElementOrAttribute())
                     return null;
 
                 // Match up the MSBuild item / property with its corresponding XML element / attribute.
-                MSBuildObject msbuildObject = projectDocument.GetMSBuildObjectAtPosition(xmlPosition.Node.Start);
+                MSBuildObject msbuildObject;
 
                 MarkedStringContainer hoverContent = null;
                 HoverContentProvider contentProvider = new HoverContentProvider(projectDocument);
-                if (xmlPosition.IsElement(out XSElement element))
+                if (location.IsElement(out XSElement element))
                 {
+                    msbuildObject = projectDocument.GetMSBuildObjectAtPosition(element.Start);
+
                     if (msbuildObject is MSBuildProperty propertyFromElement)
                         hoverContent = contentProvider.Property(propertyFromElement);
                     else if (msbuildObject is MSBuildUnusedProperty unusedPropertyFromElement)
@@ -146,8 +148,19 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                     else if (msbuildObject is MSBuildUnresolvedImport unresolvedImportFromElement)
                         hoverContent = contentProvider.UnresolvedImport(unresolvedImportFromElement);
                 }
-                else if (xmlPosition.IsAttribute(out XSAttribute attribute))
+                else if (location.IsElementText(out XSElementText text))
                 {
+                    msbuildObject = projectDocument.GetMSBuildObjectAtPosition(text.Element.Start);
+
+                    if (msbuildObject is MSBuildProperty propertyFromText)
+                        hoverContent = contentProvider.Property(propertyFromText);
+                    else if (msbuildObject is MSBuildUnusedProperty unusedPropertyFromText)
+                        hoverContent = contentProvider.UnusedProperty(unusedPropertyFromText);
+                }
+                else if (location.IsAttribute(out XSAttribute attribute))
+                {
+                    msbuildObject = projectDocument.GetMSBuildObjectAtPosition(attribute.Element.Start);
+
                     if (msbuildObject is MSBuildItemGroup itemGroupFromAttribute)
                         hoverContent = contentProvider.ItemGroupMetadata(itemGroupFromAttribute, attribute.Name);
                     else if (msbuildObject is MSBuildUnusedItemGroup unusedItemGroupFromAttribute)
@@ -168,7 +181,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 return new Hover
                 {
                     Contents = hoverContent,
-                    Range = xmlPosition.Node.Range.ToLsp()
+                    Range = location.Node.Range.ToLsp()
                 };
             }
         }

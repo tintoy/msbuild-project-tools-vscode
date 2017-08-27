@@ -2,6 +2,8 @@ using System;
 
 namespace MSBuildProjectTools.LanguageServer
 {
+    // BUG: Range comparisons are currently broken. Add tests to prove that [1,1..1,10] < [1,1..1,5] (etc).
+
     /// <summary>
     ///     Represents a range in a text document.
     /// </summary>

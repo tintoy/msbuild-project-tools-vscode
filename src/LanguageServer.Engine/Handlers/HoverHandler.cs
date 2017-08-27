@@ -104,8 +104,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </returns>
         async Task<Hover> OnHover(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
         {
-            Log.Information("OnHover!");
-
             if (Workspace.Configuration.DisableHover)
                 return null;
 
@@ -119,11 +117,13 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 Position position = parameters.Position.ToNative();
 
+                Log.Information("OnHover: {Position:l}", position);
+
                 var inspectionResult = projectDocument.XmlLocator.Inspect(position);
                 if (inspectionResult == null)
                     return null;
                     
-                Log.Information("Inspection Result: {Kind} @ {Range} ({Flags})",
+                Log.Information("Inspection Result: {Kind} @ {Range:l} ({Flags})",
                     inspectionResult.Node.Kind,
                     inspectionResult.Node.Range,
                     inspectionResult.Flags

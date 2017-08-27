@@ -112,9 +112,10 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// <param name="expectedNodeKind">
         ///     The kind of node expected at the position.
         /// </param>
-        [InlineData("Test2", 11, 10, XSNodeKind.Element)]
+        [InlineData("Test2", 11, 10, "PackageReference")]
+        [InlineData("Test2", 12, 18, "PackageReference")]
         [Theory(DisplayName = "Expect line and column to be within empty element's name ")]
-        public void Line_Col_InEmptyElementName(string testFileName, int line, int column, XSNodeKind expectedNodeKind)
+        public void Line_Col_InEmptyElementName(string testFileName, int line, int column, string expectedElementName)
         {
             Position testPosition = new Position(line, column);
 
@@ -126,8 +127,12 @@ namespace MSBuildProjectTools.LanguageServer.Tests
             XmlPosition result = locator.Inspect(testPosition);
 
             Assert.NotNull(result);
-            Assert.Equal(expectedNodeKind, result.Node.Kind);
+            Assert.Equal(XSNodeKind.Element, result.Node.Kind);
             Assert.True(result.IsElement, "IsElement");
+
+            XSElement element = (XSElement)result.Node;
+            Assert.Equal(expectedElementName, element.Name);
+
             Assert.True(result.IsEmptyElement, "IsEmptyElement");
             Assert.True(result.IsName, "IsName");
 

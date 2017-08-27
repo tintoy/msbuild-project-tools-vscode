@@ -4,9 +4,8 @@ using System.Collections.Generic;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
+    using System.Linq;
     using Utilities;
-
-    // AF: Does not currently work correctly.
 
     /// <summary>
     ///     A facility for looking up XML by textual location.
@@ -60,8 +59,13 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 _nodesByStartPosition.Add(node.Range.Start, node);
             }
 
-            _nodeRanges.Sort();
+            SortNodeRanges();
         }
+
+        /// <summary>
+        ///     All nodes in the document.
+        /// </summary>
+        public IEnumerable<XSNode> AllNodes => _nodesByStartPosition.Values;
 
         /// <summary>
         ///     Inspect the specified position in the XML.
@@ -95,7 +99,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                         nodeAtPosition.NextSibling.Kind,
                         nodeAtPosition.NextSibling.Range
                     );
-                    
+
                     nodeAtPosition = nodeAtPosition.NextSibling;
                 }
             }
@@ -140,6 +144,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (position == null)
                 throw new ArgumentNullException(nameof(position));
 
+            position = position.ToOneBased();
+
             // TODO: Use binary search.
 
             Range lastMatchingRange = null;
@@ -153,11 +159,25 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
 
                 if (objectRange.Contains(position))
                     lastMatchingRange = objectRange;
-            }
+            }   
             if (lastMatchingRange == null)
                 return null;
 
             return _nodesByStartPosition[lastMatchingRange.Start];
+        }
+
+        /// <summary>
+        ///     Ensure that the locator's object ranges are sorted by start position, then end position.
+        /// </summary>
+        void SortNodeRanges()
+        {
+            Range[] unsortedRanges = _nodeRanges.ToArray();
+            _nodeRanges.Clear();
+            _nodeRanges.AddRange(
+                unsortedRanges
+                    .OrderBy(range => range.Start)
+                    .ThenBy(range => range.End)
+            );
         }
     }
 }

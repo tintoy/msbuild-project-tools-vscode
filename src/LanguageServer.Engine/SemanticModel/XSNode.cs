@@ -32,6 +32,16 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         public Range Range { get; }
 
         /// <summary>
+        ///     The node's next sibling node (if any).
+        /// </summary>
+        public XSNode NextSibling { get; set; }
+
+        /// <summary>
+        ///     The node's previous sibling node (if any).
+        /// </summary>
+        public XSNode PreviousSibling { get; set; }
+
+        /// <summary>
         ///     The kind of XML node represented by the <see cref="XSNode"/>.
         /// </summary>
         public abstract XSNodeKind Kind { get; }

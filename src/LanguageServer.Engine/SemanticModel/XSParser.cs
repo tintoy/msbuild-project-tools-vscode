@@ -36,13 +36,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
 
             XSParserVisitor parserVisitor = new XSParserVisitor(xmlPositions);
             parserVisitor.Visit(document);
-            parserVisitor.InferWhitespace();
+            parserVisitor.FinaliseModel();
 
-            return new List<XSNode>(
-                parserVisitor.DiscoveredNodes
-                    .OrderBy(discoveredNode => discoveredNode.Range.Start)
-                    .ThenBy(discoveredNode => discoveredNode.Range.End)
-            );
+            return parserVisitor.DiscoveredNodes;
         }
 
         /// <summary>
@@ -67,13 +63,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
 
             XSParserVisitor parserVisitor = new XSParserVisitor(xmlPositions);
             parserVisitor.Visit(node);
-            parserVisitor.InferWhitespace();
+            parserVisitor.FinaliseModel();
 
-            return new List<XSNode>(
-                parserVisitor.DiscoveredNodes
-                    .OrderBy(discoveredNode => discoveredNode.Range.Start)
-                    .ThenBy(discoveredNode => discoveredNode.Range.End)
-            );
+            return parserVisitor.DiscoveredNodes;
         }
 
         /// <summary>
@@ -127,24 +119,36 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             XSElement CurrentElement => HaveCurrentElement ? _elementStack.Peek() : null;
 
             /// <summary>
+            ///     Perform final processing of discovered nodes.
+            /// </summary>
+            public void FinaliseModel()
+            {
+                InferWhitespace();
+
+                XSNode[] sortedNodes =
+                    DiscoveredNodes
+                        .OrderBy(discoveredNode => discoveredNode.Range.Start)
+                        .ThenBy(discoveredNode => discoveredNode.Range.End)
+                        .ToArray();
+                DiscoveredNodes.Clear();
+                DiscoveredNodes.AddRange(sortedNodes);
+
+                ConnectSiblings();
+            }
+
+            /// <summary>
             ///     Find the spaces between elements and use that to infer whitespace.
             /// </summary>
-            public void InferWhitespace()
+            void InferWhitespace()
             {
                 // TODO: Merge contiguous whitespace.
 
-                Queue<XSElement> discoveredElements = new Queue<XSElement>(
-                    DiscoveredNodes.OfType<XSElement>()
+                var discoveredElements = DiscoveredNodes.OfType<XSElementWithContent>()
                         .OrderBy(discoveredNode => discoveredNode.Range.Start)
-                        .ThenBy(discoveredNode => discoveredNode.Range.End)
-                );
+                        .ThenBy(discoveredNode => discoveredNode.Range.End);
 
-                while (discoveredElements.Count > 0)
+                foreach (XSElementWithContent element in discoveredElements)
                 {
-                    XSElementWithContent element = discoveredElements.Dequeue() as XSElementWithContent;
-                    if (element == null)
-                        continue;
-
                     int startOfNextNode, endOfNode, whitespaceLength;
 
                     endOfNode = element.ElementNode.StartTag.Span.End;
@@ -179,6 +183,39 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                             ),
                             parent: element
                         ));
+                    }
+                }
+            }
+
+            /// <summary>
+            ///     Connect sibling nodes.
+            /// </summary>
+            void ConnectSiblings()
+            {
+                // TODO: Move attribute sibiling connections here, too (currently done when adding the attributes).
+
+                var discoveredElements = DiscoveredNodes.OfType<XSElement>();
+                foreach (XSElement element in discoveredElements)
+                {
+                    // Join up sibling attributes.
+                    XSNode previousSibling = null;
+                    foreach (XSAttribute nextSibling in element.Attributes)
+                    {
+                        nextSibling.PreviousSibling = previousSibling;
+                        if (previousSibling != null)
+                            previousSibling.NextSibling = nextSibling;
+
+                        previousSibling = nextSibling;
+                    }
+
+                    // Join up sibling content nodes.
+                    foreach (XSNode nextSibling in element.Content)
+                    {
+                        nextSibling.PreviousSibling = previousSibling;
+                        if (previousSibling != null)
+                            previousSibling.NextSibling = nextSibling;
+
+                        previousSibling = nextSibling;
                     }
                 }
             }
@@ -291,7 +328,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             public override SyntaxNode VisitXmlAttribute(XmlAttributeSyntax attribute)
             {
                 if (!HaveCurrentElement)
-                    return base.VisitXmlAttribute(attribute);
+                    return attribute;
 
                 Range attributeRange = attribute.Span.ToNative(_textPositions);
                 Range nameRange = attribute.NameNode?.Span.ToNative(_textPositions) ?? attributeRange;
@@ -323,6 +360,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 Range textRange = text.Span.ToNative(_textPositions);
                 if (CurrentElement == null || !CurrentElement.Range.Contains(textRange))
                     return text;
+
+                // TODO: Capture previous / next sibling for XSElementText.
 
                 DiscoveredNodes.Add(
                     new XSElementText(text, textRange, CurrentElement)

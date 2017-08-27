@@ -33,6 +33,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         public override XSNodeKind Kind => XSNodeKind.Whitespace;
 
         /// <summary>
+        ///     The node name.
+        /// </summary>
+        public override string Name => "#Whitespace";
+
+        /// <summary>
         ///     The <see cref="XSElement"/> that contains the whitespace.
         /// </summary>
         public XSElement Parent { get; }

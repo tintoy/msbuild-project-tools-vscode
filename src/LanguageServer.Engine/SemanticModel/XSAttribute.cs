@@ -47,7 +47,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <summary>
         ///     The attribute name.
         /// </summary>
-        public string Name => AttributeNode.Name;
+        public override string Name => AttributeNode.Name;
 
         /// <summary>
         ///     The attribute value.

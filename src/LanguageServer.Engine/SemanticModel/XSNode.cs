@@ -32,6 +32,16 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         public Range Range { get; }
 
         /// <summary>
+        ///     The node's starting position.
+        /// </summary>
+        public Position Start => Range.Start;
+
+        /// <summary>
+        ///     The node's ending position.
+        /// </summary>
+        public Position End => Range.End;
+
+        /// <summary>
         ///     The node's next sibling node (if any).
         /// </summary>
         public XSNode NextSibling { get; set; }
@@ -45,6 +55,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The kind of XML node represented by the <see cref="XSNode"/>.
         /// </summary>
         public abstract XSNodeKind Kind { get; }
+
+        /// <summary>
+        ///     The node name.
+        /// </summary>
+        public abstract string Name { get; }
 
         /// <summary>
         ///     Does the <see cref="XSNode"/> represent valid XML?

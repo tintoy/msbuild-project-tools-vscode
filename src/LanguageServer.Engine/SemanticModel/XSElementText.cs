@@ -36,6 +36,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         public XmlTextSyntax TextNode => SyntaxNode;
 
         /// <summary>
+        ///     The text.
+        /// </summary>
+        public string Text => TextNode.ToFullString();
+
+        /// <summary>
         ///     The element whose content includes the text.
         /// </summary>
         public XSElement Element { get; }
@@ -44,6 +49,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The kind of XML node represented by the <see cref="XSNode"/>.
         /// </summary>
         public override XSNodeKind Kind => XSNodeKind.Text;
+
+        /// <summary>
+        ///     The node name.
+        /// </summary>
+        public override string Name => "#Text";
 
         /// <summary>
         ///     Does the <see cref="XSNode"/> represent valid XML?

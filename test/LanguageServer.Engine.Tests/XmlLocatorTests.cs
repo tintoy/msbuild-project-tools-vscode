@@ -71,9 +71,12 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// <param name="column">
         ///     The target column.
         /// </param>
-        [InlineData("Test1", 3, 21)]
-        [Theory(DisplayName = "Expect line and column to be within element content ")]
-        public void Line_Col_InElementContent(string testFileName, int line, int column)
+        /// <param name="expectedNodeKind">
+        ///     The kind of node expected at the position.
+        /// </param>
+        [InlineData("Test1", 3, 21, XSNodeKind.Element)]
+        [Theory(DisplayName = "Expect line and column to be after element content ")]
+        public void Line_Col_AfterElementContent(string testFileName, int line, int column, XSNodeKind expectedNodeKind)
         {
             Position testPosition = new Position(line, column);
 
@@ -82,11 +85,50 @@ namespace MSBuildProjectTools.LanguageServer.Tests
             XmlDocumentSyntax document = Parser.ParseText(testXml);
 
             XmlLocator locator = new XmlLocator(document, positions);
-
             XmlPosition result = locator.Inspect(testPosition);
+
             Assert.NotNull(result);
+            Assert.Equal(expectedNodeKind, result.Node.Kind);
+            Assert.True(result.IsElementContent, "IsElementContent");
+            Assert.True(result.IsPositionAfterNode, "IsPositionAfterNode");
+
+            // TODO: Verify Parent, PreviousSibling, and NextSibling.
+        }
+
+        /// <summary>
+        ///     Verify that the target line and column lie after within an element's content.
+        /// </summary>
+        /// <param name="testFileName">
+        ///     The name of the test file, without the extension.
+        /// </param>
+        /// <param name="line">
+        ///     The target line.
+        /// </param>
+        /// <param name="column">
+        ///     The target column.
+        /// </param>
+        /// <param name="expectedNodeKind">
+        ///     The kind of node expected at the position.
+        /// </param>
+        [InlineData("Test1", 3, 22, XSNodeKind.Whitespace)]
+        [Theory(DisplayName = "Expect line and column to be within element content ")]
+        public void Line_Col_InElementContent(string testFileName, int line, int column, XSNodeKind expectedNodeKind)
+        {
+            Position testPosition = new Position(line, column);
+
+            string testXml = LoadTestFile("TestFiles", testFileName + ".xml");
+            TextPositions positions = new TextPositions(testXml);
+            XmlDocumentSyntax document = Parser.ParseText(testXml);
+
+            XmlLocator locator = new XmlLocator(document, positions);
+            XmlPosition result = locator.Inspect(testPosition);
+
+            Assert.NotNull(result);
+            Assert.Equal(expectedNodeKind, result.Node.Kind);
             Assert.True(result.IsElementContent, "IsElementContent");
             Assert.True(result.IsPositionWithinNode, "IsPositionWithinNode");
+
+            // TODO: Verify Parent, PreviousSibling, and NextSibling.
         }
 
         /// <summary>

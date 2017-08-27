@@ -153,12 +153,14 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         public bool IsDirty { get; protected set; }
 
         /// <summary>
-        ///     The project XML object lookup facility.
+        ///     The textual position translator for the project XML .
         /// </summary>
-        /// <exception cref="InvalidOperationException">
-        ///     The project is not loaded.
-        /// </exception>
         public TextPositions XmlPositions { get; protected set; }
+
+        /// <summary>
+        ///     The project XML node lookup facility.
+        /// </summary>
+        public XmlLocator XmlLocator { get; protected set; }
 
         /// <summary>
         ///     The project MSBuild object-lookup facility.
@@ -166,7 +168,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <exception cref="InvalidOperationException">
         ///     The project is not loaded.
         /// </exception>
-        public MSBuildLocator MSBuildLookup { get; protected set; }
+        public MSBuildLocator MSBuildLocator { get; protected set; }
 
         /// <summary>
         ///     MSBuild objects in the project that correspond to locations in the file.
@@ -174,7 +176,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <exception cref="InvalidOperationException">
         ///     The project is not loaded.
         /// </exception>
-        public IEnumerable<MSBuildObject> MSBuildObjects => MSBuildLookup.AllObjects;
+        public IEnumerable<MSBuildObject> MSBuildObjects => MSBuildLocator.AllObjects;
 
         /// <summary>
         ///     NuGet package sources configured for the current project.
@@ -206,7 +208,8 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             }
             Xml = Microsoft.Language.Xml.Parser.ParseText(xml);
             XmlPositions = new TextPositions(xml);
-            
+            XmlLocator = new XmlLocator(Xml, XmlPositions);
+
             IsDirty = false;
 
             await ConfigurePackageSources(cancellationToken);
@@ -389,7 +392,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             if (!HasMSBuildProject)
                 throw new InvalidOperationException($"MSBuild project '{ProjectFile.FullName}' is not loaded.");
 
-            return MSBuildLookup.Find(position);
+            return MSBuildLocator.Find(position);
         }
 
         /// <summary>

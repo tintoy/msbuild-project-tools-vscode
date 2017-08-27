@@ -1,3 +1,4 @@
+using Microsoft.Language.Xml;
 using System;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
@@ -19,10 +20,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="node">
         ///     The <see cref="XSNode"/> closest to the position.
         /// </param>
-        /// <param name="flags">
-        ///     <see cref="XmlPositionFlags"/> value(s) describing the position.
-        /// </param>
-        public XmlPosition(Position position, int absolutePosition, XSNode node, XmlPositionFlags flags)
+        public XmlPosition(Position position, int absolutePosition, XSNode node)
         {
             if (position == null)
                 throw new ArgumentNullException(nameof(position));
@@ -32,8 +30,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             
             Position = position;
             AbsolutePosition = absolutePosition;
-            Flags = flags;
             Node = node;
+
+            Flags = ComputeFlags();
         }
 
         /// <summary>
@@ -50,6 +49,49 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The <see cref="XSNode"/> closest to the position.
         /// </summary>
         public XSNode Node { get; }
+        
+        /// <summary>
+        ///     The node's parent node (if any).
+        /// </summary>
+        public XSNode Parent
+        {
+            get
+            {
+                switch (Node)
+                {
+                    case XSElement element:
+                    {
+                        return element.ParentElement;
+                    }
+                    case XSAttribute attribute:
+                    {
+                        return attribute.Element;
+                    }
+                    case XSElementText textContent:
+                    {
+                        return textContent.Element;
+                    }
+                    case XSWhitespace whitespace:
+                    {
+                        return whitespace.Parent;
+                    }
+                    default:
+                    {
+                        return null;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        ///     The next sibling (if any) of the <see cref="XSNode"/> closest to the position.
+        /// </summary>
+        public XSNode NextSibling => Node?.NextSibling;
+
+        /// <summary>
+        ///     The previous sibling (if any) of the <see cref="XSNode"/> closest to the position.
+        /// </summary>
+        public XSNode PreviousSibling => Node?.PreviousSibling;
 
         /// <summary>
         ///     <see cref="XmlPositionFlags"/> value(s) describing the position.
@@ -114,16 +156,104 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <summary>
         ///     Is the position before the nearest <see cref="Node"/>?
         /// </summary>
-        public bool IsPositionBeforeNode => Position < Node.Range;
+        public bool IsPositionBeforeNode => Position < Node.Range.Start;
 
         /// <summary>
         ///     Is the position within the nearest <see cref="Node"/>?
         /// </summary>
-        public bool IsPositionWithinNode => Node.Range.Contains(Position);
+        public bool IsPositionWithinNode => Position >= Node.Range.Start && Position < Node.Range.End;
 
         /// <summary>
         ///     Is the position after the nearest <see cref="Node"/>?
         /// </summary>
-        public bool IsPositionAfterNode => Position > Node.Range;
+        public bool IsPositionAfterNode => Position >= Node.Range.End;
+
+        /// <summary>
+        ///     Determine <see cref="XmlPositionFlags"/> for the current position.
+        /// </summary>
+        /// <returns>
+        ///     <see cref="XmlPositionFlags"/> describing the position.
+        /// </returns>
+        XmlPositionFlags ComputeFlags()
+        {
+            XmlPositionFlags flags = XmlPositionFlags.None;
+
+            XSNode node;
+            if (IsPositionBeforeNode)
+                node = PreviousSibling ?? Parent;
+            else if (IsPositionAfterNode)
+                node = NextSibling ?? Parent;
+            else
+                node = Node;
+
+            switch (node)
+            {
+                case XSEmptyElement element:
+                {
+                    flags |= XmlPositionFlags.Element | XmlPositionFlags.Empty;
+
+                    XmlEmptyElementSyntax syntaxNode = element.ElementNode;
+
+                    TextSpan nameSpan = syntaxNode.NameNode?.Span ?? new TextSpan();
+                    if (nameSpan.Contains(AbsolutePosition))
+                        flags |= XmlPositionFlags.Name;
+
+                    break;
+                }
+                case XSElementWithContent elementWithContent:
+                {
+                    flags |= XmlPositionFlags.Element;
+
+                    XmlElementSyntax syntaxNode = elementWithContent.ElementNode;
+
+                    TextSpan nameSpan = syntaxNode.NameNode?.Span ?? new TextSpan();
+                    if (nameSpan.Contains(AbsolutePosition))
+                        flags |= XmlPositionFlags.Name;
+
+                    TextSpan startTagSpan = syntaxNode.StartTag?.Span ?? new TextSpan();
+                    if (startTagSpan.Contains(AbsolutePosition))
+                        flags |= XmlPositionFlags.OpeningTag;
+
+                    TextSpan endTagSpan = syntaxNode.EndTag?.Span ?? new TextSpan();
+                    if (endTagSpan.Contains(AbsolutePosition))
+                        flags |= XmlPositionFlags.ClosingTag;
+
+                    if (AbsolutePosition >= startTagSpan.End && AbsolutePosition <= endTagSpan.Start)
+                        flags |= XmlPositionFlags.Value;
+
+                    break;
+                }
+                case XSAttribute attribute:
+                {
+                    flags |= XmlPositionFlags.Attribute;
+
+                    XmlAttributeSyntax syntaxNode = attribute.AttributeNode;
+
+                    TextSpan nameSpan = syntaxNode.NameNode?.Span ?? new TextSpan();
+                    if (nameSpan.Contains(AbsolutePosition))
+                        flags |= XmlPositionFlags.Name;
+
+                    TextSpan valueSpan = syntaxNode.ValueNode?.Span ?? new TextSpan();
+                    if (valueSpan.Contains(AbsolutePosition))
+                        flags |= XmlPositionFlags.Value;
+
+                    break;
+                }
+                case XSElementText text:
+                {
+                    flags |= XmlPositionFlags.Text | XmlPositionFlags.Element | XmlPositionFlags.Value;
+
+                    break;
+                }
+                case XSWhitespace whitespace:
+                {
+                    flags |= XmlPositionFlags.Whitespace | XmlPositionFlags.Element | XmlPositionFlags.Value;
+
+                    break;
+                }
+            }
+
+            return flags;
+        }
     }
 }

@@ -85,9 +85,10 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 return null;
 
             int absolutePosition = _documentPositions.GetAbsolutePosition(position);
-            XmlPositionFlags flags = GetPositionFlags(position, absolutePosition, nodeAtPosition);
 
-            return new XmlPosition(position, absolutePosition, nodeAtPosition, flags);
+            XmlPosition inspectionResult = new XmlPosition(position, absolutePosition, nodeAtPosition);
+
+            return inspectionResult;
         }
 
         /// <summary>
@@ -132,11 +133,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                     break;
 
                 if (lastMatchingRange != null && objectRange > lastMatchingRange)
-                {
-                    lastMatchingRange = null;
-
                     break; // No match.
-                }
 
                 if (objectRange.Contains(position))
                     lastMatchingRange = objectRange;
@@ -145,95 +142,6 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 return null;
 
             return _nodesByStartPosition[lastMatchingRange.Start];
-        }
-
-        /// <summary>
-        ///     Determine <see cref="XmlPositionFlags"/> for the specified position.
-        /// </summary>
-        /// <param name="position">
-        ///     The (1-based) target line and column.
-        /// </param>
-        /// <param name="absolutePosition">
-        ///     The (0-based) absolute position.
-        /// </param>
-        /// <param name="nearestNode">
-        ///     The target position's nearest node.
-        /// </param>
-        /// <returns>
-        ///     <see cref="XmlPositionFlags"/> describing the position.
-        /// </returns>
-        XmlPositionFlags GetPositionFlags(Position position, int absolutePosition, XSNode nearestNode)
-        {
-            XmlPositionFlags flags = XmlPositionFlags.None;
-
-            switch (nearestNode)
-            {
-                case XSEmptyElement element:
-                {
-                    flags |= XmlPositionFlags.Element | XmlPositionFlags.Empty;
-
-                    XmlEmptyElementSyntax syntaxNode = element.ElementNode;
-
-                    TextSpan nameSpan = syntaxNode.NameNode?.Span ?? new TextSpan();
-                    if (nameSpan.Contains(absolutePosition))
-                        flags |= XmlPositionFlags.Name;
-
-                    break;
-                }
-                case XSElementWithContent elementWithContent:
-                {
-                    flags |= XmlPositionFlags.Element;
-
-                    XmlElementSyntax syntaxNode = elementWithContent.ElementNode;
-
-                    TextSpan nameSpan = syntaxNode.NameNode?.Span ?? new TextSpan();
-                    if (nameSpan.Contains(absolutePosition))
-                        flags |= XmlPositionFlags.Name;
-
-                    TextSpan startTagSpan = syntaxNode.StartTag?.Span ?? new TextSpan();
-                    if (startTagSpan.Contains(absolutePosition))
-                        flags |= XmlPositionFlags.OpeningTag;
-
-                    TextSpan endTagSpan = syntaxNode.EndTag?.Span ?? new TextSpan();
-                    if (endTagSpan.Contains(absolutePosition))
-                        flags |= XmlPositionFlags.ClosingTag;
-
-                    if (absolutePosition >= startTagSpan.End && absolutePosition <= endTagSpan.Start)
-                        flags |= XmlPositionFlags.Value;
-
-                    break;
-                }
-                case XSAttribute attribute:
-                {
-                    flags |= XmlPositionFlags.Attribute;
-
-                    XmlAttributeSyntax syntaxNode = attribute.AttributeNode;
-
-                    TextSpan nameSpan = syntaxNode.NameNode?.Span ?? new TextSpan();
-                    if (nameSpan.Contains(absolutePosition))
-                        flags |= XmlPositionFlags.Name;
-
-                    TextSpan valueSpan = syntaxNode.ValueNode?.Span ?? new TextSpan();
-                    if (valueSpan.Contains(absolutePosition))
-                        flags |= XmlPositionFlags.Value;
-
-                    break;
-                }
-                case XSElementText text:
-                {
-                    flags |= XmlPositionFlags.Text | XmlPositionFlags.Element | XmlPositionFlags.Value;
-
-                    break;
-                }
-                case XSWhitespace whitespace:
-                {
-                    flags |= XmlPositionFlags.Whitespace | XmlPositionFlags.Element | XmlPositionFlags.Value;
-
-                    break;
-                }
-            }
-
-            return flags;
         }
     }
 }

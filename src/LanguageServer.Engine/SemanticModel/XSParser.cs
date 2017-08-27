@@ -150,22 +150,29 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 foreach (XSElementWithContent element in discoveredElements)
                 {
                     int startOfNextNode, endOfNode, whitespaceLength;
+                    XSWhitespace whitespace;
 
                     endOfNode = element.ElementNode.StartTag.Span.End;
-                    foreach (XSElement childElement in element.ChildElements)
+                    for (int contentIndex = 0; contentIndex < element.Content.Count; contentIndex++)
                     {
+                        XSElement childElement = element.Content[contentIndex] as XSElement;
+                        if (childElement == null)
+                            continue;
+
                         startOfNextNode = childElement.ElementNode.Span.Start;
 
                         whitespaceLength = startOfNextNode - endOfNode;
                         if (whitespaceLength > 0)
                         {
-                            DiscoveredNodes.Add(new XSWhitespace(
+                            whitespace = new XSWhitespace(
                                 range: new Range(
                                     start: _textPositions.GetPosition(endOfNode),
                                     end: _textPositions.GetPosition(startOfNextNode)
                                 ),
                                 parent: element
-                            ));
+                            );
+                            element.Content.Insert(contentIndex, whitespace);
+                            DiscoveredNodes.Add(whitespace);
                         }
 
                         endOfNode = childElement.ElementNode.Span.End;
@@ -176,13 +183,15 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                     whitespaceLength = startOfNextNode - endOfNode;
                     if (whitespaceLength > 0)
                     {
-                        DiscoveredNodes.Add(new XSWhitespace(
+                        whitespace = new XSWhitespace(
                             range: new Range(
                                 start: _textPositions.GetPosition(endOfNode),
                                 end: _textPositions.GetPosition(startOfNextNode)
                             ),
                             parent: element
-                        ));
+                        );
+                        element.Content.Add(whitespace);
+                        DiscoveredNodes.Add(whitespace);
                     }
                 }
             }
@@ -207,6 +216,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
 
                         previousSibling = nextSibling;
                     }
+
+                    previousSibling = null;
 
                     // Join up sibling content nodes.
                     foreach (XSNode nextSibling in element.Content)

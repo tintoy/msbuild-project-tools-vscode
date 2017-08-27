@@ -104,6 +104,8 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </returns>
         async Task<Hover> OnHover(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
         {
+            Log.Information("OnHover!");
+
             if (Workspace.Configuration.DisableHover)
                 return null;
 
@@ -117,65 +119,76 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 Position position = parameters.Position.ToNative();
 
+                var inspectionResult = projectDocument.XmlLocator.Inspect(position);
+                if (inspectionResult == null)
+                    return null;
+                    
+                Log.Information("Inspection Result: {Kind} @ {Range} ({Flags})",
+                    inspectionResult.Node.Kind,
+                    inspectionResult.Node.Range,
+                    inspectionResult.Flags
+                );
+
                 // Try to match up the position with an element or attribute in the XML, then match that up with an MSBuild object.
-                SyntaxNode xmlNode = projectDocument.GetXmlAtPosition(position);
-                if (xmlNode == null)
-                    return null;
+                //SyntaxNode xmlNode = projectDocument.GetXmlAtPosition(position);
+                //if (xmlNode == null)
+                //    return null;
 
-                SyntaxNode elementOrAttribute = xmlNode.GetContainingElementOrAttribute();
-                if (elementOrAttribute == null)
-                    return null;
+                //SyntaxNode elementOrAttribute = xmlNode.GetContainingElementOrAttribute();
+                //if (elementOrAttribute == null)
+                //    return null;
 
-                position = elementOrAttribute.Span.ToNative(projectDocument.XmlPositions).Start;
+                //position = elementOrAttribute.Span.ToNative(projectDocument.XmlPositions).Start;
 
                 // Match up the MSBuild item / property with its corresponding XML element / attribute.
                 MSBuildObject msbuildObject = projectDocument.GetMSBuildObjectAtPosition(position);
 
-                Range range = elementOrAttribute.Span.ToNative(projectDocument.XmlPositions);
                 Hover result = new Hover
                 {
-                    Range = range.ToLsp()
+                    Range = inspectionResult.Node.Range.Transform(moveEndColumns: 1).ToLsp()
                 };
-                
-                HoverContentProvider contentProvider = new HoverContentProvider(projectDocument);
-                if (elementOrAttribute is IXmlElementSyntax element)
-                {
-                    if (msbuildObject is MSBuildProperty propertyFromElement)
-                        result.Contents = contentProvider.Property(propertyFromElement);
-                    else if (msbuildObject is MSBuildUnusedProperty unusedPropertyFromElement)
-                        result.Contents = contentProvider.UnusedProperty(unusedPropertyFromElement);
-                    else if (msbuildObject is MSBuildItemGroup itemGroupFromElement)
-                        result.Contents = contentProvider.ItemGroup(itemGroupFromElement);
-                    else if (msbuildObject is MSBuildUnusedItemGroup unusedItemGroupFromElement)
-                        result.Contents = contentProvider.UnusedItemGroup(unusedItemGroupFromElement);
-                    else if (msbuildObject is MSBuildTarget targetFromElement)
-                        result.Contents = contentProvider.Target(targetFromElement);
-                    else if (msbuildObject is MSBuildImport importFromElement)
-                        result.Contents = contentProvider.Import(importFromElement);
-                    else if (msbuildObject is MSBuildUnresolvedImport unresolvedImportFromElement)
-                        result.Contents = contentProvider.UnresolvedImport(unresolvedImportFromElement);
-                    else
-                        return null;
-                }
-                else if (elementOrAttribute is XmlAttributeSyntax attribute)
-                {
-                    if (msbuildObject is MSBuildItemGroup itemGroupFromAttribute)
-                        result.Contents = contentProvider.ItemGroupMetadata(itemGroupFromAttribute, attribute.Name);
-                    else if (msbuildObject is MSBuildUnusedItemGroup unusedItemGroupFromAttribute)
-                        result.Contents = contentProvider.UnusedItemGroupMetadata(unusedItemGroupFromAttribute, attribute.Name);
-                    else if (msbuildObject is MSBuildSdkImport sdkImportFromAttribute)
-                        result.Contents = contentProvider.SdkImport(sdkImportFromAttribute);
-                    else if (msbuildObject is MSBuildUnresolvedSdkImport unresolvedSdkImportFromAttribute)
-                        result.Contents = contentProvider.UnresolvedSdkImport(unresolvedSdkImportFromAttribute);
-                    else if (msbuildObject is MSBuildImport importFromAttribute)
-                        result.Contents = contentProvider.Import(importFromAttribute);
-                    else if (attribute.Name == "Condition")
-                        result.Contents = contentProvider.Condition(attribute.ParentElement.Name, attribute.Value);
-                    else
-                        return null;
-                }
-                else
-                    return null;
+
+                result.Contents = $"Result: {inspectionResult.Node.Kind} ({inspectionResult.Flags})";
+
+                //HoverContentProvider contentProvider = new HoverContentProvider(projectDocument);
+                //if (elementOrAttribute is IXmlElementSyntax element)
+                //{
+                //    if (msbuildObject is MSBuildProperty propertyFromElement)
+                //        result.Contents = contentProvider.Property(propertyFromElement);
+                //    else if (msbuildObject is MSBuildUnusedProperty unusedPropertyFromElement)
+                //        result.Contents = contentProvider.UnusedProperty(unusedPropertyFromElement);
+                //    else if (msbuildObject is MSBuildItemGroup itemGroupFromElement)
+                //        result.Contents = contentProvider.ItemGroup(itemGroupFromElement);
+                //    else if (msbuildObject is MSBuildUnusedItemGroup unusedItemGroupFromElement)
+                //        result.Contents = contentProvider.UnusedItemGroup(unusedItemGroupFromElement);
+                //    else if (msbuildObject is MSBuildTarget targetFromElement)
+                //        result.Contents = contentProvider.Target(targetFromElement);
+                //    else if (msbuildObject is MSBuildImport importFromElement)
+                //        result.Contents = contentProvider.Import(importFromElement);
+                //    else if (msbuildObject is MSBuildUnresolvedImport unresolvedImportFromElement)
+                //        result.Contents = contentProvider.UnresolvedImport(unresolvedImportFromElement);
+                //    else
+                //        return null;
+                //}
+                //else if (elementOrAttribute is XmlAttributeSyntax attribute)
+                //{
+                //    if (msbuildObject is MSBuildItemGroup itemGroupFromAttribute)
+                //        result.Contents = contentProvider.ItemGroupMetadata(itemGroupFromAttribute, attribute.Name);
+                //    else if (msbuildObject is MSBuildUnusedItemGroup unusedItemGroupFromAttribute)
+                //        result.Contents = contentProvider.UnusedItemGroupMetadata(unusedItemGroupFromAttribute, attribute.Name);
+                //    else if (msbuildObject is MSBuildSdkImport sdkImportFromAttribute)
+                //        result.Contents = contentProvider.SdkImport(sdkImportFromAttribute);
+                //    else if (msbuildObject is MSBuildUnresolvedSdkImport unresolvedSdkImportFromAttribute)
+                //        result.Contents = contentProvider.UnresolvedSdkImport(unresolvedSdkImportFromAttribute);
+                //    else if (msbuildObject is MSBuildImport importFromAttribute)
+                //        result.Contents = contentProvider.Import(importFromAttribute);
+                //    else if (attribute.Name == "Condition")
+                //        result.Contents = contentProvider.Condition(attribute.ParentElement.Name, attribute.Value);
+                //    else
+                //        return null;
+                //}
+                //else
+                //    return null;
 
                 return result;
             }

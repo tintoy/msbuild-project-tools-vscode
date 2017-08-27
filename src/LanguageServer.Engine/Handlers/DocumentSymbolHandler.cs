@@ -115,7 +115,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 if (!projectDocument.HasMSBuildProject)
                     return null;
 
-                foreach (MSBuildObject msbuildObject in projectDocument.MSBuildLookup.AllObjects)
+                foreach (MSBuildObject msbuildObject in projectDocument.MSBuildLocator.AllObjects)
                 {
                     // Special case for item groups, which can contribute multiple symbols from a single item group.
                     if (msbuildObject is MSBuildItemGroup itemGroup)

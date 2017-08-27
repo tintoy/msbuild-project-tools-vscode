@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>netstandard1.3</TargetFramework>
+        <SomePackage>MyPackage</SomePackage>
+        <SomePackage>AnotherPackage</SomePackage>
+        <YetAnotherProperty>false</YetAnotherProperty>
+        <AnotherProperty Condition=" '$(YetAnotherProperty)' == 'true' ">Hello</AnotherProperty>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+        <PackageReference Include="$(SomePackage)" Version="10.0.3" />
+        <Foo Include="A;B;C;D;E;F" Diddly="Hello%(Identity)" /><>
+        <Foo Include="G;H;I;J" Diddly="Dee" />
+        <Foo Include="K;L;M" Diddly="Dee" ExtensionsPath="$(MSBuildExtensionsPath)" Condition=" '$(AnotherProperty)' == 'Hello' " />
+        <Bar Include="A;@(Foo->'%(Diddly)')" />
+    </ItemGroup>
+</Project>

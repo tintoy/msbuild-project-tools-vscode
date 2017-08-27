@@ -135,7 +135,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 if (location == null)
                     return null;
 
-                Log.Information("Completion requested for {Valid:l} {NodeKind} @ {NodeRange:l}/{NodeLength} ({LocationFlags})",
+                Log.Verbose("Completion requested for {Valid:l} {NodeKind} @ {NodeRange:l}/{NodeLength} ({LocationFlags})",
                     location.Node.IsValid ? "valid" : "invalid",
                     location.Node.Kind,
                     location.Node.Range,

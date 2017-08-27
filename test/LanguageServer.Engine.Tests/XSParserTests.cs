@@ -88,19 +88,19 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         [InlineData("Test1", 9, XSNodeKind.Whitespace)]
         [InlineData("Test1", 10, XSNodeKind.Element)]
         [InlineData("Test1", 11, XSNodeKind.Whitespace)]
-        [InlineData("Invalid.EmptyOpeningTag", 0, XSNodeKind.Element)]
-        [InlineData("Invalid.EmptyOpeningTag", 1, XSNodeKind.Whitespace)]
-        [InlineData("Invalid.EmptyOpeningTag", 2, XSNodeKind.Element)]
-        [InlineData("Invalid.EmptyOpeningTag", 3, XSNodeKind.Attribute)]
-        [InlineData("Invalid.EmptyOpeningTag", 4, XSNodeKind.Whitespace)]
-        [InlineData("Invalid.EmptyOpeningTag", 5, XSNodeKind.Element)]
-        [InlineData("Invalid.EmptyOpeningTag", 6, XSNodeKind.Whitespace)]
-        [InlineData("Invalid.EmptyOpeningTag", 7, XSNodeKind.Element)]
-        [InlineData("Invalid.EmptyOpeningTag", 8, XSNodeKind.Whitespace)]
-        [InlineData("Invalid.EmptyOpeningTag", 9, XSNodeKind.Element)] // Invalid element
-        [InlineData("Invalid.EmptyOpeningTag", 10, XSNodeKind.Whitespace)]
-        [InlineData("Invalid.EmptyOpeningTag", 11, XSNodeKind.Whitespace)]
-        [InlineData("Invalid.EmptyOpeningTag", 12, XSNodeKind.Element)]
+        [InlineData("Invalid1.EmptyOpeningTag", 0, XSNodeKind.Element)]
+        [InlineData("Invalid1.EmptyOpeningTag", 1, XSNodeKind.Whitespace)]
+        [InlineData("Invalid1.EmptyOpeningTag", 2, XSNodeKind.Element)]
+        [InlineData("Invalid1.EmptyOpeningTag", 3, XSNodeKind.Attribute)]
+        [InlineData("Invalid1.EmptyOpeningTag", 4, XSNodeKind.Whitespace)]
+        [InlineData("Invalid1.EmptyOpeningTag", 5, XSNodeKind.Element)]
+        [InlineData("Invalid1.EmptyOpeningTag", 6, XSNodeKind.Whitespace)]
+        [InlineData("Invalid1.EmptyOpeningTag", 7, XSNodeKind.Element)]
+        [InlineData("Invalid1.EmptyOpeningTag", 8, XSNodeKind.Whitespace)]
+        [InlineData("Invalid1.EmptyOpeningTag", 9, XSNodeKind.Element)] // Invalid element
+        [InlineData("Invalid1.EmptyOpeningTag", 10, XSNodeKind.Whitespace)]
+        [InlineData("Invalid1.EmptyOpeningTag", 11, XSNodeKind.Whitespace)]
+        [InlineData("Invalid1.EmptyOpeningTag", 12, XSNodeKind.Element)]
         [Theory(DisplayName = "XSParser discovers node of kind ")]
         void NodeKind(string testFileName, int index, XSNodeKind nodeKind)
         {
@@ -127,8 +127,8 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// <param name="index">
         ///     The element node's index within the semantic model.
         /// </param>
-        [InlineData("Invalid.EmptyOpeningTag", 9)]
-        [InlineData("Invalid.DoubleOpeningTag", 7)]
+        [InlineData("Invalid1.EmptyOpeningTag", 9)]
+        [InlineData("Invalid1.DoubleOpeningTag", 7)]
         [Theory(DisplayName = "XSParser discovers invalid element ")]
         void InvalidElement(string testFileName, int index)
         {

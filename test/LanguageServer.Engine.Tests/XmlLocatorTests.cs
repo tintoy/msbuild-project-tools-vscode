@@ -198,8 +198,10 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// <param name="column">
         ///     The target column.
         /// </param>
-        [InlineData("Invalid.DoubleOpeningTag", 4, 10)]
-        [InlineData("Invalid.EmptyOpeningTag", 5, 10)]
+        [InlineData("Invalid1.DoubleOpeningTag", 4, 10)]
+        [InlineData("Invalid1.EmptyOpeningTag", 5, 10)]
+        [InlineData("Invalid2.DoubleOpeningTag", 13, 10)]
+        [InlineData("Invalid2.EmptyOpeningTag", 13, 65)]
         [Theory(DisplayName = "Expect line and column to be on an element that can be replaced by completion ")]
         public void Line_Col_CanCompleteElement(string testFileName, int line, int column)
         {

@@ -288,8 +288,26 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                     contentRange = elementRange;
 
                 XSElement xsElement;
-                if (String.IsNullOrWhiteSpace(element.Name) || openingTagRange == elementRange || contentRange == elementRange || closingTagRange == elementRange)
-                    xsElement = new XSInvalidElement(element, elementRange, parent: CurrentElement, hasContent: true);
+                if (String.IsNullOrWhiteSpace(element.Name))
+                {
+                    // All the ways an XML element can go wrong.
+
+                    if (element.StartTag.Width == 2) // <> surrounded by whitespace
+                        xsElement = new XSInvalidElement(element, openingTagRange, parent: CurrentElement, hasContent: false);
+                    else if (element.EndTag == null) // <<
+                        xsElement = new XSInvalidElement(element, openingTagRange, parent: CurrentElement, hasContent: false);
+                    else if (element.EndTag.Width == 0) // <> after an element
+                    {
+                        openingTagRange = new Range(
+                            _textPositions.GetPosition(element.Span.Start),
+                            _textPositions.GetPosition(element.Span.Start + 1)
+                        );
+
+                        xsElement = new XSInvalidElement(element, openingTagRange, parent: CurrentElement, hasContent: false);
+                    }
+                    else // Fuck knows.
+                        xsElement = new XSInvalidElement(element, elementRange, parent: CurrentElement, hasContent: true);
+                }
                 else
                     xsElement = new XSElementWithContent(element, elementRange, openingTagRange, contentRange, closingTagRange, parent: CurrentElement);
 

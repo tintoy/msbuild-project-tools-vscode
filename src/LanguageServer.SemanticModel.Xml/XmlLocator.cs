@@ -195,6 +195,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 throw new ArgumentNullException(nameof(node));
 
             XmlLocationFlags flags = XmlLocationFlags.None;
+            if (!node.IsValid)
+                flags |= XmlLocationFlags.Invalid;
 
             switch (node)
             {
@@ -230,6 +232,18 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
 
                     if (absolutePosition >= startTagSpan.End && absolutePosition <= endTagSpan.Start)
                         flags |= XmlLocationFlags.Value;
+
+                    break;
+                }
+                case XSInvalidElement invalidElement:
+                {
+                    flags |= XmlLocationFlags.Element;
+
+                    XmlElementSyntaxBase syntaxNode = invalidElement.ElementNode;
+
+                    TextSpan nameSpan = syntaxNode.NameNode?.Span ?? new TextSpan();
+                    if (nameSpan.Contains(absolutePosition))
+                        flags |= XmlLocationFlags.Name;
 
                     break;
                 }

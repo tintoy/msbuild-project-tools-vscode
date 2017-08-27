@@ -131,9 +131,24 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                     return null;
 
                 Position position = parameters.Position.ToNative();
+                XmlLocation location = projectDocument.XmlLocator.Inspect(position);
+                if (location == null)
+                    return null;
+
+                Log.Information("Completion requested for {Valid:l} {NodeKind} @ {NodeRange:l}/{NodeLength} ({LocationFlags})",
+                    location.Node.IsValid ? "valid" : "invalid",
+                    location.Node.Kind,
+                    location.Node.Range,
+                    projectDocument.XmlPositions.GetLength(location.Node.Range),
+                    location.Flags
+                );
+                XSElement replaceElement;
+                if (location.CanCompleteElement(out replaceElement))
+                {
+                    Log.Information("Completion handler would be able to replace element @ {Range:l}", replaceElement.Range);
+                }
 
                 XSAttribute attribute;
-                XmlLocation location = projectDocument.XmlLocator.Inspect(position);
                 if (!location.IsAttribute(out attribute))
                     return null;
 

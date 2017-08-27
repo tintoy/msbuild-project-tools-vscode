@@ -174,8 +174,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
             XmlDocumentSyntax document = Parser.ParseText(testXml);
 
             XmlLocator locator = new XmlLocator(document, positions);
-            XmlLocation result = locator.Inspect(testPosition);
-
+            XmlLocation result = locator.Inspect(testPosition);        
             Assert.NotNull(result);
 
             XSAttribute attribute;
@@ -185,6 +184,38 @@ namespace MSBuildProjectTools.LanguageServer.Tests
             Assert.Equal(expectedAttributeName, attribute.Name);
 
             // TODO: Verify Parent, PreviousSibling, and NextSibling.
+        }
+
+        /// <summary>
+        ///     Verify that the target line and column are on an element that can be replaced by completion.
+        /// </summary>
+        /// <param name="testFileName">
+        ///     The name of the test file, without the extension.
+        /// </param>
+        /// <param name="line">
+        ///     The target line.
+        /// </param>
+        /// <param name="column">
+        ///     The target column.
+        /// </param>
+        [InlineData("Invalid.DoubleOpeningTag", 4, 10)]
+        [InlineData("Invalid.EmptyOpeningTag", 5, 10)]
+        [Theory(DisplayName = "Expect line and column to be on an element that can be replaced by completion ")]
+        public void Line_Col_CanCompleteElement(string testFileName, int line, int column)
+        {
+            Position testPosition = new Position(line, column);
+
+            string testXml = LoadTestFile("TestFiles", testFileName + ".xml");
+            TextPositions positions = new TextPositions(testXml);
+            XmlDocumentSyntax document = Parser.ParseText(testXml);
+
+            XmlLocator locator = new XmlLocator(document, positions);
+            XmlLocation location = locator.Inspect(testPosition);
+            Assert.NotNull(location);
+
+            XSElement replacingElement;
+            Assert.True(location.CanCompleteElement(out replacingElement), "CanCompleteReplacement");
+            Assert.NotNull(replacingElement);
         }
 
         /// <summary>

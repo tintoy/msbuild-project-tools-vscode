@@ -366,5 +366,54 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
 
             return location.IsElement() || location.IsAttribute();
         }
+
+        /// <summary>
+        ///     Can the element at the location be replaced by a completion?
+        /// </summary>
+        /// <param name="location">
+        ///     The XML location.
+        /// </param>
+        /// <param name="replaceElement">
+        ///     The element (if any) that will be replaced by the completion.
+        /// </param>
+        /// <returns>
+        ///     <c>true</c>, if the location represents an element that can be replaced by completion; otherwise, <c>false</c>.
+        /// </returns>
+        /// <remarks>
+        ///     We can replace "&lt;&gt;" and "&lt;&lt;Element /&gt;".
+        /// </remarks>
+        public static bool CanCompleteElement(this XmlLocation location, out XSElement replaceElement)
+        {
+            if (location == null)
+                throw new ArgumentNullException(nameof(location));
+
+            replaceElement = null;
+            if (location.IsWhitespace())
+                return true;
+
+            XSElement element;
+            if (!location.IsElement(out element))
+                return false;
+
+            if (element.IsValid)
+            {
+                // If the element is valid, then check if we have an invalid parent (e.g. "<<Foo />" yields invalid element "" with child element "Foo").
+
+                if (element.ParentElement.IsValid)
+                    return false;
+
+                if (element.ParentElement.Start.LineNumber != location.Node.Start.LineNumber)
+                    return false;
+
+                if (location.Node.Start.ColumnNumber - element.ParentElement.Start.ColumnNumber == 1)
+                    element = element.ParentElement;
+            }
+            else if (element.Start.LineNumber != element.End.LineNumber || element.End.ColumnNumber - element.Start.ColumnNumber != 2)
+                return false; // Not "<>", which is what VSCode inserts when you're not directly to the left of an element and type "<".
+
+            replaceElement = element;
+
+            return true;
+        }
     }
 }

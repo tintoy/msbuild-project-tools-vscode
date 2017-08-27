@@ -56,6 +56,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <summary>
         ///     Element or attribute has no content.
         /// </summary>
-        Empty = 1024
+        Empty = 1024,
+
+        /// <summary>
+        ///     Node at location does not represent valid XML.
+        /// </summary>
+        Invalid = 2048
     }
 }

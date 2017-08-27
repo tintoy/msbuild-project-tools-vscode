@@ -44,12 +44,12 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <summary>
         ///     The node's next sibling node (if any).
         /// </summary>
-        public XSNode NextSibling { get; set; }
+        public XSNode NextSibling { get; internal set; }
 
         /// <summary>
         ///     The node's previous sibling node (if any).
         /// </summary>
-        public XSNode PreviousSibling { get; set; }
+        public XSNode PreviousSibling { get; internal set; }
 
         /// <summary>
         ///     The kind of XML node represented by the <see cref="XSNode"/>.

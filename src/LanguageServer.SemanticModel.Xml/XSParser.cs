@@ -163,7 +163,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                                     ),
                                     parent: element
                                 );
-                                element.Content.Insert(contentIndex, whitespace);
+                                element.Content = element.Content.Insert(contentIndex, whitespace);
                                 DiscoveredNodes.Add(whitespace);
                             }
 
@@ -184,7 +184,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                                     ),
                                     parent: element
                                 );
-                                element.Content.Insert(contentIndex, whitespace);
+                                element.Content = element.Content.Insert(contentIndex, whitespace);
                                 DiscoveredNodes.Add(whitespace);
                             }
 
@@ -204,7 +204,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                             ),
                             parent: element
                         );
-                        element.Content.Add(whitespace);
+                        element.Content = element.Content.Add(whitespace);
                         DiscoveredNodes.Add(whitespace);
                     }
                 }
@@ -294,7 +294,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                     xsElement = new XSElementWithContent(element, elementRange, openingTagRange, contentRange, closingTagRange, parent: CurrentElement);
 
                 if (xsElement.ParentElement is XSElementWithContent parentElement)
-                    parentElement.Content.Add(xsElement);
+                    parentElement.Content = parentElement.Content.Add(xsElement);
 
                 PushElement(xsElement);
 
@@ -336,7 +336,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                     xsElement = new XSEmptyElement(emptyElement, elementRange, parent: CurrentElement);
 
                 if (xsElement.ParentElement is XSElementWithContent parentElement)
-                    parentElement.Content.Add(xsElement);
+                    parentElement.Content = parentElement.Content.Add(xsElement);
 
                 PushElement(xsElement);
 
@@ -372,7 +372,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 else
                     xsAttribute = new XSAttribute(attribute, CurrentElement, attributeRange, nameRange, valueRange);
 
-                CurrentElement.Attributes.Add(xsAttribute);
+                CurrentElement.Attributes = CurrentElement.Attributes.Add(xsAttribute);
                 DiscoveredNodes.Add(xsAttribute);
 
                 return attribute;
@@ -394,7 +394,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                     return text;
 
                 XSElementText elementText = new XSElementText(text, textRange, CurrentElement);
-                CurrentElement.Content.Add(elementText);
+                CurrentElement.Content = CurrentElement.Content.Add(elementText);
 
                 DiscoveredNodes.Add(elementText);
 

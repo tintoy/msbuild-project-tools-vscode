@@ -1,6 +1,7 @@
 using Microsoft.Language.Xml;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
@@ -45,9 +46,14 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         public XSElement ParentElement { get; }
 
         /// <summary>
+        ///     The element's attributes (if any).
+        /// </summary>
+        public ImmutableList<XSAttribute> Attributes { get; internal set; } = ImmutableList<XSAttribute>.Empty;
+
+        /// <summary>
         ///     The element's content (if any).
         /// </summary>
-        public List<XSNode> Content { get; } = new List<XSNode>();
+        public ImmutableList<XSNode> Content { get; internal set; } = ImmutableList<XSNode>.Empty;
 
         /// <summary>
         ///     The element's child elements (if any).
@@ -58,11 +64,6 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The kind of XML node represented by the <see cref="XSNode"/>.
         /// </summary>
         public override XSNodeKind Kind => XSNodeKind.Element;
-
-        /// <summary>
-        ///     The element's attributes (if any).
-        /// </summary>
-        public List<XSAttribute> Attributes { get; } = new List<XSAttribute>();
 
         /// <summary>
         ///     Does the <see cref="XSNode"/> represent valid XML?

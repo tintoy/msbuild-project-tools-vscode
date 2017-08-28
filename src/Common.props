@@ -1,0 +1,7 @@
+<Project>
+    <PropertyGroup>
+        <AssetTargetFallback>dnxcore50</AssetTargetFallback>
+        
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
+</Project>

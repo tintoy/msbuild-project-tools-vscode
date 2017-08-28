@@ -402,13 +402,16 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="replaceElement">
         ///     The element (if any) that will be replaced by the completion.
         /// </param>
+        /// <param name="asChildOfElementNamed">
+        ///     If specified, the location's parent element must have the specified name.
+        /// </param>
         /// <returns>
         ///     <c>true</c>, if the location represents an element that can be replaced by completion; otherwise, <c>false</c>.
         /// </returns>
         /// <remarks>
         ///     We can replace "&lt;&gt;" and "&lt;&lt;Element /&gt;".
         /// </remarks>
-        public static bool CanCompleteElement(this XmlLocation location, out XSElement replaceElement)
+        public static bool CanCompleteElement(this XmlLocation location, out XSElement replaceElement, string asChildOfElementNamed = null)
         {
             if (location == null)
                 throw new ArgumentNullException(nameof(location));
@@ -437,6 +440,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             else if (element.Start.LineNumber != element.End.LineNumber || element.End.ColumnNumber - element.Start.ColumnNumber != 2)
                 return false; // Not "<>", which is what VSCode inserts when you're not directly to the left of an element and type "<".
 
+            if (asChildOfElementNamed != null && element.ParentElement?.Name != asChildOfElementNamed)
+                return false;
+
             replaceElement = element;
 
             return true;
@@ -451,10 +457,16 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="targetAttribute">
         ///     The attribute (if any) whose value will be replaced by the completion.
         /// </param>
+        /// <param name="onElementNamed">
+        ///     If specified, attribute's element must have the specified name.
+        /// </param>
+        /// <param name="forAttributeNamed">
+        ///     If specified, the attribute must have one of the specified names.
+        /// </param>
         /// <returns>
         ///     <c>true</c>, if the location represents an attribute whose value can be replaced by a completion; otherwise, <c>false</c>.
         /// </returns>
-        public static bool CanCompleteAttributeValue(this XmlLocation location, out XSAttribute targetAttribute, string requireElementName = null, params string[] requireAttributeNames)
+        public static bool CanCompleteAttributeValue(this XmlLocation location, out XSAttribute targetAttribute, string onElementNamed = null, params string[] forAttributeNamed)
         {
             if (location == null)
                 throw new ArgumentNullException(nameof(location));
@@ -465,10 +477,10 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (!location.IsAttributeValue(out attribute))
                 return false;
 
-            if (requireElementName != null && attribute.Element.Name != requireElementName)
+            if (onElementNamed != null && attribute.Element.Name != onElementNamed)
                 return false;
 
-            if (requireAttributeNames.Length > 0 && Array.IndexOf(requireAttributeNames, attribute.Name) == -1)
+            if (forAttributeNamed.Length > 0 && Array.IndexOf(forAttributeNamed, attribute.Name) == -1)
                 return false;
 
             targetAttribute = attribute;

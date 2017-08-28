@@ -34,7 +34,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// </param>
         [InlineData("Test1", 2, 5)]
         [InlineData("Test1", 3, 9)]
-        [Theory(DisplayName = "Expect line and column to be inside element ")]
+        [Theory(DisplayName = "Line / column inside element ")]
         public void Line_Col_ListInsideElement1(string testFileName, int line, int column)
         {
             // TODO: Change this test to use XmlLocator.
@@ -80,7 +80,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         [InlineData("Test1", 3, 22, XSNodeKind.Whitespace)]
         [InlineData("Test2", 11, 8, XSNodeKind.Whitespace)]
         [InlineData("Test2", 5, 22, XSNodeKind.Text)]
-        [Theory(DisplayName = "Expect line and column to be within element content ")]
+        [Theory(DisplayName = "Line / column within element content ")]
         public void Line_Col_InElementContent(string testFileName, int line, int column, XSNodeKind expectedNodeKind)
         {
             Position testPosition = new Position(line, column);
@@ -116,7 +116,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// </param>
         [InlineData("Test2", 11, 10, "PackageReference")]
         [InlineData("Test2", 12, 18, "PackageReference")]
-        [Theory(DisplayName = "Expect line and column to be within empty element's name ")]
+        [Theory(DisplayName = "Line / column within empty element's name ")]
         public void Line_Col_InEmptyElementName(string testFileName, int line, int column, string expectedElementName)
         {
             Position testPosition = new Position(line, column);
@@ -164,7 +164,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         [InlineData("Test2", 11, 62, "Version")]
         [InlineData("Test2", 11, 63, "Version")]
         [InlineData("Test2", 11, 68, "Version")]
-        [Theory(DisplayName = "Expect line and column to be within attribute's value ")]
+        [Theory(DisplayName = "Line / column within attribute's value ")]
         public void Line_Col_InAttributeValue(string testFileName, int line, int column, string expectedAttributeName)
         {
             Position testPosition = new Position(line, column);
@@ -202,7 +202,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         [InlineData("Invalid1.EmptyOpeningTag", 5, 10)]
         [InlineData("Invalid2.DoubleOpeningTag", 13, 10)]
         [InlineData("Invalid2.EmptyOpeningTag", 13, 65)]
-        [Theory(DisplayName = "Expect line and column to be on an element that can be replaced by completion ")]
+        [Theory(DisplayName = "Line / column is on element that can be replaced by completion ")]
         public void Line_Col_CanCompleteElement(string testFileName, int line, int column)
         {
             Position testPosition = new Position(line, column);
@@ -218,6 +218,44 @@ namespace MSBuildProjectTools.LanguageServer.Tests
             XSElement replacingElement;
             Assert.True(location.CanCompleteElement(out replacingElement), "CanCompleteReplacement");
             Assert.NotNull(replacingElement);
+        }
+
+        /// <summary>
+        ///     Verify that the target line and column are on an element that can be replaced by completion.
+        /// </summary>
+        /// <param name="testFileName">
+        ///     The name of the test file, without the extension.
+        /// </param>
+        /// <param name="line">
+        ///     The target line.
+        /// </param>
+        /// <param name="column">
+        ///     The target column.
+        /// </param>
+        [InlineData("Invalid1.DoubleOpeningTag", 4, 10, "Element2")]
+        [InlineData("Invalid1.EmptyOpeningTag", 5, 10, "Element2")]
+        [InlineData("Invalid2.DoubleOpeningTag", 13, 10, "ItemGroup")]
+        [InlineData("Invalid2.EmptyOpeningTag", 13, 65, "ItemGroup")]
+        [Theory(DisplayName = "Line / column is on completable element if parent name matches ")]
+        public void Line_Col_CanCompleteElementInParentNamed(string testFileName, int line, int column, string expectedParent)
+        {
+            Position testPosition = new Position(line, column);
+
+            string testXml = LoadTestFile("TestFiles", testFileName + ".xml");
+            TextPositions positions = new TextPositions(testXml);
+            XmlDocumentSyntax document = Parser.ParseText(testXml);
+
+            XmlLocator locator = new XmlLocator(document, positions);
+            XmlLocation location = locator.Inspect(testPosition);
+            Assert.NotNull(location);
+
+            XSElement replaceElement;
+            Assert.True(
+                location.CanCompleteElement(out replaceElement, asChildOfElementNamed: expectedParent),
+                "CanCompleteReplacement"
+            );
+            Assert.NotNull(replaceElement);
+            Assert.Equal(expectedParent, replaceElement.ParentElement?.Name);
         }
 
         /// <summary>

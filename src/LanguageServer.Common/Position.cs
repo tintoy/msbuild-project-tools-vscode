@@ -119,6 +119,14 @@ namespace MSBuildProjectTools.LanguageServer
         }
 
         /// <summary>
+        ///     Create an <see cref="Range"/> that starts and ends at the <see cref="Position"/>.
+        /// </summary>
+        /// <returns>
+        ///     The <see cref="Range"/>.
+        /// </returns>
+        public Range ToEmptyRange() => new Range(start: this, end: this);
+
+        /// <summary>
         ///     Determine whether the position is equal to another object.
         /// </summary>
         /// <param name="other">

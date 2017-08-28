@@ -6,6 +6,8 @@
     <RootNamespace>MSBuildProjectTools.LanguageServer</RootNamespace>
   </PropertyGroup>
 
+  <Import Project="../Common.props" />
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Build" Version="15.3.409" />
     <PackageReference Include="Microsoft.Language.Xml" Version="1.1.14" />

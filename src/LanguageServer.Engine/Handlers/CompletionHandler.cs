@@ -99,6 +99,12 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             get => new CompletionRegistrationOptions
             {
                 DocumentSelector = DocumentSelector,
+                TriggerCharacters = new string[] {
+                    "<", // Element
+                    "$", // Property or function-call expression 
+                    "@", // Item group reference
+                    "%"  // Metadata reference
+                },
                 ResolveProvider = false
             };
         }
@@ -136,7 +142,9 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                     return null;
 
                 if (location.CanCompleteAttributeValue(out XSAttribute attribute, "PackageReference", "Include", "Version"))
-                    completionItems = await HandlePackageReferenceCompletion(projectDocument, attribute, cancellationToken);
+                    completionItems = await HandlePackageReferenceAttributeCompletion(projectDocument, attribute, cancellationToken);
+                else if (location.CanCompleteElement(out XSElement replaceElement, asChildOfElementNamed: "ItemGroup"))
+                    completionItems = HandlePackageReferenceElementCompletion(projectDocument, location, replaceElement);
             }
             if (completionItems == null)
                 return null;
@@ -163,7 +171,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <returns>
         ///     A <see cref="Task"/> representing the operation.
         /// </returns>
-        async Task<List<CompletionItem>> HandlePackageReferenceCompletion(ProjectDocument projectDocument, XSAttribute attribute, CancellationToken cancellationToken)
+        async Task<List<CompletionItem>> HandlePackageReferenceAttributeCompletion(ProjectDocument projectDocument, XSAttribute attribute, CancellationToken cancellationToken)
         {
             try
             {
@@ -234,6 +242,43 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 return null;
             }
+        }
+
+        /// <summary>
+        ///     Handle completion for an attribute of a PackageReference element.
+        /// </summary>
+        /// <param name="projectDocument">
+        ///     The current project document.
+        /// </param>
+        /// <param name="location">
+        ///     The location where completion will be offered.
+        /// </param>
+        /// <param name="replaceElement">
+        ///     The element (if any) that will be replaced by the completion.
+        /// </param>
+        /// <returns>
+        ///     The completion list or <c>null</c> if no completions are provided.
+        /// </returns>
+        List<CompletionItem> HandlePackageReferenceElementCompletion(ProjectDocument projectDocument, XmlLocation location, XSElement replaceElement)
+        {
+            if (projectDocument == null)
+                throw new ArgumentNullException(nameof(projectDocument));
+
+            Range replaceRange = replaceElement?.Range ?? location.Position.ToEmptyRange();
+
+            return new List<CompletionItem>
+            {
+                new CompletionItem
+                {
+                    Label = "<PackageReference />",
+                    TextEdit = new TextEdit
+                    {
+                        NewText = "<PackageReference Include=\"${1:Package}\" Version=\"${2:1.0.0}\" />$0",
+                        Range = replaceRange.ToLsp()
+                    },
+                    InsertTextFormat = InsertTextFormat.Snippet
+                }
+            };
         }
 
         /// <summary>

@@ -1,13 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <AssetTargetFallback>dnxcore50</AssetTargetFallback>
-
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>IDE0016</NoWarn>
+    
     <AssemblyName>MSBuildProjectTools.LanguageServer.Engine</AssemblyName>
     <RootNamespace>MSBuildProjectTools.LanguageServer</RootNamespace>
   </PropertyGroup>
+
+  <Import Project="../Common.props" />
 
   <ItemGroup>
     <PackageReference Include="JsonRpc" Version="1.0.0" />

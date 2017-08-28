@@ -6,6 +6,8 @@
         <RootNamespace>MSBuildProjectTools.LanguageServer.Host</RootNamespace>
     </PropertyGroup>
 
+    <Import Project="../Common.props" />
+
     <ItemGroup>
         <PackageReference Include="JsonRpc" Version="1.0.0" />
         <PackageReference Include="LSP" Version="1.0.0" />

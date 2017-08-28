@@ -7,7 +7,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
     /// <summary>
     ///     Information about a position in XML.
     /// </summary>
-    [DebuggerDisplay("{GetDebuggerDisplayString()}")]
+    [DebuggerDisplay("{ToString()}")]
     public class XmlLocation
     {
         /// <summary>
@@ -103,12 +103,12 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         public XmlLocationFlags Flags { get; }
 
         /// <summary>
-        ///     Get a string representation of the <see cref="XmlLocation"/> for display in the debugger.
+        ///     Get a string representation of the <see cref="XmlLocation"/>.
         /// </summary>
         /// <returns>
-        ///     The debugger display string.
+        ///     The display string.
         /// </returns>
-        string GetDebuggerDisplayString()
+        public override string ToString()
         {
             string nodeDescription = Node.Kind.ToString();
             if (Node is XSElement element)

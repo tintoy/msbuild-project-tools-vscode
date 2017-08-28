@@ -156,6 +156,32 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         }
 
         /// <summary>
+        ///     Does the location represent an attribute's value?
+        /// </summary>
+        /// <param name="location">
+        ///     The XML location.
+        /// </param>
+        /// <param name="attribute">
+        ///     Receives the attribute whose value is represented by the location.
+        /// </param>
+        /// <returns>
+        ///     <c>true</c>, if the location represents an attribute's name; otherwise, <c>false</c>.
+        /// </returns>
+        public static bool IsAttributeValue(this XmlLocation location, out XSAttribute attribute)
+        {
+            if (location.IsAttributeValue())
+            {
+                attribute = (XSAttribute)location.Node;
+
+                return true;
+            }
+
+            attribute = null;
+
+            return false;
+        }
+
+        /// <summary>
         ///     Does the location represent an element?
         /// </summary>
         /// <param name="location">
@@ -368,7 +394,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         }
 
         /// <summary>
-        ///     Can the element at the location be replaced by a completion?
+        ///     Does the location represent a place where an element can be created or replaced by a completion?
         /// </summary>
         /// <param name="location">
         ///     The XML location.
@@ -412,6 +438,40 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 return false; // Not "<>", which is what VSCode inserts when you're not directly to the left of an element and type "<".
 
             replaceElement = element;
+
+            return true;
+        }
+
+        /// <summary>
+        ///     Does the location represent a place where an attribute value can be created or replaced by a completion?
+        /// </summary>
+        /// <param name="location">
+        ///     The XML location.
+        /// </param>
+        /// <param name="targetAttribute">
+        ///     The attribute (if any) whose value will be replaced by the completion.
+        /// </param>
+        /// <returns>
+        ///     <c>true</c>, if the location represents an attribute whose value can be replaced by a completion; otherwise, <c>false</c>.
+        /// </returns>
+        public static bool CanCompleteAttributeValue(this XmlLocation location, out XSAttribute targetAttribute, string requireElementName = null, params string[] requireAttributeNames)
+        {
+            if (location == null)
+                throw new ArgumentNullException(nameof(location));
+            
+            targetAttribute = null;
+
+            XSAttribute attribute;
+            if (!location.IsAttributeValue(out attribute))
+                return false;
+
+            if (requireElementName != null && attribute.Element.Name != requireElementName)
+                return false;
+
+            if (requireAttributeNames.Length > 0 && Array.IndexOf(requireAttributeNames, attribute.Name) == -1)
+                return false;
+
+            targetAttribute = attribute;
 
             return true;
         }

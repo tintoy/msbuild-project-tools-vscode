@@ -135,29 +135,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 if (location == null)
                     return null;
 
-                Log.Verbose("Completion requested for {Valid:l} {NodeKind} @ {NodeRange:l}/{NodeLength} ({LocationFlags})",
-                    location.Node.IsValid ? "valid" : "invalid",
-                    location.Node.Kind,
-                    location.Node.Range,
-                    projectDocument.XmlPositions.GetLength(location.Node.Range),
-                    location.Flags
-                );
-                XSElement replaceElement;
-                if (location.CanCompleteElement(out replaceElement))
-                {
-                    Log.Information("Completion handler would be able to replace element @ {Range:l}", replaceElement.Range);
-                }
-
-                XSAttribute attribute;
-                if (!location.IsAttribute(out attribute))
-                    return null;
-
-                // Are we on the attribute's value?
-                if (!location.IsAttributeValue())
-                    return null;
-
-                // Must be a PackageReference element.
-                if (attribute.Element.Name == "PackageReference")
+                if (location.CanCompleteAttributeValue(out XSAttribute attribute, "PackageReference", "Include", "Version"))
                     completionItems = await HandlePackageReferenceCompletion(projectDocument, attribute, cancellationToken);
             }
             if (completionItems == null)

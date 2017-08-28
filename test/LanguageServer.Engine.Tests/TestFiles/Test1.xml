@@ -1,5 +1,5 @@
 <Element1>
-    <Element2 Attribute1="Value1">
+    <Element2 Attribute1="Value1" >
         <Element3 />
         <Element4 />
     </Element2>

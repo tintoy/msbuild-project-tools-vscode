@@ -17,14 +17,17 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="range">
         ///     The <see cref="Range"/>, within the source text, spanned by the element.
         /// </param>
+        /// <param name="attributesRange">
+        ///     The range, within the source text, spanned by the element's attributes.
+        /// </param>
         /// <param name="parent">
         ///     The <see cref="XSInvalidElement"/>'s parent element (if any).
         /// </param>
         /// <param name="hasContent">
         ///     Does the <see cref="XSInvalidElement"/> have any content (besides attributes)?
         /// </param>
-        public XSInvalidElement(XmlElementSyntaxBase element, Range range, XSElement parent, bool hasContent)
-            : base(element, range, parent)
+        public XSInvalidElement(XmlElementSyntaxBase element, Range range, Range attributesRange, XSElement parent, bool hasContent)
+            : base(element, range, attributesRange, parent)
         {
             HasContent = hasContent;
         }

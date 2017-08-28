@@ -275,6 +275,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             {
                 Range elementRange = element.Span.ToNative(_textPositions);
                 Range openingTagRange = element.StartTag?.Span.ToNative(_textPositions) ?? elementRange;
+                Range attributesRange = element.AttributesNode?.FullSpan.ToNative(_textPositions) ?? elementRange;
                 Range closingTagRange = element.EndTag?.Span.ToNative(_textPositions) ?? elementRange;
                 Range contentRange;
                 if (openingTagRange.End <= closingTagRange.Start)
@@ -293,9 +294,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                     // All the ways an XML element can go wrong.
 
                     if (element.StartTag.Width == 2) // <> surrounded by whitespace
-                        xsElement = new XSInvalidElement(element, openingTagRange, parent: CurrentElement, hasContent: false);
+                        xsElement = new XSInvalidElement(element, openingTagRange, attributesRange: openingTagRange, parent: CurrentElement, hasContent: false);
                     else if (element.EndTag == null) // <<
-                        xsElement = new XSInvalidElement(element, openingTagRange, parent: CurrentElement, hasContent: false);
+                        xsElement = new XSInvalidElement(element, openingTagRange, attributesRange: openingTagRange, parent: CurrentElement, hasContent: false);
                     else if (element.EndTag.Width == 0) // <> after an element
                     {
                         openingTagRange = new Range(
@@ -303,13 +304,13 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                             _textPositions.GetPosition(element.Span.Start + 1)
                         );
 
-                        xsElement = new XSInvalidElement(element, openingTagRange, parent: CurrentElement, hasContent: false);
+                        xsElement = new XSInvalidElement(element, openingTagRange, attributesRange: openingTagRange, parent: CurrentElement, hasContent: false);
                     }
                     else // Fuck knows.
-                        xsElement = new XSInvalidElement(element, elementRange, parent: CurrentElement, hasContent: true);
+                        xsElement = new XSInvalidElement(element, elementRange, attributesRange: openingTagRange, parent: CurrentElement, hasContent: true);
                 }
                 else
-                    xsElement = new XSElementWithContent(element, elementRange, openingTagRange, contentRange, closingTagRange, parent: CurrentElement);
+                    xsElement = new XSElementWithContent(element, elementRange, openingTagRange, attributesRange, contentRange, closingTagRange, parent: CurrentElement);
 
                 if (xsElement.ParentElement is XSElementWithContent parentElement)
                     parentElement.Content = parentElement.Content.Add(xsElement);
@@ -346,12 +347,13 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             public override SyntaxNode VisitXmlEmptyElement(XmlEmptyElementSyntax emptyElement)
             {
                 Range elementRange = emptyElement.Span.ToNative(_textPositions);
+                Range attributesRange = emptyElement.AttributesNode?.FullSpan.ToNative(_textPositions) ?? elementRange;
 
                 XSElement xsElement;
                 if (String.IsNullOrWhiteSpace(emptyElement.Name))
-                    xsElement = new XSInvalidElement(emptyElement, elementRange, parent: CurrentElement, hasContent: false);
+                    xsElement = new XSInvalidElement(emptyElement, elementRange, attributesRange, parent: CurrentElement, hasContent: false);
                 else
-                    xsElement = new XSEmptyElement(emptyElement, elementRange, parent: CurrentElement);
+                    xsElement = new XSEmptyElement(emptyElement, elementRange, attributesRange, parent: CurrentElement);
 
                 if (xsElement.ParentElement is XSElementWithContent parentElement)
                     parentElement.Content = parentElement.Content.Add(xsElement);

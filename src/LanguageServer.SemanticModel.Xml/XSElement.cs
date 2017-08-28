@@ -19,14 +19,18 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The <see cref="XmlElementSyntaxBase"/> represented by the <see cref="XSElement"/>.
         /// </param>
         /// <param name="range">
-        ///     The range, within the source text, spanned by the node.
+        ///     The range, within the source text, spanned by the element.
+        /// </param>
+        /// <param name="attributesRange">
+        ///     The range, within the source text, spanned by the element's attributes.
         /// </param>
         /// <param name="parent">
         ///     The <see cref="XSElement"/>'s parent element (if any).
         /// </param>
-        protected XSElement(XmlElementSyntaxBase element, Range range, XSElement parent)
+        protected XSElement(XmlElementSyntaxBase element, Range range, Range attributesRange, XSElement parent)
             : base(element, range)
         {
+            AttributesRange = attributesRange;
             ParentElement = parent;
         }
 
@@ -39,6 +43,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The <see cref="XmlElementSyntaxBase"/> represented by the <see cref="XSElement"/>.
         /// </summary>
         public XmlElementSyntaxBase ElementNode => SyntaxNode;
+
+        /// <summary>
+        ///     The range, within the source text, spanned by the element's attributes.
+        /// </summary>
+        public Range AttributesRange { get; }
 
         /// <summary>
         ///     The <see cref="XSElement"/>'s parent element (if any).

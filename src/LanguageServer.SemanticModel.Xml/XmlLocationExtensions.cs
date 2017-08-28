@@ -377,6 +377,54 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         }
 
         /// <summary>
+        ///     Does the location represent an element's attributes range (but not a specific attribute)?
+        /// </summary>
+        /// <param name="location">
+        ///     The XML location.
+        /// </param>
+        /// <returns>
+        ///     <c>true</c>, if the location represents an element; otherwise, <c>false</c>.
+        /// </returns>
+        public static bool IsElementAttributes(this XmlLocation location)
+        {
+            if (location == null)
+                throw new ArgumentNullException(nameof(location));
+
+            return location.IsElement() && location.Flags.HasFlag(XmlLocationFlags.Attributes);
+        }
+
+        /// <summary>
+        ///     Does the location represent an element's attributes range (but not a specific attribute)?
+        /// </summary>
+        /// <param name="location">
+        ///     The XML location.
+        /// </param>
+        /// <param name="element">
+        ///     Receives the <see cref="XSElement"/>.
+        /// </param>
+        /// <returns>
+        ///     <c>true</c>, if the location represents an element; otherwise, <c>false</c>.
+        /// </returns>
+        public static bool IsElementAttributes(this XmlLocation location, out XSElement element)
+        {
+            if (location == null)
+                throw new ArgumentNullException(nameof(location));
+
+            if (location.IsElementAttributes())
+            {
+                element = (XSElement)location.Node;
+
+                return true;
+            }
+            else
+            {
+                element = null;
+
+                return false;
+            }
+        }
+
+        /// <summary>
         ///     Does the location represent an element or an attribute?
         /// </summary>
         /// <param name="location">

@@ -210,6 +210,10 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                     if (nameSpan.Contains(absolutePosition))
                         flags |= XmlLocationFlags.Name;
 
+                    TextSpan attributesSpan = syntaxNode.AttributesNode?.FullSpan ?? new TextSpan();
+                    if (attributesSpan.Contains(absolutePosition))
+                        flags |= XmlLocationFlags.Attributes;
+
                     break;
                 }
                 case XSElementWithContent elementWithContent:
@@ -225,6 +229,10 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                     TextSpan startTagSpan = syntaxNode.StartTag?.Span ?? new TextSpan();
                     if (startTagSpan.Contains(absolutePosition))
                         flags |= XmlLocationFlags.OpeningTag;
+
+                    TextSpan attributesSpan = syntaxNode.AttributesNode?.FullSpan ?? new TextSpan();
+                    if (attributesSpan.Contains(absolutePosition))
+                        flags |= XmlLocationFlags.Attributes;
 
                     TextSpan endTagSpan = syntaxNode.EndTag?.Span ?? new TextSpan();
                     if (endTagSpan.Contains(absolutePosition))
@@ -244,6 +252,10 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                     TextSpan nameSpan = syntaxNode.NameNode?.Span ?? new TextSpan();
                     if (nameSpan.Contains(absolutePosition))
                         flags |= XmlLocationFlags.Name;
+
+                    TextSpan attributesSpan = syntaxNode.AttributesNode?.FullSpan ?? new TextSpan();
+                    if (attributesSpan.Contains(absolutePosition))
+                        flags |= XmlLocationFlags.Attributes;
 
                     break;
                 }

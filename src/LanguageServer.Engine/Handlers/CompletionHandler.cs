@@ -144,7 +144,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 if (location.CanCompleteAttributeValue(out XSAttribute attribute, "PackageReference", "Include", "Version"))
                     completionItems = await HandlePackageReferenceAttributeCompletion(projectDocument, attribute, cancellationToken);
                 else if (location.CanCompleteElement(out XSElement replaceElement, asChildOfElementNamed: "ItemGroup"))
-                    completionItems = HandlePackageReferenceElementCompletion(projectDocument, location, replaceElement);
+                    completionItems = HandlePackageReferenceElementCompletion(projectDocument, location, replaceElement); // TODO: Other item types.
             }
             if (completionItems == null)
                 return null;

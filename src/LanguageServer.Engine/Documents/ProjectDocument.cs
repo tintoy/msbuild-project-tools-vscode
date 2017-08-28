@@ -179,6 +179,26 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         protected ILogger Log { get; set; }
 
         /// <summary>
+        ///     Inspect the specified location in the XML.
+        /// </summary>
+        /// <param name="position">
+        ///     The location's position.
+        /// </param>
+        /// <returns>
+        ///     An <see cref="XmlLocation"/> representing the result of the inspection.
+        /// </returns>
+        public XmlLocation InspectXml(Position position)
+        {
+            if (position == null)
+                throw new ArgumentNullException(nameof(position));
+
+            if (!HasXml)
+                throw new InvalidOperationException("Project is not loaded.");
+
+            return XmlLocator.Inspect(position);
+        }
+
+        /// <summary>
         ///     Load and parse the project.
         /// </summary>
         /// <param name="cancellationToken">

@@ -148,7 +148,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         }
 
         /// <summary>
-        ///     XSParser should discover nodes of the specified type at the specified index.
+        ///     XSParser should discover a node with the specified range at the specified index.
         /// </summary>
         /// <param name="testFileName">
         ///     The name of the test file, without the extension.
@@ -156,8 +156,17 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// <param name="index">
         ///     The node index.
         /// </param>
-        /// <param name="nodeKind">
-        ///     The node kind.
+        /// <param name="startLine">
+        ///     The node's starting line.
+        /// </param>
+        /// <param name="startColumn">
+        ///     The node's starting column.
+        /// </param>
+        /// <param name="endLine">
+        ///     The node's ending line.
+        /// </param>
+        /// <param name="endColumn">
+        ///     The node's ending column.
         /// </param>
         [InlineData("Test1", 0, 1, 1, 7, 12)]
         [InlineData("Test1", 1, 1, 11, 2, 5)]
@@ -191,6 +200,53 @@ namespace MSBuildProjectTools.LanguageServer.Tests
             );
 
             Assert.Equal(expectedRange, node.Range);
+        }
+
+        /// <summary>
+        ///     XSParser should discover an element with the specified attributes range at the specified index.
+        /// </summary>
+        /// <param name="testFileName">
+        ///     The name of the test file, without the extension.
+        /// </param>
+        /// <param name="index">
+        ///     The node index.
+        /// </param>
+        /// <param name="startLine">
+        ///     The element's attributes node's starting line.
+        /// </param>
+        /// <param name="startColumn">
+        ///     The element's attributes node's starting column.
+        /// </param>
+        /// <param name="endLine">
+        ///     The element's attributes node's ending line.
+        /// </param>
+        /// <param name="endColumn">
+        ///     The element's attributes node's ending column.
+        /// </param>
+        [InlineData("Test1", "Element2", 2, 15, 2, 35)]
+        [InlineData("Test2", "PackageReference", 11, 27, 11, 70)]
+        [Theory(DisplayName = "XSParser discovers element with attributes range ")]
+        void ElementAttributesRange(string testFileName, string elementName, int startLine, int startColumn, int endLine, int endColumn)
+        {
+            string testXml = LoadTestFile("TestFiles", testFileName + ".xml");
+            TextPositions xmlPositions = new TextPositions(testXml);
+            XmlDocumentSyntax xmlDocument = Parser.ParseText(testXml);
+
+            List<XSNode> nodes = xmlDocument.GetSemanticModel(xmlPositions);
+            Assert.NotNull(nodes);
+
+            XSNode targetNode = nodes.Find(node => node.Name == elementName);
+            Assert.NotNull(targetNode);
+
+            Assert.IsAssignableFrom<XSElement>(targetNode);
+            XSElement targetElement = (XSElement)targetNode;
+            
+            Range expectedRange = new Range(
+                start: new Position(startLine, startColumn),
+                end: new Position(endLine, endColumn)
+            );
+
+            Assert.Equal(expectedRange, targetElement.AttributesRange);
         }
 
         /// <summary>

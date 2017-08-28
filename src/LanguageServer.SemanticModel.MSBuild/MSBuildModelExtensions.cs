@@ -1,5 +1,8 @@
 using Microsoft.Build.Construction;
+using Microsoft.Build.Evaluation;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
@@ -8,6 +11,50 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
     /// </summary>
     public static class MSBuildModelExtensions
     {
+        /// <summary>
+        ///     Enumerate the names of all tasks available for use in the project.
+        /// </summary>
+        /// <param name="project">
+        ///     The MSBuild <see cref="Project"/>.
+        /// </param>
+        /// <returns>
+        ///     A sequence of task names.
+        /// </returns>
+        public static IEnumerable<string> GetAvailableTaskNames(this Project project)
+        {
+            if (project == null)
+                throw new ArgumentNullException(nameof(project));
+
+            return project.GetAllUsingTasks().Select(
+                usingTask => usingTask.TaskName
+            );
+        }
+
+        /// <summary>
+        ///     Recursively enumerate all <see cref="ProjectUsingTaskElement"/>s in the project and any projects that it imports.
+        /// </summary>
+        /// <param name="project">
+        ///     The MSBuild <see cref="Project"/>.
+        /// </param>
+        /// <returns>
+        ///     A sequence of <see cref="ProjectUsingTaskElement"/>s.
+        /// </returns>
+        public static IEnumerable<ProjectUsingTaskElement> GetAllUsingTasks(this Project project)
+        {
+            if (project == null)
+                throw new ArgumentNullException(nameof(project));
+
+            return
+                project.Xml.UsingTasks.Union(
+                    project.Imports.SelectMany(
+                        import => import.ImportedProject.UsingTasks
+                    )
+                )
+                .OrderBy(
+                    usingTask => usingTask.TaskName
+                );
+        }
+
         /// <summary>
         ///     Convert the MSBuild <see cref="ElementLocation"/> to its native equivalent.
         /// </summary>

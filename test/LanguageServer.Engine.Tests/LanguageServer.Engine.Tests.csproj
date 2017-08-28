@@ -5,6 +5,9 @@
         <RootNamespace>MSBuildProjectTools.LanguageServer.Tests</RootNamespace>
         <AssemblyName>MSBuildProjectTools.LanguageServer.Engine.Tests</AssemblyName>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+      <NoWarn>1701;1702;1705;IDE0016</NoWarn>
+    </PropertyGroup>
     
     <ItemGroup>
         <PackageReference Include="JsonRpc" Version="1.0.0" />
@@ -41,5 +44,16 @@
 
     <ItemGroup>
         <Content Include="TestFiles/**/*.xml" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="TestProjects\Project1.csproj">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="TestProjects\Project1.csproj" />
     </ItemGroup>
 </Project>

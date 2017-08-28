@@ -199,6 +199,8 @@ namespace MSBuildProjectTools.LanguageServer
             if (comparison < 0)
                 return comparison;
 
+            // AF: This comparison is may now be suspect - remember that .Contains no longer includes the end position.
+
             comparison = CompareTo(range.End);
             if (comparison > 0)
                 return comparison;
@@ -210,9 +212,9 @@ namespace MSBuildProjectTools.LanguageServer
         ///     Get a string representation of the position.
         /// </summary>
         /// <returns>
-        ///     The string representation "(LineNumber,ColumnNumber)".
+        ///     The string representation "LineNumber,ColumnNumber".
         /// </returns>
-        public override string ToString() => String.Format("({0},{1})", LineNumber, ColumnNumber);
+        public override string ToString() => String.Format("{0},{1}", LineNumber, ColumnNumber);
 
         /// <summary>
         ///     Convert the position to a one-based position.

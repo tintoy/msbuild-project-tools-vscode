@@ -40,16 +40,6 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         readonly List<AutoCompleteResource> _autoCompleteResources = new List<AutoCompleteResource>();
 
         /// <summary>
-        ///     Cached package Ids, keyed by partial package Id.
-        /// </summary>
-        readonly Dictionary<string, string[]> _packageIdCache = new Dictionary<string, string[]>();
-
-        /// <summary>
-        ///     Cached package versions, keyed by package Id.
-        /// </summary>
-        readonly Dictionary<string, NuGetVersion[]> _packageVersionCache = new Dictionary<string, NuGetVersion[]>();
-
-        /// <summary>
         ///     The underlying MSBuild project collection.
         /// </summary>
         public virtual ProjectCollection MSBuildProjectCollection { get; protected set; }
@@ -153,12 +143,14 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         public bool IsDirty { get; protected set; }
 
         /// <summary>
-        ///     The project XML object lookup facility.
+        ///     The textual position translator for the project XML .
         /// </summary>
-        /// <exception cref="InvalidOperationException">
-        ///     The project is not loaded.
-        /// </exception>
         public TextPositions XmlPositions { get; protected set; }
+
+        /// <summary>
+        ///     The project XML node lookup facility.
+        /// </summary>
+        public XmlLocator XmlLocator { get; protected set; }
 
         /// <summary>
         ///     The project MSBuild object-lookup facility.
@@ -166,7 +158,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <exception cref="InvalidOperationException">
         ///     The project is not loaded.
         /// </exception>
-        public MSBuildLocator MSBuildLookup { get; protected set; }
+        public MSBuildLocator MSBuildLocator { get; protected set; }
 
         /// <summary>
         ///     MSBuild objects in the project that correspond to locations in the file.
@@ -174,7 +166,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <exception cref="InvalidOperationException">
         ///     The project is not loaded.
         /// </exception>
-        public IEnumerable<MSBuildObject> MSBuildObjects => MSBuildLookup.AllObjects;
+        public IEnumerable<MSBuildObject> MSBuildObjects => MSBuildLocator.AllObjects;
 
         /// <summary>
         ///     NuGet package sources configured for the current project.
@@ -206,7 +198,8 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             }
             Xml = Microsoft.Language.Xml.Parser.ParseText(xml);
             XmlPositions = new TextPositions(xml);
-            
+            XmlLocator = new XmlLocator(Xml, XmlPositions);
+
             IsDirty = false;
 
             await ConfigurePackageSources(cancellationToken);
@@ -228,6 +221,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
 
             Xml = Microsoft.Language.Xml.Parser.ParseText(xml);
             XmlPositions = new TextPositions(xml);
+            XmlLocator = new XmlLocator(Xml, XmlPositions);
             IsDirty = true;
             
             TryLoadMSBuildProject();
@@ -285,13 +279,8 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             if (!HasXml)
                 throw new InvalidOperationException("Project is not currently loaded.");
 
-            if (_packageIdCache.TryGetValue(packageIdPrefix, out string[] cachedPackageIds))
-                return new SortedSet<string>(cachedPackageIds);
-
             SortedSet<string> packageIds = await _autoCompleteResources.SuggestPackageIds(packageIdPrefix, includePrerelease: true, cancellationToken: cancellationToken);
-            if (packageIds.Count > 0)
-                _packageIdCache[packageIdPrefix] = packageIds.ToArray();
-
+            
             return packageIds;
         }
 
@@ -313,12 +302,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             if (!HasXml)
                 throw new InvalidOperationException("Project is not currently loaded.");
 
-            if (_packageVersionCache.TryGetValue(packageId, out NuGetVersion[] cachedPackageVersions))
-                return new SortedSet<NuGetVersion>(cachedPackageVersions);
-
             SortedSet<NuGetVersion> packageVersions = await _autoCompleteResources.SuggestPackageVersions(packageId, includePrerelease: true, cancellationToken: cancellationToken);
-            if (packageVersions.Count > 0)
-                _packageVersionCache[packageId] = packageVersions.ToArray();
 
             return packageVersions;
         }
@@ -389,7 +373,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             if (!HasMSBuildProject)
                 throw new InvalidOperationException($"MSBuild project '{ProjectFile.FullName}' is not loaded.");
 
-            return MSBuildLookup.Find(position);
+            return MSBuildLocator.Find(position);
         }
 
         /// <summary>

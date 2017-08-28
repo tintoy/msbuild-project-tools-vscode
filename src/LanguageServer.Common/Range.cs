@@ -2,16 +2,41 @@ using System;
 
 namespace MSBuildProjectTools.LanguageServer
 {
+    // BUG: Range comparisons are currently broken. Add tests to prove that [1,1..1,10] < [1,1..1,5] (etc).
+
     /// <summary>
     ///     Represents a range in a text document.
     /// </summary>
+    /// <remarks>
+    ///     The range includes the start position, but does not (for the purposes of <see cref="Contains(Position)"/> include the end position.
+    /// </remarks>
     public class Range
         : IEquatable<Range>, IComparable<Range>
     {
         /// <summary>
-        ///     An empty range (1,1-1,1).
+        ///     An empty range [1,1..1,1).
         /// </summary>
         public static readonly Range Empty = new Range(start: Position.Origin, end: Position.Origin);
+
+        /// <summary>
+        ///     Create a new <see cref="Range"/>.
+        /// </summary>
+        /// <param name="startLine">
+        ///     The range's (1-based) starting line number.
+        /// </param>
+        /// <param name="startColumn">
+        ///     The range's (1-based) starting column number.
+        /// </param>
+        /// <param name="endLine">
+        ///     The range's (1-based) ending line number.
+        /// </param>
+        /// <param name="endColumn">
+        ///     The range's (1-based) ending column number.
+        /// </param>
+        public Range(int startLine, int startColumn, int endLine, int endColumn)
+            : this(start: new Position(startLine, startColumn), end: new Position(endLine, endColumn))
+        {
+        }
 
         /// <summary>
         ///     Create a new <see cref="Range"/>.
@@ -46,6 +71,11 @@ namespace MSBuildProjectTools.LanguageServer
         ///     The range's ending position.
         /// </summary>
         public Position End { get; }
+
+        /// <summary>
+        ///     Is the range empty?
+        /// </summary>
+        public bool IsEmpty => Start == End;
 
         /// <summary>
         ///     Create a copy of the <see cref="Range"/> with the specified starting position.
@@ -104,12 +134,32 @@ namespace MSBuildProjectTools.LanguageServer
         /// <returns>
         ///     <c>true></c>, if the range contains the target position; otherwise, <c>false</c>.
         /// </returns>
+        /// <remarks>
+        ///     The range includes the start position, but does not (for the purposes of <see cref="Contains(Position)"/> include the end position.
+        /// </remarks>
         public bool Contains(Position position)
         {
             if (position == null)
                 throw new ArgumentNullException(nameof(position));
             
-            return position >= Start && position <= End;
+            return position >= Start && position < End;
+        }
+
+        /// <summary>
+        ///     Determine whether the range entirely contains another range.
+        /// </summary>
+        /// <param name="range">
+        ///     The target range.
+        /// </param>
+        /// <returns>
+        ///     <c>true></c>, if the range entirely contains the target range; otherwise, <c>false</c>.
+        /// </returns>
+        public bool Contains(Range range)
+        {
+            if (range == null)
+                throw new ArgumentNullException(nameof(range));
+
+            return range.Start >= Start && range.End <= End;
         }
 
         /// <summary>
@@ -169,7 +219,7 @@ namespace MSBuildProjectTools.LanguageServer
                 throw new ArgumentNullException(nameof(other));
             
             int startComparison = Start.CompareTo(other.Start);
-            if (startComparison < 0)
+            if (startComparison != 0)
                 return startComparison;
 
             return End.CompareTo(other.End);
@@ -179,9 +229,9 @@ namespace MSBuildProjectTools.LanguageServer
         ///     Get a string representation of the range.
         /// </summary>
         /// <returns>
-        ///     The string representation "Start-End".
+        ///     The string representation "[Start..End]".
         /// </returns>
-        public override string ToString() => String.Format("{0}-{1}", Start, End);
+        public override string ToString() => String.Format("[{0}..{1})", Start, End);
 
         /// <summary>
         ///     Create an empty range from the specified position.

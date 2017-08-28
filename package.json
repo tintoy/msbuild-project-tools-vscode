@@ -79,10 +79,11 @@
                                     "title": "Language service logging level.",
                                     "type": "string",
                                     "enum": [
-                                        "Verbose",
-                                        "Information",
+                                        "Error",
                                         "Warning",
-                                        "Error"
+                                        "Information",
+                                        "Verbose",
+                                        "Debug"
                                     ],
                                     "default": "Information",
                                     "description": "The logging level for the MSBuild language service."

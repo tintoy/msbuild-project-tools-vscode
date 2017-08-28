@@ -8,7 +8,7 @@ using Serilog;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-    
+
 namespace MSBuildProjectTools.LanguageServer.Handlers
 {
     using ContentProviders;
@@ -108,7 +108,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 return null;
 
             ProjectDocument projectDocument = await Workspace.GetProjectDocument(parameters.TextDocument.Uri);
-            
+
             using (await projectDocument.Lock.ReaderLockAsync(cancellationToken))
             {
                 // This won't work if we can't inspect the MSBuild project state.
@@ -117,67 +117,72 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 Position position = parameters.Position.ToNative();
 
-                // Try to match up the position with an element or attribute in the XML, then match that up with an MSBuild object.
-                SyntaxNode xmlNode = projectDocument.GetXmlAtPosition(position);
-                if (xmlNode == null)
+                XmlLocation location = projectDocument.XmlLocator.Inspect(position);
+                if (location == null)
                     return null;
 
-                SyntaxNode elementOrAttribute = xmlNode.GetContainingElementOrAttribute();
-                if (elementOrAttribute == null)
+                if (!location.IsElementOrAttribute())
                     return null;
-
-                position = elementOrAttribute.Span.ToNative(projectDocument.XmlPositions).Start;
 
                 // Match up the MSBuild item / property with its corresponding XML element / attribute.
-                MSBuildObject msbuildObject = projectDocument.GetMSBuildObjectAtPosition(position);
+                MSBuildObject msbuildObject;
 
-                Range range = elementOrAttribute.Span.ToNative(projectDocument.XmlPositions);
-                Hover result = new Hover
-                {
-                    Range = range.ToLsp()
-                };
-                
+                MarkedStringContainer hoverContent = null;
                 HoverContentProvider contentProvider = new HoverContentProvider(projectDocument);
-                if (elementOrAttribute is IXmlElementSyntax element)
+                if (location.IsElement(out XSElement element))
                 {
+                    msbuildObject = projectDocument.GetMSBuildObjectAtPosition(element.Start);
+
                     if (msbuildObject is MSBuildProperty propertyFromElement)
-                        result.Contents = contentProvider.Property(propertyFromElement);
+                        hoverContent = contentProvider.Property(propertyFromElement);
                     else if (msbuildObject is MSBuildUnusedProperty unusedPropertyFromElement)
-                        result.Contents = contentProvider.UnusedProperty(unusedPropertyFromElement);
+                        hoverContent = contentProvider.UnusedProperty(unusedPropertyFromElement);
                     else if (msbuildObject is MSBuildItemGroup itemGroupFromElement)
-                        result.Contents = contentProvider.ItemGroup(itemGroupFromElement);
+                        hoverContent = contentProvider.ItemGroup(itemGroupFromElement);
                     else if (msbuildObject is MSBuildUnusedItemGroup unusedItemGroupFromElement)
-                        result.Contents = contentProvider.UnusedItemGroup(unusedItemGroupFromElement);
+                        hoverContent = contentProvider.UnusedItemGroup(unusedItemGroupFromElement);
                     else if (msbuildObject is MSBuildTarget targetFromElement)
-                        result.Contents = contentProvider.Target(targetFromElement);
+                        hoverContent = contentProvider.Target(targetFromElement);
                     else if (msbuildObject is MSBuildImport importFromElement)
-                        result.Contents = contentProvider.Import(importFromElement);
+                        hoverContent = contentProvider.Import(importFromElement);
                     else if (msbuildObject is MSBuildUnresolvedImport unresolvedImportFromElement)
-                        result.Contents = contentProvider.UnresolvedImport(unresolvedImportFromElement);
-                    else
-                        return null;
+                        hoverContent = contentProvider.UnresolvedImport(unresolvedImportFromElement);
                 }
-                else if (elementOrAttribute is XmlAttributeSyntax attribute)
+                else if (location.IsElementText(out XSElementText text))
                 {
-                    if (msbuildObject is MSBuildItemGroup itemGroupFromAttribute)
-                        result.Contents = contentProvider.ItemGroupMetadata(itemGroupFromAttribute, attribute.Name);
-                    else if (msbuildObject is MSBuildUnusedItemGroup unusedItemGroupFromAttribute)
-                        result.Contents = contentProvider.UnusedItemGroupMetadata(unusedItemGroupFromAttribute, attribute.Name);
-                    else if (msbuildObject is MSBuildSdkImport sdkImportFromAttribute)
-                        result.Contents = contentProvider.SdkImport(sdkImportFromAttribute);
-                    else if (msbuildObject is MSBuildUnresolvedSdkImport unresolvedSdkImportFromAttribute)
-                        result.Contents = contentProvider.UnresolvedSdkImport(unresolvedSdkImportFromAttribute);
-                    else if (msbuildObject is MSBuildImport importFromAttribute)
-                        result.Contents = contentProvider.Import(importFromAttribute);
-                    else if (attribute.Name == "Condition")
-                        result.Contents = contentProvider.Condition(attribute.ParentElement.Name, attribute.Value);
-                    else
-                        return null;
+                    msbuildObject = projectDocument.GetMSBuildObjectAtPosition(text.Element.Start);
+
+                    if (msbuildObject is MSBuildProperty propertyFromText)
+                        hoverContent = contentProvider.Property(propertyFromText);
+                    else if (msbuildObject is MSBuildUnusedProperty unusedPropertyFromText)
+                        hoverContent = contentProvider.UnusedProperty(unusedPropertyFromText);
                 }
-                else
+                else if (location.IsAttribute(out XSAttribute attribute))
+                {
+                    msbuildObject = projectDocument.GetMSBuildObjectAtPosition(attribute.Element.Start);
+
+                    if (msbuildObject is MSBuildItemGroup itemGroupFromAttribute)
+                        hoverContent = contentProvider.ItemGroupMetadata(itemGroupFromAttribute, attribute.Name);
+                    else if (msbuildObject is MSBuildUnusedItemGroup unusedItemGroupFromAttribute)
+                        hoverContent = contentProvider.UnusedItemGroupMetadata(unusedItemGroupFromAttribute, attribute.Name);
+                    else if (msbuildObject is MSBuildSdkImport sdkImportFromAttribute)
+                        hoverContent = contentProvider.SdkImport(sdkImportFromAttribute);
+                    else if (msbuildObject is MSBuildUnresolvedSdkImport unresolvedSdkImportFromAttribute)
+                        hoverContent = contentProvider.UnresolvedSdkImport(unresolvedSdkImportFromAttribute);
+                    else if (msbuildObject is MSBuildImport importFromAttribute)
+                        hoverContent = contentProvider.Import(importFromAttribute);
+                    else if (attribute.Name == "Condition")
+                        hoverContent = contentProvider.Condition(attribute.Element.Name, attribute.Value);
+                }
+
+                if (hoverContent == null)
                     return null;
 
-                return result;
+                return new Hover
+                {
+                    Contents = hoverContent,
+                    Range = location.Node.Range.ToLsp()
+                };
             }
         }
 
@@ -205,7 +210,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         {
             if (parameters == null)
                 throw new ArgumentNullException(nameof(parameters));
-            
+
             try
             {
                 return await OnHover(parameters, cancellationToken);

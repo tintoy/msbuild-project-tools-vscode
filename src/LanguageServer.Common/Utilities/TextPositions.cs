@@ -108,6 +108,46 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         }
 
         /// <summary>
+        ///     Calculate the length of the specified <see cref="Range"/> in the text.
+        /// </summary>
+        /// <param name="range">
+        ///     The range.
+        /// </param>
+        /// <returns>
+        ///     The range length.
+        /// </returns>
+        public int GetLength(Range range)
+        {
+            if (range == null)
+                throw new ArgumentNullException(nameof(range));
+            
+            return GetDistance(range.Start, range.End);
+        }
+
+        /// <summary>
+        ///     Calculate the number of characters, in the text, between the specified positions.
+        /// </summary>
+        /// <param name="position1">
+        ///     The first position.
+        /// </param>
+        /// <param name="position2">
+        ///     The second position.
+        /// </param>
+        /// <returns>
+        ///     The difference in offset between <paramref name="position2"/> and <paramref name="position1"/> (can be negative).
+        /// </returns>
+        public int GetDistance(Position position1, Position position2)
+        {
+            if (position1 == null)
+                throw new ArgumentNullException(nameof(position1));
+            
+            if (position2 == null)
+                throw new ArgumentNullException(nameof(position2));
+            
+            return GetAbsolutePosition(position2) - GetAbsolutePosition(position1);
+        }
+
+        /// <summary>
         ///     Calculate the start position for each line in the text.
         /// </summary>
         /// <param name="text">
@@ -133,19 +173,19 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
                 switch (currentChar)
                 {
                     case '\r':
-                        {
-                            if (currentPosition < text.Length && text[currentPosition] == '\n')
-                                currentPosition++;
+                    {
+                        if (currentPosition < text.Length && text[currentPosition] == '\n')
+                            currentPosition++;
 
-                            goto case '\n';
-                        }
+                        goto case '\n';
+                    }
                     case '\n':
-                        {
-                            lineStarts.Add(currentLineStart);
-                            currentLineStart = currentPosition;
+                    {
+                        lineStarts.Add(currentLineStart);
+                        currentLineStart = currentPosition;
 
-                            break;
-                        }
+                        break;
+                    }
                 }
             }
             lineStarts.Add(currentLineStart);

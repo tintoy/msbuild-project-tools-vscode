@@ -91,7 +91,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                 else
                     MSBuildProject = MSBuildProjectCollection.LoadProject(ProjectFile.FullName);
 
-                MSBuildLookup = new MSBuildLocator(MSBuildProject, Xml, XmlPositions);
+                MSBuildLocator = new MSBuildLocator(MSBuildProject, Xml, XmlPositions);
 
                 return true;
             }
@@ -132,7 +132,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                 if (MSBuildProjectCollection == null)
                     return true;
 
-                MSBuildLookup = null;
+                MSBuildLocator = null;
                 MSBuildProjectCollection.UnloadProject(MSBuildProject);
                 MSBuildProject = null;
 

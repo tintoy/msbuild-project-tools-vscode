@@ -194,7 +194,7 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
     };
 
     const dotNetExecutable = await executables.find('dotnet');
-    const serverAssembly = context.asAbsolutePath('out/language-server/LanguageServer.dll');
+    const serverAssembly = context.asAbsolutePath('out/language-server/MSBuildProjectTools.LanguageServer.Host.dll');
     const serverOptions: ServerOptions = {
         command: dotNetExecutable,
         args: [ serverAssembly ],

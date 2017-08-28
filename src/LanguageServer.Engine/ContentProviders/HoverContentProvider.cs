@@ -262,7 +262,7 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
             if (metadataName == "Condition")
                 return Condition(itemGroup.Name, itemGroup.FirstItem.Xml.Condition);
 
-            if (String.Equals(metadataName, "Include"))
+            if (metadataName == "Include")
                 metadataName = "Identity";
 
             string[] metadataValues =
@@ -318,7 +318,7 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
             if (metadataName == "Condition")
                 return Condition(itemGroup.Name, itemGroup.FirstItem.Xml.Condition);
 
-            if (String.Equals(metadataName, "Include"))
+            if (metadataName != "Include")
                 metadataName = "Identity";
 
             string[] metadataValues =

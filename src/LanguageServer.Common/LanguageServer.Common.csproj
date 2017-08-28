@@ -1,22 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <AssetTargetFallback>dnxcore50</AssetTargetFallback>
-
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>IDE0016</NoWarn>
-    <AssemblyName>MSBuildProjectTools.LanguageServer.Engine</AssemblyName>
+    <AssemblyName>MSBuildProjectTools.LanguageServer.Common</AssemblyName>
     <RootNamespace>MSBuildProjectTools.LanguageServer</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="JsonRpc" Version="1.0.0" />
-    <PackageReference Include="LSP" Version="1.0.0" />
     <PackageReference Include="Microsoft.Build" Version="15.3.409" />
     <PackageReference Include="Microsoft.Language.Xml" Version="1.1.14" />
-    <PackageReference Include="Microsoft.Build.Runtime" Version="15.3.409" />
-    <PackageReference Include="Nito.AsyncEx.Tasks" Version="1.0.1" />
-    <PackageReference Include="Nito.AsyncEx.Coordination" Version="1.0.1" />
     <PackageReference Include="NuGet.Client" Version="4.0.0" />
     <PackageReference Include="NuGet.Configuration" Version="4.0.0" />
     <PackageReference Include="NuGet.PackageManagement" Version="4.0.0" NoWarn="NU1701" />
@@ -28,13 +20,4 @@
     <PackageReference Include="Serilog" Version="2.5.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="../LanguageServer.Common/LanguageServer.Common.csproj" />
-    <ProjectReference Include="../LanguageServer.SemanticModel.MSBuild/LanguageServer.SemanticModel.MSBuild.csproj" />
-    <ProjectReference Include="../LanguageServer.SemanticModel.Xml/LanguageServer.SemanticModel.Xml.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="SemanticModel\" />
-  </ItemGroup>
 </Project>

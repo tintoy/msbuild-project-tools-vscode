@@ -10,3 +10,5 @@ insert_final_newline = true
 
 [*.yml]
 indent_size = 2
+
+csharp_style_throw_expression = false:none

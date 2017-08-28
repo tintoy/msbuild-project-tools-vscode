@@ -101,19 +101,23 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                     range: invalidProjectFile.GetRange(),
                     diagnosticCode: invalidProjectFile.ErrorCode
                 );
-
-                TryUnloadMSBuildProject();
-
-                return false;
+            }
+            catch (XmlException invalidProjectXml)
+            {
+                // TODO: Match SourceUri (need overloads of AddXXXDiagnostic for reporting diagnostics for other files).
+                AddErrorDiagnostic(invalidProjectXml.Message,
+                    range: invalidProjectXml.GetRange(),
+                    diagnosticCode: "MSBuild.InvalidXML"
+                );
             }
             catch (Exception loadError)
             {
                 Log.Error(loadError, "Error loading MSBuild project '{ProjectFileName}'.", ProjectFile.FullName);
-
-                TryUnloadMSBuildProject();
-
-                return false;
             }
+
+            TryUnloadMSBuildProject();
+
+            return false;
         }
 
         /// <summary>

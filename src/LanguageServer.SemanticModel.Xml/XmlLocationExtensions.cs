@@ -182,6 +182,52 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         }
 
         /// <summary>
+        ///     Does the location represent an element that has the specified attribute?
+        /// </summary>
+        /// <param name="location">
+        ///     The XML location.
+        /// </param>
+        /// <param name="attributeName">
+        ///     The attribute name.
+        /// </param>
+        /// <returns>
+        ///     <c>true</c>, if the location represents an element with the specified attribute; otherwise, <c>false</c>.
+        /// </returns>
+        public static bool HasAttribute(this XmlLocation location, string attributeName)
+        {
+            return location.IsElement(out XSElement element) && element.HasAttribute(attributeName);
+        }
+
+        /// <summary>
+        ///     Does the location represent an element that has the specified attribute?
+        /// </summary>
+        /// <param name="location">
+        ///     The XML location.
+        /// </param>
+        /// <param name="attributeName">
+        ///     The attribute name.
+        /// </param>
+        /// <param name="attribute">
+        ///     Receives the attribute.
+        /// </param>
+        /// <returns>
+        ///     <c>true</c>, if the location represents an element with the specified attribute; otherwise, <c>false</c>.
+        /// </returns>
+        public static bool HasAttribute(this XmlLocation location, string attributeName, out XSAttribute attribute)
+        {
+            if (location.IsElement(out XSElement element))
+            {
+                attribute = element[attributeName];
+
+                return attribute != null;
+            }
+
+            attribute = null;
+
+            return false;
+        }
+
+        /// <summary>
         ///     Does the location represent an element?
         /// </summary>
         /// <param name="location">
@@ -385,7 +431,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <returns>
         ///     <c>true</c>, if the location represents an element; otherwise, <c>false</c>.
         /// </returns>
-        public static bool IsElementAttributes(this XmlLocation location)
+        public static bool IsElementBetweenAttributes(this XmlLocation location)
         {
             if (location == null)
                 throw new ArgumentNullException(nameof(location));
@@ -405,12 +451,12 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <returns>
         ///     <c>true</c>, if the location represents an element; otherwise, <c>false</c>.
         /// </returns>
-        public static bool IsElementAttributes(this XmlLocation location, out XSElement element)
+        public static bool IsElementBetweenAttributes(this XmlLocation location, out XSElement element)
         {
             if (location == null)
                 throw new ArgumentNullException(nameof(location));
 
-            if (location.IsElementAttributes())
+            if (location.IsElementBetweenAttributes())
             {
                 element = (XSElement)location.Node;
 

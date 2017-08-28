@@ -102,5 +102,16 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         {
             get => Attributes.FirstOrDefault(attribute => attribute.Name == attributeName);
         }
+
+        /// <summary>
+        ///     Does the element have an attribute with the specified name?
+        /// </summary>
+        /// <param name="attributeName">
+        ///     The attribute name.
+        /// </param>
+        /// <returns>
+        ///     <c>true</c>, if the element has the specified attribute; otherwise, <c>false</c>.
+        /// </returns>
+        public bool HasAttribute(string attributeName) => Attributes.Any(attribute => attribute.Name == attributeName);
     }
 }

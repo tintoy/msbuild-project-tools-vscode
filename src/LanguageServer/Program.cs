@@ -100,10 +100,21 @@ namespace MSBuildProjectTools.LanguageServer
             if (configuration == null)
                 throw new ArgumentNullException(nameof(configuration));
             
-            Log.Logger = new LoggerConfiguration()
+            var loggerConfiguration = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
-                .WriteTo.LanguageServer(languageServer, configuration)
-                .CreateLogger();
+                .WriteTo.LanguageServer(languageServer, configuration);
+
+            string seqServerUrl = Environment.GetEnvironmentVariable("MSBUILD_PROJECT_TOOLS_SEQ_URL");
+            if (!String.IsNullOrWhiteSpace(seqServerUrl))
+            {
+                loggerConfiguration.WriteTo.Seq(seqServerUrl,
+                    apiKey: Environment.GetEnvironmentVariable("MSBUILD_PROJECT_TOOLS_SEQ_API_KEY")
+                );
+
+                // TODO: Use LoggingLevelSwitch.
+            }
+
+            Log.Logger = loggerConfiguration.CreateLogger();
         }
     }
 }

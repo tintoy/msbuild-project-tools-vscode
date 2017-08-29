@@ -88,6 +88,23 @@
                                     "default": "Information",
                                     "description": "The logging level for the MSBuild language service."
                                 },
+                                "seqLogging": {
+                                    "type": "object",
+                                    "default": {},
+                                    "description": "Configure the MSBuild language service to log to Seq (https://getseq.net/).",
+                                    "properties": {
+                                        "url": {
+                                            "type": "string",
+                                            "default": null,
+                                            "description": "The URL of the Seq server (Seq logging will be enabled if this is specified)."
+                                        },
+                                        "apiKey": {
+                                            "type":"string",
+                                            "default": null,
+                                            "description": "The API key (if any) to use when authenticating to Seq."
+                                        }
+                                    }
+                                },
                                 "trace": {
                                     "type": "boolean",
                                     "default": false,

@@ -113,6 +113,26 @@ interface LanguageSettings {
      * Disable tooltips when hovering over XML in MSBuild project files.
      */
     disableHover: boolean;
+
+    /**
+     * Seq logging settings.
+     */
+    seqLogging?: SeqLoggingSettings;
+}
+
+/**
+ * Seq logging settings.
+ */
+interface SeqLoggingSettings {
+    /**
+     * The Seq server URL (null or empty to disable Seq logging).
+     */
+    url: string | null;
+
+    /**
+     * The Seq API key (if any).
+     */
+    apiKey?: string;
 }
 
 /**
@@ -193,11 +213,21 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
         }
     };
 
+    const serverEnvironment = {};
+    const seqLoggingSettings = configuration.language.seqLogging;
+    if (seqLoggingSettings && seqLoggingSettings.url) {
+        serverEnvironment['MSBUILD_PROJECT_TOOLS_SEQ_URL'] = configuration.language.seqLogging.url;
+        serverEnvironment['MSBUILD_PROJECT_TOOLS_SEQ_API_KEY'] = configuration.language.seqLogging.apiKey;
+    }
+
     const dotNetExecutable = await executables.find('dotnet');
     const serverAssembly = context.asAbsolutePath('out/language-server/MSBuildProjectTools.LanguageServer.Host.dll');
     const serverOptions: ServerOptions = {
         command: dotNetExecutable,
         args: [ serverAssembly ],
+        options: {
+            env: Object.assign({}, process.env, serverEnvironment)
+        }
     };
 
     let languageClient = new LanguageClient('MSBuild Project Tools', serverOptions, clientOptions);

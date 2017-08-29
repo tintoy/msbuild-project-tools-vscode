@@ -47,6 +47,9 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             Providers.Add(
                 new PackageReferenceCompletion(logger)
             );
+            Providers.Add(
+                new ItemAttributeCompletion(logger)
+            );
         }
 
         /// <summary>

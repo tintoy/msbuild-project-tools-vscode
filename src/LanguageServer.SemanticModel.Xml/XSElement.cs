@@ -60,6 +60,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         public ImmutableList<XSAttribute> Attributes { get; internal set; } = ImmutableList<XSAttribute>.Empty;
 
         /// <summary>
+        ///     The names of the element's attributes.
+        /// </summary>
+        public IEnumerable<string> AttributeNames => Attributes.Select(attribute => attribute.Name);
+
+        /// <summary>
         ///     The element's content (if any).
         /// </summary>
         public ImmutableList<XSNode> Content { get; internal set; } = ImmutableList<XSNode>.Empty;

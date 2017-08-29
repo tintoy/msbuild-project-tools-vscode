@@ -1,4 +1,5 @@
 using Lsp.Models;
+using NuGet.Versioning;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -9,12 +10,11 @@ using System.Threading.Tasks;
 namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 {
     using Documents;
-    using NuGet.Versioning;
     using SemanticModel;
     using Utilities;
 
     /// <summary>
-    ///     Completion provider for "PackageReference" items.
+    ///     Completion provider for "PackageReference" and "DotNetCliToolReference" items.
     /// </summary>
     public class PackageReferenceCompletion
         : CompletionProvider
@@ -182,10 +182,20 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             {
                 new CompletionItem
                 {
-                    Label = "<PackageReference />",
+                    Label = "PackageReference",
                     TextEdit = new TextEdit
                     {
                         NewText = "<PackageReference Include=\"${1:PackageId}\" Version=\"${2:PackageVersion}\" />$0",
+                        Range = replaceRange.ToLsp()
+                    },
+                    InsertTextFormat = InsertTextFormat.Snippet
+                },
+                new CompletionItem
+                {
+                    Label = "DotNetCliToolReference",
+                    TextEdit = new TextEdit
+                    {
+                        NewText = "<DotNetCliToolReference Include=\"${1:PackageId}\" Version=\"${2:PackageVersion}\" />$0",
                         Range = replaceRange.ToLsp()
                     },
                     InsertTextFormat = InsertTextFormat.Snippet

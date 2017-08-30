@@ -17,6 +17,21 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         : ICompletionProvider
     {
         /// <summary>
+        ///     A dummy completion list to indicate that a provider offers no completions, but may offer completions for future iterations of the current completion (i.e. as the user continues to type).
+        /// </summary>
+        public static readonly CompletionList CallMeAgain = new CompletionList(
+            new CompletionItem[]
+            {
+                new CompletionItem
+                {
+                    Label = "Dummy",
+                    InsertText = "This should never be displayed."
+                }
+            },
+            isIncomplete: true
+        );
+
+        /// <summary>
         ///     Create a new <see cref="CompletionProvider"/>.
         /// </summary>
         /// <param name="logger">
@@ -27,7 +42,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             if (logger == null)
                 throw new ArgumentNullException(nameof(logger));
 
-            Log = logger.ForContext(GetType());
+            Log = logger.ForContext("CompletionProvider", GetType().FullName);
         }
 
         /// <summary>

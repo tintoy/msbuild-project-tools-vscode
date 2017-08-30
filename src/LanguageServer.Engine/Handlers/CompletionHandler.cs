@@ -44,6 +44,10 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
             Workspace = workspace;
 
+            // TODO: Automatic discovery of completion components.
+            Providers.Add(
+                new CurrentElementCompletion(logger)
+            );
             Providers.Add(
                 new PackageReferenceCompletion(logger)
             );
@@ -146,6 +150,8 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         {
             ProjectDocument projectDocument = await Workspace.GetProjectDocument(parameters.TextDocument.Uri);
 
+            XmlLocation location;
+
             bool isIncomplete = false;
             List<CompletionItem> completionItems = new List<CompletionItem>();
             using (await projectDocument.Lock.ReaderLockAsync(cancellationToken))
@@ -156,7 +162,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 Position position = parameters.Position.ToNative();
                 Log.Verbose("Completion requested for {Position:l}", position);
 
-                XmlLocation location = projectDocument.XmlLocator.Inspect(position);
+                location = projectDocument.XmlLocator.Inspect(position);
                 if (location == null)
                 {
                     Log.Verbose("Completion short-circuited; nothing interesting at {Position:l}", position);
@@ -191,6 +197,14 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 foreach (CompletionList providerCompletions in allProviderCompletions)
                 {
+                    // Special case; provider offers no completions this time, but may do so next time.
+                    if (providerCompletions == CompletionProvider.CallMeAgain)
+                    {
+                        isIncomplete = true;
+
+                        continue;
+                    }
+
                     if (providerCompletions != null)
                     {
                         completionItems.AddRange(providerCompletions.Items);
@@ -198,11 +212,11 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                         isIncomplete |= providerCompletions.IsIncomplete; // If any provider returns incomplete results, VSCode will need to ask again as the user continues to type.
                     }
                 }
-
-                Log.Verbose("Offering a total of {CompletionCount} completions for {Location:l}.", completionItems.Count, location);
             }
 
-            if (completionItems.Count == 0)
+            Log.Verbose("Offering a total of {CompletionCount} completions for {Location:l} (Exhaustive: {Exhaustive}).", completionItems.Count, location, !isIncomplete);
+
+            if (completionItems.Count == 0 && !isIncomplete)
                 return null;
 
             CompletionList completionList = new CompletionList(completionItems, isIncomplete);

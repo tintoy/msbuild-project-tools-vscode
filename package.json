@@ -82,8 +82,7 @@
                                         "Error",
                                         "Warning",
                                         "Information",
-                                        "Verbose",
-                                        "Debug"
+                                        "Verbose"
                                     ],
                                     "default": "Information",
                                     "description": "The logging level for the MSBuild language service."
@@ -91,7 +90,7 @@
                                 "seqLogging": {
                                     "type": "object",
                                     "default": {},
-                                    "description": "Configure the MSBuild language service to log to Seq (https://getseq.net/).",
+                                    "description": "Configure the MSBuild language service to log to Seq (https://getseq.net/). This is only useful if you're hacking on the language service itself.",
                                     "properties": {
                                         "url": {
                                             "type": "string",
@@ -102,6 +101,18 @@
                                             "type":"string",
                                             "default": null,
                                             "description": "The API key (if any) to use when authenticating to Seq."
+                                        },
+                                        "logLevel": {
+                                            "type":"string",
+                                            "enum": [
+                                                "Error",
+                                                "Warning",
+                                                "Information",
+                                                "Verbose",
+                                                "Debug"
+                                            ],
+                                            "default": "Verbose",
+                                            "description": "The minimum log level for Seq."
                                         }
                                     }
                                 },

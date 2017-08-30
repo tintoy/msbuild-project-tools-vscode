@@ -520,10 +520,15 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
 
             if (element.IsValid)
             {
-                // If the element is valid, then check if we have an invalid parent (e.g. "<<Foo />" yields invalid element "" with child element "Foo").
-
+                // The common case; we can simply replace this element.
                 if (element.ParentElement.IsValid)
-                    return false;
+                {
+                    replaceElement = element;
+
+                    return true;
+                }
+
+                // We have an invalid parent (e.g. "<<Foo />" yields invalid element "" with child element "Foo").
 
                 if (element.ParentElement.Start.LineNumber != location.Node.Start.LineNumber)
                     return false;

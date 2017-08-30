@@ -20,7 +20,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         : CompletionProvider
     {
         /// <summary>
-        ///     Create a new <see cref="ItemAttributeCompletion"/>.
+        ///     Create a new <see cref="PropertyConditionCompletion"/>.
         /// </summary>
         /// <param name="logger">
         ///     The application logger.

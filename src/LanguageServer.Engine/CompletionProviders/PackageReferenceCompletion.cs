@@ -212,6 +212,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 {
                     Label = "<PackageReference />",
                     Detail = "A NuGet package",
+                    SortText = "1000<PackageReference />",
                     Kind = CompletionItemKind.File,
                     TextEdit = new TextEdit
                     {
@@ -225,6 +226,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                     Label = "<DotNetCliToolReference />",
                     Detail = "A command extension package for the dotnet CLI",
                     Kind = CompletionItemKind.File,
+                    SortText = "1000<DotNetCliToolReference />",
                     TextEdit = new TextEdit
                     {
                         NewText = "<DotNetCliToolReference Include=\"${1:PackageId}\" Version=\"${2:PackageVersion}\" />$0",

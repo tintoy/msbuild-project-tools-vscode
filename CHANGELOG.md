@@ -1,5 +1,14 @@
 # Change Log
 
+## v0.2.0
+
+* Improved completions:
+  * Add completions for `PackageReference` and `DotNetCliToolReference`.
+  * Add completions for common item attributes.
+  * Add completions for property `Condition` elements.
+  * Support for logging to [Seq](https://getseq.net/).  
+    Only useful if you're hacking on the language service itself.
+
 ## v0.1.12
 
 * Sort package versions in descending order for classic completion provider, too.  

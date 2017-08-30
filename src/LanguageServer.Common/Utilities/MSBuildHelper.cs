@@ -127,6 +127,32 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         }
 
         /// <summary>
+        ///     Create a copy of the project for caching.
+        /// </summary>
+        /// <param name="project">
+        ///     The MSBuild project.
+        /// </param>
+        /// <returns>
+        ///     The project copy (independent of original, but sharing the same <see cref="ProjectCollection"/>).
+        /// </returns>
+        /// <remarks>
+        ///     You can only create a single cached copy for a given project.
+        /// </remarks>
+        public static Project CloneAsCachedProject(this Project project)
+        {
+            if (project == null)
+                throw new ArgumentNullException(nameof(project));
+
+            ProjectRootElement clonedXml = project.Xml.DeepClone();
+            Project clonedProject = new Project(clonedXml, project.GlobalProperties, project.ToolsVersion, project.ProjectCollection);
+            clonedProject.FullPath = Path.ChangeExtension(project.FullPath,
+                ".cached" + Path.GetExtension(project.FullPath)
+            );
+
+            return clonedProject;
+        }
+
+        /// <summary>
         ///     Get the <see cref="Range"/> represented by the <see cref="InvalidProjectFileException"/>.
         /// </summary>
         /// <param name="invalidProjectFileException">

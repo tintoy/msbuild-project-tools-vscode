@@ -50,6 +50,9 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             Providers.Add(
                 new ItemAttributeCompletion(logger)
             );
+            Providers.Add(
+                new PropertyConditionCompletion(logger)
+            );
         }
 
         /// <summary>
@@ -151,6 +154,8 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                     return null;
 
                 Position position = parameters.Position.ToNative();
+                Log.Verbose("Completion requested for {Position:l}", position);
+
                 XmlLocation location = projectDocument.XmlLocator.Inspect(position);
                 if (location == null)
                     return null;

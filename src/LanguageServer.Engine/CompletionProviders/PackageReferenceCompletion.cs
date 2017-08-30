@@ -56,10 +56,18 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             bool isIncomplete = false;
             List<CompletionItem> completions = new List<CompletionItem>();
 
+            Log.Verbose("Evaluate completions for {XmlLocation:l}", location);
+
             using (await projectDocument.Lock.ReaderLockAsync())
             {
                 if (location.CanCompleteAttributeValue(out XSAttribute attribute, "PackageReference", "Include", "Version"))
                 {
+                    Log.Verbose("Offering completions for value of attribute {AttributeName} of element {ElementName} @ {Position:l}",
+                        attribute.Name,
+                        attribute.Element.Name,
+                        location.Position
+                    );
+
                     List<CompletionItem> packageCompletions = await HandlePackageReferenceAttributeCompletion(projectDocument, attribute, cancellationToken);
                     if (packageCompletions != null)
                     {
@@ -69,11 +77,31 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 }
                 else if (location.CanCompleteElement(out XSElement replaceElement, asChildOfElementNamed: "ItemGroup"))
                 {
+                    if (replaceElement != null)
+                    {
+                        Log.Verbose("Offering completions to replace child element @ {ReplaceRange} of {ElementName} @ {Position:l}",
+                            replaceElement.Range,
+                            "ItemGroup",
+                            location.Position
+                        );
+                    }
+                    else
+                    {
+                        Log.Verbose("Offering completions for new child element of {ElementName} @ {Position:l}",
+                            "ItemGroup",
+                            location.Position
+                        );
+                    }
+
                     List<CompletionItem> elementCompletions = HandlePackageReferenceElementCompletion(location, projectDocument, replaceElement);
                     if (elementCompletions != null)
                         completions.AddRange(elementCompletions);
                 }
+                else
+                    Log.Verbose("Not offering any completions for {XmlLocation:l}", location);
             }
+
+            Log.Verbose("Offering {CompletionCount} completions for {XmlLocation:l}", completions.Count, location);
 
             if (completions.Count == 0)
                 return null;
@@ -183,6 +211,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 new CompletionItem
                 {
                     Label = "PackageReference",
+                    Detail = "A NuGet package reference",
                     TextEdit = new TextEdit
                     {
                         NewText = "<PackageReference Include=\"${1:PackageId}\" Version=\"${2:PackageVersion}\" />$0",
@@ -193,6 +222,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 new CompletionItem
                 {
                     Label = "DotNetCliToolReference",
+                    Detail = "A dotnet command-line tool package reference",
                     TextEdit = new TextEdit
                     {
                         NewText = "<DotNetCliToolReference Include=\"${1:PackageId}\" Version=\"${2:PackageVersion}\" />$0",

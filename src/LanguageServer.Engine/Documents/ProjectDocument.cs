@@ -51,14 +51,12 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         public Project MSBuildProject { get; protected set; }
 
         /// <summary>
-        ///     An immutable snapshot of the MSBuild project state (if available).
+        ///     Is the underlying MSBuild project cached (i.e. out-of-date with respect to the source text)?
         /// </summary>
         /// <remarks>
-        ///     This can be used to keep data available that some types of completion require (while the user is typing and the MSBuild project XML may be invalid).
-        ///
-        ///     Do not attempt to correlate objects in this project snapshot with positions in the XML as positions may no longer be accurate (instead, match up by element / attribute name).
+        ///     If the current project XML is invalid, the original MSBuild project is retained, but <see cref="MSBuildLocator"/> functionality will be unavailable (since source positions may no longer match up).
         /// </remarks>
-        public ProjectInstance MSBuildProjectSnapshot { get; protected set; }
+        public bool IsMSBuildProjectCached { get; private set; }
 
         /// <summary>
         ///     Create a new <see cref="ProjectDocument"/>.
@@ -166,18 +164,27 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <summary>
         ///     The project MSBuild object-lookup facility.
         /// </summary>
-        /// <exception cref="InvalidOperationException">
-        ///     The project is not loaded.
-        /// </exception>
-        public MSBuildLocator MSBuildLocator { get; protected set; }
+        protected MSBuildLocator MSBuildLocator { get; private set; }
 
         /// <summary>
         ///     MSBuild objects in the project that correspond to locations in the file.
         /// </summary>
         /// <exception cref="InvalidOperationException">
-        ///     The project is not loaded.
+        ///     The project is cached or not loaded.
         /// </exception>
-        public IEnumerable<MSBuildObject> MSBuildObjects => MSBuildLocator.AllObjects;
+        public IEnumerable<MSBuildObject> MSBuildObjects
+        {
+            get
+            {
+                if (!HasMSBuildProject)
+                    throw new InvalidOperationException($"MSBuild project '{ProjectFile.FullName}' is not loaded.");
+
+                if (IsMSBuildProjectCached)
+                    throw new InvalidOperationException($"MSBuild project '{ProjectFile.FullName}' is a cached (out-of-date) copy because the project XML is currently invalid; positional lookups can't work in this scenario.");
+
+                return MSBuildLocator.AllObjects;
+            }
+        }
 
         /// <summary>
         ///     NuGet package sources configured for the current project.
@@ -204,7 +211,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                 throw new ArgumentNullException(nameof(position));
 
             if (!HasXml)
-                throw new InvalidOperationException("Project is not loaded.");
+                throw new InvalidOperationException($"XML for project '{ProjectFile.FullName}' is not loaded.");
 
             return XmlLocator.Inspect(position);
         }
@@ -222,22 +229,30 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         {
             ClearDiagnostics();
 
+            Xml = null;
+            XmlPositions = null;
+            XmlLocator = null;
+
             string xml;
             using (StreamReader reader = ProjectFile.OpenText())
             {
                 xml = await reader.ReadToEndAsync();
             }
-            Xml = Microsoft.Language.Xml.Parser.ParseText(xml);
+            Xml = Parser.ParseText(xml);
             XmlPositions = new TextPositions(xml);
             XmlLocator = new XmlLocator(Xml, XmlPositions);
 
             IsDirty = false;
 
             await ConfigurePackageSources(cancellationToken);
-            TryLoadMSBuildProject();
 
-            if (HasMSBuildProject)
-                UpdateProjectSnapshot();
+            bool loaded = TryLoadMSBuildProject();
+            if (loaded)
+                MSBuildLocator = new MSBuildLocator(MSBuildProject, Xml, XmlPositions);
+            else
+                MSBuildLocator = null;
+
+            IsMSBuildProjectCached = !loaded;
         }
 
         /// <summary>
@@ -253,15 +268,18 @@ namespace MSBuildProjectTools.LanguageServer.Documents
 
             ClearDiagnostics();
 
-            Xml = Microsoft.Language.Xml.Parser.ParseText(xml);
+            Xml = Parser.ParseText(xml);
             XmlPositions = new TextPositions(xml);
             XmlLocator = new XmlLocator(Xml, XmlPositions);
             IsDirty = true;
-            
-            TryLoadMSBuildProject();
 
-            if (HasMSBuildProject)
-                UpdateProjectSnapshot();
+            bool loaded = TryLoadMSBuildProject();
+            if (loaded)
+                MSBuildLocator = new MSBuildLocator(MSBuildProject, Xml, XmlPositions);
+            else
+                MSBuildLocator = null;
+
+            IsMSBuildProjectCached = !loaded;
         }
 
         /// <summary>
@@ -314,7 +332,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         {
             // We don't actually need a working MSBuild project for this.
             if (!HasXml)
-                throw new InvalidOperationException("Project is not currently loaded.");
+                throw new InvalidOperationException($"XML for project '{ProjectFile.FullName}' is not loaded.");
 
             SortedSet<string> packageIds = await _autoCompleteResources.SuggestPackageIds(packageIdPrefix, includePrerelease: true, cancellationToken: cancellationToken);
             
@@ -337,7 +355,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         {
             // We don't actually need a working MSBuild project for this.
             if (!HasXml)
-                throw new InvalidOperationException("Project is not currently loaded.");
+                throw new InvalidOperationException($"XML for project '{ProjectFile.FullName}' is not loaded.");
 
             SortedSet<NuGetVersion> packageVersions = await _autoCompleteResources.SuggestPackageVersions(packageId, includePrerelease: true, cancellationToken: cancellationToken);
 
@@ -349,8 +367,9 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// </summary>
         public virtual void Unload()
         {
-            MSBuildProjectSnapshot = null;
             TryUnloadMSBuildProject();
+            MSBuildLocator = null;
+            IsMSBuildProjectCached = false;
 
             Xml = null;
             XmlPositions = null;
@@ -411,6 +430,9 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             if (!HasMSBuildProject)
                 throw new InvalidOperationException($"MSBuild project '{ProjectFile.FullName}' is not loaded.");
 
+            if (IsMSBuildProjectCached)
+                throw new InvalidOperationException($"MSBuild project '{ProjectFile.FullName}' is a cached (out-of-date) copy because the project XML is currently invalid; positional lookups can't work in this scenario.");
+
             return MSBuildLocator.Find(position);
         }
 
@@ -429,17 +451,6 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         ///     <c>true</c>, if the project was successfully unloaded; otherwise, <c>false</c>.
         /// </returns>
         protected abstract bool TryUnloadMSBuildProject();
-
-        /// <summary>
-        ///     Create an immutable snapshot of the MSBuild project's state (if it is available).
-        /// </summary>
-        protected void UpdateProjectSnapshot()
-        {
-            if (!HasMSBuildProject)
-                throw new InvalidOperationException($"MSBuild project '{ProjectFile.FullName}' is not loaded.");
-
-            MSBuildProjectSnapshot = MSBuildProject.CreateProjectInstance(ProjectInstanceSettings.Immutable);
-        }
 
         /// <summary>
         ///     Remove all diagnostics for the project file.

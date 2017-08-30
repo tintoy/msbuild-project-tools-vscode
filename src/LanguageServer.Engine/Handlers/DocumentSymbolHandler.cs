@@ -112,10 +112,11 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             List<SymbolInformation> symbols = new List<SymbolInformation>();
             using (await projectDocument.Lock.ReaderLockAsync(cancellationToken))
             {
-                if (!projectDocument.HasMSBuildProject)
+                // We need a valid MSBuild project with up-to-date positional information.
+                if (!projectDocument.HasMSBuildProject || projectDocument.IsMSBuildProjectCached)
                     return null;
 
-                foreach (MSBuildObject msbuildObject in projectDocument.MSBuildLocator.AllObjects)
+                foreach (MSBuildObject msbuildObject in projectDocument.MSBuildObjects)
                 {
                     // Special case for item groups, which can contribute multiple symbols from a single item group.
                     if (msbuildObject is MSBuildItemGroup itemGroup)

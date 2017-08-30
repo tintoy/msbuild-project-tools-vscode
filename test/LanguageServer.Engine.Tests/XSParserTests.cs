@@ -172,7 +172,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         [InlineData("Test1", 1, 1, 11, 2, 5)]
         [InlineData("Test1", 2, 2, 5, 5, 16)]
         [InlineData("Test1", 3, 2, 15, 2, 34)]
-        [InlineData("Test1", 4, 2, 35, 3, 9)]
+        [InlineData("Test1", 4, 2, 36, 3, 9)]
         [InlineData("Test1", 5, 3, 9, 3, 21)]
         [InlineData("Test1", 6, 3, 21, 4, 9)]
         [InlineData("Test1", 7, 4, 9, 4, 21)]
@@ -193,6 +193,12 @@ namespace MSBuildProjectTools.LanguageServer.Tests
 
             XSNode node = nodes[index];
             Assert.NotNull(node);
+
+            TestOutput.WriteLine("Node {0} at {1} is {2}.",
+                index,
+                node.Range,
+                node.Kind
+            );
 
             Range expectedRange = new Range(
                 start: new Position(startLine, startColumn),

@@ -111,8 +111,8 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
             using (await projectDocument.Lock.ReaderLockAsync(cancellationToken))
             {
-                // This won't work if we can't inspect the MSBuild project state.
-                if (!projectDocument.HasMSBuildProject)
+                // This won't work if we can't inspect the MSBuild project state and match it up to the target position.
+                if (!projectDocument.HasMSBuildProject || projectDocument.IsMSBuildProjectCached)
                     return null;
 
                 Position position = parameters.Position.ToNative();

@@ -158,7 +158,13 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 XmlLocation location = projectDocument.XmlLocator.Inspect(position);
                 if (location == null)
+                {
+                    Log.Verbose("Completion short-circuited; nothing interesting at {Position:l}", position);
+
                     return null;
+                }
+
+                Log.Verbose("Completion will target {XmlLocation:l}", location);
 
                 CompletionList[] allProviderCompletions;
                 try
@@ -192,7 +198,10 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                         isIncomplete |= providerCompletions.IsIncomplete; // If any provider returns incomplete results, VSCode will need to ask again as the user continues to type.
                     }
                 }
+
+                Log.Verbose("Offering a total of {CompletionCount} completions for {Location:l}.", completionItems.Count, location);
             }
+
             if (completionItems.Count == 0)
                 return null;
 

@@ -5,6 +5,7 @@ import * as path from 'path';
 import * as semver from 'semver';
 import * as vscode from 'vscode';
 import { LanguageClient, ServerOptions, LanguageClientOptions, ErrorAction, CloseAction } from 'vscode-languageclient';
+import { Trace } from 'vscode-jsonrpc/lib/main';
 
 import * as dotnet from './utils/dotnet';
 import * as executables from './utils/executables';
@@ -108,6 +109,11 @@ interface LanguageSettings {
      * Enable the language service?
      */
     enable: boolean;
+
+    /**
+     * Enable verbose tracing of messages between the language client and language service?
+     */
+    trace: boolean;
 
     /**
      * Disable tooltips when hovering over XML in MSBuild project files.
@@ -231,6 +237,9 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
     };
 
     let languageClient = new LanguageClient('MSBuild Project Tools', serverOptions, clientOptions);
+    if (configuration.language.trace)
+        languageClient.trace = Trace.Verbose;
+
     handleBusyNotifications(languageClient, statusBarItem);
 
     outputChannel = languageClient.outputChannel;

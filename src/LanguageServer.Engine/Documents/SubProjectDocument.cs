@@ -91,8 +91,6 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                 else
                     MSBuildProject = MSBuildProjectCollection.LoadProject(ProjectFile.FullName);
 
-                MSBuildLocator = new MSBuildLocator(MSBuildProject, Xml, XmlPositions);
-
                 return true;
             }
             catch (InvalidProjectFileException invalidProjectFile)
@@ -136,7 +134,6 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                 if (MSBuildProjectCollection == null)
                     return true;
 
-                MSBuildLocator = null;
                 MSBuildProjectCollection.UnloadProject(MSBuildProject);
                 MSBuildProject = null;
 

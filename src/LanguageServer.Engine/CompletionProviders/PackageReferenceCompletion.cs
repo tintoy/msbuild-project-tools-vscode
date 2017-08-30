@@ -210,8 +210,9 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             {
                 new CompletionItem
                 {
-                    Label = "PackageReference",
-                    Detail = "A NuGet package reference",
+                    Label = "<PackageReference />",
+                    Detail = "A NuGet package",
+                    Kind = CompletionItemKind.File,
                     TextEdit = new TextEdit
                     {
                         NewText = "<PackageReference Include=\"${1:PackageId}\" Version=\"${2:PackageVersion}\" />$0",
@@ -221,8 +222,9 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 },
                 new CompletionItem
                 {
-                    Label = "DotNetCliToolReference",
-                    Detail = "A dotnet command-line tool package reference",
+                    Label = "<DotNetCliToolReference />",
+                    Detail = "A command extension package for the dotnet CLI",
+                    Kind = CompletionItemKind.File,
                     TextEdit = new TextEdit
                     {
                         NewText = "<DotNetCliToolReference Include=\"${1:PackageId}\" Version=\"${2:PackageVersion}\" />$0",

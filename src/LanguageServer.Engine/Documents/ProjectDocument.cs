@@ -16,6 +16,7 @@ using System.Xml;
 
 namespace MSBuildProjectTools.LanguageServer.Documents
 {
+    using Microsoft.Build.Execution;
     using SemanticModel;
     using Utilities;
 
@@ -42,12 +43,22 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <summary>
         ///     The underlying MSBuild project collection.
         /// </summary>
-        public virtual ProjectCollection MSBuildProjectCollection { get; protected set; }
+        public ProjectCollection MSBuildProjectCollection { get; protected set; }
 
         /// <summary>
         ///     The underlying MSBuild project.
         /// </summary>
         public Project MSBuildProject { get; protected set; }
+
+        /// <summary>
+        ///     An immutable snapshot of the MSBuild project state (if available).
+        /// </summary>
+        /// <remarks>
+        ///     This can be used to keep data available that some types of completion require (while the user is typing and the MSBuild project XML may be invalid).
+        ///
+        ///     Do not attempt to correlate objects in this project snapshot with positions in the XML as positions may no longer be accurate (instead, match up by element / attribute name).
+        /// </remarks>
+        public ProjectInstance MSBuildProjectSnapshot { get; protected set; }
 
         /// <summary>
         ///     Create a new <see cref="ProjectDocument"/>.
@@ -224,6 +235,9 @@ namespace MSBuildProjectTools.LanguageServer.Documents
 
             await ConfigurePackageSources(cancellationToken);
             TryLoadMSBuildProject();
+
+            if (HasMSBuildProject)
+                UpdateProjectSnapshot();
         }
 
         /// <summary>
@@ -245,6 +259,9 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             IsDirty = true;
             
             TryLoadMSBuildProject();
+
+            if (HasMSBuildProject)
+                UpdateProjectSnapshot();
         }
 
         /// <summary>
@@ -332,6 +349,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// </summary>
         public virtual void Unload()
         {
+            MSBuildProjectSnapshot = null;
             TryUnloadMSBuildProject();
 
             Xml = null;
@@ -411,6 +429,17 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         ///     <c>true</c>, if the project was successfully unloaded; otherwise, <c>false</c>.
         /// </returns>
         protected abstract bool TryUnloadMSBuildProject();
+
+        /// <summary>
+        ///     Create an immutable snapshot of the MSBuild project's state (if it is available).
+        /// </summary>
+        protected void UpdateProjectSnapshot()
+        {
+            if (!HasMSBuildProject)
+                throw new InvalidOperationException($"MSBuild project '{ProjectFile.FullName}' is not loaded.");
+
+            MSBuildProjectSnapshot = MSBuildProject.CreateProjectInstance(ProjectInstanceSettings.Immutable);
+        }
 
         /// <summary>
         ///     Remove all diagnostics for the project file.

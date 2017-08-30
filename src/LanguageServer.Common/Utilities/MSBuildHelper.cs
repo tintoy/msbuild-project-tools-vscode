@@ -54,7 +54,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
             Dictionary<string, string> globalProperties = CreateGlobalMSBuildProperties(runtimeInfo, solutionDirectory);
             EnsureMSBuildEnvironment(globalProperties);
 
-            ProjectCollection projectCollection = new ProjectCollection(globalProperties);
+            ProjectCollection projectCollection = new ProjectCollection(globalProperties) { IsBuildEnabled = false };
 
             // Override toolset paths (for some reason these point to the main directory where the dotnet executable lives).
             Toolset toolset = projectCollection.GetToolset("15.0");

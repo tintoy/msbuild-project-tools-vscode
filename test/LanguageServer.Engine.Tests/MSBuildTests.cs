@@ -2,7 +2,6 @@ using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
 using System;
 using System.IO;
-using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
 

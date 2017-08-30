@@ -93,6 +93,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                     .Select(attributeName => new CompletionItem
                     {
                         Label = attributeName,
+                        Kind = CompletionItemKind.Field,
                         TextEdit = new TextEdit
                         {
                             NewText = $"{attributeName}=\"$1\"$0",

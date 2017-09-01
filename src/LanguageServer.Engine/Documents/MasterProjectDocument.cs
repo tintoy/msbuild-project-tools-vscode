@@ -171,8 +171,6 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                 Log.Error(loadError, "Error loading MSBuild project '{ProjectFileName}'.", ProjectFile.FullName);
             }
 
-            TryUnloadMSBuildProject();
-
             return false;
         }
 

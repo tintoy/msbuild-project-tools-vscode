@@ -3,6 +3,7 @@
 ## v0.2.1
 
 * Add completions for top-level elements (e.g. `<PropertyGroup>`, `<ItemGroup>`, `<Target>`).
+* Add completions for property elements (both common and locally-defined).
 * Improve language-service internals (more consistently accurate comprehension of project contents).
 
 ## v0.2.0

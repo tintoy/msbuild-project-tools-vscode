@@ -57,6 +57,9 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             Providers.Add(
                 new PropertyConditionCompletion(logger)
             );
+            Providers.Add(
+                new PropertyElementCompletion(logger)
+            );
         }
 
         /// <summary>

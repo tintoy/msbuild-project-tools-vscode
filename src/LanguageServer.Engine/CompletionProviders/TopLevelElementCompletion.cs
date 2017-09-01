@@ -87,7 +87,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 return null;
 
             return new CompletionList(completions,
-                isIncomplete: true // AF: Consider the performance implications if other providers take a while to offer completions; at that point, we may want to consider switching to using "resolve"-style completion.
+                isIncomplete: false // Consider this list to be exhaustive
             );
         }
 

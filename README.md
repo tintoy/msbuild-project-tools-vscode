@@ -13,6 +13,7 @@ You need .NET Core 2.0.0 or newer installed to use the language service (but you
 * _Language service feature:_ Completions for `PackageReference` and `DotNetCliToolReference`.
   * Completions for `Include` and `Version` attributes of these items.
 * _Language service feature:_ Completions for common top-level elements (e.g. `PropertyGroup`, `ItemGroup`, `Target`).
+* _Language service feature:_ Completions for property elements.
 * _Language service feature:_ Completions for common item attributes.
 * _Language service feature:_ Completions for common property `Condition` attributes.
 * _Language service feature:_ Hover the mouse over imports, targets, items, properties, and conditions to see information about them.

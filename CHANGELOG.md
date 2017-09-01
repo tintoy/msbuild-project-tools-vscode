@@ -1,5 +1,10 @@
 # Change Log
 
+## v0.2.1
+
+* Add completions for top-level elements (e.g. `<PropertyGroup>`, `<ItemGroup>`, `<Target>`).
+* Improve language-service internals (more consistently accurate comprehension of project contents).
+
 ## v0.2.0
 
 * Improved completions:

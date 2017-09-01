@@ -1,6 +1,5 @@
 using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
-using Microsoft.Language.Xml;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
@@ -17,13 +16,10 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     An <see cref="ProjectPropertyElement"/> representing the MSBuild property.
         /// </param>
         /// <param name="declaringElement">
-        ///     An <see cref="XmlElementSyntax"/> representing the property's declaring XML element.
+        ///     An <see cref="XSElement"/> representing the property's declaring XML element.
         /// </param>
-        /// <param name="xmlRange">
-        ///     A <see cref="Range"/> representing the span of the property's declaring XML element.
-        /// </param>
-        public MSBuildUnusedProperty(ProjectPropertyElement propertyElement, XmlElementSyntaxBase declaringElement, Range xmlRange)
-            : base(propertyElement, declaringElement, xmlRange)
+        public MSBuildUnusedProperty(ProjectPropertyElement propertyElement, XSElement declaringElement)
+            : base(propertyElement, declaringElement)
         {
         }
 

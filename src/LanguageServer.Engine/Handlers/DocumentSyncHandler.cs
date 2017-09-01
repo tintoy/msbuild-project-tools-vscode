@@ -193,13 +193,11 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 foreach (MSBuildObject msbuildObject in msbuildObjects)
                 {
-                    Log.Verbose("{Type:l}: {Kind} {Name} spanning {XmlRange} (ABS:{SpanStart}-{SpanEnd})",
+                    Log.Verbose("{Type:l}: {Kind} {Name} spanning {XmlRange}",
                         msbuildObject.GetType().Name,
                         msbuildObject.Kind,
                         msbuildObject.Name,
-                        msbuildObject.XmlRange,
-                        msbuildObject.Xml.Span.Start,
-                        msbuildObject.Xml.Span.End
+                        msbuildObject.XmlRange
                     );
                 }
             }
@@ -232,20 +230,23 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
             if (projectDocument.HasMSBuildProject)
             {
-                MSBuildObject[] msbuildObjects = projectDocument.MSBuildObjects.ToArray();
-                Log.Verbose("MSBuild project reloaded ({MSBuildObjectCount} MSBuild objects).", msbuildObjects.Length);
-
-                foreach (MSBuildObject msbuildObject in msbuildObjects)
+                if (!projectDocument.IsMSBuildProjectCached)
                 {
-                    Log.Verbose("{Type:l}: {Kind} {Name} spanning {XmlRange} (ABS:{SpanStart}-{SpanEnd})",
-                        msbuildObject.GetType().Name,
-                        msbuildObject.Kind,
-                        msbuildObject.Name,
-                        msbuildObject.XmlRange,
-                        msbuildObject.Xml.Span.Start,
-                        msbuildObject.Xml.Span.End
-                    );
+                    MSBuildObject[] msbuildObjects = projectDocument.MSBuildObjects.ToArray();
+                    Log.Verbose("MSBuild project reloaded ({MSBuildObjectCount} MSBuild objects).", msbuildObjects.Length);
+
+                    foreach (MSBuildObject msbuildObject in msbuildObjects)
+                    {
+                        Log.Verbose("{Type:l}: {Kind} {Name} spanning {XmlRange}",
+                            msbuildObject.GetType().Name,
+                            msbuildObject.Kind,
+                            msbuildObject.Name,
+                            msbuildObject.XmlRange
+                        );
+                    }
                 }
+                else
+                    Log.Verbose("MSBuild project not loaded; will used cached project state (as long as positional lookups are not required).");
             }
             else
                 Log.Verbose("MSBuild project not loaded.");

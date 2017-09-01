@@ -43,7 +43,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <summary>
         ///     The project XML.
         /// </summary>
-        readonly XmlDocumentSyntax _projectXml;
+        readonly XmlLocator _projectXmlLocator;
 
         /// <summary>
         ///     The position-lookup for the project XML.
@@ -56,26 +56,26 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="project">
         ///     The MSBuild project.
         /// </param>
-        /// <param name="projectXml">
-        ///     The project XML.
+        /// <param name="projectXmlLocator">
+        ///     The <see cref="XmlLocator"/> for the project XML.
         /// </param>
         /// <param name="xmlPositions">
         ///     The position-lookup for the project XML.
         /// </param>
-        public MSBuildLocator(Project project, XmlDocumentSyntax projectXml, TextPositions xmlPositions)
+        public MSBuildLocator(Project project, XmlLocator projectXmlLocator, TextPositions xmlPositions)
         {
             if (project == null)
                 throw new ArgumentNullException(nameof(project));
 
-            if (projectXml == null)
-                throw new ArgumentNullException(nameof(projectXml));
+            if (projectXmlLocator == null)
+                throw new ArgumentNullException(nameof(projectXmlLocator));
             
             if (xmlPositions == null)
                 throw new ArgumentNullException(nameof(xmlPositions));
             
             _project = project;
             _projectFile = _project.FullPath ?? String.Empty;
-            _projectXml = projectXml;
+            _projectXmlLocator = projectXmlLocator;
             _xmlPositions = xmlPositions;
             
             AddTargets();
@@ -150,23 +150,6 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         }
 
         /// <summary>
-        ///     Find the XML (if any) at the specified position.
-        /// </summary>
-        /// <param name="position">
-        ///     The target position.
-        /// </param>
-        /// <returns>
-        ///     A <see cref="SyntaxNode"/> representing the element, or <c>null</c> if no element was found at the specified position.
-        /// </returns>
-        SyntaxNode FindXmlAtPosition(Position position)
-        {
-            if (position == null)
-                throw new ArgumentNullException(nameof(position));
-
-            return _projectXml.FindNode(position, _xmlPositions);   
-        }
-
-        /// <summary>
         ///     Get a <see cref="Range"/> representing the span of XML within the source text.
         /// </summary>
         /// <param name="xml">
@@ -213,22 +196,16 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         {
             if (target == null)
                 throw new ArgumentNullException(nameof(target));
-            
-            Position propertyStart = target.Location.ToNative();
-            
-            SyntaxNode xmlAtPosition = FindXmlAtPosition(propertyStart);
-            if (xmlAtPosition == null)
+
+            XmlLocation targetLocation = _projectXmlLocator.Inspect(
+                target.Location.ToNative()
+            );
+            XSElement targetElement;
+            if (!targetLocation.IsElement(out targetElement))
                 return;
 
-            XmlElementSyntaxBase targetElement = xmlAtPosition.GetContainingElement();
-            if (targetElement == null)
-                return;
-
-            Range targetRange = GetRange(targetElement);
-
-            _objectRanges.Add(targetRange);
-            _objectsByStartPosition.Add(targetRange.Start,
-                new MSBuildTarget(target, targetElement, targetRange)
+            Add(
+                new MSBuildTarget(target, targetElement)
             );
         }
 
@@ -255,30 +232,24 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (property == null)
                 throw new ArgumentNullException(nameof(property));
             
-            Position propertyStart = property.Location.ToNative();
+            XmlLocation propertyLocation = _projectXmlLocator.Inspect(
+                property.Location.ToNative()
+            );
+            XSElement propertyElement;
+            if (!propertyLocation.IsElement(out propertyElement))
+                return;
                 
-            SyntaxNode xmlAtPosition = FindXmlAtPosition(propertyStart);
-            if (xmlAtPosition == null)
-                return;
-
-            XmlElementSyntaxBase propertyElement = xmlAtPosition.GetContainingElement();
-            if (propertyElement == null)
-                return;
-
-            Range propertyRange = GetRange(propertyElement);
-            _objectRanges.Add(propertyRange);
-
             ProjectProperty evaluatedProperty = _project.GetProperty(property.Name);
             if (evaluatedProperty != null)
             {
-                _objectsByStartPosition.Add(propertyRange.Start,
-                    new MSBuildProperty(evaluatedProperty, property, propertyElement, propertyRange)
+                Add(
+                    new MSBuildProperty(evaluatedProperty, property, propertyElement)
                 );
             }
             else
             {
-                _objectsByStartPosition.Add(propertyRange.Start,
-                    new MSBuildUnusedProperty(property, propertyElement, propertyRange)
+                Add(
+                    new MSBuildUnusedProperty(property, propertyElement)
                 );
             }
         }
@@ -292,8 +263,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             var itemsByXml = new Dictionary<ProjectItemElement, List<ProjectItem>>();
             foreach (ProjectItem item in _project.ItemsIgnoringCondition)
             {
+                // Must be declared in main project file.
                 if (!IsFromCurrentProject(item.Xml))
-                    continue; // Not declared in main project file.
+                    continue;
+
+                Position itemStartPosition = item.Xml.Location.ToNative();
 
                 List<ProjectItem> itemsFromXml;
                 if (!itemsByXml.TryGetValue(item.Xml, out itemsFromXml))
@@ -301,7 +275,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                     itemsFromXml = new List<ProjectItem>();
                     itemsByXml.Add(item.Xml, itemsFromXml);
                 }
-
+                
                 itemsFromXml.Add(item);
             }
 
@@ -311,31 +285,28 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             {
                 Position itemStart = itemXml.Location.ToNative();
 
-                SyntaxNode xmlAtPosition = _projectXml.FindNode(itemStart, _xmlPositions);
-                if (xmlAtPosition == null)
+                XmlLocation itemLocation = _projectXmlLocator.Inspect(itemStart);
+                if (itemLocation == null)
                     continue;
 
-                XmlElementSyntaxBase itemElement = xmlAtPosition.GetContainingElement();
-                if (itemElement == null)
+                XSElement itemElement;
+                if (!itemLocation.IsElement(out itemElement))
                     continue;
-
-                Range itemRange = GetRange(itemElement);
 
                 List<ProjectItem> itemsFromXml;
                 if (!itemsByXml.TryGetValue(itemXml, out itemsFromXml)) // AF: Should not happen.
-                    throw new InvalidOperationException($"Found item XML at {itemRange} with no corresponding items in the MSBuild project (irrespective of condition).");
+                    throw new InvalidOperationException($"Found item XML at {itemLocation.Node.Range} with no corresponding items in the MSBuild project (irrespective of condition).");
 
-                _objectRanges.Add(itemRange);
                 if (usedItems.Contains(itemsFromXml[0]))
                 {
-                    _objectsByStartPosition.Add(itemRange.Start,
-                        new MSBuildItemGroup(itemsByXml[itemXml], itemXml, itemElement, itemRange)
+                    Add(
+                        new MSBuildItemGroup(itemsByXml[itemXml], itemXml, itemElement)
                     );
                 }
                 else
                 {
-                    _objectsByStartPosition.Add(itemRange.Start,
-                        new MSBuildUnusedItemGroup(itemsByXml[itemXml], itemXml, itemElement, itemRange)
+                    Add(
+                        new MSBuildUnusedItemGroup(itemsByXml[itemXml], itemXml, itemElement)
                     );
                 }
             }
@@ -402,22 +373,20 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (importStart == Position.Invalid)
                 importStart = Position.Origin;
             
-            SyntaxNode xmlAtPosition = FindXmlAtPosition(importStart);
-            if (xmlAtPosition == null)
+            XmlLocation importLocation = _projectXmlLocator.Inspect(importStart);
+            if (importLocation == null)
                 return;
 
-            XmlElementSyntaxBase importElement = xmlAtPosition.GetContainingElement();
-            if (importElement == null)
+            XSElement importElement;
+            if (!importLocation.IsElement(out importElement))
                 return;
-
-            XmlAttributeSyntax sdkAttribute = importElement.AsSyntaxElement["Sdk"];
+            
+            XSAttribute sdkAttribute = importElement["Sdk"];
             if (sdkAttribute == null)
                 return;
 
-            Range importRange = GetRange(sdkAttribute);
-            _objectRanges.Add(importRange);
-            _objectsByStartPosition.Add(importRange.Start,
-                new MSBuildSdkImport(resolvedImports.ToArray(), sdkAttribute, importRange)
+            Add(
+                new MSBuildSdkImport(resolvedImports.ToArray(), sdkAttribute)
             );
         }
 
@@ -437,18 +406,16 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             {
                 Position importStart = importsForImportingElement.Key.Location.ToNative();
                 
-                SyntaxNode xmlAtPosition = FindXmlAtPosition(importStart);
-                if (xmlAtPosition == null)
+                XmlLocation importLocation = _projectXmlLocator.Inspect(importStart);
+                if (importLocation == null)
                     continue;
 
-                XmlElementSyntaxBase importElement = xmlAtPosition.GetContainingElement();
-                if (importElement == null)
+                XSElement importElement;
+                if (!importLocation.IsElement(out importElement))
                     continue;
 
-                Range importRange = GetRange(importElement);
-                _objectRanges.Add(importRange);
-                _objectsByStartPosition.Add(importRange.Start,
-                    new MSBuildImport(importsForImportingElement.ToArray(), importElement, importRange)
+                Add(
+                    new MSBuildImport(importsForImportingElement.ToArray(), importElement)
                 );
             }
         }
@@ -466,20 +433,18 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             
             Position importStart = import.Location.ToNative();
 
-            SyntaxNode xmlAtPosition = FindXmlAtPosition(importStart);
-            if (xmlAtPosition == null)
+            XmlLocation importLocation = _projectXmlLocator.Inspect(importStart);
+            if (importLocation == null)
                 return;
 
-            XmlElementSyntaxBase importElement = xmlAtPosition.GetContainingElement();
-            if (importElement == null)
+            XSElement importElement;
+            if (!importLocation.IsElement(out importElement))
                 return;
 
-            XmlAttributeSyntax sdkAttribute = importElement.AsSyntaxElement["Sdk"];
+            XSAttribute sdkAttribute = importElement["Sdk"];
 
-            Range importRange = GetRange(importElement);
-            _objectRanges.Add(importRange);
-            _objectsByStartPosition.Add(importRange.Start,
-                new MSBuildUnresolvedSdkImport(import, sdkAttribute, importRange)
+            Add(
+                new MSBuildUnresolvedSdkImport(import, sdkAttribute)
             );
         }
 
@@ -496,19 +461,58 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
 
             Position importStart = import.Location.ToNative();
 
-            SyntaxNode xmlAtPosition = FindXmlAtPosition(importStart);
-            if (xmlAtPosition == null)
+            XmlLocation importLocation = _projectXmlLocator.Inspect(importStart);
+            if (importLocation == null)
                 return;
 
-            XmlElementSyntaxBase importElement = xmlAtPosition.GetContainingElement();
-            if (importElement == null)
+            XSElement importElement;
+            if (!importLocation.IsElement(out importElement))
                 return;
 
-            Range importRange = GetRange(importElement);
-            _objectRanges.Add(importRange);
-            _objectsByStartPosition.Add(importRange.Start,
-                new MSBuildUnresolvedImport(import, importElement, importRange)
-            );            
+            Add(
+                new MSBuildUnresolvedImport(import, importElement)
+            );
+        }
+
+        /// <summary>
+        ///     Add the MSBuild object to the locator.
+        /// </summary>
+        /// <param name="msbuildObject">
+        ///     The <see cref="MSBuildObject"/>.
+        /// </param>
+        void Add(MSBuildObject msbuildObject)
+        {
+            if (msbuildObject == null)
+                throw new ArgumentNullException(nameof(msbuildObject));
+
+            // Rarely, we get a duplicate item-group if the item group element is empty.
+            // TODO: Figure out why.
+
+            if (_objectsByStartPosition.TryGetValue(msbuildObject.XmlRange.Start, out MSBuildObject dupe))
+            {
+                Serilog.Log.Information("Found duplicate {0} (vs {1}) at {2} (vs {3}). Same underlying object: {IdentityMatch}",
+                    msbuildObject.Kind,
+                    dupe.Kind,
+                    msbuildObject.XmlRange,
+                    dupe.XmlRange,
+                    msbuildObject.IsSameUnderlyingObject(dupe)
+                );
+
+                if (msbuildObject is MSBuildItemGroup itemGroup1 && dupe is MSBuildItemGroup itemGroup2)
+                {
+                    Serilog.Log.Information("Duplicate items are {Spec1} ({XmlSpec1}) vs {Spec2} ({XmlSpec2}) => {@Spec1Location} vs {@Spec2Location}",
+                        itemGroup1.FirstInclude,
+                        itemGroup1.FirstItem.Xml.Include,
+                        itemGroup2.FirstInclude,
+                        itemGroup2.FirstItem.Xml.Include,
+                        itemGroup1.FirstItem.Xml.Location,
+                        itemGroup2.FirstItem.Xml.Location
+                    );
+                }
+            }
+
+            _objectRanges.Add(msbuildObject.XmlRange);
+            _objectsByStartPosition.Add(msbuildObject.XmlRange.Start, msbuildObject);
         }
     }
 }

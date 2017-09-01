@@ -46,7 +46,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
             // TODO: Automatic discovery of completion components.
             Providers.Add(
-                new CurrentElementCompletion(logger)
+                new TopLevelElementCompletion(logger)
             );
             Providers.Add(
                 new PackageReferenceCompletion(logger)
@@ -121,9 +121,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 DocumentSelector = DocumentSelector,
                 TriggerCharacters = new string[] {
                     "<", // Element
-                    "$", // Property or function-call expression 
-                    "@", // Item group reference
-                    "%"  // Metadata reference
                 },
                 ResolveProvider = false
             };
@@ -197,14 +194,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 foreach (CompletionList providerCompletions in allProviderCompletions)
                 {
-                    // Special case; provider offers no completions this time, but may do so next time.
-                    if (providerCompletions == CompletionProvider.CallMeAgain)
-                    {
-                        isIncomplete = true;
-
-                        continue;
-                    }
-
                     if (providerCompletions != null)
                     {
                         completionItems.AddRange(providerCompletions.Items);

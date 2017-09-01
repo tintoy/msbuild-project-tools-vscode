@@ -1,0 +1,156 @@
+using Lsp.Models;
+using Serilog;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace MSBuildProjectTools.LanguageServer.CompletionProviders
+{
+    using Documents;
+    using SemanticModel;
+    using Utilities;
+
+    /// <summary>
+    ///     Completion provider for the top-level elements (e.g. PropertyGroup, ItemGroup, Target, etc).
+    /// </summary>
+    public class TopLevelElementCompletion
+        : CompletionProvider
+    {
+        /// <summary>
+        ///     Create a new <see cref="TopLevelElementCompletion"/>.
+        /// </summary>
+        /// <param name="logger">
+        ///     The application logger.
+        /// </param>
+        public TopLevelElementCompletion(ILogger logger)
+            : base(logger)
+        {
+        }
+
+        /// <summary>
+        ///     The sort priority for the provider's completion items.
+        /// </summary>
+        public int Priority { get; set; } = 1000;
+
+        /// <summary>
+        ///     Provide completions for the specified location.
+        /// </summary>
+        /// <param name="location">
+        ///     The <see cref="XmlLocation"/> where completions are requested.
+        /// </param>
+        /// <param name="projectDocument">
+        ///     The <see cref="ProjectDocument"/> that contains the <paramref name="location"/>.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///     A <see cref="CancellationToken"/> that can be used to cancel the operation.
+        /// </param>
+        /// <returns>
+        ///     A <see cref="Task{TResult}"/> that resolves either a <see cref="CompletionList"/>s, or <c>null</c> if no completions are provided.
+        /// </returns>
+        public override async Task<CompletionList> ProvideCompletions(XmlLocation location, ProjectDocument projectDocument, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (location == null)
+                throw new ArgumentNullException(nameof(location));
+
+            if (projectDocument == null)
+                throw new ArgumentNullException(nameof(projectDocument));
+
+            List<CompletionItem> completions = new List<CompletionItem>();
+
+            Log.Verbose("Evaluate completions for {XmlLocation:l}", location);
+
+            using (await projectDocument.Lock.ReaderLockAsync())
+            {
+                XSElement replaceElement;
+                if (!location.CanCompleteElement(out replaceElement, asChildOfElementNamed: "Project"))
+                {
+                    Log.Verbose("Not offering any completions for {XmlLocation:l} (not a direct child of the 'Project' element).", location);
+
+                    return null;
+                }
+
+                Log.Verbose("Offering completions to replace element {ElementName} @ {ReplaceRange:l}",
+                    replaceElement.Name,
+                    replaceElement.Range
+                );
+
+                completions.AddRange(
+                    GetCompletionItems(replaceElement.Range)
+                );
+            }
+
+            Log.Verbose("Offering {CompletionCount} completion(s) for {XmlLocation:l}", completions.Count, location);
+
+            if (completions.Count == 0)
+                return null;
+
+            return new CompletionList(completions,
+                isIncomplete: true // AF: Consider the performance implications if other providers take a while to offer completions; at that point, we may want to consider switching to using "resolve"-style completion.
+            );
+        }
+
+        /// <summary>
+        ///     Get top-level element completions.
+        /// </summary>
+        /// <param name="replaceRange">
+        ///     The range of text to be replaced by the completions.
+        /// </param>
+        /// <returns>
+        ///     A sequence of <see cref="CompletionItem"/>s.
+        /// </returns>
+        public IEnumerable<CompletionItem> GetCompletionItems(Range replaceRange)
+        {
+            if (replaceRange == null)
+                throw new ArgumentNullException(nameof(replaceRange));
+
+            Lsp.Models.Range completionRange = replaceRange.ToLsp();
+            
+            // <PropertyGroup>
+            //     $0
+            // </PropertyGroup>
+            yield return new CompletionItem
+            {
+                Label = "<PropertyGroup>",
+                SortText = Priority + "<PropertyGroup>",
+                TextEdit = new TextEdit
+                {
+                    NewText = "<PropertyGroup>\n    $0\n</PropertyGroup>",
+                    Range = completionRange
+                },
+                InsertTextFormat = InsertTextFormat.Snippet
+            };
+
+            // <ItemGroup>
+            //     $0
+            // </ItemGroup>
+            yield return new CompletionItem
+            {
+                Label = "<ItemGroup>",
+                SortText = Priority + "<ItemGroup>",
+                TextEdit = new TextEdit
+                {
+                    NewText = "<ItemGroup>\n    $0\n</ItemGroup>",
+                    Range = completionRange
+                },
+                InsertTextFormat = InsertTextFormat.Snippet
+            };
+
+            // <Target Name="TargetName">
+            //     $0
+            // </Target>
+            yield return new CompletionItem
+            {
+                Label = "<Target>",
+                SortText = Priority + "<Target>",
+                TextEdit = new TextEdit
+                {
+                    NewText = "<Target Name=\"${1:TargetName}\">\n    $0\n</Target>",
+                    Range = completionRange
+                },
+                InsertTextFormat = InsertTextFormat.Snippet
+            };
+        }
+    }
+}

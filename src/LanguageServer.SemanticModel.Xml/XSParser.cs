@@ -288,11 +288,10 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 else
                     contentRange = elementRange;
 
+                // All the ways an XML element can go wrong.
                 XSElement xsElement;
                 if (String.IsNullOrWhiteSpace(element.Name))
                 {
-                    // All the ways an XML element can go wrong.
-
                     if (element.StartTag.Width == 2) // <> surrounded by whitespace
                         xsElement = new XSInvalidElement(element, openingTagRange, attributesRange: openingTagRange, parent: CurrentElement, hasContent: false);
                     else if (element.EndTag == null) // <<
@@ -309,6 +308,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                     else // Fuck knows.
                         xsElement = new XSInvalidElement(element, elementRange, attributesRange: openingTagRange, parent: CurrentElement, hasContent: true);
                 }
+                else if (String.IsNullOrWhiteSpace(element.EndTag.Name)) // <XXX> with no </XXX>
+                    xsElement = new XSInvalidElement(element, openingTagRange, attributesRange: openingTagRange, parent: CurrentElement, hasContent: false);
                 else
                     xsElement = new XSElementWithContent(element, elementRange, openingTagRange, attributesRange, contentRange, closingTagRange, parent: CurrentElement);
 

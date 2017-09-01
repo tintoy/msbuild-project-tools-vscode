@@ -1,6 +1,5 @@
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Construction;
-using Microsoft.Language.Xml;
 using System.Collections.Generic;
 using System;
 using System.Linq;
@@ -26,13 +25,10 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The MSBuild <see cref="ProjectItemElement"/> from where the items originate.
         /// </param>
         /// <param name="itemElement">
-        ///     An <see cref="XmlElementSyntax"/> representing the item's XML element.
+        ///     An <see cref="XSElement"/> representing the item's XML element.
         /// </param>
-        /// <param name="xmlRange">
-        ///     A <see cref="Range"/> representing the span of the item's XML element.
-        /// </param>
-        public MSBuildItemGroup(IReadOnlyList<ProjectItem> items, ProjectItemElement originatingElement, XmlElementSyntaxBase itemElement, Range xmlRange)
-            : base(items, itemElement, xmlRange)
+        public MSBuildItemGroup(IReadOnlyList<ProjectItem> items, ProjectItemElement originatingElement, XSElement itemElement)
+            : base(items, itemElement)
         {
             if (Items.Count == 0)
                 throw new ArgumentException("Must specify at least one ProjectItem.", nameof(items));
@@ -107,7 +103,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <summary>
         ///     The item group's declaring XML element.
         /// </summary>
-        public XmlElementSyntaxBase ItemElement => (XmlElementSyntaxBase)base.Xml;
+        public XSElement Element => (XSElement)Xml;
 
         /// <summary>
         ///     Get the evaluated values of the specified metadata for the items in the group.

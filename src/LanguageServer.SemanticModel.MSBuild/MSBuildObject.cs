@@ -14,30 +14,23 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="xml">
         ///     A <see cref="SyntaxNode"/> representing the item's corresponding XML.
         /// </param>
-        /// <param name="xmlRange">
-        ///     A <see cref="Range"/> representing the span of text covered by the item's XML.
-        /// </param>
-        protected MSBuildObject(SyntaxNode xml, Range xmlRange)
+        protected MSBuildObject(XSNode xml)
         {
             if (xml == null)
                 throw new ArgumentNullException(nameof(xml));
 
-            if (xmlRange == null)
-                throw new ArgumentNullException(nameof(xmlRange));
-            
             Xml = xml;
-            XmlRange = xmlRange;
         }
 
         /// <summary>
         ///     A <see cref="SyntaxNode"/> representing the item's corresponding XML.
         /// </summary>
-        public SyntaxNode Xml { get; }
+        public XSNode Xml { get; }
 
         /// <summary>
         ///     A <see cref="Range"/> representing the span of text covered by the item's XML.
         /// </summary>
-        public Range XmlRange { get; }
+        public Range XmlRange => Xml.Range;
 
         /// <summary>
         ///     The object's name.
@@ -53,6 +46,17 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The full path of the file where the object is declared.
         /// </summary>
         public abstract string SourceFile { get; }
+
+        /// <summary>
+        ///     Determine whether another <see cref="MSBuildObject"/> represents the same underlying MSBuild object.
+        /// </summary>
+        /// <param name="other">
+        ///     The <see cref="MSBuildObject"/>.
+        /// </param>
+        /// <returns>
+        ///     <c>true</c>, if the 2 <see cref="MSBuildObject"/>s represent the same underlying MSBuild object; otherwise, <c>false</c>.
+        /// </returns>
+        public abstract bool IsSameUnderlyingObject(MSBuildObject other);
 
         /// <summary>
         ///     Determine whether the object's XML contains the specified position.
@@ -90,11 +94,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="declaringXml">
         ///     A <see cref="SyntaxNode"/> representing the object's declaring XML.
         /// </param>
-        /// <param name="xmlRange">
-        ///     A <see cref="Range"/> representing the span of text covered by the item's XML.
-        /// </param>
-        protected MSBuildObject(TUnderlyingObject underlyingObject, SyntaxNode declaringXml, Range xmlRange)
-            : base(declaringXml, xmlRange)
+        protected MSBuildObject(TUnderlyingObject underlyingObject, XSNode declaringXml)
+            : base(declaringXml)
         {
             if (underlyingObject == null)
                 throw new ArgumentNullException(nameof(underlyingObject));
@@ -106,5 +107,25 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The underlying MSBuild object.
         /// </summary>
         protected TUnderlyingObject UnderlyingObject { get; }
+
+        /// <summary>
+        ///     Determine whether another <see cref="MSBuildObject"/> represents the same underlying MSBuild object.
+        /// </summary>
+        /// <param name="other">
+        ///     The <see cref="MSBuildObject"/>.
+        /// </param>
+        /// <returns>
+        ///     <c>true</c>, if the 2 <see cref="MSBuildObject"/>s represent the same underlying MSBuild object; otherwise, <c>false</c>.
+        /// </returns>
+        public sealed override bool IsSameUnderlyingObject(MSBuildObject other)
+        {
+            if (other == null)
+                throw new ArgumentNullException(nameof(other));
+
+            if (other is MSBuildObject<TUnderlyingObject> otherWithUnderlying)
+                return ReferenceEquals(UnderlyingObject, otherWithUnderlying.UnderlyingObject);
+
+            return false;
+        }
     }
 }

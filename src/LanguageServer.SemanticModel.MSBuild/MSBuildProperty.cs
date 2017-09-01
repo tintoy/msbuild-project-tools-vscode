@@ -1,6 +1,5 @@
 using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
-using Microsoft.Language.Xml;
 using System;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
@@ -21,13 +20,10 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The <see cref="ProjectPropertyElement"/> that results in the underlying MSBuild <see cref="ProjectProperty"/>'s current value.
         /// </param>
         /// <param name="propertyElement">
-        ///     An <see cref="XmlElementSyntax"/> representing the property's XML element.
+        ///     An <see cref="XSElement"/> representing the property's XML element.
         /// </param>
-        /// <param name="xmlRange">
-        ///     A <see cref="Range"/> representing the span of the property's XML element.
-        /// </param>
-        public MSBuildProperty(ProjectProperty property, ProjectPropertyElement declaringXml, XmlElementSyntaxBase propertyElement, Range xmlRange)
-            : base(property, propertyElement, xmlRange)
+        public MSBuildProperty(ProjectProperty property, ProjectPropertyElement declaringXml, XSElement propertyElement)
+            : base(property, propertyElement)
         {
             if (declaringXml == null)
                 throw new ArgumentNullException(nameof(declaringXml));
@@ -49,6 +45,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The full path of the file where the property is declared.
         /// </summary>
         public override string SourceFile => Property.Xml.Location.File;
+
+        /// <summary>
+        ///     The property's declaring element.
+        /// </summary>
+        public XSElement Element => (XSElement)Xml;
 
         /// <summary>
         ///     The property's evaluated value.

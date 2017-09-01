@@ -1,6 +1,5 @@
 using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
-using Microsoft.Language.Xml;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,13 +19,10 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     A read-only list of underlying MSBuild <see cref="ResolvedImport"/>s representing the imports resulting from the SDK import.
         /// </param>
         /// <param name="sdkAttribute">
-        ///     An <see cref="XmlAttributeSyntax"/> representing the import's "Sdk" attribute.
+        ///     An <see cref="XSAttribute"/> representing the import's "Sdk" attribute.
         /// </param>
-        /// <param name="xmlRange">
-        ///     A <see cref="Range"/> representing the span of the item's XML element.
-        /// </param>
-        public MSBuildSdkImport(IReadOnlyList<ResolvedImport> imports, XmlAttributeSyntax sdkAttribute, Range xmlRange)
-            : base(imports, sdkAttribute, xmlRange)
+        public MSBuildSdkImport(IReadOnlyList<ResolvedImport> imports, XSAttribute sdkAttribute)
+            : base(imports, sdkAttribute)
         {
         }
 
@@ -48,7 +44,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <summary>
         ///     The import's "Sdk" attribute.
         /// </summary>
-        public XmlAttributeSyntax SdkAttribute => (XmlAttributeSyntax)Xml;
+        public XSAttribute Attribute => (XSAttribute)Xml;
 
         /// <summary>
         ///     The underlying <see cref="ResolvedImport"/>s.

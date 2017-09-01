@@ -34,8 +34,8 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// </param>
         [InlineData("Test1", 2, 5)]
         [InlineData("Test1", 3, 9)]
-        [Theory(DisplayName = "Line / column inside element ")]
-        public void Line_Col_ListInsideElement1(string testFileName, int line, int column)
+        [Theory(DisplayName = "Inside element ")]
+        public void InsideElement1(string testFileName, int line, int column)
         {
             // TODO: Change this test to use XmlLocator.
 
@@ -80,8 +80,8 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         [InlineData("Test1", 3, 22, XSNodeKind.Whitespace)]
         [InlineData("Test2", 11, 8, XSNodeKind.Whitespace)]
         [InlineData("Test2", 5, 22, XSNodeKind.Text)]
-        [Theory(DisplayName = "Line / column within element content ")]
-        public void Line_Col_InElementContent(string testFileName, int line, int column, XSNodeKind expectedNodeKind)
+        [Theory(DisplayName = "Within element content ")]
+        public void InElementContent(string testFileName, int line, int column, XSNodeKind expectedNodeKind)
         {
             Position testPosition = new Position(line, column);
 
@@ -116,8 +116,8 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// </param>
         [InlineData("Test2", 11, 10, "PackageReference")]
         [InlineData("Test2", 12, 18, "PackageReference")]
-        [Theory(DisplayName = "Line / column within empty element's name ")]
-        public void Line_Col_InEmptyElementName(string testFileName, int line, int column, string expectedElementName)
+        [Theory(DisplayName = "Within empty element's name ")]
+        public void InEmptyElementName(string testFileName, int line, int column, string expectedElementName)
         {
             Position testPosition = new Position(line, column);
 
@@ -164,8 +164,8 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         [InlineData("Test2", 11, 62, "Version")]
         [InlineData("Test2", 11, 63, "Version")]
         [InlineData("Test2", 11, 68, "Version")]
-        [Theory(DisplayName = "Line / column within attribute's value ")]
-        public void Line_Col_InAttributeValue(string testFileName, int line, int column, string expectedAttributeName)
+        [Theory(DisplayName = "Within attribute's value ")]
+        public void InAttributeValue(string testFileName, int line, int column, string expectedAttributeName)
         {
             Position testPosition = new Position(line, column);
 
@@ -202,8 +202,9 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         [InlineData("Invalid1.EmptyOpeningTag", 5, 10)]
         [InlineData("Invalid2.DoubleOpeningTag", 13, 10)]
         [InlineData("Invalid2.EmptyOpeningTag", 13, 65)]
-        [Theory(DisplayName = "Line / column is on element that can be replaced by completion ")]
-        public void Line_Col_CanCompleteElement(string testFileName, int line, int column)
+        [InlineData("Invalid2.NoClosingTag", 14, 10)]
+        [Theory(DisplayName = "On element that can be replaced by completion ")]
+        public void CanCompleteElement(string testFileName, int line, int column)
         {
             Position testPosition = new Position(line, column);
 
@@ -236,8 +237,9 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         [InlineData("Invalid1.EmptyOpeningTag", 5, 10, "Element2")]
         [InlineData("Invalid2.DoubleOpeningTag", 13, 10, "ItemGroup")]
         [InlineData("Invalid2.EmptyOpeningTag", 13, 65, "ItemGroup")]
-        [Theory(DisplayName = "Line / column is on completable element if parent name matches ")]
-        public void Line_Col_CanCompleteElementInParentNamed(string testFileName, int line, int column, string expectedParent)
+        [InlineData("Invalid2.NoClosingTag", 10, 5, "Project")]
+        [Theory(DisplayName = "On completable element if parent name matches ")]
+        public void CanCompleteElementInParentNamed(string testFileName, int line, int column, string expectedParent)
         {
             Position testPosition = new Position(line, column);
 

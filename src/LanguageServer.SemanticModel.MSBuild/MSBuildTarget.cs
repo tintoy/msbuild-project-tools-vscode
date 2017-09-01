@@ -1,5 +1,4 @@
 using Microsoft.Build.Construction;
-using Microsoft.Language.Xml;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
@@ -16,13 +15,10 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The underlying MSBuild <see cref="ProjectTargetElement"/>.
         /// </param>
         /// <param name="element">
-        ///     An <see cref="XmlElementSyntax"/> representing the target's XML element.
+        ///     An <see cref="XSElement"/> representing the target's XML element.
         /// </param>
-        /// <param name="xmlRange">
-        ///     A <see cref="Range"/> representing the span of the target's XML element.
-        /// </param>
-        public MSBuildTarget(ProjectTargetElement target, XmlElementSyntaxBase element, Range xmlRange)
-            : base(target, element, xmlRange)
+        public MSBuildTarget(ProjectTargetElement target, XSElement element)
+            : base(target, element)
         {
         }
 
@@ -40,6 +36,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The full path of the file where the target is declared.
         /// </summary>
         public override string SourceFile => Target.Location.File;
+
+        /// <summary>
+        ///     The target's declaring element.
+        /// </summary>
+        public XSElement Element => (XSElement)Xml;
 
         /// <summary>
         ///     The underlying MSBuild <see cref="ProjectTargetElement"/>.

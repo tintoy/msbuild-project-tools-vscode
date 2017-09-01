@@ -536,8 +536,6 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 if (location.Node.Start.ColumnNumber - element.ParentElement.Start.ColumnNumber == 1)
                     element = element.ParentElement;
             }
-            else if (element.Start.LineNumber != element.End.LineNumber || element.End.ColumnNumber - element.Start.ColumnNumber != 2)
-                return false; // Not "<>", which is what VSCode inserts when you're not directly to the left of an element and type "<".
 
             if (asChildOfElementNamed != null && element.ParentElement?.Name != asChildOfElementNamed)
                 return false;

@@ -248,7 +248,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
 
             bool loaded = TryLoadMSBuildProject();
             if (loaded)
-                MSBuildLocator = new MSBuildLocator(MSBuildProject, Xml, XmlPositions);
+                MSBuildLocator = new MSBuildLocator(MSBuildProject, XmlLocator, XmlPositions);
             else
                 MSBuildLocator = null;
 
@@ -275,7 +275,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
 
             bool loaded = TryLoadMSBuildProject();
             if (loaded)
-                MSBuildLocator = new MSBuildLocator(MSBuildProject, Xml, XmlPositions);
+                MSBuildLocator = new MSBuildLocator(MSBuildProject, XmlLocator, XmlPositions);
             else
                 MSBuildLocator = null;
 

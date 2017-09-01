@@ -217,6 +217,9 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// <param name="index">
         ///     The node index.
         /// </param>
+        /// <param name="elementName">
+        ///     The expected element name.
+        /// </param>
         /// <param name="startLine">
         ///     The element's attributes node's starting line.
         /// </param>
@@ -253,6 +256,57 @@ namespace MSBuildProjectTools.LanguageServer.Tests
             );
 
             Assert.Equal(expectedRange, targetElement.AttributesRange);
+        }
+
+        /// <summary>
+        ///     Verify that the Parser correctly determines an invalid element's range.
+        /// </summary>
+        /// <param name="testFileName">
+        ///     The name of the test file, without the extension.
+        /// </param>
+        /// <param name="index">
+        ///     The node index.
+        /// </param>
+        /// <param name="elementName">
+        ///     The expected element name.
+        /// </param>
+        /// <param name="startLine">
+        ///     The element's attributes node's starting line.
+        /// </param>
+        /// <param name="startColumn">
+        ///     The element's attributes node's starting column.
+        /// </param>
+        /// <param name="endLine">
+        ///     The element's attributes node's ending line.
+        /// </param>
+        /// <param name="endColumn">
+        ///     The element's attributes node's ending column.
+        /// </param>
+        [Theory(DisplayName = "Invalid element has expected range ")]
+        [InlineData("Invalid2.NoClosingTag", 22, "P", 10, 5, 10, 8)]
+        public void InvalidElementRange(string testFileName, int nodeIndex, string elementName, int startLine, int startColumn, int endLine, int endColumn)
+        {
+            string testXml = LoadTestFile("TestFiles", testFileName + ".xml");
+            TextPositions xmlPositions = new TextPositions(testXml);
+            XmlDocumentSyntax xmlDocument = Parser.ParseText(testXml);
+
+            List<XSNode> nodes = xmlDocument.GetSemanticModel(xmlPositions);
+            Assert.NotNull(nodes);
+
+            XSNode targetNode = nodes[nodeIndex];
+            Assert.NotNull(targetNode);
+
+            Assert.IsAssignableFrom<XSElement>(targetNode);
+            XSElement targetElement = (XSElement)targetNode;
+
+            Assert.Equal(elementName, targetElement.Name);
+            Assert.False(targetElement.IsValid, "IsValid");
+
+            Range expectedRange = new Range(
+                start: new Position(startLine, startColumn),
+                end: new Position(endLine, endColumn)
+            );
+            Assert.Equal(expectedRange, targetElement.Range);
         }
 
         /// <summary>

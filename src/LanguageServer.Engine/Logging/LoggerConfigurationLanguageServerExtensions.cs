@@ -1,5 +1,6 @@
 using Serilog;
 using Serilog.Configuration;
+using Serilog.Core;
 using System;
 
 namespace MSBuildProjectTools.LanguageServer.Logging
@@ -20,13 +21,13 @@ namespace MSBuildProjectTools.LanguageServer.Logging
         /// <param name="languageServer">
         ///     The language server to which events will be logged.
         /// </param>
-        /// <param name="configuration">
-        ///     The language server configuration.
+        /// <param name="levelSwitch">
+        ///     The <see cref="LoggingLevelSwitch"/> that controls logging.
         /// </param>
         /// <returns>
         ///     The logger configuration.
         /// </returns>
-        public static LoggerConfiguration LanguageServer(this LoggerSinkConfiguration loggerSinkConfiguration, Lsp.LanguageServer languageServer, Configuration configuration)
+        public static LoggerConfiguration LanguageServer(this LoggerSinkConfiguration loggerSinkConfiguration, Lsp.LanguageServer languageServer, LoggingLevelSwitch levelSwitch)
         {
             if (loggerSinkConfiguration == null)
                 throw new ArgumentNullException(nameof(loggerSinkConfiguration));
@@ -34,11 +35,11 @@ namespace MSBuildProjectTools.LanguageServer.Logging
             if (languageServer == null)
                 throw new ArgumentNullException(nameof(languageServer));
             
-            if (configuration == null)
-                throw new ArgumentNullException(nameof(configuration));
+            if (levelSwitch == null)
+                throw new ArgumentNullException(nameof(levelSwitch));
 
             return loggerSinkConfiguration.Sink(
-                new LanguageServerLoggingSink(languageServer, configuration)
+                new LanguageServerLoggingSink(languageServer, levelSwitch)
             );
         }
     }

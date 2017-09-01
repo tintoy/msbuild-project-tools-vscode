@@ -21,9 +21,9 @@ namespace MSBuildProjectTools.LanguageServer.Logging
         readonly Lsp.LanguageServer _languageServer;
 
         /// <summary>
-        ///     The language server configuration.
+        ///     The <see cref="LoggingLevelSwitch"/> that controls logging.
         /// </summary>
-        readonly Configuration _configuration;
+        readonly LoggingLevelSwitch _levelSwitch;
 
         /// <summary>
         ///     Has the language server shut down?
@@ -36,19 +36,19 @@ namespace MSBuildProjectTools.LanguageServer.Logging
         /// <param name="languageServer">
         ///     The language server to which events will be logged.
         /// </param>
-        /// <param name="configuration">
-        ///     The language server configuration.
+        /// <param name="levelSwitch">
+        ///     The <see cref="LoggingLevelSwitch"/> that controls logging.
         /// </param>
-        public LanguageServerLoggingSink(Lsp.LanguageServer languageServer, Configuration configuration)
+        public LanguageServerLoggingSink(Lsp.LanguageServer languageServer, LoggingLevelSwitch levelSwitch)
         {
             if (languageServer == null)
                 throw new ArgumentNullException(nameof(languageServer));
 
-            if (configuration == null)
-                throw new ArgumentNullException(nameof(configuration));
+            if (levelSwitch == null)
+                throw new ArgumentNullException(nameof(levelSwitch));
 
             _languageServer = languageServer;
-            _configuration = configuration;
+            _levelSwitch = levelSwitch;
 
             _languageServer.Shutdown += shutDownRequested =>
             {
@@ -69,7 +69,7 @@ namespace MSBuildProjectTools.LanguageServer.Logging
             if (_hasServerShutDown)
                 return;
 
-            if (logEvent.Level < _configuration.LogLevel)
+            if (logEvent.Level < _levelSwitch.MinimumLevel)
                 return;
 
             LogMessageParams logParameters = new LogMessageParams

@@ -9,6 +9,7 @@
     <Import Project="../Common.props" />
 
     <ItemGroup>
+        <PackageReference Include="Autofac" Version="4.6.1" />
         <PackageReference Include="JsonRpc" Version="1.0.0" />
         <PackageReference Include="LSP" Version="1.0.0" />
         <PackageReference Include="Microsoft.Build" Version="15.3.409" />

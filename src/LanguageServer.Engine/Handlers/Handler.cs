@@ -17,6 +17,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
     ///     The base class for language server event handlers.
     /// </summary>
     public abstract class Handler
+        : JsonRpc.IJsonRpcHandler
     {
         /// <summary>
         ///     Create a new <see cref="Handler"/>.

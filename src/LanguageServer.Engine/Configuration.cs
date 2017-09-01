@@ -1,3 +1,4 @@
+using Serilog.Core;
 using Serilog.Events;
 
 namespace MSBuildProjectTools.LanguageServer
@@ -12,13 +13,35 @@ namespace MSBuildProjectTools.LanguageServer
         /// </summary>
         public Configuration()
         {
-
         }
 
         /// <summary>
         ///     The currently-configured minimum log level.
         /// </summary>
-        public LogEventLevel LogLevel { get; set; } = LogEventLevel.Information;
+        public LogEventLevel LogLevel
+        {
+            get => LogLevelSwitch.MinimumLevel;
+            set => LogLevelSwitch.MinimumLevel = value;
+        }
+
+        /// <summary>
+        ///     The currently-configured minimum log level for logging to Seq.
+        /// </summary>
+        public LogEventLevel SeqLogLevel
+        {
+            get => SeqLogLevelSwitch.MinimumLevel;
+            set => SeqLogLevelSwitch.MinimumLevel = value;
+        }
+
+        /// <summary>
+        ///     The serilog log-level switch for regular logging.
+        /// </summary>
+        public LoggingLevelSwitch LogLevelSwitch { get; } = new LoggingLevelSwitch(LogEventLevel.Information);
+
+        /// <summary>
+        ///     The serilog log-level switch for logging to Seq.
+        /// </summary>
+        public LoggingLevelSwitch SeqLogLevelSwitch { get; } = new LoggingLevelSwitch(LogEventLevel.Verbose);
 
         /// <summary>
         ///     Disable tooltips when hovering on XML in MSBuild project files?

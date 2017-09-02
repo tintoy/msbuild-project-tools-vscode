@@ -4,7 +4,7 @@ import { default as axios } from 'axios';
 import * as path from 'path';
 import * as semver from 'semver';
 import * as vscode from 'vscode';
-import { LanguageClient, ServerOptions, LanguageClientOptions, ErrorAction, CloseAction } from 'vscode-languageclient';
+import { LanguageClient, ServerOptions, LanguageClientOptions, ErrorAction, CloseAction, RevealOutputChannelOn } from 'vscode-languageclient';
 import { Trace } from 'vscode-jsonrpc/lib/main';
 
 import * as dotnet from './utils/dotnet';
@@ -207,6 +207,7 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
         synchronize: {
             configurationSection: 'msbuildProjectTools'
         },
+        diagnosticCollectionName: 'MSBuild Project',
         errorHandler: {
             error: (error, message, count) =>
             {
@@ -216,7 +217,8 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
                 return ErrorAction.Continue;
             },
             closed: () => CloseAction.Restart
-        }
+        },
+        revealOutputChannelOn: RevealOutputChannelOn.Error
     };
 
     const serverEnvironment = {};

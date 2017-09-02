@@ -31,27 +31,31 @@ namespace MSBuildProjectTools.LanguageServer
 
             builder.RegisterInstance(Configuration);
             
-            builder.RegisterType<Lsp.LanguageServer>().AsSelf()
-                .As<Lsp.ILanguageServer>()
+            builder
+                .Register(_ => new Lsp.LanguageServer(
+                    input: Console.OpenStandardInput(),
+                    output: Console.OpenStandardOutput()
+                ))
+                .AsSelf().As<Lsp.ILanguageServer>()
                 .SingleInstance()
                 .OnActivated(activated =>
                 {
                     Lsp.LanguageServer languageServer = activated.Instance;
                     
+                    // Register configuration handler (which is not a Handlers.Handler).
                     var configurationHandler = activated.Context.Resolve<Handlers.ConfigurationHandler>();
                     languageServer.AddHandler(configurationHandler);
 
+                    // Register all other handlers.
                     var handlers = activated.Context.Resolve<IEnumerable<Handlers.Handler>>();
                     foreach (Handlers.Handler handler in handlers)
                         languageServer.AddHandler(handler);
                 });
 
-            builder.RegisterType<Handlers.ConfigurationHandler>()
-                .AsSelf()
+            builder.RegisterType<Handlers.ConfigurationHandler>().AsSelf()
                 .SingleInstance();
 
-            builder.RegisterType<Documents.Workspace>()
-                .AsSelf()
+            builder.RegisterType<Documents.Workspace>().AsSelf()
                 .SingleInstance();
 
             Type handlerType = typeof(Handlers.Handler);

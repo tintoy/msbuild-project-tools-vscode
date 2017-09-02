@@ -1,4 +1,5 @@
-﻿using Lsp;
+﻿using Autofac;
+using Lsp;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -51,70 +52,29 @@ namespace MSBuildProjectTools.LanguageServer
         /// </returns>
         static async Task AsyncMain()
         {
-            var server = new Lsp.LanguageServer(
-                input: Console.OpenStandardInput(),
-                output: Console.OpenStandardOutput()
-            );
+            using (IContainer container = BuildContainer())
+            {
+                var server = container.Resolve<Lsp.LanguageServer>();
 
-            Configuration configuration = new Configuration();
-            ConfigureLogging(server, configuration);
-
-            Workspace workspace = new Workspace(server, configuration, Log.Logger);
-            server.AddHandler(
-                new ConfigurationHandler(configuration)
-            );
-            server.AddHandler(
-                new DocumentSyncHandler(server, workspace, Log.Logger)
-            );
-            server.AddHandler(
-                new HoverHandler(server, workspace, Log.Logger)
-            );
-            server.AddHandler(
-                new DocumentSymbolHandler(server, workspace, Log.Logger)
-            );
-            server.AddHandler(
-                new CompletionHandler(server, workspace, Log.Logger)
-            );
-            server.AddHandler(
-                new DefinitionHandler(server, workspace, Log.Logger)
-            );
-
-            await server.Initialize();
-            await server.WasShutDown;
+                await server.Initialize();
+                await server.WasShutDown;
+            }
         }
 
         /// <summary>
-        ///     Configure Serilog to write log events to the language server.
+        ///     Build a container for language server components.
         /// </summary>
-        /// <param name="languageServer">
-        ///     The language server.
-        /// </param>
-        /// <param name="configuration">
-        ///     The language server configuration.
-        /// </param>
-        static void ConfigureLogging(Lsp.LanguageServer languageServer, Configuration configuration)
+        /// <returns>
+        ///     The container.
+        /// </returns>
+        static IContainer BuildContainer()
         {
-            if (languageServer == null)
-                throw new ArgumentNullException(nameof(languageServer));
-
-            if (configuration == null)
-                throw new ArgumentNullException(nameof(configuration));
+            ContainerBuilder builder = new ContainerBuilder();
             
-            var loggerConfiguration = new LoggerConfiguration()
-                .MinimumLevel.Verbose()
-                .WriteTo.LanguageServer(languageServer, configuration.SeqLogLevelSwitch);
+            builder.RegisterModule<LoggingModule>();
+            builder.RegisterModule<LanguageServerModule>();
 
-            string seqServerUrl = Environment.GetEnvironmentVariable("MSBUILD_PROJECT_TOOLS_SEQ_URL");
-            if (!String.IsNullOrWhiteSpace(seqServerUrl))
-            {
-                loggerConfiguration.WriteTo.Seq(seqServerUrl,
-                    apiKey: Environment.GetEnvironmentVariable("MSBUILD_PROJECT_TOOLS_SEQ_API_KEY")
-                );
-
-                // TODO: Use LoggingLevelSwitch.
-            }
-
-            Log.Logger = loggerConfiguration.CreateLogger();
+            return builder.Build();
         }
     }
 }

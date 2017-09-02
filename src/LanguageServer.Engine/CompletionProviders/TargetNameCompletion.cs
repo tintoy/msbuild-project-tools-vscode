@@ -60,23 +60,43 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             if (projectDocument == null)
                 throw new ArgumentNullException(nameof(projectDocument));
 
+            Log.Verbose("Evaluate completions for {XmlLocation:l}", location);
+
+            List<CompletionItem> completions = new List<CompletionItem>();
+
             using (await projectDocument.Lock.ReaderLockAsync())
             {
                 XSAttribute attribute;
                 if (!location.CanCompleteAttributeValue(out attribute, onElementNamed: "Target") || !SupportedAttributeNames.Contains(attribute.Name))
+                {
+                    Log.Verbose("Not offering any completions for {XmlLocation:l} (not the value of a supported attribute on a 'Target' element).", location);
+
                     return null;
+                }
 
                 // We don't support partial completion yet for composite values (i.e. "Value1;Value2;Value3").
                 if (attribute.Value.IndexOf(';') != -1)
+                {
+                    Log.Verbose("Not offering any completions for {XmlLocation:l} (attribute value contains a semicolon, and we don't support partial completions yet).", location);
+
                     return null;
+                }
 
                 // TODO: Support composite values for BeforeTargets and AfterTargets (if last character of attribute value is a semicolon, we simply insert the new value after that, rather than replacing the entire attribute value).
 
-                return new CompletionList(
-                    GetCompletionItems(projectDocument, attribute.ValueRange),
-                    isIncomplete: false // Consider this list to be exhaustive
+                completions.AddRange(
+                    GetCompletionItems(projectDocument, attribute.ValueRange)
                 );
             }
+
+            if (completions.Count == 0)
+                return null; // No completions provided.
+
+            Log.Verbose("Offering {CompletionCount} completion(s) for {XmlLocation:l}", completions.Count, location);
+
+            return new CompletionList(completions,
+                isIncomplete: false // Consider this list to be exhaustive
+            );
         }
 
         /// <summary>

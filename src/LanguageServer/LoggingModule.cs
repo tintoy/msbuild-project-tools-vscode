@@ -58,7 +58,7 @@ namespace MSBuildProjectTools.LanguageServer
             Lsp.LanguageServer languageServer = componentContext.Resolve<Lsp.LanguageServer>();
 
             var loggerConfiguration = new LoggerConfiguration()
-                .MinimumLevel.Verbose()
+                .MinimumLevel.Debug()
                 .WriteTo.LanguageServer(languageServer, configuration.LogLevelSwitch);
 
             string seqServerUrl = Environment.GetEnvironmentVariable("MSBUILD_PROJECT_TOOLS_SEQ_URL");

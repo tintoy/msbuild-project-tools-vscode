@@ -43,23 +43,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 throw new ArgumentNullException(nameof(workspace));
 
             Workspace = workspace;
-
-            // TODO: Automatic discovery of completion components.
-            Providers.Add(
-                new TopLevelElementCompletion(logger)
-            );
-            Providers.Add(
-                new PackageReferenceCompletion(logger)
-            );
-            Providers.Add(
-                new ItemAttributeCompletion(logger)
-            );
-            Providers.Add(
-                new PropertyConditionCompletion(logger)
-            );
-            Providers.Add(
-                new PropertyElementCompletion(logger)
-            );
         }
 
         /// <summary>

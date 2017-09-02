@@ -5,6 +5,9 @@ using System.Collections.Generic;
 
 namespace MSBuildProjectTools.LanguageServer
 {
+    using CompletionProviders;
+    using Handlers;
+
     /// <summary>
     ///     Registration logic for language server components.
     /// </summary>
@@ -36,41 +39,63 @@ namespace MSBuildProjectTools.LanguageServer
                     input: Console.OpenStandardInput(),
                     output: Console.OpenStandardOutput()
                 ))
-                .AsSelf().As<Lsp.ILanguageServer>()
+                .AsSelf()
+                .As<Lsp.ILanguageServer>()
                 .SingleInstance()
                 .OnActivated(activated =>
                 {
                     Lsp.LanguageServer languageServer = activated.Instance;
                     
-                    // Register configuration handler (which is not a Handlers.Handler).
-                    var configurationHandler = activated.Context.Resolve<Handlers.ConfigurationHandler>();
+                    // Register configuration handler (which is not a Handler).
+                    var configurationHandler = activated.Context.Resolve<ConfigurationHandler>();
                     languageServer.AddHandler(configurationHandler);
 
                     // Register all other handlers.
-                    var handlers = activated.Context.Resolve<IEnumerable<Handlers.Handler>>();
-                    foreach (Handlers.Handler handler in handlers)
+                    var handlers = activated.Context.Resolve<IEnumerable<Handler>>();
+                    foreach (Handler handler in handlers)
                         languageServer.AddHandler(handler);
                 });
 
-            builder.RegisterType<Handlers.ConfigurationHandler>().AsSelf()
+            builder.RegisterType<ConfigurationHandler>()
+                .AsSelf()
                 .SingleInstance();
 
-            builder.RegisterType<Documents.Workspace>().AsSelf()
+            builder.RegisterType<Documents.Workspace>()
+                .AsSelf()
                 .SingleInstance();
 
-            Type handlerType = typeof(Handlers.Handler);
+            builder
+                .RegisterTypes(
+                    typeof(ConfigurationHandler),
+                    typeof(DocumentSyncHandler),
+                    typeof(DocumentSymbolHandler),
+                    typeof(DefinitionHandler),
+                    typeof(HoverHandler)
+                )
+                .AsSelf()
+                .As<Handler>()
+                .SingleInstance();
+
+            builder.RegisterType<CompletionHandler>()
+                .AsSelf().As<Handler>()
+                .SingleInstance()
+                .OnActivated(activated =>
+                {
+                    CompletionHandler completionHandler = activated.Instance;
+
+                    completionHandler.Providers.AddRange(
+                        activated.Context.Resolve<IEnumerable<ICompletionProvider>>()
+                    );
+                });
+
+            Type completionProviderType = typeof(CompletionProvider);
             builder.RegisterAssemblyTypes(ThisAssembly)
                 .Where(
-                    type => !type.IsAbstract && type.IsSubclassOf(handlerType)
+                    type => type.IsSubclassOf(completionProviderType) && !type.IsAbstract
                 )
-                .AsSelf().As<Handlers.Handler>()
-                .SingleInstance();
-
-            Type completionProviderType = typeof(CompletionProviders.CompletionProvider);
-            builder.RegisterAssemblyTypes(ThisAssembly)
-                .Where(
-                    type => !type.IsAbstract && type.IsSubclassOf(completionProviderType)
-                )
+                .AsSelf()
+                .As<CompletionProvider>()
+                .As<ICompletionProvider>()
                 .SingleInstance();
         }
 

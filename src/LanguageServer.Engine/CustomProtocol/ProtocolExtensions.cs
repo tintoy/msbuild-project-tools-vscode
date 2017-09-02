@@ -1,5 +1,7 @@
 using Lsp;
 using System;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace MSBuildProjectTools.LanguageServer.CustomProtocol
 {
@@ -51,6 +53,33 @@ namespace MSBuildProjectTools.LanguageServer.CustomProtocol
                 IsBusy = false,
                 Message = message
             });
+        }
+
+        /// <summary>
+        ///     Update the configuration from the specified notification parameters.
+        /// </summary>
+        /// <param name="configuration">
+        ///     The <see cref="Configuration"/> to update.
+        /// </param>
+        /// <param name="parameters">
+        ///     The DidChangeConfiguration notification parameters.
+        /// </param>
+        public static void UpdateFrom(this Configuration configuration, DidChangeConfigurationObjectParams parameters)
+        {
+            if (configuration == null)
+                throw new ArgumentNullException(nameof(configuration));
+            
+            if (parameters == null)
+                throw new ArgumentNullException(nameof(parameters));
+
+            JObject settings = parameters.Settings?.SelectToken("msbuildProjectTools.language") as JObject;
+            if (settings == null)
+                return;
+
+            using (JsonReader reader = settings.CreateReader())
+            {
+                new JsonSerializer().Populate(reader, configuration);
+            }
         }
     }
 }

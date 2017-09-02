@@ -93,7 +93,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             {
                 if (position == nodeAtPosition.Range.End && position == nodeAtPosition.NextSibling.Range.Start)
                 {
-                    Serilog.Log.Logger.Debug("XmlLocator.Inspect moves to next sibling ({NodeKind} @ {NodeRange} -> {NextSiblingKind} @ {NextSiblingRange}).",
+                    Serilog.Log.Debug("XmlLocator.Inspect moves to next sibling ({NodeKind} @ {NodeRange} -> {NextSiblingKind} @ {NextSiblingRange}).",
                         nodeAtPosition.Kind,
                         nodeAtPosition.Range,
                         nodeAtPosition.NextSibling.Kind,

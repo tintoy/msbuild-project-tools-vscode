@@ -13,6 +13,7 @@ using System.Threading.Tasks;
     
 namespace MSBuildProjectTools.LanguageServer.Handlers
 {
+    using CustomProtocol;
     using Handlers;
 
     /// <summary>
@@ -67,44 +68,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </returns>
         Task OnDidChangeConfiguration(DidChangeConfigurationObjectParams parameters)
         {
-            JObject languageConfiguration = parameters.Settings.SelectToken("msbuildProjectTools.language") as JObject;
-            if (languageConfiguration != null)
-            {
-                if (languageConfiguration.TryGetValue("logLevel", out JToken logLevel) && logLevel.Type == JTokenType.String)
-                {
-                    LogEventLevel configuredLogLevel;
-                    if (!Enum.TryParse(logLevel.Value<string>(), true, out configuredLogLevel))
-                        configuredLogLevel = LogEventLevel.Information;
-                
-                    Configuration.LogLevelSwitch.MinimumLevel = configuredLogLevel;
-                }
-
-                if (languageConfiguration.TryGetValue("disableHover", out JToken disableHover) && disableHover.Type == JTokenType.Boolean)
-                    Configuration.DisableHover = disableHover.Value<bool>();
-            }
-
-            JObject seqConfiguration = parameters.Settings.SelectToken("msbuildProjectTools.language.seqLogging") as JObject;
-            if (seqConfiguration != null)
-            {
-                if (seqConfiguration.TryGetValue("logLevel", out JToken logLevel) && logLevel.Type == JTokenType.String)
-                {
-                    LogEventLevel configuredLogLevel;
-                    if (!Enum.TryParse(logLevel.Value<string>(), true, out configuredLogLevel))
-                        configuredLogLevel = LogEventLevel.Information;
-                
-                    Configuration.SeqLogLevelSwitch.MinimumLevel = configuredLogLevel;
-                }
-            }
-
-            JObject nugetConfiguration = parameters.Settings.SelectToken("msbuildProjectTools.nuget") as JObject;
-            if (nugetConfiguration != null)
-            {
-                if (nugetConfiguration.TryGetValue("disablePreFetch", out JToken disablePrefetch) && disablePrefetch.Type == JTokenType.Boolean)
-                    Configuration.DisableNuGetPreFetch = disablePrefetch.Value<bool>();
-
-                if (nugetConfiguration.TryGetValue("newestVersionsFirst", out JToken newestVersionsFirst) && newestVersionsFirst.Type == JTokenType.Boolean)
-                    Configuration.ShowNewestNuGetVersionsFirst = newestVersionsFirst.Value<bool>();
-            }
+            Configuration.UpdateFrom(parameters);
 
             if (ConfigurationChanged != null)
                 ConfigurationChanged(this, EventArgs.Empty);
@@ -160,26 +124,5 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         {
             return null;
         }
-    }
-
-    /// <summary>
-    ///     Custom handler for "workspace/didChangeConfiguration" with the configuration as a <see cref="JObject"/>.
-    /// </summary>
-    [Method("workspace/didChangeConfiguration")]
-    interface IDidChangeConfigurationSettingsHandler
-        : INotificationHandler<DidChangeConfigurationObjectParams>, IJsonRpcHandler, IRegistration<object>, ICapability<DidChangeConfigurationCapability>
-    {
-    }
-
-    /// <summary>
-    ///     Notification parameters for "workspace/didChangeConfiguration".
-    /// </summary>
-    class DidChangeConfigurationObjectParams
-    {
-        /// <summary>
-        ///     The current settings.
-        /// </summary>
-        [JsonProperty("settings")]
-        public JObject Settings;
     }
 }

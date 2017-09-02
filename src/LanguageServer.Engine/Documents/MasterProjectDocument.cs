@@ -111,7 +111,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         {
             await base.Load(cancellationToken);
 
-            if (!Workspace.Configuration.DisableNuGetPreFetch)
+            if (!Workspace.Configuration.NuGet.DisablePreFetch)
                 WarmUpNuGetClient();
         }
 

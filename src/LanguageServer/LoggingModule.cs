@@ -36,11 +36,6 @@ namespace MSBuildProjectTools.LanguageServer
         }
 
         /// <summary>
-        ///     The language server configuration.
-        /// </summary>
-        public Configuration Configuration { get; }
-
-        /// <summary>
         ///     Create the application logger.
         /// </summary>
         /// <param name="componentContext">
@@ -55,18 +50,19 @@ namespace MSBuildProjectTools.LanguageServer
                 throw new ArgumentNullException(nameof(componentContext));
             
             Configuration configuration = componentContext.Resolve<Configuration>();
+            ConfigureSeq(configuration.Seq);
+
             Lsp.LanguageServer languageServer = componentContext.Resolve<Lsp.LanguageServer>();
 
             var loggerConfiguration = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .WriteTo.LanguageServer(languageServer, configuration.LogLevelSwitch);
 
-            string seqServerUrl = Environment.GetEnvironmentVariable("MSBUILD_PROJECT_TOOLS_SEQ_URL");
-            if (!String.IsNullOrWhiteSpace(seqServerUrl))
+            if (!String.IsNullOrWhiteSpace(configuration.Seq.Url))
             {
-                loggerConfiguration.WriteTo.Seq(seqServerUrl,
-                    apiKey: Environment.GetEnvironmentVariable("MSBUILD_PROJECT_TOOLS_SEQ_API_KEY"),
-                    controlLevelSwitch: configuration.SeqLogLevelSwitch
+                loggerConfiguration.WriteTo.Seq(configuration.Seq.Url,
+                    apiKey: configuration.Seq.ApiKey,
+                    controlLevelSwitch: configuration.Seq.LogLevelSwitch
                 );
             }
 
@@ -74,6 +70,22 @@ namespace MSBuildProjectTools.LanguageServer
             Log.Logger = logger;
 
             return logger;
+        }
+
+        /// <summary>
+        ///     Configure SEQ logging from environment variables.
+        /// </summary>
+        /// <param name="configuration">
+        ///     The language server's Seq logging configuration.
+        /// </param>
+        static void ConfigureSeq(SeqLoggingConfiguration configuration)
+        {
+            if (configuration == null)
+                throw new ArgumentNullException(nameof(configuration));
+            
+            // We have to use environment variables here since at configuration time there's no LSP connection yet.
+            configuration.Url = Environment.GetEnvironmentVariable("MSBUILD_PROJECT_TOOLS_SEQ_URL");
+            configuration.ApiKey = Environment.GetEnvironmentVariable("MSBUILD_PROJECT_TOOLS_SEQ_API_KEY");
         }
     }
 }

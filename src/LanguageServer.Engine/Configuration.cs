@@ -16,24 +16,6 @@ namespace MSBuildProjectTools.LanguageServer
         }
 
         /// <summary>
-        ///     The currently-configured minimum log level.
-        /// </summary>
-        public LogEventLevel LogLevel
-        {
-            get => LogLevelSwitch.MinimumLevel;
-            set => LogLevelSwitch.MinimumLevel = value;
-        }
-
-        /// <summary>
-        ///     The currently-configured minimum log level for logging to Seq.
-        /// </summary>
-        public LogEventLevel SeqLogLevel
-        {
-            get => SeqLogLevelSwitch.MinimumLevel;
-            set => SeqLogLevelSwitch.MinimumLevel = value;
-        }
-
-        /// <summary>
         ///     The serilog log-level switch for regular logging.
         /// </summary>
         public LoggingLevelSwitch LogLevelSwitch { get; } = new LoggingLevelSwitch(LogEventLevel.Information);

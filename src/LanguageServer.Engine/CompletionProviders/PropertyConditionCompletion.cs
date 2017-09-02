@@ -31,6 +31,11 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         }
 
         /// <summary>
+        ///     The provider display name.
+        /// </summary>
+        public override string Name => "Top-level Elements";
+
+        /// <summary>
         ///     Provide completions for the specified location.
         /// </summary>
         /// <param name="location">

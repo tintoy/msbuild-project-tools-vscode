@@ -76,11 +76,24 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                     if (!Enum.TryParse(logLevel.Value<string>(), true, out configuredLogLevel))
                         configuredLogLevel = LogEventLevel.Information;
                 
-                    Configuration.LogLevel = configuredLogLevel;
+                    Configuration.LogLevelSwitch.MinimumLevel = configuredLogLevel;
                 }
 
                 if (languageConfiguration.TryGetValue("disableHover", out JToken disableHover) && disableHover.Type == JTokenType.Boolean)
                     Configuration.DisableHover = disableHover.Value<bool>();
+            }
+
+            JObject seqConfiguration = parameters.Settings.SelectToken("msbuildProjectTools.language.seqLogging") as JObject;
+            if (seqConfiguration != null)
+            {
+                if (seqConfiguration.TryGetValue("logLevel", out JToken logLevel) && logLevel.Type == JTokenType.String)
+                {
+                    LogEventLevel configuredLogLevel;
+                    if (!Enum.TryParse(logLevel.Value<string>(), true, out configuredLogLevel))
+                        configuredLogLevel = LogEventLevel.Information;
+                
+                    Configuration.SeqLogLevelSwitch.MinimumLevel = configuredLogLevel;
+                }
             }
 
             JObject nugetConfiguration = parameters.Settings.SelectToken("msbuildProjectTools.nuget") as JObject;

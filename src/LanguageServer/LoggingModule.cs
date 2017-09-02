@@ -59,7 +59,7 @@ namespace MSBuildProjectTools.LanguageServer
 
             var loggerConfiguration = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
-                .WriteTo.LanguageServer(languageServer, configuration.SeqLogLevelSwitch);
+                .WriteTo.LanguageServer(languageServer, configuration.LogLevelSwitch);
 
             string seqServerUrl = Environment.GetEnvironmentVariable("MSBUILD_PROJECT_TOOLS_SEQ_URL");
             if (!String.IsNullOrWhiteSpace(seqServerUrl))

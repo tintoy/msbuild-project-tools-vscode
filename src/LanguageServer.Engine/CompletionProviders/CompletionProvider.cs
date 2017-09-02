@@ -27,13 +27,24 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             if (logger == null)
                 throw new ArgumentNullException(nameof(logger));
 
-            Log = logger.ForContext(GetType());
+            Log = logger.ForContext(GetType())
+                        .ForContext("CompletionProvider", Name);
         }
+
+        /// <summary>
+        ///     The provider display name.
+        /// </summary>
+        public abstract string Name { get; }
+
+        /// <summary>
+        ///     The sort priority for the provider's completion items.
+        /// </summary>
+        public virtual int Priority => 1000;
 
         /// <summary>
         ///     The provider logger.
         /// </summary>
-        ILogger Log { get; }
+        protected ILogger Log { get; }
 
         /// <summary>
         ///     Provide completions for the specified location.

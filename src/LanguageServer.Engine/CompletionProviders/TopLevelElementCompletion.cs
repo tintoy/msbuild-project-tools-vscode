@@ -30,9 +30,9 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         }
 
         /// <summary>
-        ///     The sort priority for the provider's completion items.
+        ///     The provider display name.
         /// </summary>
-        public int Priority { get; set; } = 1000;
+        public override string Name => "Property Conditions";
 
         /// <summary>
         ///     Provide completions for the specified location.
@@ -113,6 +113,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             yield return new CompletionItem
             {
                 Label = "<PropertyGroup>",
+                Documentation = "Define a property group.",
                 SortText = Priority + "<PropertyGroup>",
                 TextEdit = new TextEdit
                 {
@@ -128,6 +129,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             yield return new CompletionItem
             {
                 Label = "<ItemGroup>",
+                Documentation = "Define an item group.",
                 SortText = Priority + "<ItemGroup>",
                 TextEdit = new TextEdit
                 {
@@ -143,6 +145,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             yield return new CompletionItem
             {
                 Label = "<Target>",
+                Documentation = "Define or override a target.",
                 SortText = Priority + "<Target>",
                 TextEdit = new TextEdit
                 {

@@ -32,7 +32,7 @@ namespace MSBuildProjectTools.LanguageServer
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));
 
-            builder.RegisterInstance(Configuration);
+            builder.RegisterInstance(Configuration).AsSelf();
             
             builder
                 .Register(_ => new Lsp.LanguageServer(

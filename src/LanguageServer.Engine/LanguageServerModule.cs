@@ -50,6 +50,10 @@ namespace MSBuildProjectTools.LanguageServer
                 .AsSelf()
                 .SingleInstance();
 
+            builder.RegisterType<Documents.Workspace>()
+                .AsSelf()
+                .SingleInstance();
+
             Type handlerType = typeof(Handlers.Handler);
             builder.RegisterAssemblyTypes(ThisAssembly)
                 .Where(

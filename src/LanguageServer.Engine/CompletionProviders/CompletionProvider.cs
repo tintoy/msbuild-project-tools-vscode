@@ -27,7 +27,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             if (logger == null)
                 throw new ArgumentNullException(nameof(logger));
 
-            Log = logger.ForContext("CompletionProvider", GetType().FullName);
+            Log = logger.ForContext(GetType());
         }
 
         /// <summary>

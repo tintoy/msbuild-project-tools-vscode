@@ -40,6 +40,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         public override string Name => SyntaxNode.Name;
 
         /// <summary>
+        ///     The element name prefix (if any).
+        /// </summary>
+        public string Prefix => SyntaxNode.NameNode?.Prefix?.Name?.Text;
+
+        /// <summary>
         ///     The <see cref="XmlElementSyntaxBase"/> represented by the <see cref="XSElement"/>.
         /// </summary>
         public XmlElementSyntaxBase ElementNode => SyntaxNode;

@@ -50,9 +50,29 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         public override string Name => AttributeNode.Name;
 
         /// <summary>
+        ///     The attribute name prefix (if any).
+        /// </summary>
+        public string Prefix => SyntaxNode.NameNode?.Prefix?.Name?.Text;
+
+        /// <summary>
         ///     The attribute value.
         /// </summary>
         public string Value => AttributeNode.Value;
+
+        /// <summary>
+        ///     Does the attribute represent the default XML namespace, or an XML namespace prefix?
+        /// </summary>
+        public bool IsNamespace => IsDefaultNamespace || IsNamespacePrefix;
+
+        /// <summary>
+        ///     Does the attribute represent the default XML namespace?
+        /// </summary>
+        public bool IsDefaultNamespace => Name == "xmlns";
+
+        /// <summary>
+        ///     Does the attribute represent an XML namespace prefix?
+        /// </summary>
+        public bool IsNamespacePrefix => Prefix == "xmlns";
 
         /// <summary>
         ///     The <see cref="XmlAttributeSyntax"/> represented by the <see cref="XSAttribute"/>.

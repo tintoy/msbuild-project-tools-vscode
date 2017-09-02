@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.2
+
+* Add completions for attributes that refer to target names.
+
 ## v0.2.1
 
 * Add completions for top-level elements (e.g. `<PropertyGroup>`, `<ItemGroup>`, `<Target>`).

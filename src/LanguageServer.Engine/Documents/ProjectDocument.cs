@@ -122,14 +122,6 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// </param>
         protected virtual void Dispose(bool disposing)
         {
-            if (disposing)
-            {
-                if (MSBuildProjectCollection != null)
-                {
-                    MSBuildProjectCollection.Dispose();
-                    MSBuildProjectCollection = null;
-                }
-            }
         }
 
         /// <summary>

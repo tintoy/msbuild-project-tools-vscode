@@ -48,6 +48,24 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         }
 
         /// <summary>
+        ///     Dispose of resources being used by the <see cref="ProjectDocument"/>.
+        /// </summary>
+        /// <param name="disposing">
+        ///     Explicit disposal?
+        /// </param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (MSBuildProjectCollection != null)
+                {
+                    MSBuildProjectCollection.Dispose();
+                    MSBuildProjectCollection = null;
+                }
+            }
+        }
+
+        /// <summary>
         ///     Sub-projects (if any).
         /// </summary>
         public IReadOnlyDictionary<Uri, SubProjectDocument> SubProjects => _subProjects;

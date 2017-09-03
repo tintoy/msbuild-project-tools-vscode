@@ -50,6 +50,18 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         }
 
         /// <summary>
+        ///     Dispose of resources being used by the <see cref="ProjectDocument"/>.
+        /// </summary>
+        /// <param name="disposing">
+        ///     Explicit disposal?
+        /// </param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                MSBuildProjectCollection = null;
+        }
+
+        /// <summary>
         ///     A <see cref="ProjectDocument"/> representing the project's parent (i.e. main) project.
         /// </summary>
         public ProjectDocument MasterProjectDocument { get; }

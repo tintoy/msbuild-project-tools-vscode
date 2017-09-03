@@ -89,8 +89,6 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                         absoluteStartPosition: startPosition + valueStartPosition,
                         absoluteEndPosition: startPosition + valueStartPosition + valueLength
                     );
-
-                    // TODO: Handle completion between the 2 semicolons in "Value1;;Value2" (currently broken, although all other types of completions work).
                 }
 
                 completions.AddRange(

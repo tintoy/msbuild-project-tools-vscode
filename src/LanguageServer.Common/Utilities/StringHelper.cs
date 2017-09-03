@@ -30,8 +30,8 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
             if (str == null)
                 throw new ArgumentNullException(nameof(str));
 
-            if (atIndex < 0 || atIndex >= str.Length)
-                throw new ArgumentOutOfRangeException(nameof(atIndex), atIndex, "Index must be between 0 and 1 less than the string's length.");
+            if (atIndex < 0 || atIndex > str.Length)
+                throw new ArgumentOutOfRangeException(nameof(atIndex), atIndex, "Index must be between 0 and the string's length.");
             
             if (str.Length == 0)
                 return (0, 0);
@@ -39,35 +39,45 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
             int lastIndex = str.Length - 1;
             int afterLastIndex = lastIndex + 1;
 
-            int previousDelimiterIndex;
+            // They can ask us about the "end" position in the string, but we'll take that to mean the last legal position.
+            if (atIndex == afterLastIndex)
+                atIndex--;
+
+            // Special case: on the first ";" in "A;;B".
+            if (atIndex > 0 && str[atIndex - 1] == delimiter && str[atIndex] == delimiter)
+                return (atIndex, 0);
+
+            int segmentStartIndex;
             if (atIndex > 0)
             {
-                previousDelimiterIndex = str.LastIndexOf(delimiter,
-                    startIndex: Math.Max(0, atIndex)
+                segmentStartIndex = str.LastIndexOf(delimiter,
+                    startIndex: atIndex
                 );
-                if (previousDelimiterIndex == -1)
-                    previousDelimiterIndex = 0; // Indicate that there is no ending delimiter and so the segment starts at the beginning of the string.
+                if (segmentStartIndex == -1)
+                    segmentStartIndex = 0; // Indicate that there is no ending delimiter and so the segment starts at the beginning of the string.
                 else
-                    previousDelimiterIndex++; // Skip over the delimiter itself.
+                    segmentStartIndex++; // Skip over the delimiter.
             }
+            else if (str[atIndex] == delimiter && lastIndex >= 1)
+                segmentStartIndex = 1; // String starts with delimiter; skip over it.
             else
-                previousDelimiterIndex = 0;
+                segmentStartIndex = 0;
 
-            int nextDelimiterIndex;
+            int segmentEndIndex;
             if (atIndex < lastIndex)
             {
-                nextDelimiterIndex = str.IndexOf(delimiter,
-                    startIndex: Math.Min(lastIndex, atIndex + 1)
+                segmentEndIndex = str.IndexOf(delimiter,
+                    startIndex: Math.Min(atIndex + 1, lastIndex)
                 );
-                if (nextDelimiterIndex == -1)
-                    nextDelimiterIndex = afterLastIndex; // Indicate that there is no ending delimiter and so the segment runs to the end of the string.
+                if (segmentEndIndex == -1)
+                    segmentEndIndex = afterLastIndex; // Indicate that there is no ending delimiter and so the segment runs to the end of the string.
             }
             else
-                nextDelimiterIndex = afterLastIndex; // Indicate that there is no ending delimiter and so the segment runs to the end of the string.
+                segmentEndIndex = afterLastIndex; // Indicate that there is no ending delimiter and so the segment runs to the end of the string.
 
             return (
-                startIndex: previousDelimiterIndex,
-                length: nextDelimiterIndex - previousDelimiterIndex
+                startIndex: segmentStartIndex,
+                length: segmentEndIndex - segmentStartIndex
             );
         }
     }

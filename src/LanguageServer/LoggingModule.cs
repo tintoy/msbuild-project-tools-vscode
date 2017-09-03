@@ -55,12 +55,12 @@ namespace MSBuildProjectTools.LanguageServer
             Lsp.LanguageServer languageServer = componentContext.Resolve<Lsp.LanguageServer>();
 
             var loggerConfiguration = new LoggerConfiguration()
-                .MinimumLevel.Debug()
+                .MinimumLevel.Verbose()
                 .WriteTo.LanguageServer(languageServer, configuration.LogLevelSwitch);
 
             if (!String.IsNullOrWhiteSpace(configuration.Seq.Url))
             {
-                loggerConfiguration.WriteTo.Seq(configuration.Seq.Url,
+                loggerConfiguration = loggerConfiguration.WriteTo.Seq(configuration.Seq.Url,
                     apiKey: configuration.Seq.ApiKey,
                     controlLevelSwitch: configuration.Seq.LogLevelSwitch
                 );

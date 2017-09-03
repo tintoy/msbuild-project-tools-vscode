@@ -74,18 +74,27 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                     return null;
                 }
 
-                // We don't support partial completion yet for composite values (i.e. "Value1;Value2;Value3").
-                if (attribute.Value.IndexOf(';') != -1)
-                {
-                    Log.Verbose("Not offering any completions for {XmlLocation:l} (attribute value contains a semicolon, and we don't support partial completions yet).", location);
+                Range targetRange = attribute.ValueRange;
+                HashSet<string> excludeTargetNames = new HashSet<string>();
 
-                    return null;
+                // Handle potentially composite (i.e. "Value1;Value2;Value3") values, where it's legal to have them.
+                if (attribute.Name != "Name" && attribute.Value.IndexOf(';') != -1)
+                {
+                    int startPosition = projectDocument.XmlPositions.GetAbsolutePosition(attribute.ValueRange.Start);
+                    int insertStartPosition = location.AbsolutePosition - startPosition;
+
+                    (int valueStartPosition, int valueLength) = attribute.Value.DelimitedSegment(insertStartPosition, ';');
+
+                    targetRange = projectDocument.XmlPositions.GetRange(
+                        absoluteStartPosition: startPosition + valueStartPosition,
+                        absoluteEndPosition: startPosition + valueStartPosition + valueLength
+                    );
+
+                    // TODO: Handle completion between the 2 semicolons in "Value1;;Value2" (currently broken, although all other types of completions work).
                 }
 
-                // TODO: Support composite values for BeforeTargets and AfterTargets (if last character of attribute value is a semicolon, we simply insert the new value after that, rather than replacing the entire attribute value).
-
                 completions.AddRange(
-                    GetCompletionItems(projectDocument, attribute.ValueRange)
+                    GetCompletionItems(projectDocument, targetRange, excludeTargetNames)
                 );
             }
 
@@ -108,15 +117,18 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         /// <param name="replaceRange">
         ///     The range of text to be replaced by the completions.
         /// </param>
+        /// <param name="excludeTargetNames">
+        ///     The names of targets (if any) to exclude from the completion list.
+        /// </param>
         /// <returns>
         ///     A sequence of <see cref="CompletionItem"/>s.
         /// </returns>
-        public IEnumerable<CompletionItem> GetCompletionItems(ProjectDocument projectDocument, Range replaceRange)
+        public IEnumerable<CompletionItem> GetCompletionItems(ProjectDocument projectDocument, Range replaceRange, HashSet<string> excludeTargetNames)
         {
             if (replaceRange == null)
                 throw new ArgumentNullException(nameof(replaceRange));
 
-            HashSet<string> offeredTargetNames = new HashSet<string>();
+            HashSet<string> offeredTargetNames = new HashSet<string>(excludeTargetNames);
             Lsp.Models.Range replaceRangeLsp = replaceRange.ToLsp();
 
             // Well-known targets.

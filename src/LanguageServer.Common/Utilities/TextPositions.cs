@@ -108,6 +108,26 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         }
 
         /// <summary>
+        ///     Get a <see cref="Range"/> representing the specified absolute positions.
+        /// </summary>
+        /// <param name="absoluteStartPosition">
+        ///     The (0-based) absolute start position.
+        /// </param>
+        /// <param name="absoluteEndPosition">
+        ///     The (1-based) absolute end position.
+        /// </param>
+        /// <returns>
+        ///     The <see cref="Range"/>.
+        /// </returns>
+        public Range GetRange(int absoluteStartPosition, int absoluteEndPosition)
+        {
+            return new Range(
+                start: GetPosition(absoluteStartPosition),
+                end: GetPosition(absoluteEndPosition)
+            );
+        }
+
+        /// <summary>
         ///     Calculate the length of the specified <see cref="Range"/> in the text.
         /// </summary>
         /// <param name="range">

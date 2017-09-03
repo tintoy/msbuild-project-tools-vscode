@@ -40,6 +40,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
             int afterLastIndex = lastIndex + 1;
 
             // They can ask us about the "end" position in the string, but we'll take that to mean the last legal position.
+            // This is here DelimitedSegment is often called from the language engine because of VSCode calling us at the end of an attribute value (an index which is after the last valid index for the attribute value string).
             if (atIndex == afterLastIndex)
                 atIndex--;
 

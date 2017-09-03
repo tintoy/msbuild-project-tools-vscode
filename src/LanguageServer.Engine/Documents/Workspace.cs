@@ -15,6 +15,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
     ///     The workspace that holds project documents.
     /// </summary>
     public class Workspace
+        : IDisposable
     {
         /// <summary>
         ///     Documents for loaded project, keyed by document URI.
@@ -47,6 +48,38 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             Server = server;
             Configuration = configuration;
             Log = logger.ForContext<Workspace>();
+        }
+
+         /// <summary>
+        ///     Finaliser for <see cref="Workspace"/>.
+        /// </summary>
+        ~Workspace()
+        {
+            Dispose(false);
+        }
+
+        /// <summary>
+        ///     Dispose of resources being used by the <see cref="Workspace"/>.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        ///     Dispose of resources being used by the <see cref="Workspace"/>.
+        /// </summary>
+        /// <param name="disposing">
+        ///     Explicit disposal?
+        /// </param>
+        protected virtual void Dispose(bool disposing)
+        {
+            ProjectDocument[] projectDocuments = _projectDocuments.Values.ToArray();
+            _projectDocuments.Clear();
+
+            foreach (ProjectDocument projectDocument in projectDocuments)
+                projectDocument.Dispose();
         }
 
         /// <summary>

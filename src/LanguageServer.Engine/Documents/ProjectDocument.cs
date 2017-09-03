@@ -24,6 +24,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
     ///     Represents the document state for an MSBuild project.
     /// </summary>
     public abstract class ProjectDocument
+        : IDisposable
     {
         /// <summary>
         ///     Diagnostics (if any) for the project.
@@ -94,6 +95,41 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                 throw new ArgumentException($"Unexpected project file extension '{ProjectFile.Extension}'.", nameof(documentUri));
 
             Log = logger.ForContext("ProjectDocument", ProjectFile.FullName);
+        }
+
+        /// <summary>
+        ///     Finaliser for <see cref="ProjectDocument"/>.
+        /// </summary>
+        ~ProjectDocument()
+        {
+            Dispose(false);
+        }
+
+        /// <summary>
+        ///     Dispose of resources being used by the <see cref="ProjectDocument"/>.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        ///     Dispose of resources being used by the <see cref="ProjectDocument"/>.
+        /// </summary>
+        /// <param name="disposing">
+        ///     Explicit disposal?
+        /// </param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (MSBuildProjectCollection != null)
+                {
+                    MSBuildProjectCollection.Dispose();
+                    MSBuildProjectCollection = null;
+                }
+            }
         }
 
         /// <summary>

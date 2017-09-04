@@ -36,7 +36,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 );
             }
 
-            return parseResult.Value;
+            return parseResult.Value.EnsureRelationships();
         }
     }
 }

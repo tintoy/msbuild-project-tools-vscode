@@ -21,12 +21,22 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     The node kind.
         /// </summary>
-        public abstract ExpressionNodeKind Kind { get; }
+        public abstract ExpressionKind Kind { get; }
 
         /// <summary>
         ///     The node's parent (if any).
         /// </summary>
         public ExpressionNode Parent { get; internal set; }
+
+        /// <summary>
+        ///     The node's previous sibling (if any).
+        /// </summary>
+        public ExpressionNode PreviousSibling { get; internal set; }
+
+        /// <summary>
+        ///     The node's next sibling (if any).
+        /// </summary>
+        public ExpressionNode NextSibling { get; internal set; }
 
         /// <summary>
         ///     The node's absolute starting position (0-based).
@@ -127,7 +137,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     The node kind.
         /// </summary>
-        public override ExpressionNodeKind Kind => ExpressionNodeKind.List;
+        public override ExpressionKind Kind => ExpressionKind.List;
 
         /// <summary>
         ///     The list's items.
@@ -170,7 +180,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     The node kind.
         /// </summary>
-        public override ExpressionNodeKind Kind => ExpressionNodeKind.ListSeparator;
+        public override ExpressionKind Kind => ExpressionKind.ListSeparator;
 
         /// <summary>
         ///     The offset, in characters, of the actual separator character from the <see cref="ExpressionNode.AbsoluteStart"/> of the <see cref="GenericListSeparator"/>.
@@ -213,7 +223,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     The node kind.
         /// </summary>
-        public override ExpressionNodeKind Kind => ExpressionNodeKind.ListItem;
+        public override ExpressionKind Kind => ExpressionKind.ListItem;
 
         /// <summary>
         ///     The item value.

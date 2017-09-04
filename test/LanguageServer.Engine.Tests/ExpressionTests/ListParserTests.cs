@@ -1,5 +1,6 @@
 using Sprache;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
@@ -8,8 +9,8 @@ using Xunit.Abstractions;
 
 namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
 {
+    using SemanticModel;
     using SemanticModel.MSBuildExpressions;
-    using System.Collections.Generic;
 
     /// <summary>
     ///     Tests for parsing of MSBuild list expressions.
@@ -39,7 +40,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         ///     Verify that the GenericListItem parser can successfully parse the specified input.
         /// </summary>
         /// <param name="input">
-        ///     The input to parse.
+        ///     The source text to parse.
         /// </param>
         [InlineData("")]
         [InlineData(" ")]
@@ -59,7 +60,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         ///     Verify that the <see cref="Parsers.GenericList"/> MSBuild expression parser can parse a simple generic list in an equivalent fashion to <see cref="String.Split(char[])"/>.
         /// </summary>
         /// <param name="input">
-        ///     The input to parse.
+        ///     The source text to parse.
         /// </param>
         [InlineData("ABC")]
         [InlineData(";ABC")]
@@ -73,7 +74,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
             string[] expectedValues = input.Split(';');
             Action<ExpressionNode>[] itemTests = GenericItemTests(expectedValues, (expectedValue, actualItem) =>
             {
-                Assert.Equal(ExpressionNodeKind.ListItem, actualItem.Kind);
+                Assert.Equal(ExpressionKind.ListItem, actualItem.Kind);
 
                 GenericListItem actuaListItem = Assert.IsType<GenericListItem>(actualItem);
                 Assert.Equal(expectedValue, actuaListItem.Value);
@@ -81,35 +82,44 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
 
             AssertParser.SucceedsWith(Parsers.GenericList, input, actualList =>
             {
-                Assert.Equal(ExpressionNodeKind.List, actualList.Kind);
-
-                TestOutput.WriteLine("Input: '{0}'", input);
-                TestOutput.WriteLine(
-                    new String('=', input.Length + 9)
-                );
-
-                foreach (ExpressionNode actualChild in actualList.Children)
-                {
-                    TestOutput.WriteLine("{0} ({1}..{2})",
-                        actualChild.Kind,
-                        actualChild.AbsoluteStart,
-                        actualChild.AbsoluteEnd
-                    );
-                    if (actualChild is GenericListItem actualItem)
-                        TestOutput.WriteLine("\tValue = '{0}'", actualItem.Value);
-                    else if (actualChild is GenericListSeparator actualSeparator)
-                        TestOutput.WriteLine("\tSeparatorOffset = {0}", actualSeparator.SeparatorOffset);
-                }
+                DumpList(actualList, input);
 
                 Assert.Collection(actualList.Items, itemTests);
             });
         }
 
         /// <summary>
+        ///     Verify that a parsed generic list can find an item by its absolute position within the source text.
+        /// </summary>
+        /// <param name="input">
+        ///     The source text to parse.
+        /// </param>
+        /// <param name="position">
+        ///     The item's position within the source text.
+        /// </param>
+        /// <param name="expectedItemValue">
+        ///     The expected value of the item.
+        /// </param>
+        [InlineData("ABC", 0, "ABC")]
+        [InlineData("ABC;DEF", 3, "ABC")]
+        [InlineData("ABC;DEF", 4, "DEF")]
+        [Theory(DisplayName = "GenericList can find item at position ")]
+        public void GenericList_FindItemAtPosition(string input, int position, string expectedItemValue)
+        {
+            GenericList list = MSBuildExpression.ParseGenericList(input);
+            DumpList(list, input);
+
+            GenericListItem actualItem = list.FindItemAt(position);
+            Assert.NotNull(actualItem);
+
+            Assert.Equal(expectedItemValue, actualItem.Value);
+        }
+
+        /// <summary>
         ///     Explicitly parse the components of a generic list, and verify that the parse is successful.
         /// </summary>
         /// <param name="input">
-        ///     The input to parse.
+        ///     The source text to parse.
         /// </param>
         /// <param name="expectLeadingSeparator">
         ///     Expect a leading separator?
@@ -213,6 +223,30 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
                     actual => testActionTemplate(expectedValue, actual)
                 )
                 .ToArray();
+        }
+
+        void DumpList(GenericList list, string input)
+        {
+            if (list == null)
+                throw new ArgumentNullException(nameof(list));
+
+            TestOutput.WriteLine("Input: '{0}'", input);
+            TestOutput.WriteLine(
+                new String('=', input.Length + 9)
+            );
+
+            foreach (ExpressionNode child in list.Children)
+            {
+                TestOutput.WriteLine("{0} ({1}..{2})",
+                    child.Kind,
+                    child.AbsoluteStart,
+                    child.AbsoluteEnd
+                );
+                if (child is GenericListItem actualItem)
+                    TestOutput.WriteLine("\tValue = '{0}'", actualItem.Value);
+                else if (child is GenericListSeparator actualSeparator)
+                    TestOutput.WriteLine("\tSeparatorOffset = {0}", actualSeparator.SeparatorOffset);
+            }
         }
 
         static IEnumerable<T> AsSequenceIfDefined<T>(IOption<T> item)

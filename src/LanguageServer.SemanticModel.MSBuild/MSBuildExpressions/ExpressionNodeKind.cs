@@ -3,7 +3,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
     /// <summary>
     ///     Well-known kinds of MSBuild expression nodes.
     /// </summary>
-    public enum ExpressionNodeKind
+    public enum ExpressionKind
     {
         /// <summary>
         ///     A semicolon-delimited list.

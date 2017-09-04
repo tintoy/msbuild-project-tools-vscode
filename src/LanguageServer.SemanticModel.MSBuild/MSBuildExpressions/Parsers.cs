@@ -27,7 +27,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ///     Parse a generic MSBuild list, delimited by semicolons.
         /// </summary>
         public static readonly Parser<ExpressionNode> GenericList = Parse.Positioned(
-            from items in GenericListItem.Many()
+            from items in GenericListItem.DelimitedBy(Tokens.Semicolon.Token())
             select new ExpressionNode
             {
                 Kind = ExpressionNodeKind.List,

@@ -27,12 +27,11 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// </param>
         public static void SucceedsWithOne<TResult>(Parser<IEnumerable<TResult>> parser, string input, TResult expectedResult)
         {
-            SucceedsWith(parser, input, actualResult =>
+            SucceedsWith(parser, input, actualResults =>
             {
-                TResult[] actualResults = actualResult.ToArray();
-
-                Assert.Equal(1, actualResults.Length);
-                Assert.Equal(expectedResult, actualResults[0]);
+                Assert.Collection(actualResults,
+                    singleResult => Assert.Equal(expectedResult, singleResult)
+                );
             });
         }
 

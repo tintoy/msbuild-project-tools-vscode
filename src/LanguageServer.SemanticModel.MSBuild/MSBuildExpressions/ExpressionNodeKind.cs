@@ -16,6 +16,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ListItem,
 
         /// <summary>
+        ///     A generic list item separator.
+        /// </summary>
+        ListSeparator,
+
+        /// <summary>
         ///     A quoted string.
         /// </summary>
         QuotedString

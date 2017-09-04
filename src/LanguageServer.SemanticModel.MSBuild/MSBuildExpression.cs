@@ -19,24 +19,24 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The MSBuild expression to parse.
         /// </param>
         /// <returns>
-        ///     A list of <see cref="ExpressionNode"/>s representing the list items.
+        ///     A <see cref="GenericList"/> node representing the list and its items.
         /// </returns>
-        public static List<ExpressionNode> ParseGenericList(string expression)
+        public static GenericList ParseGenericList(string expression)
         {
             if (expression == null)
                 throw new ArgumentNullException(nameof(expression));
 
-            List<ExpressionNode> items = new List<ExpressionNode>();
-
             var parseResult = Parsers.GenericList.TryParse(expression);
-            if (parseResult.WasSuccessful)
+            if (!parseResult.WasSuccessful)
             {
-                items.AddRange(
-                    parseResult.Value.Children.Where(node => node.Kind == ExpressionNodeKind.ListItem)
+                throw new ParseException(
+                    String.Format("Failed to parse generic list ({0})",
+                        parseResult.Expectations.FirstOrDefault() ?? "unknown error"
+                    )
                 );
             }
 
-            return items;
+            return parseResult.Value;
         }
     }
 }

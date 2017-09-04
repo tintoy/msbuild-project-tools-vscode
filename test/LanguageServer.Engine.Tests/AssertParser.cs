@@ -84,7 +84,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         public static void SucceedsWith<TResult>(Parser<TResult> parser, string input, Action<TResult> resultAssertion)
         {
             IResult<TResult> result = parser.TryParse(input);
-            Assert.True(result.WasSuccessful, $"Parsing of '{input}' failed unexpectedly ('{result.Value}').");
+            Assert.True(result.WasSuccessful, $"Parsing of '{input}' failed unexpectedly ({String.Join(", ", result.Expectations)}).");
 
             resultAssertion(result.Value);
         }

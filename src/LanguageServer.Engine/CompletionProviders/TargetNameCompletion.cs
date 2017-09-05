@@ -13,6 +13,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 {
     using Documents;
     using SemanticModel;
+    using SemanticModel.MSBuildExpressions;
     using Utilities;
 
     /// <summary>
@@ -81,13 +82,23 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 if (attribute.Name != "Name" && attribute.Value.IndexOf(';') != -1)
                 {
                     int startPosition = projectDocument.XmlPositions.GetAbsolutePosition(attribute.ValueRange.Start);
-                    int insertStartPosition = location.AbsolutePosition - startPosition;
+                    int relativePosition = location.AbsolutePosition - startPosition;
 
-                    (int valueStartPosition, int valueLength) = attribute.Value.DelimitedSegment(insertStartPosition, ';');
+                    SimpleList list = MSBuildExpression.ParseSimpleList(attribute.Value);
+                    SimpleListItem itemAtPosition = list.FindItemAt(relativePosition);
+                    if (itemAtPosition == null)
+                        return null;
+
+                    Log.Verbose("Completions will replace item {ItemValue} spanning [{ItemStartPosition}..{ItemEndPosition}) in MSBuild simple list expression {ListExpression}.",
+                        itemAtPosition.Value,
+                        itemAtPosition.AbsoluteStart,
+                        itemAtPosition.AbsoluteEnd,
+                        attribute.Value
+                    );
 
                     targetRange = projectDocument.XmlPositions.GetRange(
-                        absoluteStartPosition: startPosition + valueStartPosition,
-                        absoluteEndPosition: startPosition + valueStartPosition + valueLength
+                        absoluteStartPosition: startPosition + itemAtPosition.AbsoluteStart,
+                        absoluteEndPosition: startPosition + itemAtPosition.AbsoluteEnd
                     );
                 }
 

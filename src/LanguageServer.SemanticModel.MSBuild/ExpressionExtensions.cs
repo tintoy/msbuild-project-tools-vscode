@@ -6,7 +6,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
     using MSBuildExpressions;
 
     /// <summary>
-    ///     Extension methods for <see cref="ExpressionNode"/>
+    ///     Extension methods for <see cref="ExpressionNode"/>.
     /// </summary>
     public static class ExpressionExtensions
     {

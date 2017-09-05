@@ -42,9 +42,9 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         /// <param name="input">
         ///     The source text to parse.
         /// </param>
-        [InlineData("")]
-        [InlineData(" ")]
-        [InlineData("ABC")]
+        [InlineData(""    )]
+        [InlineData(" "   )]
+        [InlineData("ABC" )]
         [InlineData(" ABC")]
         [InlineData("ABC ")]
         [Theory(DisplayName = "GenericListItem parser succeeds ")]
@@ -62,11 +62,12 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         /// <param name="input">
         ///     The source text to parse.
         /// </param>
-        [InlineData("ABC")]
-        [InlineData(";ABC")]
-        [InlineData("ABC;")]
-        [InlineData(";ABC;")]
-        [InlineData("ABC;DEF")]
+        [InlineData(";;"      )]
+        [InlineData("ABC"     )]
+        [InlineData(";ABC"    )]
+        [InlineData("ABC;"    )]
+        [InlineData(";ABC;"   )]
+        [InlineData("ABC;DEF" )]
         [InlineData("ABC;DEF;")]
         [Theory(DisplayName = "Parse MSBuild generic list is equivalent to String.Split ")]
         public void GenericListEquivalentToStringSplit(string input)
@@ -100,9 +101,11 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         /// <param name="expectedItemValue">
         ///     The expected value of the item.
         /// </param>
-        [InlineData("ABC", 0, "ABC")]
-        [InlineData("ABC;DEF", 3, "ABC")]
-        [InlineData("ABC;DEF", 4, "DEF")]
+        [InlineData("ABC",      0, "ABC")]
+        [InlineData("ABC;DEF",  3, "ABC")]
+        [InlineData("ABC;DEF",  4, "DEF")]
+        [InlineData("ABC;;DEF", 4, ""   )]
+        [InlineData("ABC;;DEF", 5, "DEF")]
         [Theory(DisplayName = "GenericList can find item at position ")]
         public void GenericList_FindItemAtPosition(string input, int position, string expectedItemValue)
         {
@@ -113,6 +116,12 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
             Assert.NotNull(actualItem);
 
             Assert.Equal(expectedItemValue, actualItem.Value);
+
+            string actualInput = input.Substring(
+                startIndex: actualItem.AbsoluteStart,
+                length: actualItem.AbsoluteEnd - actualItem.AbsoluteStart
+            );
+            Assert.Equal(expectedItemValue, actualInput);
         }
 
         /// <summary>

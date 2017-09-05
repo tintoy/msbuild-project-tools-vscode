@@ -6,6 +6,8 @@ using System.Linq;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
 {
+    using Utilities;
+
     /// <summary>
     ///     Parsers for MSBuild expression syntax.
     /// </summary>
@@ -14,9 +16,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     Parse a generic MSBuild list item.
         /// </summary>
-        public static readonly Parser<GenericListItem> GenericListItem = Parse.Positioned(
+        public static readonly Parser<SimpleListItem> SimpleListItem = Parse.Positioned(
             from item in Tokens.ListChar.Many().Text()
-            select new GenericListItem
+            select new SimpleListItem
             {
                 Value = item
             }
@@ -25,11 +27,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     Parse a generic MSBuild list item.
         /// </summary>
-        public static readonly Parser<GenericListSeparator> GenericListSeparator = Parse.Positioned(
+        public static readonly Parser<SimpleListSeparator> SimpleListSeparator = Parse.Positioned(
             from leading in Parse.WhiteSpace.Many().Text()
             from separator in Tokens.Semicolon
             from trailing in Parse.WhiteSpace.Many().Text()
-            select new GenericListSeparator
+            select new SimpleListSeparator
             {
                 SeparatorOffset = leading.Length
             }
@@ -38,65 +40,121 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     Parse a generic MSBuild list's leading item separator.
         /// </summary>
-        public static readonly Parser<IEnumerable<ExpressionNode>> GenericListLeadingSeparator =
-            from separator in GenericListSeparator.Once()
-            let leadingEmptyItem = new GenericListItem
+        public static readonly Parser<IEnumerable<ExpressionNode>> SimpleListLeadingSeparator =
+            from separator in SimpleListSeparator.Once()
+            let leadingEmptyItem = new SimpleListItem
             {
                 Value = String.Empty
             }
-            select leadingEmptyItem.AsSequence().Concat<ExpressionNode>(separator);
+            select leadingEmptyItem.ToSequence().Concat<ExpressionNode>(separator);
 
         /// <summary>
-        ///     Parse a generic MSBuild list item separator, optionally followed by a generic list item.
+        ///     Parse a generic MSBuild list item separator, optionally followed by a simple list item.
         /// </summary>
-        public static readonly Parser<IEnumerable<ExpressionNode>> GenericListSeparatorWithItem =
-            from separator in GenericListSeparator.Once()
-            from item in GenericListItem.Once()
+        public static readonly Parser<IEnumerable<ExpressionNode>> SimpleListSeparatorWithItem =
+            from separator in SimpleListSeparator.Once()
+            from item in SimpleListItem.Once()
             select separator.Concat<ExpressionNode>(item);
 
         /// <summary>
         ///     Parse a generic MSBuild list, delimited by semicolons.
         /// </summary>
-        public static readonly Parser<GenericList> GenericList = Parse.Positioned(
-            from leadingSeparator in GenericListLeadingSeparator.Optional()
-            from firstItem in GenericListItem.Once<ExpressionNode>()
-            from remainingItems in GenericListSeparatorWithItem.Many()
+        public static readonly Parser<SimpleList> SimpleList = Parse.Positioned(
+            from leadingSeparator in SimpleListLeadingSeparator.Optional()
+            from firstItem in SimpleListItem.Once<ExpressionNode>()
+            from remainingItems in SimpleListSeparatorWithItem.Many()
             let items =
-                leadingSeparator.AsFlattenedSequenceIfDefined()
+                leadingSeparator.ToFlattenedSequenceIfDefined()
                     .Concat(firstItem)
                     .Concat(
-                        remainingItems.SelectMany(items => items)
+                        remainingItems.Flatten()
                     )
-            select new GenericList
+            select new SimpleList
             {
                 Children = ImmutableList.CreateRange(items)
             }
         );
 
-        static IEnumerable<T> AsSequence<T>(this T item)
+        /// <summary>
+        ///     Create sequence containing the item.
+        /// </summary>
+        /// <typeparam name="T">
+        ///     The item type.
+        /// </typeparam>
+        /// <param name="item">
+        ///     The item.
+        /// </param>
+        /// <returns>
+        ///     A single-element sequence containing the item.
+        /// </returns>
+        static IEnumerable<T> ToSequence<T>(this T item)
         {
             yield return item;
         }
 
-        static IEnumerable<T> AsSequenceIfDefined<T>(this IOption<T> item)
+        /// <summary>
+        ///     Create sequence that contains the optional item if it is defined.
+        /// </summary>
+        /// <typeparam name="T">
+        ///     The item type.
+        /// </typeparam>
+        /// <param name="optionalItem">
+        ///     The optional item.
+        /// </param>
+        /// <returns>
+        ///     If <see cref="IOption{T}.IsDefined"/> is <c>true</c>, a single-element sequence containing the item; otherwise, <c>false</c>.
+        /// </returns>
+        static IEnumerable<T> ToSequenceIfDefined<T>(this IOption<T> optionalItem)
         {
-            if (item.IsDefined)
-                yield return item.Get();
+            if (optionalItem == null)
+                throw new ArgumentNullException(nameof(optionalItem));
+
+            if (optionalItem.IsDefined)
+                yield return optionalItem.Get();
         }
 
-        static IEnumerable<T> AsFlattenedSequenceIfDefined<T>(this IOption<IEnumerable<T>> items)
+        /// <summary>
+        ///     Create flattened sequence that contains the optional items if they defined.
+        /// </summary>
+        /// <typeparam name="T">
+        ///     The item type.
+        /// </typeparam>
+        /// <param name="optionalItems">
+        ///     The optional items.
+        /// </param>
+        /// <returns>
+        ///     If <see cref="IOption{T}.IsDefined"/> is <c>true</c>, a single-element sequence containing the item; otherwise, an empty sequence.
+        /// </returns>
+        static IEnumerable<T> ToFlattenedSequenceIfDefined<T>(this IOption<IEnumerable<T>> optionalItems)
         {
-            if (items.IsDefined)
-            {
-                foreach (T item in items.Get())
-                    yield return item;
-            }
+            if (optionalItems == null)
+                throw new ArgumentNullException(nameof(optionalItems));
+
+            if (!optionalItems.IsDefined)
+                yield break;
+
+            foreach (T item in optionalItems.Get())
+                yield return item;
         }
 
-        static IEnumerable<T> AsSequenceOrElse<T>(this IOption<T> item, T valueIfNotDefined)
+        /// <summary>
+        ///     Create a sequence that contains the optional item or a default value.
+        /// </summary>
+        /// <typeparam name="T">
+        ///     The item type.
+        /// </typeparam>
+        /// <param name="optionalItem">
+        ///     The optional item.
+        /// </param>
+        /// <param name="valueIfNotDefined">
+        ///     The <typeparamref name="T"/> to use if <paramref name="optionalItem"/> is not defined.
+        /// </param>
+        /// <returns>
+        ///     If <see cref="IOption{T}.IsDefined"/> is <c>true</c>, a single-element sequence containing the item; otherwise, a sequence containing <paramref name="valueIfNotDefined"/>.
+        /// </returns>
+        static IEnumerable<T> ToSequenceOrElse<T>(this IOption<T> optionalItem, T valueIfNotDefined)
         {
-            yield return item.GetOrElse(valueIfNotDefined);
-
+            yield return optionalItem.GetOrElse(valueIfNotDefined);
         }
     }
 }

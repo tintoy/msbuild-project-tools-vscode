@@ -11,12 +11,12 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         List,
 
         /// <summary>
-        ///     A generic list item.
+        ///     A simple list item.
         /// </summary>
         ListItem,
 
         /// <summary>
-        ///     A generic list item separator.
+        ///     A simple list item separator.
         /// </summary>
         ListSeparator,
 

@@ -146,7 +146,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
             );
 
             return new SortedSet<string>(
-                results.SelectMany(suggestions => suggestions)
+                results.Flatten()
             );
         }
 
@@ -189,8 +189,8 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
             );
 
             return new SortedSet<NuGetVersion>(
-                results.SelectMany(suggestions => suggestions),
-                NuGet.Versioning.VersionComparer.VersionReleaseMetadata
+                results.Flatten(),
+                VersionComparer.VersionReleaseMetadata
             );
         }
     }

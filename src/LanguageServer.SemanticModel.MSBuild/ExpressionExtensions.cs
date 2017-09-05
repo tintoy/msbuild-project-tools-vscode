@@ -64,15 +64,15 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     Find the list item at (or close to) the specified absolute position within the source text.
         /// </summary>
         /// <param name="list">
-        ///     The <see cref="GenericList"/> to search.
+        ///     The <see cref="SimpleList"/> to search.
         /// </param>
         /// <param name="atPosition">
         ///     The absolute position (0-based).
         /// </param>
         /// <returns>
-        ///     The <see cref="GenericListItem"/>, or <c>null</c> if there is no item at the specified absolute position.
+        ///     The <see cref="SimpleListItem"/>, or <c>null</c> if there is no item at the specified absolute position.
         /// </returns>
-        public static GenericListItem FindItemAt(this GenericList list, int atPosition)
+        public static SimpleListItem FindItemAt(this SimpleList list, int atPosition)
         {
             if (list == null)
                 throw new ArgumentNullException(nameof(list));
@@ -83,21 +83,21 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             ExpressionNode nodeAtPosition = list.Children.FindLast(
                 node => node.AbsoluteStart <= atPosition
             );
-            if (nodeAtPosition is GenericListItem itemAtPosition)
+            if (nodeAtPosition is SimpleListItem itemAtPosition)
                 return itemAtPosition;
 
-            if (nodeAtPosition is GenericListSeparator separatorAtPosition)
+            if (nodeAtPosition is SimpleListSeparator separatorAtPosition)
             {
                 // If the position is on or before a separator then choose the preceding item; otherwise, choose the next item.
                 int separatorPosition = separatorAtPosition.AbsoluteStart + separatorAtPosition.SeparatorOffset;
 
                 return (atPosition <= separatorPosition)
-                    ? separatorAtPosition.PreviousSibling as GenericListItem
-                    : separatorAtPosition.NextSibling as GenericListItem;
+                    ? separatorAtPosition.PreviousSibling as SimpleListItem
+                    : separatorAtPosition.NextSibling as SimpleListItem;
             }
 
             throw new InvalidOperationException(
-                $"Encountered unexpected node type '{nodeAtPosition.GetType().FullName}' inside a GenericList expression."
+                $"Encountered unexpected node type '{nodeAtPosition.GetType().FullName}' inside a SimpleList expression."
             );
         }
     }

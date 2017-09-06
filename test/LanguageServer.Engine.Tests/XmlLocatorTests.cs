@@ -217,7 +217,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
             Assert.NotNull(location);
 
             XSElement replacingElement;
-            Assert.True(location.CanCompleteElement(out replacingElement), "CanCompleteReplacement");
+            Assert.True(location.CanCompleteElement(out replacingElement), "CanCompleteElement");
             Assert.NotNull(replacingElement);
         }
 
@@ -238,6 +238,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         [InlineData("Invalid2.DoubleOpeningTag", 13, 10, "ItemGroup")]
         [InlineData("Invalid2.EmptyOpeningTag", 13, 65, "ItemGroup")]
         [InlineData("Invalid2.NoClosingTag", 10, 5, "Project")]
+        [InlineData("Invalid2.EmptyOpeningTag.ChildOfRoot", 2, 6, "Project")]
         [Theory(DisplayName = "On completable element if parent name matches ")]
         public void CanCompleteElementInParentNamed(string testFileName, int line, int column, string expectedParent)
         {
@@ -254,7 +255,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
             XSElement replaceElement;
             Assert.True(
                 location.CanCompleteElement(out replaceElement, asChildOfElementNamed: expectedParent),
-                "CanCompleteReplacement"
+                "CanCompleteElement"
             );
             Assert.NotNull(replaceElement);
             Assert.Equal(expectedParent, replaceElement.ParentElement?.Name);

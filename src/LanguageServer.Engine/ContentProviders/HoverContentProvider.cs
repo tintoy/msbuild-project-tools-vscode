@@ -301,6 +301,15 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
             if (metadataName == "Include")
                 metadataName = "Identity";
 
+            List<MarkedString> content = new List<MarkedString>
+            {
+                $"Item Metadata: `{itemGroup.Name}.{metadataName}`"
+            };
+
+            string metadataHelp = MSBuildSchemaHelp.ForItemMetadata(itemGroup.Name, metadataName);
+            if (metadataHelp != null)
+                content.Add(metadataHelp);
+
             string[] metadataValues =
                 itemGroup.GetMetadataValues(metadataName).Where(
                     value => !String.IsNullOrWhiteSpace(value)
@@ -322,10 +331,11 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
             else
                 metadataContent.AppendLine("No values are present for this metadata.");
 
-            return new MarkedStringContainer(
-                $"Item Metadata: `{itemGroup.Name}.{metadataName}`",
+            content.Add(
                 metadataContent.ToString()
             );
+
+            return new MarkedStringContainer(content);
         }
 
         /// <summary>
@@ -357,6 +367,15 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
             if (metadataName != "Include")
                 metadataName = "Identity";
 
+            List<MarkedString> content = new List<MarkedString>
+            {
+                $"Unused Item Metadata: `{itemGroup.Name}.{metadataName}` (item condition is false)"
+            };
+
+            string metadataHelp = MSBuildSchemaHelp.ForItemMetadata(itemGroup.Name, metadataName);
+            if (metadataHelp != null)
+                content.Add(metadataHelp);
+
             string[] metadataValues =
                 itemGroup.GetMetadataValues(metadataName).Where(
                     value => !String.IsNullOrWhiteSpace(value)
@@ -378,10 +397,11 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
             else
                 metadataContent.AppendLine("No values are present for this metadata.");
 
-            return new MarkedStringContainer(
-                $"Unused Item Metadata: `{itemGroup.Name}.{metadataName}` (item condition is false)",
+            content.Add(
                 metadataContent.ToString()
             );
+
+            return new MarkedStringContainer(content);
         }
 
         /// <summary>

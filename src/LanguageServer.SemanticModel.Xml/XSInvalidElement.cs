@@ -1,4 +1,4 @@
-﻿using Microsoft.Language.Xml;
+using Microsoft.Language.Xml;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
@@ -29,6 +29,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         public XSInvalidElement(XmlElementSyntaxBase element, Range range, Range attributesRange, XSElement parent, bool hasContent)
             : base(element, range, attributesRange, parent)
         {
+            if (parent == null)
+                System.Diagnostics.Debugger.Break();
+
             HasContent = hasContent;
         }
 

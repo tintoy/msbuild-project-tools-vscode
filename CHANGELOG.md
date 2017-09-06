@@ -1,5 +1,10 @@
 # Change Log
 
+## v0.2.4
+
+* Fix bug: missing completions for top-level elements (e.g. `<PropertyGroup>`, `<ItemGroup>`, `<Target>`).
+* Improve help for well-known items and their metadata.
+
 ## v0.2.3
 
 * Add help for well-known elements, attributes, properties, and item types from `MSBuild.*.xsd` to improve completions and tooltips-on-hover.

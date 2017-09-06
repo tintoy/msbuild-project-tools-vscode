@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
@@ -11,12 +12,16 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <summary>
         ///     The names of well-known MSBuild properties.
         /// </summary>
-        public static IReadOnlyCollection<string> WellKnownPropertyNames => Properties.Keys;
+        public static IEnumerable<string> WellKnownPropertyNames => Properties.Keys;
 
         /// <summary>
         ///     The names of well-known MSBuild item types.
         /// </summary>
-        public static IReadOnlyCollection<string> WellKnownItemTypes => ItemTypes.Keys;
+        public static IEnumerable<string> WellKnownItemTypes => Items.Keys.Where(
+            itemType => itemType[0] != '*'
+            &&
+            itemType.IndexOf('.') == -1
+        );
 
         /// <summary>
         ///     Get help content for the specified element.
@@ -25,7 +30,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The element name.
         /// </param>
         /// <returns>
-        ///     The element help content.
+        ///     The element help content, or <c>null</c> if no content is available for it.
         /// </returns>
         public static string ForElement(string elementName)
         {
@@ -49,7 +54,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The attribute name.
         /// </param>
         /// <returns>
-        ///     The attribute help content.
+        ///     The attribute help content, or <c>null</c> if no content is available for it.
         /// </returns>
         public static string ForAttribute(string elementName, string attributeName)
         {
@@ -70,7 +75,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The property name.
         /// </param>
         /// <returns>
-        ///     The property help content.
+        ///     The property help content, or <c>null</c> if no content is available for it.
         /// </returns>
         public static string ForProperty(string propertyName)
         {
@@ -91,7 +96,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The item type (e.g. Compile, Content).
         /// </param>
         /// <returns>
-        ///     The item help content.
+        ///     The item help content, or <c>null</c> if no content is available for it.
         /// </returns>
         public static string ForItemType(string itemType)
         {
@@ -99,7 +104,40 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'itemName'.", nameof(itemType));
 
             string helpKey = itemType;
-            if (ItemTypes.TryGetValue(helpKey, out string help))
+            if (Items.TryGetValue(helpKey, out string help))
+                return help;
+
+            return null;
+        }
+
+        /// <summary>
+        ///     Get help content for a well-known MSBuild item type's metadata.
+        /// </summary>
+        /// <param name="itemType">
+        ///     The item type (e.g. Compile, Content).
+        /// </param>
+        /// <param name="metadataName">
+        ///     The name of the item metadata.
+        /// </param>
+        /// <returns>
+        ///     The item metadata help content, or <c>null</c> if no content is available for it.
+        /// </returns>
+        public static string ForItemMetadata(string itemType, string metadataName)
+        {
+            if (String.IsNullOrWhiteSpace(itemType))
+                throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'itemName'.", nameof(itemType));
+
+            if (String.IsNullOrWhiteSpace(metadataName))
+                throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'metadataName'.", nameof(metadataName));
+
+            string help;
+
+            string helpKey = String.Format("{0}.{1}", itemType, metadataName);
+            if (Items.TryGetValue(helpKey, out help))
+                return help;
+
+            helpKey = String.Format("*.{0}", metadataName);
+            if (Items.TryGetValue(helpKey, out help))
                 return help;
 
             return null;
@@ -135,7 +173,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             ["ItemGroup.Label"] = "Optional expression. Used to identify or order system and user elements",
             ["OnError"] = "Specifies targets to execute in the event of a recoverable error",
             ["OnError.Condition"] = "Optional expression evaluated to determine whether the targets should be executed",
-            ["OnError.ExecuteTargets"] = "Semi-colon separated list of targets to execute",
+            ["OnError.ExecuteTargets"] = "Semicolon separated list of targets to execute",
             ["OnError.Label"] = "Optional expression. Used to identify or order system and user elements",
             ["Otherwise"] = "Groups PropertyGroup and/or ItemGroup elements that are used if no Conditions on sibling When elements evaluate to true",
             ["ParameterGroup"] = "Groups parameters that are part of an inline task definition.",
@@ -149,11 +187,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             ["PropertyGroup.Condition"] = "Optional expression evaluated to determine whether the PropertyGroup should be used",
             ["PropertyGroup.Label"] = "Optional expression. Used to identify or order system and user elements",
             ["SimpleItem.Condition"] = "Optional expression evaluated to determine whether the items should be evaluated",
-            ["SimpleItem.Exclude"] = "Semi-colon separated list of files (wildcards are allowed) or other item names to exclude from the Include list",
-            ["SimpleItem.Include"] = "Semi-colon separated list of files (wildcards are allowed) or other item names to include in this item list",
+            ["SimpleItem.Exclude"] = "Semicolon separated list of files (wildcards are allowed) or other item names to exclude from the Include list",
+            ["SimpleItem.Include"] = "Semicolon separated list of files (wildcards are allowed) or other item names to include in this item list",
             ["SimpleItem.Label"] = "Optional expression. Used to identify or order system and user elements",
-            ["SimpleItem.Remove"] = "Semi-colon separated list of files (wildcards are allowed) or other item names to remove from the existing list contents",
-            ["SimpleItem.Update"] = "Semi-colon separated list of files (wildcards are allowed) or other item names to be updated with the metadata from contained in this xml element",
+            ["SimpleItem.Remove"] = "Semicolon separated list of files (wildcards are allowed) or other item names to remove from the existing list contents",
+            ["SimpleItem.Update"] = "Semicolon separated list of files (wildcards are allowed) or other item names to be updated with the metadata from contained in this xml element",
             ["StringProperty.Condition"] = "Optional expression evaluated to determine whether the property should be evaluated",
             ["StringProperty.Label"] = "Optional expression. Used to identify or order system and user elements",
             ["Target"] = "Groups tasks into a section of the build process",
@@ -199,6 +237,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         static readonly Dictionary<string, string> Properties = new Dictionary<string, string>
         {
             ["AllowLocalNetworkLoopback"] = "Flag indicating whether to allow local network loopback.",
+            ["AllowUnsafeBlocks"] = "Allow unsafe code blocks.",
             ["AppDesignerFolder"] = "Name of folder for Application Designer",
             ["ApplicationRevision"] = "integer",
             ["ApplicationVersion"] = "Matches the expression \"\\d\\.\\d\\.\\d\\.(\\d|\\*)\"",
@@ -268,7 +307,10 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             ["AppxUseHardlinksIfPossible"] = "Flag indicating whether to use hard links if possible when copying files during creation of app packages.",
             ["AppxValidateAppxManifest"] = "Flag indicating whether to validate app manifest.",
             ["AppxValidateStoreManifest"] = "Flag indicating whether to validate store manifest.",
+            ["AssemblyKeyContainerName"] = "The name of the CAPI container that holds the strong-naming key used to sign the output assembly.",
+            ["AssemblyKeyProviderName"] = "The name of the CAPI provider that provides the strong-naming key used to sign the output assembly.",
             ["AssemblyName"] = "Name of output assembly",
+            ["AssemblyOriginatorKeyFile"] = "The path of the strong-naming key (.snk) file used to sign the output assembly.",
             ["AssemblyTitle"] = "Description for the assembly manifest",
             ["AssemblyVersion"] = "Numeric value of the version for the assembly manifest in the format major.minor.patch (e.g. 2.4.0)",
             ["Authors"] = "A comma-separated list of NuGet packages authors",
@@ -312,17 +354,23 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             ["CodeAnalysisUseTypeNameInSuppression"] = "Indicates whether to include the name of the rule when Code Analysis emits a suppression. The default is true.",
             ["CodeAnalysisVerbose"] = "Indicates whether to output verbose Code Analysis diagnostic info to the console. The default is false.",
             ["Company"] = "Company name for the assembly manifest",
+            ["Configuration"] = "The project build configuration (e.g. Debug, Release).",
             ["Copyright"] = "Copyright details for the NuGet package",
             ["CreateWebPageOnPublish"] = "boolean",
-            ["Debug"] = "none, pdbonly, or full",
             ["DebugSymbols"] = "Whether to emit symbols (boolean)",
+            ["DebugType"] = "none, pdbonly, or full",
             ["DefaultLanguage"] = "Default resource language.",
+            ["DefineConstants"] = "Compile-time constants to be defined (e.g. DEBUG, TRACE).",
             ["DefineDebug"] = "Whether DEBUG is defined (boolean)",
             ["DefineTrace"] = "Whether TRACE is defined (boolean)",
+            ["DelaySign"] = "Delay-sign the output assembly (boolean).",
             ["Description"] = "A long description of the NuGet package for UI display",
             ["DisableFastUpToDateCheck"] = "Whether Visual Studio should do its own faster up-to-date check before Building, rather than invoke MSBuild to do a possibly more accurate one. You would set this to false if you have a heavily customized build process and builds in Visual Studio are not occurring when they should.",
-            ["DisallowUrlActivation"] = "boolean",
+            ["DocumentationFile"] = "The XML documentation file to generate from doc-comments.",
+            ["EnableASPDebugging"] = "Enable classic ASP debugging (boolean).",
+            ["EnableASPXDebugging"] = "Enable ASP.NET Razor debugging (boolean).",
             ["EnableSigningChecks"] = "Flag indicating whether to enable signing checks during app package generation.",
+            ["EnableUnmanagedDebugging"] = "Enable unmanaged debugging (boolean).",
             ["FileVersion"] = "Numeric value of the version for the assembly manifest in the format major.minor.build.revision (e.g. 2.4.0.1)",
             ["FinalAppxManifestName"] = "Path to the final app manifest.",
             ["FinalAppxPackageRecipe"] = "Full path to the final app package recipe.",
@@ -364,8 +412,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             ["OptionExplicit"] = "Should Option Explicit be set (On or Off)",
             ["OptionInfer"] = "Should Option Infer be set (On or Off)",
             ["OptionStrict"] = "Should Option Strict be set (On or Off)",
-            ["Output"] = "Type of output to generate (WinExe, Exe, or Library)",
+            ["OutDir"] = "Path to output folder, with trailing slash (legacy property; prefer use of \"OutputPath\" instead)",
             ["OutputPath"] = "Path to output folder, with trailing slash",
+            ["OutputType"] = "Type of output to generate (WinExe, Exe, or Library)",
             ["PackageCertificateKeyFile"] = "App package certificate key file.",
             ["PackageIconUrl"] = "The URL for a 64x64 image with transparent background to use as the icon for the NuGet package in UI display",
             ["PackageId"] = "The case-insensitive NuGet package identifier, which must be unique across nuget.org or whatever gallery the NuGet package will reside in. IDs may not contain spaces or characters that are not valid for a URL, and generally follow .NET namespace rules.",
@@ -388,22 +437,29 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             ["ProjectPriFileName"] = "File name to use for project-specific resource index file (PRI).",
             ["ProjectPriFullPath"] = "Full path to project-specific resource index file (PRI).",
             ["ProjectPriIndexName"] = "Name of the resource index used in the generated .pri file.",
-            ["ReferencePath"] = "Semi-colon separated list of folders to search during reference resolution",
-            ["Repository"] = "The type of the repository where the project is stored (e.g. git)",
+            ["ReferencePath"] = "Semicolon separated list of folders to search during reference resolution",
+            ["RegisterForComInterop"] = "Register the assembly's types for COM Interop (boolean).",
+            ["RepositoryType"] = "The type of the repository where the project is stored (e.g. git)",
             ["RepositoryUrl"] = "The URL for the repository where the project is stored",
             ["ResgenToolPath"] = "Full path to a folder containing resgen tool.",
+            ["RootNamespace"] = "The default namespace for new code files added to the project.",
             ["RunCodeAnalysis"] = "Indicates whether to run Code Analysis during the build.",
             ["RuntimeIdentifier"] = "Runtime identifier supported by the project (e.g. win10-x64)",
-            ["RuntimeIdentifiers"] = "Semi-colon separated list of runtime identifiers supported by the project (e.g. win10-x64;osx.10.11-x64;ubuntu.16.04-x64)",
+            ["RuntimeIdentifiers"] = "Semicolon separated list of runtime identifiers supported by the project (e.g. win10-x64;osx.10.11-x64;ubuntu.16.04-x64)",
             ["SignAppxPackageExeFullPath"] = "Full path to signtool.exe utility.",
+            ["SignAssembly"] = "Sign the output assembly, giving it a strong name (boolean).",
+            ["SolutionDir"] = "The solution directory.",
+            ["SolutionExt"] = "The solution file extension.",
+            ["SolutionFileName"] = "The solution file name.",
+            ["SolutionName"] = "The solution file name, without extension.",
+            ["SolutionPath"] = "The full path to the solution file.",
             ["StartupObject"] = "Type that contains the main entry point",
             ["StoreManifestName"] = "Name of the store manifest file.",
             ["TargetFramework"] = "Framework that this project targets. Must be a Target Framework Moniker (e.g. netcoreapp1.0)",
-            ["TargetFrameworks"] = "Semi-colon separated list of frameworks that this project targets. Must be a Target Framework Moniker (e.g. netcoreapp1.0;net461)",
+            ["TargetFrameworks"] = "Semicolon separated list of frameworks that this project targets. Must be a Target Framework Moniker (e.g. netcoreapp1.0;net461)",
             ["TargetPlatformSdkRootOverride"] = "Full path to platform SDK root.",
             ["Title"] = "A human-friendly title of the package, typically used in UI displays as on nuget.org and the Package Manager in Visual Studio. If not specified, the package ID is used instead.",
-            ["TrustUrlParameters"] = "boolean",
-            ["UpdateEnabled"] = "boolean",
+            ["TreatWarningsAsErrors"] = "Treat compile warnings as errors (boolean).",
             ["UpdateIntervalUnits"] = "Hours, Days, or Weeks",
             ["UpdateMode"] = "Foreground or Background",
             ["UpdatePeriodically"] = "boolean",
@@ -413,24 +469,45 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             ["VersionPrefix"] = "When Version is not specified, VersionPrefix represents the first fragment of the version string (e.g. 1.0.0). The syntax is VersionPrefix[-VersionSuffix].",
             ["VersionSuffix"] = "When Version is not specified, VersionSuffix represents the second fragment of the version string (e.g. beta). The syntax is VersionPrefix[-VersionSuffix].",
             ["WarningLevel"] = "integer between 0 and 4 inclusive",
-            ["WarningsAsErrors"] = "Comma separated list of warning numbers to treat as errors",
+            ["WarningsAsErrors"] = "Comma separated list of warning numbers to treat as errors"
         };
 
         /// <summary>
-        ///     Help content for item elements, keyed by item type.
+        ///     Help content for item types / item metadata , keyed by "ItemType" or "ItemType.MetadataName".
         /// </summary>
         /// <remarks>
         ///     Extracted from MSBuild.*.xsd
         /// </remarks>
-        static readonly Dictionary<string, string> ItemTypes = new Dictionary<string, string>
+        static readonly Dictionary<string, string> Items = new Dictionary<string, string>
         {
+            ["*.Identity"] = "The item specification (evaluated include).",
             ["Analyzer"] = "An assembly containing diagnostic analyzers",
             ["ApplicationDefinition"] = "XAML file that contains the application definition, only one can be defined",
+            ["ApplicationDefinition.CopyToOutputDirectory"] = "XAML file that contains the application definition, only one can be defined",
+            ["ApplicationDefinition.CustomToolNamespace"] = "XAML file that contains the application definition, only one can be defined",
+            ["ApplicationDefinition.DependentUpon"] = "XAML file that contains the application definition, only one can be defined",
+            ["ApplicationDefinition.Generator"] = "XAML file that contains the application definition, only one can be defined",
+            ["ApplicationDefinition.Group"] = "XAML file that contains the application definition, only one can be defined",
+            ["ApplicationDefinition.LastGenOutput"] = "XAML file that contains the application definition, only one can be defined",
+            ["ApplicationDefinition.Link"] = "XAML file that contains the application definition, only one can be defined",
+            ["ApplicationDefinition.SubType"] = "XAML file that contains the application definition, only one can be defined",
             ["AppxHashUri"] = "Hash algorithm URI.",
+            ["AppxHashUri.Id"] = "Hash algorithm URI.",
             ["AppxManifest"] = "app manifest template",
+            ["AppxManifest.DependentUpon"] = "app manifest template",
+            ["AppxManifest.Link"] = "app manifest template",
+            ["AppxManifest.SubType"] = "app manifest template",
+            ["AppxManifest.Visible"] = "app manifest template",
             ["AppxManifestFileNameQuery"] = "XPath queries used to extract file names from the app manifest.",
             ["AppxManifestImageFileNameQuery"] = "XPath queries used to define image files in the app manifest and restrictions on them.",
+            ["AppxManifestImageFileNameQuery.DescriptionID"] = "XPath queries used to define image files in the app manifest and restrictions on them.",
+            ["AppxManifestImageFileNameQuery.ExpectedScaleDimensions"] = "XPath queries used to define image files in the app manifest and restrictions on them.",
+            ["AppxManifestImageFileNameQuery.ExpectedTargetSizes"] = "XPath queries used to define image files in the app manifest and restrictions on them.",
+            ["AppxManifestImageFileNameQuery.MaximumFileSize"] = "XPath queries used to define image files in the app manifest and restrictions on them.",
             ["AppxManifestMetadata"] = "App manifest metadata item. Can be a literal, or it can be a path to a binary to extract version from.",
+            ["AppxManifestMetadata.Name"] = "App manifest metadata item. Can be a literal, or it can be a path to a binary to extract version from.",
+            ["AppxManifestMetadata.Value"] = "App manifest metadata item. Can be a literal, or it can be a path to a binary to extract version from.",
+            ["AppxManifestMetadata.Version"] = "App manifest metadata item. Can be a literal, or it can be a path to a binary to extract version from.",
             ["AppxManifestSchema"] = "App manifest schema file.",
             ["AppxReservedFileName"] = "Reserved file name which cannot appear in the app package.",
             ["AppxSystemBinary"] = "Name of any file which is present on the machine and should not be part of the app payload.",
@@ -438,29 +515,136 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             ["CodeAnalysisDependentAssemblyPaths"] = "Additional reference assembly paths to pass to the Code Analysis command line tool.",
             ["CodeAnalysisDictionary"] = "Code Analysis custom dictionaries.",
             ["CodeAnalysisImport"] = "Code Analysis projects (*.fxcop) or reports to import.",
+            ["COMFileReference"] = "Type libraries that feed into the ResolvedComreference target.",
+            ["COMFileReference.WrapperTool"] = " The name of the wrapper tool that is used on the component, for example, \"tlbimp.\"",
             ["Compile"] = "Source files for compiler",
+            ["Compile.AutoGen"] = "Source files for compiler",
+            ["Compile.CopyToOutputDirectory"] = "Source files for compiler",
+            ["Compile.DependentUpon"] = "Source files for compiler",
+            ["Compile.DesignTime"] = "Source files for compiler",
+            ["Compile.DesignTimeSharedInput"] = "Source files for compiler",
+            ["Compile.Link"] = "Source files for compiler",
+            ["Compile.SubType"] = "Source files for compiler",
+            ["Compile.VBMyExtensionTemplateID"] = "Source files for compiler",
+            ["Compile.Visible"] = "Source files for compiler",
             ["COMReference"] = "Reference to a COM component",
+            ["COMReference.EmbedInteropTypes"] = "Reference to a COM component",
+            ["COMReference.Guid"] = "Reference to a COM component",
+            ["COMReference.Isolated"] = "Reference to a COM component",
+            ["COMReference.Lcid"] = "Reference to a COM component",
+            ["COMReference.Name"] = "Reference to a COM component",
+            ["COMReference.VersionMajor"] = "Reference to a COM component",
+            ["COMReference.VersionMinor"] = "Reference to a COM component",
+            ["COMReference.WrapperTool"] = "Reference to a COM component",
             ["Content"] = "Files that are not compiled, but may be embedded or published",
+            ["Content.CopyToOutputDirectory"] = "Files that are not compiled, but may be embedded or published",
+            ["Content.CopyToPublishDirectory"] = "Files that are not compiled, but may be embedded or published",
+            ["Content.CustomToolNamespace"] = "Files that are not compiled, but may be embedded or published",
+            ["Content.DependentUpon"] = "Files that are not compiled, but may be embedded or published",
+            ["Content.Generator"] = "Files that are not compiled, but may be embedded or published",
+            ["Content.Group"] = "Files that are not compiled, but may be embedded or published",
+            ["Content.IsAssembly"] = "Files that are not compiled, but may be embedded or published",
+            ["Content.LastGenOutput"] = "Files that are not compiled, but may be embedded or published",
+            ["Content.Link"] = "Files that are not compiled, but may be embedded or published",
+            ["Content.PublishState"] = "Files that are not compiled, but may be embedded or published",
+            ["Content.SubType"] = "Files that are not compiled, but may be embedded or published",
+            ["Content.Visible"] = "Files that are not compiled, but may be embedded or published",
             ["DotNetCliToolReference"] = "The CLI tool that the user wants restored in the context of the project",
+            ["DotNetCliToolReference.ExcludeAssets"] = "The CLI tool that the user wants restored in the context of the project",
+            ["DotNetCliToolReference.IncludeAssets"] = "The CLI tool that the user wants restored in the context of the project",
+            ["DotNetCliToolReference.PrivateAssets"] = "The CLI tool that the user wants restored in the context of the project",
             ["EmbeddedResource"] = "Resources to be embedded in the generated assembly",
+            ["EmbeddedResource.CopyToOutputDirectory"] = "Resources to be embedded in the generated assembly",
+            ["EmbeddedResource.CustomToolNamespace"] = "Resources to be embedded in the generated assembly",
+            ["EmbeddedResource.DependentUpon"] = "Resources to be embedded in the generated assembly",
+            ["EmbeddedResource.Generator"] = "Resources to be embedded in the generated assembly",
+            ["EmbeddedResource.LastGenOutput"] = "Resources to be embedded in the generated assembly",
+            ["EmbeddedResource.Link"] = "Resources to be embedded in the generated assembly",
+            ["EmbeddedResource.LogicalName"] = "Resources to be embedded in the generated assembly",
+            ["EmbeddedResource.SubType"] = "Resources to be embedded in the generated assembly",
+            ["EmbeddedResource.Visible"] = "Resources to be embedded in the generated assembly",
             ["Folder"] = "Folder on disk",
             ["Import"] = "Assemblies whose namespaces should be imported by the Visual Basic compiler",
             ["NativeReference"] = "Reference to a native manifest file, or to a file that contains a native manifest",
+            ["NativeReference.HintPath"] = "Reference to a native manifest file, or to a file that contains a native manifest",
+            ["NativeReference.Name"] = "Reference to a native manifest file, or to a file that contains a native manifest",
             ["None"] = "Files that should have no role in the build process",
+            ["None.CopyToOutputDirectory"] = "Files that should have no role in the build process",
+            ["None.CustomToolNamespace"] = "Files that should have no role in the build process",
+            ["None.DependentUpon"] = "Files that should have no role in the build process",
+            ["None.Generator"] = "Files that should have no role in the build process",
+            ["None.LastGenOutput"] = "Files that should have no role in the build process",
+            ["None.Link"] = "Files that should have no role in the build process",
+            ["None.Visible"] = "Files that should have no role in the build process",
             ["PackageReference"] = "Reference to a package",
+            ["PackageReference.ExcludeAssets"] = "Specifies which package assets should be ignored",
+            ["PackageReference.IncludeAssets"] = "Specifies which package assets should be consumed",
+            ["PackageReference.PrivateAssets"] = "Specifies which package assets should be consumed, but treated as design-time dependencies (these will not be listed as dependencies of the output package)",
             ["Page"] = "XAML files that are converted to binary and compiled into the assembly",
+            ["Page.CopyToOutputDirectory"] = "XAML files that are converted to binary and compiled into the assembly",
+            ["Page.CustomToolNamespace"] = "XAML files that are converted to binary and compiled into the assembly",
+            ["Page.DependentUpon"] = "XAML files that are converted to binary and compiled into the assembly",
+            ["Page.Generator"] = "XAML files that are converted to binary and compiled into the assembly",
+            ["Page.Group"] = "XAML files that are converted to binary and compiled into the assembly",
+            ["Page.LastGenOutput"] = "XAML files that are converted to binary and compiled into the assembly",
+            ["Page.Link"] = "XAML files that are converted to binary and compiled into the assembly",
+            ["Page.SubType"] = "XAML files that are converted to binary and compiled into the assembly",
             ["PlatformVersionDescription"] = "Platform version description. Used to map between internal OS version and marketing OS version.",
+            ["PlatformVersionDescription.OSVersion"] = "Platform version description. Used to map between internal OS version and marketing OS version.",
+            ["PlatformVersionDescription.TargetPlatformIdentifier"] = "Platform version description. Used to map between internal OS version and marketing OS version.",
+            ["PlatformVersionDescription.TargetPlatformVersion"] = "Platform version description. Used to map between internal OS version and marketing OS version.",
             ["PRIResource"] = "String resources to be indexed in app package's resource index.",
+            ["PRIResource.DependentUpon"] = "String resources to be indexed in app package's resource index.",
+            ["PRIResource.Link"] = "String resources to be indexed in app package's resource index.",
+            ["PRIResource.Visible"] = "String resources to be indexed in app package's resource index.",
             ["ProjectCapability"] = "Project Capability that may activate design-time components in an IDE.",
             ["ProjectReference"] = "Reference to another project",
+            ["ProjectReference.EmbedInteropTypes"] = "Reference to another project",
+            ["ProjectReference.ExcludeAssets"] = "Reference to another project",
+            ["ProjectReference.IncludeAssets"] = "Reference to another project",
+            ["ProjectReference.Name"] = "Reference to another project",
+            ["ProjectReference.OutputItemType"] = "Reference to another project",
+            ["ProjectReference.Package"] = "Reference to another project",
+            ["ProjectReference.PrivateAssets"] = "Reference to another project",
+            ["ProjectReference.Project"] = "Reference to another project",
+            ["ProjectReference.ReferenceOutputAssembly"] = "Reference to another project",
+            ["ProjectReference.SpecificVersion"] = "Reference to another project",
+            ["ProjectReference.Targets"] = "Reference to another project",
             ["Reference"] = "Reference to an assembly",
+            ["Reference.Aliases"] = "Reference to an assembly",
+            ["Reference.EmbedInteropTypes"] = "Reference to an assembly",
+            ["Reference.FusionName"] = "Reference to an assembly",
+            ["Reference.HintPath"] = "Reference to an assembly",
+            ["Reference.Name"] = "Reference to an assembly",
+            ["Reference.Private"] = "Reference to an assembly",
+            ["Reference.RequiredTargetFramework"] = "Reference to an assembly",
+            ["Reference.SpecificVersion"] = "Reference to an assembly",
             ["Resource"] = "File that is compiled into the assembly",
+            ["Resource.CopyToOutputDirectory"] = "File that is compiled into the assembly",
+            ["Resource.CustomToolNamespace"] = "File that is compiled into the assembly",
+            ["Resource.DependentUpon"] = "File that is compiled into the assembly",
+            ["Resource.Generator"] = "File that is compiled into the assembly",
+            ["Resource.Group"] = "File that is compiled into the assembly",
+            ["Resource.LastGenOutput"] = "File that is compiled into the assembly",
+            ["Resource.Link"] = "File that is compiled into the assembly",
+            ["Resource.SubType"] = "File that is compiled into the assembly",
             ["SDKReference"] = "Reference to an extension SDK",
+            ["SDKReference.Name"] = "Reference to an extension SDK",
             ["StoreAssociationFile"] = "A file containing app store association data.",
+            ["StoreAssociationFile.DependentUpon"] = "A file containing app store association data.",
+            ["StoreAssociationFile.Link"] = "A file containing app store association data.",
+            ["StoreAssociationFile.Visible"] = "A file containing app store association data.",
             ["StoreManifestSchema"] = "Store manifest schema file.",
             ["TargetPlatform"] = "Target platform in the form of \"[Identifier], Version=[Version]\", for example, \"Windows, Version=8.0\"",
             ["WebReferences"] = "Name of Web References folder to display in user interface",
-            ["WebReferenceUrl"] = "Represents a reference to a web service"
+            ["WebReferenceUrl"] = "Represents a reference to a web service",
+            ["WebReferenceUrl.CachedAppSettingsObjectName"] = "Represents a reference to a web service",
+            ["WebReferenceUrl.CachedDynamicPropName"] = "Represents a reference to a web service",
+            ["WebReferenceUrl.CachedSettingsPropName"] = "Represents a reference to a web service",
+            ["WebReferenceUrl.RelPath"] = "Represents a reference to a web service",
+            ["WebReferenceUrl.ServiceLocationURL"] = "Represents a reference to a web service",
+            ["WebReferenceUrl.UpdateFromURL"] = "Represents a reference to a web service",
+            ["WebReferenceUrl.UrlBehavior"] = "Represents a reference to a web service",
         };
     }
 }

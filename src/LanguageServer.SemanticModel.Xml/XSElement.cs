@@ -57,7 +57,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <summary>
         ///     The <see cref="XSElement"/>'s parent element (if any).
         /// </summary>
-        public XSElement ParentElement { get; }
+        public XSElement ParentElement { get; internal set; }
 
         /// <summary>
         ///     The element's attributes (if any).

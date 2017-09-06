@@ -200,6 +200,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             XmlLocation targetLocation = _projectXmlLocator.Inspect(
                 target.Location.ToNative()
             );
+            if (targetLocation == null)
+                return;
+
             XSElement targetElement;
             if (!targetLocation.IsElement(out targetElement))
                 return;
@@ -235,6 +238,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             XmlLocation propertyLocation = _projectXmlLocator.Inspect(
                 property.Location.ToNative()
             );
+            if (propertyLocation == null)
+                return;
+
             XSElement propertyElement;
             if (!propertyLocation.IsElement(out propertyElement))
                 return;

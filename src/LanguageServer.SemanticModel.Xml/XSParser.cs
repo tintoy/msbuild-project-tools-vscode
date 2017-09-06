@@ -215,8 +215,6 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             /// </summary>
             void ConnectSiblings()
             {
-                // TODO: Move attribute sibiling connections here, too (currently done when adding the attributes).
-
                 var discoveredElements = DiscoveredNodes.OfType<XSElement>();
                 foreach (XSElement element in discoveredElements)
                 {
@@ -256,8 +254,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             /// </returns>
             public override SyntaxNode VisitXmlDocument(XmlDocumentSyntax document)
             {
-                foreach (XmlElementSyntaxBase element in document.Elements.OfType<XmlElementSyntaxBase>())
-                    Visit(element);
+                XmlElementSyntaxBase root = document.Root as XmlElementSyntaxBase;
+                if (root != null)
+                    Visit(root);
 
                 return document;
             }

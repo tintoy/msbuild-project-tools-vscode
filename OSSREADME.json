@@ -6,4 +6,10 @@
 	"license": "MIT",
 	"repositoryURL": "https://github.com/atom/language-xml",
 	"description": "The file 'syntaxes/msbuild.json' was derived from the file 'syntaxes/xml.json' in the VSCode XML extension (https://github.com/Microsoft/vscode/blob/master/extensions/xml), which derived it from the Atom XML package (https://github.com/atom/language-xml), which was originally converted from the TextMate bundle https://github.com/textmate/xml.tmbundle."
+},{
+    "name": "Microsoft/msbuild",
+    "version": "0.0.0",
+    "license": "MIT",
+    "repositoryURL": "https://github.com/Microsoft/msbuild",
+    "description": "Documentation / help content for well-known MSBuild elements, attributes, properties, and item types was derived from https://github.com/Microsoft/msbuild/blob/master/src/MSBuild/Microsoft.Build.CommonTypes.xsd"
 }]

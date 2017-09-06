@@ -255,6 +255,12 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             public override SyntaxNode VisitXmlDocument(XmlDocumentSyntax document)
             {
                 XmlElementSyntaxBase root = document.Root as XmlElementSyntaxBase;
+                if (root == null)
+                    return document;
+
+                if (root is XmlElementSyntax rootElement && rootElement.StartTag == null)
+                    root = rootElement.Elements.FirstOrDefault() as XmlElementSyntaxBase;
+
                 if (root != null)
                     Visit(root);
 

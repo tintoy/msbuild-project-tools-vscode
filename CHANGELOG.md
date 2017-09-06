@@ -1,5 +1,10 @@
 # Change Log
 
+## v0.2.3
+
+* Add help for well-known elements, attributes, properties, and item types from `MSBuild.*.xsd` to improve completions and tooltips-on-hover.
+* Improve completions for attributes that refer to target names.
+
 ## v0.2.2
 
 * Add completions for attributes that refer to target names.

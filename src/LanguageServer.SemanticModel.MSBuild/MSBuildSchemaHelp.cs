@@ -23,7 +23,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'elementName'.", nameof(elementName));
 
             string helpKey = elementName;
-            if (RootItems.TryGetValue(helpKey, out string help))
+            if (Root.TryGetValue(helpKey, out string help))
                 return help;
 
             return null;
@@ -47,17 +47,17 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'elementName'.", nameof(elementName));
 
             string helpKey = String.Format("{0}.{1}", elementName, attributeName);
-            if (RootItems.TryGetValue(helpKey, out string help))
+            if (Root.TryGetValue(helpKey, out string help))
                 return help;
 
             return null;
         }
 
         /// <summary>
-        ///     Get help content for the well-known MSBuild property.
+        ///     Get help content for a well-known MSBuild property.
         /// </summary>
         /// <param name="propertyName">
-        ///     The property name name.
+        ///     The property name.
         /// </param>
         /// <returns>
         ///     The property help content.
@@ -66,9 +66,30 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         {
             if (String.IsNullOrWhiteSpace(propertyName))
                 throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'propertyName'.", nameof(propertyName));
-            
+
             string helpKey = propertyName;
             if (Properties.TryGetValue(helpKey, out string help))
+                return help;
+
+            return null;
+        }
+
+        /// <summary>
+        ///     Get help content for a well-known MSBuild item type.
+        /// </summary>
+        /// <param name="itemType">
+        ///     The item type (e.g. Compile, Content).
+        /// </param>
+        /// <returns>
+        ///     The item help content.
+        /// </returns>
+        public static string ForItemType(string itemType)
+        {
+            if (String.IsNullOrWhiteSpace(itemType))
+                throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'itemName'.", nameof(itemType));
+
+            string helpKey = itemType;
+            if (ItemTypes.TryGetValue(helpKey, out string help))
                 return help;
 
             return null;
@@ -80,7 +101,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <remarks>
         ///     Extracted from MSBuild.*.xsd
         /// </remarks>
-        static readonly Dictionary<string, string> RootItems = new Dictionary<string, string>
+        static readonly Dictionary<string, string> Root = new Dictionary<string, string>
         {
             ["Choose"] = "Groups When and Otherwise elements",
             ["Choose.Label"] = "Optional expression. Used to identify or order system and user elements",
@@ -383,6 +404,53 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             ["VersionSuffix"] = "When Version is not specified, VersionSuffix represents the second fragment of the version string (e.g. beta). The syntax is VersionPrefix[-VersionSuffix].",
             ["WarningLevel"] = "integer between 0 and 4 inclusive",
             ["WarningsAsErrors"] = "Comma separated list of warning numbers to treat as errors",
+        };
+
+        /// <summary>
+        ///     Help content for item elements, keyed by item type.
+        /// </summary>
+        /// <remarks>
+        ///     Extracted from MSBuild.*.xsd
+        /// </remarks>
+        static readonly Dictionary<string, string> ItemTypes = new Dictionary<string, string>
+        {
+            ["Analyzer"] = "An assembly containing diagnostic analyzers",
+            ["ApplicationDefinition"] = "XAML file that contains the application definition, only one can be defined",
+            ["AppxHashUri"] = "Hash algorithm URI.",
+            ["AppxManifest"] = "app manifest template",
+            ["AppxManifestFileNameQuery"] = "XPath queries used to extract file names from the app manifest.",
+            ["AppxManifestImageFileNameQuery"] = "XPath queries used to define image files in the app manifest and restrictions on them.",
+            ["AppxManifestMetadata"] = "App manifest metadata item. Can be a literal, or it can be a path to a binary to extract version from.",
+            ["AppxManifestSchema"] = "App manifest schema file.",
+            ["AppxReservedFileName"] = "Reserved file name which cannot appear in the app package.",
+            ["AppxSystemBinary"] = "Name of any file which is present on the machine and should not be part of the app payload.",
+            ["BaseApplicationManifest"] = "The base application manifest for the build. Contains ClickOnce security information.",
+            ["CodeAnalysisDependentAssemblyPaths"] = "Additional reference assembly paths to pass to the Code Analysis command line tool.",
+            ["CodeAnalysisDictionary"] = "Code Analysis custom dictionaries.",
+            ["CodeAnalysisImport"] = "Code Analysis projects (*.fxcop) or reports to import.",
+            ["Compile"] = "Source files for compiler",
+            ["COMReference"] = "Reference to a COM component",
+            ["Content"] = "Files that are not compiled, but may be embedded or published",
+            ["DotNetCliToolReference"] = "The CLI tool that the user wants restored in the context of the project",
+            ["EmbeddedResource"] = "Resources to be embedded in the generated assembly",
+            ["Folder"] = "Folder on disk",
+            ["Import"] = "Assemblies whose namespaces should be imported by the Visual Basic compiler",
+            ["NativeReference"] = "Reference to a native manifest file, or to a file that contains a native manifest",
+            ["None"] = "Files that should have no role in the build process",
+            ["PackageReference"] = "Reference to a package",
+            ["Page"] = "XAML files that are converted to binary and compiled into the assembly",
+            ["PlatformVersionDescription"] = "Platform version description. Used to map between internal OS version and marketing OS version.",
+            ["PRIResource"] = "String resources to be indexed in app package's resource index.",
+            ["ProjectCapability"] = "Project Capability that may activate design-time components in an IDE.",
+            ["ProjectReference"] = "Reference to another project",
+            ["Reference"] = "Reference to an assembly",
+            ["Resource"] = "File that is compiled into the assembly",
+            ["SDKReference"] = "Reference to an extension SDK",
+            ["StoreAssociationFile"] = "A file containing app store association data.",
+            ["StoreManifestSchema"] = "Store manifest schema file.",
+            ["TargetPlatform"] = "Target platform in the form of \"[Identifier], Version=[Version]\", for example, \"Windows, Version=8.0\"",
+            ["WebReferences"] = "Name of Web References folder to display in user interface",
+            ["WebReferenceUrl"] = "Represents a reference to a web service"
         };
     }
 }

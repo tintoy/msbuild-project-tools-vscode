@@ -32,7 +32,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         /// <summary>
         ///     The provider display name.
         /// </summary>
-        public override string Name => "Property Conditions";
+        public override string Name => "Top-level Elements";
 
         /// <summary>
         ///     Provide completions for the specified location.
@@ -113,7 +113,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             yield return new CompletionItem
             {
                 Label = "<PropertyGroup>",
-                Documentation = "Define a property group.",
+                Documentation = MSBuildSchemaHelp.ForElement("PropertyGroup"),
                 SortText = Priority + "<PropertyGroup>",
                 TextEdit = new TextEdit
                 {
@@ -129,7 +129,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             yield return new CompletionItem
             {
                 Label = "<ItemGroup>",
-                Documentation = "Define an item group.",
+                Documentation = MSBuildSchemaHelp.ForElement("ItemGroup"),
                 SortText = Priority + "<ItemGroup>",
                 TextEdit = new TextEdit
                 {
@@ -145,7 +145,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             yield return new CompletionItem
             {
                 Label = "<Target>",
-                Documentation = "Define or override a target.",
+                Documentation = MSBuildSchemaHelp.ForElement("Target"),
                 SortText = Priority + "<Target>",
                 TextEdit = new TextEdit
                 {

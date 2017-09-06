@@ -2,6 +2,7 @@ using Lsp.Models;
 using Microsoft.Build.Evaluation;
 using Microsoft.Language.Xml;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Linq;
@@ -50,6 +51,10 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
             if (property == null)
                 throw new ArgumentNullException(nameof(property));
             
+            List<MarkedString> content = new List<MarkedString>();
+
+            content.Add($"Property: `{property.Name}`");
+
             if (property.IsOverridden)
             {
                 Position overridingDeclarationPosition = property.DeclaringXml.Location.ToNative();
@@ -76,36 +81,43 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
                     $"Actual value: `{property.Value}`"
                 );
 
-                return new MarkedStringContainer(
-                    $"Property: `{property.Name}`",
-                    overrideDescription.ToString()
-                );
+                content.Add(overrideDescription.ToString());
             }
+            else
+                content.Add($"Value: `{property.Value}`");
 
-            return new MarkedStringContainer(
-                $"Property: `{property.Name}`",
-                $"Value: `{property.Value}`"
-            );
+            string propertyHelp = MSBuildSchemaHelp.ForProperty(property.Name);
+            if (propertyHelp != null)
+                content.Add(propertyHelp);
+
+            return new MarkedStringContainer(content);
         }
 
         /// <summary>
         ///     Get hover content for an <see cref="MSBuildUnusedProperty"/>.
         /// </summary>
-        /// <param name="undefinedProperty">
+        /// <param name="unusedProperty">
         ///     The <see cref="MSBuildUnusedProperty"/>.
         /// </param>
         /// <returns>
         ///     The content, or <c>null</c> if no content is provided.
         /// </returns>
-        public MarkedStringContainer UnusedProperty(MSBuildUnusedProperty undefinedProperty)
+        public MarkedStringContainer UnusedProperty(MSBuildUnusedProperty unusedProperty)
         {
-            if (undefinedProperty == null)
-                throw new ArgumentNullException(nameof(undefinedProperty));
- 
-            return new MarkedStringContainer(
-                $"Unused Property: `{undefinedProperty.Name}` (condition is false)",
-                $"Value would have been: `{undefinedProperty.Value}`"
-            );
+            if (unusedProperty == null)
+                throw new ArgumentNullException(nameof(unusedProperty));
+
+            List<MarkedString> content = new List<MarkedString>
+            {
+                $"Unused Property: `{unusedProperty.Name}` (condition is false)",
+                $"Value would have been: `{unusedProperty.Value}`"
+            };
+
+            string propertyHelp = MSBuildSchemaHelp.ForProperty(unusedProperty.Name);
+            if (propertyHelp != null)
+                content.Add(propertyHelp);
+
+            return new MarkedStringContainer(content);
         }
 
         /// <summary>
@@ -132,6 +144,15 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
                 );
             }
 
+            List<MarkedString> content = new List<MarkedString>
+            {
+                $"Item Group: `{itemGroup.OriginatingElement.ItemType}`"
+            };
+
+            string itemTypeHelp = MSBuildSchemaHelp.ForItemType(itemGroup.Name);
+            if (itemTypeHelp != null)
+                content.Add(itemTypeHelp);
+
             string[] includes = itemGroup.Includes.ToArray();
             StringBuilder itemIncludeContent = new StringBuilder();
             itemIncludeContent.AppendLine(
@@ -155,10 +176,11 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
             if (includes.Length > 5)
                 itemIncludeContent.AppendLine("* ...");
 
-            return new MarkedStringContainer(
-                $"Item Group: `{itemGroup.OriginatingElement.ItemType}`",
+            content.Add(
                 itemIncludeContent.ToString()
-            );  
+            );
+
+            return new MarkedStringContainer(content);  
         }
 
         /// <summary>
@@ -177,6 +199,15 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
             
             string condition = unusedItemGroup.Condition;
             string evaluatedCondition = _projectDocument.MSBuildProject.ExpandString(condition);
+
+            List<MarkedString> content = new List<MarkedString>
+            {
+                $"Unused Item Group: `{unusedItemGroup.OriginatingElement.ItemType}` (condition is false)"
+            };
+
+            string itemTypeHelp = MSBuildSchemaHelp.ForItemType(unusedItemGroup.Name);
+            if (itemTypeHelp != null)
+                content.Add(itemTypeHelp);
 
             StringBuilder descriptionContent = new StringBuilder();
             
@@ -202,10 +233,11 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
             if (includes.Length > 5)
                 descriptionContent.AppendLine("* ...");
 
-            return new MarkedStringContainer(
-                $"Unused Item Group: `{unusedItemGroup.OriginatingElement.ItemType}` (condition is false)",
+            content.Add(
                 descriptionContent.ToString()
-            );  
+            );
+
+            return new MarkedStringContainer(content);  
         }
 
         /// <summary>

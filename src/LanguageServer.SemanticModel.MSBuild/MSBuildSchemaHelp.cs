@@ -9,6 +9,16 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
     public static class MSBuildSchemaHelp
     {
         /// <summary>
+        ///     The names of well-known MSBuild properties.
+        /// </summary>
+        public static IReadOnlyCollection<string> WellKnownPropertyNames => Properties.Keys;
+
+        /// <summary>
+        ///     The names of well-known MSBuild item types.
+        /// </summary>
+        public static IReadOnlyCollection<string> WellKnownItemTypes => ItemTypes.Keys;
+
+        /// <summary>
         ///     Get help content for the specified element.
         /// </summary>
         /// <param name="elementName">

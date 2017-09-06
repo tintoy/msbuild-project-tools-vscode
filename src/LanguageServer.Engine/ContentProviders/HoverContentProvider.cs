@@ -51,9 +51,14 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
             if (property == null)
                 throw new ArgumentNullException(nameof(property));
             
-            List<MarkedString> content = new List<MarkedString>();
+            List<MarkedString> content = new List<MarkedString>
+            {
+                $"Property: `{property.Name}`"
+            };
 
-            content.Add($"Property: `{property.Name}`");
+            string propertyHelp = MSBuildSchemaHelp.ForProperty(property.Name);
+            if (propertyHelp != null)
+                content.Add(propertyHelp);
 
             if (property.IsOverridden)
             {
@@ -86,10 +91,6 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
             else
                 content.Add($"Value: `{property.Value}`");
 
-            string propertyHelp = MSBuildSchemaHelp.ForProperty(property.Name);
-            if (propertyHelp != null)
-                content.Add(propertyHelp);
-
             return new MarkedStringContainer(content);
         }
 
@@ -109,13 +110,16 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
 
             List<MarkedString> content = new List<MarkedString>
             {
-                $"Unused Property: `{unusedProperty.Name}` (condition is false)",
-                $"Value would have been: `{unusedProperty.Value}`"
+                $"Unused Property: `{unusedProperty.Name}` (condition is false)"
             };
 
             string propertyHelp = MSBuildSchemaHelp.ForProperty(unusedProperty.Name);
             if (propertyHelp != null)
                 content.Add(propertyHelp);
+
+            content.Add(
+                $"Value would have been: `{unusedProperty.Value}`"
+            );
 
             return new MarkedStringContainer(content);
         }

@@ -561,7 +561,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The attribute (if any) that will be replaced by the completion.
         /// </param>
         /// <param name="needsPadding">
-        ///     An <see cref="PaddingType"/> value indicating what sort of padding (if any) is required.
+        ///     An <see cref="PaddingType"/> value indicating what sort of padding (if any) is required before / after the attribute.
         /// </param>
         /// <param name="inElementNamed">
         ///     If specified, the location's element must have the specified name.

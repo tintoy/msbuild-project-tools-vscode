@@ -75,7 +75,9 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             using (await projectDocument.Lock.ReaderLockAsync())
             {
                 XSElement element;
-                if (!location.IsElementBetweenAttributes(out element))
+                XSAttribute replaceAttribute;
+                PaddingType needsPadding;
+                if (!location.CanCompleteAttribute(out element, out replaceAttribute, out needsPadding))
                     return null;
 
                 // Must be an item element.
@@ -83,13 +85,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 if (element.ParentElement?.Name != "ItemGroup")
                     return null;
 
-                // These items are handled by PackageReferenceCompletion.
-                if (element.Name == "PackageReference" || element.Name == "DotNetCliToolReference")
-                    return null;
-
-                // TODO: Check if we need to add a leading " " because we're directly after an attribute.
-
-                Lsp.Models.Range insertRange = location.Position.ToEmptyRange().ToLsp();
+                Range replaceRange = replaceAttribute?.Range ?? location.Position.ToEmptyRange();
                 
                 completions.AddRange(
                     WellKnownItemAttributes.Except(
@@ -101,8 +97,8 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                         Kind = CompletionItemKind.Field,
                         TextEdit = new TextEdit
                         {
-                            NewText = $"{attributeName}=\"$1\"$0",
-                            Range = insertRange
+                            NewText = $"{attributeName}=\"$1\"$0".WithPadding(needsPadding),
+                            Range = replaceRange.ToLsp()
                         },
                         InsertTextFormat = InsertTextFormat.Snippet
                     })

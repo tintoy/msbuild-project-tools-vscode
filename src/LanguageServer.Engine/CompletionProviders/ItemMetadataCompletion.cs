@@ -64,12 +64,14 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 
             using (await projectDocument.Lock.ReaderLockAsync())
             {
+                HashSet<string> existingMetadata = new HashSet<string>();
+                
                 completions.AddRange(
-                    GetAttributeCompletions(location, projectDocument)
+                    GetAttributeCompletions(location, projectDocument, existingMetadata)
                 );
 
                 completions.AddRange(
-                    GetElementCompletions(location, projectDocument)
+                    GetElementCompletions(location, projectDocument, existingMetadata)
                 );
             }
 
@@ -92,17 +94,20 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         /// <param name="projectDocument">
         ///     The <see cref="ProjectDocument"/> that contains the <paramref name="location"/>.
         /// </param>
+        /// <param name="existingMetadata">
+        ///     Metadata already declared on the item.
+        /// </param>
         /// <returns>
         ///     A sequence of <see cref="CompletionItem"/>s.
         /// </returns>
-        IEnumerable<CompletionItem> GetAttributeCompletions(XmlLocation location, ProjectDocument projectDocument)
+        IEnumerable<CompletionItem> GetAttributeCompletions(XmlLocation location, ProjectDocument projectDocument, HashSet<string> existingMetadata)
         {
             Log.Verbose("Evaluate attribute completions for {XmlLocation:l}", location);
 
-            XSElement element;
+            XSElement itemElement;
             XSAttribute replaceAttribute;
             PaddingType needsPadding;
-            if (!location.CanCompleteAttribute(out element, out replaceAttribute, out needsPadding))
+            if (!location.CanCompleteAttribute(out itemElement, out replaceAttribute, out needsPadding))
             {
                 Log.Verbose("Not offering any attribute completions for {XmlLocation:l} (not a location where we can offer attribute completion.", location);
 
@@ -111,25 +116,14 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 
             // Must be an item element.
             // TODO: Make an XmlLocation.IsItemElement extension method for this.
-            if (element.ParentElement?.Name != "ItemGroup")
+            if (itemElement.ParentElement?.Name != "ItemGroup")
             {
                 Log.Verbose("Not offering any attribute completions for {XmlLocation:l} (element is not a direct child of a 'PropertyGroup' element).", location);
 
                 yield break;
             }
 
-            // These items are handled by PackageReferenceCompletion.
-            if (element.Name == "PackageReference" || element.Name == "DotNetCliToolReference")
-            {
-                Log.Verbose("Not offering any attribute completions for {XmlLocation:l} ({ItemType} items are handled by another provider).",
-                    location,
-                    element.Name
-                );
-
-                yield break;
-            }
-
-            string itemType = element.Name;
+            string itemType = itemElement.Name;
             if (MSBuildSchemaHelp.ForItemType(itemType) == null)
             {
                 Log.Verbose("Not offering any attribute completions for {XmlLocation:l} ({ItemType} is not a well-known item type).",
@@ -141,6 +135,13 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             }
 
             Log.Verbose("Will offer attribute completions for {XmlLocation:l} (padding: {NeedsPadding})", location, needsPadding);
+
+            // Don't offer completions for existing metadata.
+            existingMetadata.UnionWith(
+                GetExistingMetadataNames(itemElement)
+            );
+
+            Range replaceRange = replaceAttribute?.Range ?? location.Position.ToEmptyRange();
 
             const string universalMetadataPrefix = "*.";
             string metadataPrefix = String.Format("{0}.", itemType);
@@ -154,6 +155,9 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 else
                     continue;
 
+                if (existingMetadata.Contains(metadataName))
+                    continue;
+
                 if (MSBuildHelper.IsWellKnownItemMetadata(metadataName))
                     continue;
 
@@ -165,7 +169,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                     TextEdit = new TextEdit
                     {
                         NewText = $"{metadataName}=\"$0\"".WithPadding(needsPadding),
-                        Range = location.Position.ToEmptyRange().ToLsp()
+                        Range = replaceRange.ToLsp()
                     },
                     InsertTextFormat = InsertTextFormat.Snippet
                 };
@@ -181,15 +185,18 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         /// <param name="projectDocument">
         ///     The <see cref="ProjectDocument"/> that contains the <paramref name="location"/>.
         /// </param>
+        /// <param name="existingMetadata">
+        ///     Metadata already declared on the item.
+        /// </param>
         /// <returns>
         ///     A sequence of <see cref="CompletionItem"/>s.
         /// </returns>
-        IEnumerable<CompletionItem> GetElementCompletions(XmlLocation location, ProjectDocument projectDocument)
+        IEnumerable<CompletionItem> GetElementCompletions(XmlLocation location, ProjectDocument projectDocument, HashSet<string> existingMetadata)
         {
             Log.Verbose("Evaluate element completions for {XmlLocation:l}", location);
 
-            XSElement element;
-            if (!location.CanCompleteElement(out element))
+            XSElement itemElement;
+            if (!location.CanCompleteElement(out itemElement))
             {
                 Log.Verbose("Not offering any element completions for {XmlLocation:l} (not a location where we can offer element completion.", location);
 
@@ -198,29 +205,29 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 
             // Must be an item element.
             // TODO: Make an XmlLocation.IsItemElement extension method for this.
-            if (element.ParentElement?.ParentElement?.Name != "ItemGroup")
+            if (itemElement.ParentElement?.ParentElement?.Name != "ItemGroup")
             {
                 Log.Verbose("Not offering any element completions for {XmlLocation:l} (parent element {ParentElementName} has parent {ParentParentElementName}, rather than 'PropertyGroup').",
                     location,
-                    element.ParentElement?.Name,
-                    element.ParentElement?.ParentElement?.Name
+                    itemElement.ParentElement?.Name,
+                    itemElement.ParentElement?.ParentElement?.Name
                 );
 
                 yield break;
             }
 
             // These items are handled by PackageReferenceCompletion.
-            if (element.ParentElement?.Name == "PackageReference" || element.ParentElement?.Name == "DotNetCliToolReference")
+            if (itemElement.ParentElement?.Name == "PackageReference" || itemElement.ParentElement?.Name == "DotNetCliToolReference")
             {
                 Log.Verbose("Not offering any element completions for {XmlLocation:l} ({ItemType} items are handled by another provider).",
                     location,
-                    element.Name
+                    itemElement.Name
                 );
 
                 yield break;
             }
 
-            string itemType = element.ParentElement.Name;
+            string itemType = itemElement.ParentElement.Name;
             if (MSBuildSchemaHelp.ForItemType(itemType) == null)
             {
                 Log.Verbose("Not offering any element completions for {XmlLocation:l} ({ItemType} is not a well-known item type).",
@@ -230,6 +237,11 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 
                 yield break;
             }
+
+            // Don't offer completions for existing metadata.
+            existingMetadata.UnionWith(
+                GetExistingMetadataNames(itemElement)
+            );
 
             Log.Verbose("Will offer element completions for {XmlLocation:l}", location);
 
@@ -245,6 +257,9 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 else
                     continue;
 
+                if (existingMetadata.Contains(metadataName))
+                    continue;
+
                 if (MSBuildHelper.IsWellKnownItemMetadata(metadataName))
                     continue;
 
@@ -258,11 +273,32 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                     TextEdit = new TextEdit
                     {
                         NewText = $"<{metadataName}>$0</{metadataName}>",
-                        Range = element.Range.ToLsp()
+                        Range = itemElement.Range.ToLsp()
                     },
                     InsertTextFormat = InsertTextFormat.Snippet
                 };
             }
+        }
+
+        /// <summary>
+        ///     Get the names of existing metadata on the target item.
+        /// </summary>
+        /// <param name="itemElement">
+        ///     The item element.
+        /// </param>
+        /// <returns>
+        ///     A sequence of existing metadata names.
+        /// </returns>
+        IEnumerable<string> GetExistingMetadataNames(XSElement itemElement)
+        {
+            if (itemElement == null)
+                throw new ArgumentNullException(nameof(itemElement));
+            
+            foreach (XSAttribute metadataAttribute in itemElement.Attributes)
+                yield return metadataAttribute.Name;
+
+            foreach (XSElement metadataElement in itemElement.ChildElements)
+                yield return metadataElement.Name;
         }
     }
 }

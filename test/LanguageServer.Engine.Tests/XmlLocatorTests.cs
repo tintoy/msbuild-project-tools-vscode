@@ -278,8 +278,9 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// </param>
         [InlineData("Test1", 6, 14, "Element5", PaddingType.Leading)]
         [InlineData("Test2", 17, 17, "Compile", PaddingType.Leading)]
+        [InlineData("Test2", 17, 36, "Compile", PaddingType.Leading)]
         [InlineData("Test2", 17, 37, "Compile", PaddingType.Trailing)]
-        [InlineData("Test2", 17, 53, "Compile", PaddingType.Trailing)]
+        [InlineData("Test2", 17, 53, "Compile", PaddingType.Leading)]
         [InlineData("Test2", 17, 54, "Compile", PaddingType.None)]
         [Theory(DisplayName = "On completable attribute where element name matches ")]
         public void CanCompleteAttribute(string testFileName, int line, int column, string expectedElementName, PaddingType expectedPadding)

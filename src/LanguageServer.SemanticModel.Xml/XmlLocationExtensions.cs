@@ -603,8 +603,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                         break;
                     }
                 }
-                else
-                    return false;
+                else if (location.Position == element.NameRange.End) // We're directly after the name.
+                    needsPadding = PaddingType.Leading;
             }
             else if (location.IsElement(out element))
             {

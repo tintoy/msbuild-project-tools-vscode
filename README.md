@@ -10,8 +10,9 @@ You need .NET Core 2.0.0 or newer installed to use the language service (but you
 
 ## Usage
 
-* _Language service feature:_ Completions for `PackageReference` and `DotNetCliToolReference`.
+* Completions for `PackageReference` and `DotNetCliToolReference`.
   * Completions for `Include` and `Version` attributes of these items.
+  * _Language service feature:_ Completions to create these elements.
 * _Language service feature:_ Completions for common top-level elements (e.g. `PropertyGroup`, `ItemGroup`, `Target`).
 * _Language service feature:_ Completions for property elements.
 * _Language service feature:_ Completions for common item attributes.
@@ -22,9 +23,31 @@ You need .NET Core 2.0.0 or newer installed to use the language service (but you
 * Basic syntax highlighting of MSBuild expressions in attribute values.  
   To see this highlighting, change the editor language from `XML` to `MSBuild`.
 
+### File extensions
+
+By default, the language service is automatically available for files with the following extensions:
+
+* `*.*proj`
+* `.targets`
+* `.props`
+* `.tasks`
+
+If you want to use it with additional file types:
+
+1. Open the desired file.
+2. Change the language mode by pressing `Ctrl-Shift-P` (or `Cmd-Shift-P` on Mac) and choosing "Change Language Mode".  
+   ![associate language with file extension](docs/images/change-language-mode.jpg)
+3. Choose "configure file association".  
+   ![associate language with file extension](docs/images/associate-language-with-file-extension.jpg)
+4. Choose language `MSBuild`.
+
 ## Installation
 
 You can install this extension from the [VS marketplace](https://marketplace.visualstudio.com/items?itemName=tintoy.msbuild-project-tools), or simply [download](https://github.com/tintoy/msbuild-project-tools-vscode/releases/latest) the VSIX package for the latest release and install it by choosing "Install from VSIX" from the menu on the top right of the extensions panel.
+
+## Building from source
+
+See [BUILDING.md](docs/BUILDING.md).
 
 ## Limitations
 

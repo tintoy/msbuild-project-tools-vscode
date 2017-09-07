@@ -277,6 +277,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         ///     The the name of the element to whicht the attribute will be added.
         /// </param>
         [InlineData("Test1", 6, 14, "Element5", PaddingType.Leading)]
+        [InlineData("Test2", 17, 17, "Compile", PaddingType.Leading)]
         [InlineData("Test2", 17, 37, "Compile", PaddingType.Trailing)]
         [InlineData("Test2", 17, 53, "Compile", PaddingType.Trailing)]
         [InlineData("Test2", 17, 54, "Compile", PaddingType.None)]

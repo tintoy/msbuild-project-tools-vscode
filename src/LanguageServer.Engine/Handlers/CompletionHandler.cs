@@ -155,36 +155,39 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
 
                 Log.Verbose("Completion will target {XmlLocation:l}", location);
 
-                CompletionList[] allProviderCompletions;
-                try
+                List<Task<CompletionList>> allProviderCompletions =
+                    Providers.Select(
+                        provider => provider.ProvideCompletions(location, projectDocument, cancellationToken)
+                    )
+                    .ToList();
+
+                while (allProviderCompletions.Count > 0)
                 {
-                    allProviderCompletions = await Task.WhenAll(
-                        Providers.Select(
-                            provider => provider.ProvideCompletions(location, projectDocument, cancellationToken)
-                        )
-                    );
-                }
-                catch (AggregateException aggregateSuggestionError)
-                {
-                    foreach (Exception suggestionError in aggregateSuggestionError.Flatten().InnerExceptions)
+                    Task<CompletionList> providerCompletionTask = await Task.WhenAny(allProviderCompletions);
+                    allProviderCompletions.Remove(providerCompletionTask);
+
+                    try
+                    {
+                        CompletionList providerCompletions = await providerCompletionTask;
+                        if (providerCompletions != null)
+                        {
+                            completionItems.AddRange(providerCompletions.Items);
+
+                            isIncomplete |= providerCompletions.IsIncomplete; // If any provider returns incomplete results, VSCode will need to ask again as the user continues to type.
+                        }
+                    }
+                    catch (AggregateException aggregateSuggestionError)
+                    {
+                        foreach (Exception suggestionError in aggregateSuggestionError.Flatten().InnerExceptions)
+                            Log.Error(suggestionError, "Failed to provide completions.");
+
+                        return null;
+                    }
+                    catch (Exception suggestionError)
+                    {
                         Log.Error(suggestionError, "Failed to provide completions.");
 
-                    return null;
-                }
-                catch (Exception suggestionError)
-                {
-                    Log.Error(suggestionError, "Failed to provide completions.");
-
-                    return null;
-                }
-
-                foreach (CompletionList providerCompletions in allProviderCompletions)
-                {
-                    if (providerCompletions != null)
-                    {
-                        completionItems.AddRange(providerCompletions.Items);
-
-                        isIncomplete |= providerCompletions.IsIncomplete; // If any provider returns incomplete results, VSCode will need to ask again as the user continues to type.
+                        return null;
                     }
                 }
             }

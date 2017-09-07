@@ -83,6 +83,18 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             );
         }
 
+        /// <summary>
+        ///     Get completions for item attributes.
+        /// </summary>
+        /// <param name="location">
+        ///     The <see cref="XmlLocation"/> where completions are requested.
+        /// </param>
+        /// <param name="projectDocument">
+        ///     The <see cref="ProjectDocument"/> that contains the <paramref name="location"/>.
+        /// </param>
+        /// <returns>
+        ///     A sequence of <see cref="CompletionItem"/>s.
+        /// </returns>
         IEnumerable<CompletionItem> GetAttributeCompletions(XmlLocation location, ProjectDocument projectDocument)
         {
             Log.Verbose("Evaluate attribute completions for {XmlLocation:l}", location);
@@ -140,6 +152,9 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 else
                     continue;
 
+                if (MSBuildHelper.IsWellKnownItemMetadata(metadataName))
+                    continue;
+
                 yield return new CompletionItem
                 {
                     Label = metadataName,
@@ -155,6 +170,18 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             }
         }
 
+        /// <summary>
+        ///     Get completions for item elements.
+        /// </summary>
+        /// <param name="location">
+        ///     The <see cref="XmlLocation"/> where completions are requested.
+        /// </param>
+        /// <param name="projectDocument">
+        ///     The <see cref="ProjectDocument"/> that contains the <paramref name="location"/>.
+        /// </param>
+        /// <returns>
+        ///     A sequence of <see cref="CompletionItem"/>s.
+        /// </returns>
         IEnumerable<CompletionItem> GetElementCompletions(XmlLocation location, ProjectDocument projectDocument)
         {
             Log.Verbose("Evaluate element completions for {XmlLocation:l}", location);
@@ -214,6 +241,9 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 else if (metadataKey.StartsWith(universalMetadataPrefix))
                     metadataName = metadataKey.Substring(universalMetadataPrefix.Length);
                 else
+                    continue;
+
+                if (MSBuildHelper.IsWellKnownItemMetadata(metadataName))
                     continue;
 
                 string completionLabel = $"<{metadataName}>";

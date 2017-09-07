@@ -127,6 +127,40 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         }
 
         /// <summary>
+        ///     Determine whether the specified metadata name represents well-known (built-in) item metadata.
+        /// </summary>
+        /// <param name="metadataName">
+        ///     The metadata name.
+        /// </param>
+        /// <returns>
+        ///     <c>true</c>, if <paramref name="metadataName"/> represents well-known item metadata; otherwise, <c>false</c>.
+        /// </returns>
+        public static bool IsWellKnownItemMetadata(string metadataName)
+        {
+            switch (metadataName)
+            {
+                case "AccessedTime":
+                case "CreatedTime":
+                case "Directory":
+                case "Extension":
+                case "Filename":
+                case "FullPath":
+                case "Identity":
+                case "ModifiedTime":
+                case "RecursiveDir":
+                case "RelativeDir":
+                case "RootDir":
+                {
+                    return true;
+                }
+                default:
+                {
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>
         ///     Create a copy of the project for caching.
         /// </summary>
         /// <param name="project">

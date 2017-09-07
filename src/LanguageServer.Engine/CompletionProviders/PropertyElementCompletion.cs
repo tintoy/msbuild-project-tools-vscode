@@ -66,7 +66,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 XSElement replaceElement;
                 if (!location.CanCompleteElement(out replaceElement, asChildOfElementNamed: "PropertyGroup"))
                 {
-                    Log.Verbose("Not offering any completions for {XmlLocation:l} (not a direct child of the 'PropertyGroup' element).", location);
+                    Log.Verbose("Not offering any completions for {XmlLocation:l} (not a direct child of a 'PropertyGroup' element).", location);
 
                     return null;
                 }

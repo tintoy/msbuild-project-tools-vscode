@@ -210,7 +210,12 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                     if (nameSpan.Contains(absolutePosition))
                         flags |= XmlLocationFlags.Name;
 
-                    TextSpan attributesSpan = syntaxNode.AttributesNode?.FullSpan ?? new TextSpan();
+                    TextSpan attributesSpan = new TextSpan();
+                    if (syntaxNode.AttributesNode != null)
+                        attributesSpan = syntaxNode.AttributesNode.FullSpan;
+                    else if (syntaxNode.SlashGreaterThanToken != null)
+                        attributesSpan = new TextSpan(start: syntaxNode.NameNode.Span.End, length: syntaxNode.SlashGreaterThanToken.Span.Start - syntaxNode.NameNode.Span.End);
+
                     if (attributesSpan.Contains(absolutePosition))
                         flags |= XmlLocationFlags.Attributes;
 
@@ -230,8 +235,13 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                     if (startTagSpan.Contains(absolutePosition))
                         flags |= XmlLocationFlags.OpeningTag;
 
-                    TextSpan attributesSpan = syntaxNode.AttributesNode?.FullSpan ?? new TextSpan();
-                    if (attributesSpan.Contains(absolutePosition))
+                    TextSpan attributesSpan = new TextSpan();
+                    if (syntaxNode.AttributesNode != null)
+                        attributesSpan = syntaxNode.AttributesNode.FullSpan;
+                    else if (syntaxNode.StartTag?.GreaterThanToken != null)
+                        attributesSpan = new TextSpan(start: syntaxNode.NameNode.Span.End, length: syntaxNode.StartTag.GreaterThanToken.Span.Start - syntaxNode.NameNode.Span.End);
+                        
+                    if (attributesSpan.Contains(absolutePosition) || absolutePosition == attributesSpan.End) // In this particular case, we need an inclusive comparison.
                         flags |= XmlLocationFlags.Attributes;
 
                     TextSpan endTagSpan = syntaxNode.EndTag?.Span ?? new TextSpan();

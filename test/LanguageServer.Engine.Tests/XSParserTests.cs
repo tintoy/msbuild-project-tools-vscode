@@ -178,8 +178,8 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         [InlineData("Test1", 7, 4, 9, 4, 21)]
         [InlineData("Test1", 8, 4, 21, 5, 5)]
         [InlineData("Test1", 9, 5, 16, 6, 5)]
-        [InlineData("Test1", 10, 6, 5, 6, 26)]
-        [InlineData("Test1", 11, 6, 26, 7, 1)]
+        [InlineData("Test1", 10, 6, 5, 6, 27)]
+        [InlineData("Test1", 11, 6, 27, 7, 1)]
         [Theory(DisplayName = "XSParser discovers node with range ")]
         void NodeRange(string testFileName, int index, int startLine, int startColumn, int endLine, int endColumn)
         {

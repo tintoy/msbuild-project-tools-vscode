@@ -262,6 +262,44 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         }
 
         /// <summary>
+        ///     Verify that the target line and column are on an element where an attribute can be created by completion.
+        /// </summary>
+        /// <param name="testFileName">
+        ///     The name of the test file, without the extension.
+        /// </param>
+        /// <param name="line">
+        ///     The target line.
+        /// </param>
+        /// <param name="column">
+        ///     The target column.
+        /// </param>
+        /// <param name="expectedElementName">
+        ///     The the name of the element to whicht the attribute will be added.
+        /// </param>
+        [InlineData("Test1", 6, 14, "Element5")]
+        [InlineData("Test2", 17, 37, "Compile")]
+        [Theory(DisplayName = "On completable attribute where element name matches ")]
+        public void CanCompleteAttribute(string testFileName, int line, int column, string expectedElementName)
+        {
+            Position testPosition = new Position(line, column);
+
+            string testXml = LoadTestFile("TestFiles", testFileName + ".xml");
+            TextPositions positions = new TextPositions(testXml);
+            XmlDocumentSyntax document = Parser.ParseText(testXml);
+
+            XmlLocator locator = new XmlLocator(document, positions);
+            XmlLocation location = locator.Inspect(testPosition);
+            Assert.NotNull(location);
+
+            XSAttribute replaceAttribute;
+            Assert.True(
+                location.CanCompleteAttribute(out replaceAttribute, inElementNamed: expectedElementName),
+                "CanCompleteAttribute"
+            );
+            Assert.Null(replaceAttribute);
+        }
+
+        /// <summary>
         ///     Load a test file.
         /// </summary>
         /// <param name="relativePathSegments">

@@ -518,6 +518,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (!location.IsElement(out element))
                 return false;
 
+            if (location.IsElementBetweenAttributes())
+                return false;
+
             if (element.IsValid)
             {
                 // The common case; we can simply replace this element.
@@ -541,6 +544,43 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 return false;
 
             replaceElement = element;
+
+            return true;
+        }
+
+        /// <summary>
+        ///     Does the location represent a place where an attribute can be created or replaced by a completion?
+        /// </summary>
+        /// <param name="location">
+        ///     The XML location.
+        /// </param>
+        /// <param name="replaceAttribute">
+        ///     The attribute (if any) that will be replaced by the completion.
+        /// </param>
+        /// <param name="inElementNamed">
+        ///     If specified, the location's element must have the specified name.
+        /// </param>
+        /// <returns>
+        ///     <c>true</c>, if the location represents an element that can be replaced by completion; otherwise, <c>false</c>.
+        /// </returns>
+        public static bool CanCompleteAttribute(this XmlLocation location, out XSAttribute replaceAttribute, string inElementNamed = null)
+        {
+            if (location == null)
+                throw new ArgumentNullException(nameof(location));
+
+            replaceAttribute = null;
+
+            XSAttribute attribute;
+            XSElement element;
+            if (location.IsAttribute(out attribute))
+                element = attribute.Element;
+            else if (!location.IsElementBetweenAttributes(out element))
+                return false;
+
+            if (inElementNamed != null && element.Name != inElementNamed)
+                return false;
+
+            replaceAttribute = attribute;
 
             return true;
         }

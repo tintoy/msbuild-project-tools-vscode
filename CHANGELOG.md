@@ -4,6 +4,7 @@
 
 * Fix bug: missing completions for top-level elements (e.g. `<PropertyGroup>`, `<ItemGroup>`, `<Target>`).
 * Improve help for well-known items and their metadata.
+* Bug-fix for tintoy/msbuild-project-tools-vscode#11 (should not fail on non-standard file extension).
 
 ## v0.2.3
 

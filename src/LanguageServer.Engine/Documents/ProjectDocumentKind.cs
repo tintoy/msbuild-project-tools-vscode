@@ -18,6 +18,11 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <summary>
         ///     A targets file (*.targets).
         /// </summary>
-        Targets = 3
+        Targets = 3,
+
+        /// <summary>
+        ///     Some other file type (*.*).
+        /// </summary>
+        Other  = 4
     }
 }

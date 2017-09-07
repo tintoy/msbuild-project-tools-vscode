@@ -92,7 +92,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             else if (ProjectFile.Extension.Equals(".targets", StringComparison.OrdinalIgnoreCase))
                 Kind = ProjectDocumentKind.Targets;
             else
-                throw new ArgumentException($"Unexpected project file extension '{ProjectFile.Extension}'.", nameof(documentUri));
+                Kind = ProjectDocumentKind.Other;
 
             Log = logger.ForContext("ProjectDocument", ProjectFile.FullName);
         }

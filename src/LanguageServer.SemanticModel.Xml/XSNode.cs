@@ -91,7 +91,10 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         {
             if (syntaxNode == null)
                 throw new ArgumentNullException(nameof(syntaxNode));
-            
+
+            if (range == null)
+                throw new ArgumentNullException(nameof(range));
+
             SyntaxNode = syntaxNode;
         }
 

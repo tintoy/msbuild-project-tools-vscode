@@ -14,7 +14,7 @@
         <Foo Include="G;H;I;J" Diddly="Dee" />
         <Foo Include="K;L;M" Diddly="Dee" ExtensionsPath="$(MSBuildExtensionsPath)" Condition=" '$(AnotherProperty)' == 'Hello' " />
         <Bar Include="A;@(Foo->'%(Diddly)')" />
-        <Compile Include="Hello.cs" >
+        <Compile Include="Hello.cs" Something="Else" >
             
         </Compile>
     </ItemGroup>

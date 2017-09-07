@@ -554,8 +554,14 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="location">
         ///     The XML location.
         /// </param>
+        /// <param name="element">
+        ///     The element whose attribute will be completed.
+        /// </param>
         /// <param name="replaceAttribute">
         ///     The attribute (if any) that will be replaced by the completion.
+        /// </param>
+        /// <param name="needsPadding">
+        ///     An <see cref="PaddingType"/> value indicating what sort of padding (if any) is required.
         /// </param>
         /// <param name="inElementNamed">
         ///     If specified, the location's element must have the specified name.
@@ -563,18 +569,52 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <returns>
         ///     <c>true</c>, if the location represents an element that can be replaced by completion; otherwise, <c>false</c>.
         /// </returns>
-        public static bool CanCompleteAttribute(this XmlLocation location, out XSAttribute replaceAttribute, string inElementNamed = null)
+        public static bool CanCompleteAttribute(this XmlLocation location, out XSElement element, out XSAttribute replaceAttribute, out PaddingType needsPadding, string inElementNamed = null)
         {
             if (location == null)
                 throw new ArgumentNullException(nameof(location));
 
             replaceAttribute = null;
+            needsPadding = PaddingType.None;
 
             XSAttribute attribute;
-            XSElement element;
             if (location.IsAttribute(out attribute))
+            {
                 element = attribute.Element;
-            else if (!location.IsElementBetweenAttributes(out element))
+                if (location.Position == attribute.Start)
+                {
+                    // Since we're on an existing attribute, we'll add a new attribute after it.
+                    attribute = null;
+                    needsPadding = PaddingType.Trailing;
+                }
+            }
+            else if (location.IsElementBetweenAttributes(out element))
+            {
+                if (element.Attributes.Count > 0)
+                {
+                    // Check if we're directly before an attribute.
+                    foreach (XSAttribute currentAttribute in element.Attributes)
+                    {
+                        if (location.Position == currentAttribute.End)
+                            needsPadding = PaddingType.Leading;
+                        else
+                            continue;
+
+                        break;
+                    }
+                }
+                else
+                    return false;
+            }
+            else if (location.IsElement(out element))
+            {
+                // Check if we're directly after the name.
+                if (location.Position != element.NameRange.End)
+                    return false;
+
+                needsPadding = PaddingType.Leading;
+            }
+            else
                 return false;
 
             if (inElementNamed != null && element.Name != inElementNamed)

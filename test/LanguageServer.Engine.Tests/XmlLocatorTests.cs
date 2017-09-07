@@ -276,10 +276,12 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// <param name="expectedElementName">
         ///     The the name of the element to whicht the attribute will be added.
         /// </param>
-        [InlineData("Test1", 6, 14, "Element5")]
-        [InlineData("Test2", 17, 37, "Compile")]
+        [InlineData("Test1", 6, 14, "Element5", PaddingType.Leading)]
+        [InlineData("Test2", 17, 37, "Compile", PaddingType.Trailing)]
+        [InlineData("Test2", 17, 53, "Compile", PaddingType.Trailing)]
+        [InlineData("Test2", 17, 54, "Compile", PaddingType.None)]
         [Theory(DisplayName = "On completable attribute where element name matches ")]
-        public void CanCompleteAttribute(string testFileName, int line, int column, string expectedElementName)
+        public void CanCompleteAttribute(string testFileName, int line, int column, string expectedElementName, PaddingType expectedPadding)
         {
             Position testPosition = new Position(line, column);
 
@@ -291,12 +293,16 @@ namespace MSBuildProjectTools.LanguageServer.Tests
             XmlLocation location = locator.Inspect(testPosition);
             Assert.NotNull(location);
 
+            XSElement element;
             XSAttribute replaceAttribute;
+            PaddingType needsPadding;
             Assert.True(
-                location.CanCompleteAttribute(out replaceAttribute, inElementNamed: expectedElementName),
+                location.CanCompleteAttribute(out element, out replaceAttribute, out needsPadding, inElementNamed: expectedElementName),
                 "CanCompleteAttribute"
             );
+            Assert.NotNull(element);
             Assert.Null(replaceAttribute);
+            Assert.Equal(expectedPadding, needsPadding);
         }
 
         /// <summary>

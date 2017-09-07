@@ -17,14 +17,17 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="range">
         ///     The <see cref="Range"/>, within the source text, spanned by the node.
         /// </param>
+        /// <param name="nameRange">
+        ///     The range, within the source text, spanned by the element's name.
+        /// </param>
         /// <param name="attributesRange">
         ///     The range, within the source text, spanned by the element's attributes.
         /// </param>
         /// <param name="parent">
         ///     The <see cref="XSEmptyElement"/>'s parent element (if any).
         /// </param>
-        public XSEmptyElement(XmlEmptyElementSyntax emptyElement, Range range, Range attributesRange, XSElement parent)
-            : base(emptyElement, range, attributesRange, parent)
+        public XSEmptyElement(XmlEmptyElementSyntax emptyElement, Range range, Range nameRange, Range attributesRange, XSElement parent)
+            : base(emptyElement, range, nameRange, attributesRange, parent)
         {
         }
 

@@ -20,6 +20,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="range">
         ///     The <see cref="Range"/>, within the source text, spanned by the element and its content.
         /// </param>
+        /// <param name="nameRange">
+        ///     The range, within the source text, spanned by the element's name.
+        /// </param>
         /// <param name="openingTagRange">
         ///     The <see cref="Range"/>, within the source text, spanned by the element's opening tag.
         /// </param>
@@ -35,8 +38,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="parent">
         ///     The <see cref="XSElementWithContent"/>'s parent element (if any).
         /// </param>
-        public XSElementWithContent(XmlElementSyntax element, Range range, Range openingTagRange, Range attributesRange, Range contentRange, Range closingTagRange, XSElement parent)
-            : base(element, range, attributesRange, parent)
+        public XSElementWithContent(XmlElementSyntax element, Range range, Range nameRange, Range openingTagRange, Range attributesRange, Range contentRange, Range closingTagRange, XSElement parent)
+            : base(element, range, nameRange, attributesRange, parent)
         {
             if (openingTagRange == null)
                 throw new ArgumentNullException(nameof(openingTagRange));

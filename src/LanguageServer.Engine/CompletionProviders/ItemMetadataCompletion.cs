@@ -100,7 +100,9 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             Log.Verbose("Evaluate attribute completions for {XmlLocation:l}", location);
 
             XSElement element;
-            if (!location.IsElementBetweenAttributes(out element))
+            XSAttribute replaceAttribute;
+            PaddingType needsPadding;
+            if (!location.CanCompleteAttribute(out element, out replaceAttribute, out needsPadding))
             {
                 Log.Verbose("Not offering any attribute completions for {XmlLocation:l} (not a location where we can offer attribute completion.", location);
 
@@ -138,7 +140,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 yield break;
             }
 
-            Log.Verbose("Will offer attribute completions for {XmlLocation:l}", location);
+            Log.Verbose("Will offer attribute completions for {XmlLocation:l} (padding: {NeedsPadding})", location, needsPadding);
 
             const string universalMetadataPrefix = "*.";
             string metadataPrefix = String.Format("{0}.", itemType);
@@ -162,7 +164,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                     SortText = Priority + metadataName,
                     TextEdit = new TextEdit
                     {
-                        NewText = $"{metadataName}=\"$0\" ",
+                        NewText = $"{metadataName}=\"$0\"".WithPadding(needsPadding),
                         Range = location.Position.ToEmptyRange().ToLsp()
                     },
                     InsertTextFormat = InsertTextFormat.Snippet

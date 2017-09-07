@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.5
+
+* Bug-fix: attribute completions should be available on elements that don't currently have any attributes.
+
 ## v0.2.4
 
 * Bug-fix: missing completions for top-level elements (e.g. `<PropertyGroup>`, `<ItemGroup>`, `<Target>`).

@@ -136,6 +136,24 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         }
 
         /// <summary>
+        ///     Parse an MSBuild evaluation expression.
+        /// </summary>
+        public static Parser<Evaluation> Evaluation = Parse.Positioned(
+            from evalOpen in Tokens.EvalOpen
+            from body in Tokens.Identifier.Token() // .Or()...
+            from evalClose in Tokens.EvalClose
+            select new Evaluation
+            {
+                Children = ImmutableList.Create<ExpressionNode>(
+                    new SymbolExpression
+                    {
+                        Name = body
+                    }
+                )
+            }
+        );
+
+        /// <summary>
         ///     Parse an MSBuild quoted-string-literal expression.
         /// </summary>
         public static readonly Parser<QuotedStringLiteral> QuotedStringLiteral = Parse.Positioned(

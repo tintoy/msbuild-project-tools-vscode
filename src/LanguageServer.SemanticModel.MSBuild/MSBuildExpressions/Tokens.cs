@@ -21,6 +21,21 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         public static Parser<char> Period = Parse.Char('.');
 
         /// <summary>
+        ///     Parse a dollar sign, "$".
+        /// </summary>
+        public static Parser<char> Dollar = Parse.Char('$');
+
+        /// <summary>
+        ///     Parse the opening of an evaluation expression, "$(".
+        /// </summary>
+        public static Parser<IEnumerable<char>> EvalOpen = Parse.String("$(");
+
+        /// <summary>
+        ///     Parse the close of an evaluation expression, ")".
+        /// </summary>
+        public static Parser<char> EvalClose = Parse.Char(')');
+
+        /// <summary>
         ///     Parse an equality operator, "==".
         /// </summary>
         public static Parser<string> EqualityOperator = Parse.String("==").Text();
@@ -74,21 +89,26 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         public static Parser<char> ListChar = Parse.AnyChar.Except(Tokens.Semicolon);
 
         /// <summary>
-        ///     Parse a list of strings delimited by semicolons.
+        ///     Parse a list of strings delimited by semicolons, "ABC;DEF", as character sequences.
         /// </summary>
-        public static readonly Parser<IEnumerable<IEnumerable<char>>> DelimitedList = ListChar.Many().DelimitedBy(Tokens.Semicolon);
+        public static readonly Parser<IEnumerable<IEnumerable<char>>> DelimitedList = ListChar.Many().DelimitedBy(Semicolon);
 
         /// <summary>
-        ///     Parse a list of strings delimited by semicolons.
+        ///     Parse a list of strings delimited by semicolons, "ABC;DEF", as strings.
         /// </summary>
-        public static readonly Parser<IEnumerable<IEnumerable<char>>> DelimitedListOfStrings = ListChar.Many().Text().DelimitedBy(Tokens.Semicolon);
+        public static readonly Parser<IEnumerable<IEnumerable<char>>> DelimitedListOfStrings = ListChar.Many().Text().DelimitedBy(Semicolon);
 
         /// <summary>
-        ///     Parse an identifier.
+        ///     Parse an identifier, "ABC".
         /// </summary>
         public static Parser<string> Identifier =
             from first in Parse.Letter
             from rest in Parse.LetterOrDigit.Many().Text()
             select first + rest;
+
+        /// <summary>
+        ///     Parse a qualified identifier, "ABC.DEF".
+        /// </summary>
+        public static Parser<IEnumerable<string>> QualifiedIdentifier = Identifier.DelimitedBy(Period);
     }
 }

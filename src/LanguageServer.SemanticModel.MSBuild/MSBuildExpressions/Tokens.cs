@@ -36,18 +36,23 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         public static Parser<char> SingleQuote = Parse.Char('\'');
 
         /// <summary>
-        ///     Parse a single hexadecimal digit, "[0-9A-Fa-f]".
+        ///     Parse a single hexadecimal digit, "[0-9A-F]".
         /// </summary>
-        public static Parser<char> HexDigit = Parse.Chars('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'a', 'b', 'c', 'd', 'e', 'f');
+        public static Parser<char> HexDigit = Parse.Char(
+            predicate: character =>
+                (character >= '0' && character <= '9')
+                ||
+                (character >= 'A' && character <= 'F'),
+            description: "hexadecimal digit"
+        );
 
         /// <summary>
-        ///     Parse an escaped char, "%xx" (where "x" is a hexadecimal digit).
+        ///     Parse an escaped character, "%xx" (where "x" is a hexadecimal digit, and the resulting number represents the ASCII character code).
         /// </summary>
         public static Parser<char> EscapedChar =
             from escape in Parse.Char('%')
-            from hex in HexDigit.Repeat(2).Text()
-            let character = (char)Byte.Parse(hex, NumberStyles.HexNumber)
-            select (char)Byte.Parse(hex);
+            from hexDigits in HexDigit.Repeat(2).Text()
+            select (char)Byte.Parse(hexDigits, NumberStyles.HexNumber);
 
         /// <summary>
         ///     Parse any character valid within a single-quoted string.
@@ -57,7 +62,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     Parse a quoted string.
         /// </summary>
-        public static Parser<IEnumerable<char>> QuotedString = SingleQuotedStringChar.DelimitedBy(SingleQuote);
+        public static Parser<IEnumerable<char>> QuotedString =
+            from leftQuote in SingleQuote
+            from stringContents in SingleQuotedStringChar.Many()
+            from rightQuote in SingleQuote
+            select stringContents;
 
         /// <summary>
         ///     Parse any character valid within a semicolon-delimited list.
@@ -77,7 +86,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     Parse an identifier.
         /// </summary>
-        public static Parser <string> Identifier =
+        public static Parser<string> Identifier =
             from first in Parse.Letter
             from rest in Parse.LetterOrDigit.Many().Text()
             select first + rest;

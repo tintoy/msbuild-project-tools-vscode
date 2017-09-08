@@ -12,9 +12,9 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
     using SemanticModel.MSBuildExpressions;
 
     /// <summary>
-    ///     Tests for parsing of MSBuild list expressions.
+    ///     Tests for parsing of simple MSBuild lists.
     /// </summary>
-    public class ListParserTests
+    public class SimpleListParserTests
     {
         /// <summary>
         ///     Create a new simple list parser test-suite.
@@ -22,7 +22,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         /// <param name="testOutput">
         ///     Output for the current test.
         /// </param>
-        public ListParserTests(ITestOutputHelper testOutput)
+        public SimpleListParserTests(ITestOutputHelper testOutput)
         {
             if (testOutput == null)
                 throw new ArgumentNullException(nameof(testOutput));

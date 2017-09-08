@@ -136,6 +136,19 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         }
 
         /// <summary>
+        ///     Parse an MSBuild quoted-string expression.
+        /// </summary>
+        public static readonly Parser<QuotedStringExpression> QuotedString = Parse.Positioned(
+            from leadingQuote in Tokens.SingleQuote
+            from content in Tokens.SingleQuotedStringChar.Many().Text()
+            from trailingQuote in Tokens.SingleQuote
+            select new QuotedStringExpression
+            {
+                Content = content
+            }
+        );
+
+        /// <summary>
         ///     Parse a symbol in an MSBuild expression.
         /// </summary>
         public static readonly Parser<SymbolExpression> Symbol = Parse.Positioned(
@@ -187,7 +200,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// </summary>
         public static readonly Parser<ExpressionNode> Expression =
             from leadingWhitespace in Parse.WhiteSpace.Many()
-            from expression in Comparison // .Or()...
+            from expression in QuotedString.Or<ExpressionNode>(Comparison) // .Or()...
             from trailingWhitespace in Parse.WhiteSpace.Many()
             select expression;
 

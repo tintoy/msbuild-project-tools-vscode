@@ -25,7 +25,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (expression == null)
                 throw new ArgumentNullException(nameof(expression));
 
-            var parseResult = Parsers.SimpleList.TryParse(expression);
+            var parseResult = Parsers.SimpleLists.List.TryParse(expression);
             if (!parseResult.WasSuccessful)
             {
                 throw new ParseException(

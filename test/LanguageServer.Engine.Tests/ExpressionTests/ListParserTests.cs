@@ -49,7 +49,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         [Theory(DisplayName = "SimpleListItem parser succeeds ")]
         public void ParseSimpleListItem_Success(string input)
         {
-            AssertParser.SucceedsWith(Parsers.SimpleListItem, input, actualItem =>
+            AssertParser.SucceedsWith(Parsers.SimpleLists.Item, input, actualItem =>
             {
                 Assert.Equal(input, actualItem.Value);
             });
@@ -71,14 +71,14 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         [Theory(DisplayName = "Parse MSBuild simple list is equivalent to String.Split ")]
         public void SimpleListEquivalentToStringSplit(string input)
         {
-            AssertParser.SucceedsWith(Parsers.SimpleList, input, actualList =>
+            AssertParser.SucceedsWith(Parsers.SimpleLists.List, input, actualList =>
             {
                 DumpList(actualList, input);
 
                 string[] expectedValues = input.Split(';');
                 Assert.Collection(actualList.Items, HasListItems(expectedValues, (expectedValue, actualItem) =>
                 {
-                    Assert.Equal(ExpressionKind.ListItem, actualItem.Kind);
+                    Assert.Equal(ExpressionKind.SimpleListItem, actualItem.Kind);
 
                     SimpleListItem actuaListItem = Assert.IsType<SimpleListItem>(actualItem);
                     Assert.Equal(expectedValue, actuaListItem.Value);
@@ -177,7 +177,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
                 );
                 if (child is SimpleListItem actualItem)
                     TestOutput.WriteLine("\tValue = '{0}'", actualItem.Value);
-                else if (child is SimpleListSeparator actualSeparator)
+                else if (child is ListSeparator actualSeparator)
                     TestOutput.WriteLine("\tSeparatorOffset = {0}", actualSeparator.SeparatorOffset);
             }
         }

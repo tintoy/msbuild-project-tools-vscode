@@ -6,19 +6,29 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
     public enum ExpressionKind
     {
         /// <summary>
-        ///     A semicolon-delimited list.
+        ///     A semicolon-delimited list of simple items.
         /// </summary>
-        List,
+        SimpleList,
 
         /// <summary>
         ///     A simple list item.
         /// </summary>
-        ListItem,
+        SimpleListItem,
 
         /// <summary>
         ///     A simple list item separator.
         /// </summary>
-        ListSeparator,
+        SimpleListSeparator,
+
+        /// <summary>
+        ///     A semicolon-delimited list of expressions.
+        /// </summary>
+        List,
+
+        /// <summary>
+        ///     Placeholder representing an empty slot in an expression list.
+        /// </summary>
+        EmptyListItem,
 
         /// <summary>
         ///     A quoted string.
@@ -34,5 +44,21 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ///     A generic symbol.
         /// </summary>
         Symbol
+    }
+
+    /// <summary>
+    ///     Represents a kind of MSBuild comparison expression.
+    /// </summary>
+    public enum ComparisonKind
+    {
+        /// <summary>
+        ///     Equality ("==").
+        /// </summary>
+        Equality,
+
+        /// <summary>
+        ///     Inequality ("!=").
+        /// </summary>
+        Inequality
     }
 }

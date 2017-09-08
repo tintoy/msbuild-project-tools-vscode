@@ -1,31 +1,31 @@
-﻿using Sprache;
+using Sprache;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
 {
     /// <summary>
-    ///     Represents a simple MSBuild list expression.
+    ///     Represents an MSBuild list expression.
     /// </summary>
-    public sealed class SimpleList
-        : ExpressionContainerNode, IPositionAware<SimpleList>
+    public sealed class ExpressionList
+        : ExpressionContainerNode, IPositionAware<ExpressionList>
     {
         /// <summary>
-        ///     Create a new <see cref="SimpleList"/>.
+        ///     Create a new <see cref="ExpressionList"/>.
         /// </summary>
-        public SimpleList()
+        public ExpressionList()
         {
         }
 
         /// <summary>
         ///     The node kind.
         /// </summary>
-        public override ExpressionKind Kind => ExpressionKind.SimpleList;
+        public override ExpressionKind Kind => ExpressionKind.List;
 
         /// <summary>
         ///     The list's items.
         /// </summary>
-        public IEnumerable<SimpleListItem> Items => Children.OfType<SimpleListItem>();
+        public IEnumerable<ExpressionNode> Items => Children;
 
         /// <summary>
         ///     Update positioning information.
@@ -39,7 +39,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <returns>
         ///     The <see cref="ExpressionNode"/>.
         /// </returns>
-        SimpleList IPositionAware<SimpleList>.SetPos(Sprache.Position startPosition, int length)
+        ExpressionList IPositionAware<ExpressionList>.SetPos(Sprache.Position startPosition, int length)
         {
             SetPosition(startPosition, length);
 

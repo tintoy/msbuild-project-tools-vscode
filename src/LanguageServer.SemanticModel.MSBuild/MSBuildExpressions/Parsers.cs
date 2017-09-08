@@ -14,66 +14,126 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
     static class Parsers
     {
         /// <summary>
-        ///     Parse a generic MSBuild list item.
+        ///     Parsers for simple MSBuild lists.
         /// </summary>
-        public static readonly Parser<SimpleListItem> SimpleListItem = Parse.Positioned(
-            from item in Tokens.ListChar.Many().Text()
-            select new SimpleListItem
-            {
-                Value = item
-            }
-        );
+        public static class SimpleLists
+        {
+            /// <summary>
+            ///     Parse a simple MSBuild list item.
+            /// </summary>
+            public static readonly Parser<SimpleListItem> Item = Parse.Positioned(
+                from item in Tokens.ListChar.Many().Text()
+                select new SimpleListItem
+                {
+                    Value = item
+                }
+            );
+
+            /// <summary>
+            ///     Parse a simple MSBuild list separator.
+            /// </summary>
+            public static readonly Parser<ListSeparator> Separator = Parse.Positioned(
+                from leading in Parse.WhiteSpace.Many().Text()
+                from separator in Tokens.Semicolon
+                from trailing in Parse.WhiteSpace.Many().Text()
+                select new ListSeparator
+                {
+                    SeparatorOffset = leading.Length
+                }
+            );
+
+            /// <summary>
+            ///     Parse a simple MSBuild list's leading item separator.
+            /// </summary>
+            public static readonly Parser<IEnumerable<ExpressionNode>> LeadingSeparator =
+                from separator in Separator.Once()
+                let leadingEmptyItem = new SimpleListItem
+                {
+                    Value = String.Empty
+                }
+                select leadingEmptyItem.ToSequence().Concat<ExpressionNode>(separator);
+
+            /// <summary>
+            ///     Parse a simple MSBuild list item separator, optionally followed by a simple list item.
+            /// </summary>
+            public static readonly Parser<IEnumerable<ExpressionNode>> SeparatorWithItem =
+                from separator in Separator.Once()
+                from item in Item.Once()
+                select separator.Concat<ExpressionNode>(item);
+
+            /// <summary>
+            ///     Parse a simple MSBuild list, delimited by semicolons.
+            /// </summary>
+            public static readonly Parser<SimpleList> List = Parse.Positioned(
+                from leadingSeparator in LeadingSeparator.Optional()
+                from firstItem in Item.Once<ExpressionNode>()
+                from remainingItems in SeparatorWithItem.Many()
+                let items =
+                    leadingSeparator.ToFlattenedSequenceIfDefined()
+                        .Concat(firstItem)
+                        .Concat(
+                            remainingItems.Flatten()
+                        )
+                select new SimpleList
+                {
+                    Children = ImmutableList.CreateRange(items)
+                }
+            );
+        }
 
         /// <summary>
-        ///     Parse a generic MSBuild list item.
+        ///     Parsers for MSBuild list expressions.
         /// </summary>
-        public static readonly Parser<SimpleListSeparator> SimpleListSeparator = Parse.Positioned(
-            from leading in Parse.WhiteSpace.Many().Text()
-            from separator in Tokens.Semicolon
-            from trailing in Parse.WhiteSpace.Many().Text()
-            select new SimpleListSeparator
-            {
-                SeparatorOffset = leading.Length
-            }
-        );
+        public static class Lists
+        {
+            /// <summary>
+            ///     Parse an MSBuild list separator.
+            /// </summary>
+            public static readonly Parser<ListSeparator> Separator = Parse.Positioned(
+                from leading in Parse.WhiteSpace.Many().Text()
+                from separator in Tokens.Semicolon
+                from trailing in Parse.WhiteSpace.Many().Text()
+                select new ListSeparator
+                {
+                    SeparatorOffset = leading.Length
+                }
+            );
 
-        /// <summary>
-        ///     Parse a generic MSBuild list's leading item separator.
-        /// </summary>
-        public static readonly Parser<IEnumerable<ExpressionNode>> SimpleListLeadingSeparator =
-            from separator in SimpleListSeparator.Once()
-            let leadingEmptyItem = new SimpleListItem
-            {
-                Value = String.Empty
-            }
-            select leadingEmptyItem.ToSequence().Concat<ExpressionNode>(separator);
+            /// <summary>
+            ///     Parse an MSBuild list's leading item separator.
+            /// </summary>
+            public static readonly Parser<IEnumerable<ExpressionNode>> LeadingSeparator =
+                from separator in Separator.Once()
+                let leadingEmptyItem = new EmptyListItem()
+                select leadingEmptyItem.ToSequence().Concat<ExpressionNode>(separator);
 
-        /// <summary>
-        ///     Parse a generic MSBuild list item separator, optionally followed by a simple list item.
-        /// </summary>
-        public static readonly Parser<IEnumerable<ExpressionNode>> SimpleListSeparatorWithItem =
-            from separator in SimpleListSeparator.Once()
-            from item in SimpleListItem.Once()
-            select separator.Concat<ExpressionNode>(item);
+            /// <summary>
+            ///     Parse an MSBuild list item separator, optionally followed by a  list item.
+            /// </summary>
+            public static readonly Parser<IEnumerable<ExpressionNode>> SeparatorWithItem =
+                from separator in Separator.Once()
+                from item in Expression.Once()
+                select separator.Concat(item);
 
-        /// <summary>
-        ///     Parse a generic MSBuild list, delimited by semicolons.
-        /// </summary>
-        public static readonly Parser<SimpleList> SimpleList = Parse.Positioned(
-            from leadingSeparator in SimpleListLeadingSeparator.Optional()
-            from firstItem in SimpleListItem.Once<ExpressionNode>()
-            from remainingItems in SimpleListSeparatorWithItem.Many()
-            let items =
-                leadingSeparator.ToFlattenedSequenceIfDefined()
-                    .Concat(firstItem)
-                    .Concat(
-                        remainingItems.Flatten()
-                    )
-            select new SimpleList
-            {
-                Children = ImmutableList.CreateRange(items)
-            }
-        );
+            /// <summary>
+            ///     Parse an MSBuild list, delimited by semicolons.
+            /// </summary>
+            public static readonly Parser<ExpressionList> List = Parse.Positioned(
+                from leadingSeparator in LeadingSeparator.Optional()
+                from firstItem in Expression.Once()
+                from remainingItems in SeparatorWithItem.Many()
+                let items =
+                    leadingSeparator.ToFlattenedSequenceIfDefined()
+                        .Concat(firstItem)
+                        .Concat(
+                            remainingItems.Flatten()
+                        )
+                select new ExpressionList
+                {
+                    Children = ImmutableList.CreateRange(items)
+                }
+            );
+        }
 
         /// <summary>
         ///     Parse a symbol in an MSBuild expression.
@@ -121,6 +181,15 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
                 Right = rightOperand
             }
         );
+
+        /// <summary>
+        ///     Parse an expression.
+        /// </summary>
+        public static readonly Parser<ExpressionNode> Expression =
+            from leadingWhitespace in Parse.WhiteSpace.Many()
+            from expression in Comparison // .Or()...
+            from trailingWhitespace in Parse.WhiteSpace.Many()
+            select expression;
 
         /// <summary>
         ///     Create sequence containing the item.

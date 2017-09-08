@@ -1,27 +1,27 @@
-﻿using Sprache;
+using Sprache;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
 {
     /// <summary>
-    ///     Represents a simple MSBuild list separator with leading and trailing whitespace.
+    ///     Represents a list item separator with leading and trailing whitespace.
     /// </summary>
-    public sealed class SimpleListSeparator
-        : ExpressionNode, IPositionAware<SimpleListSeparator>
+    public sealed class ListSeparator
+        : ExpressionNode, IPositionAware<ListSeparator>
     {
         /// <summary>
-        ///     Create a new <see cref="SimpleListSeparator"/>.
+        ///     Create a new <see cref="ListSeparator"/>.
         /// </summary>
-        public SimpleListSeparator()
+        public ListSeparator()
         {
         }
 
         /// <summary>
         ///     The node kind.
         /// </summary>
-        public override ExpressionKind Kind => ExpressionKind.ListSeparator;
+        public override ExpressionKind Kind => ExpressionKind.SimpleListSeparator;
 
         /// <summary>
-        ///     The offset, in characters, of the actual separator character from the <see cref="ExpressionNode.AbsoluteStart"/> of the <see cref="SimpleListSeparator"/>.
+        ///     The offset, in characters, of the actual separator character from the <see cref="ExpressionNode.AbsoluteStart"/> of the <see cref="ListSeparator"/>.
         /// </summary>
         public int SeparatorOffset { get; internal set; }
 
@@ -37,7 +37,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <returns>
         ///     The <see cref="ExpressionNode"/>.
         /// </returns>
-        SimpleListSeparator IPositionAware<SimpleListSeparator>.SetPos(Sprache.Position startPosition, int length)
+        ListSeparator IPositionAware<ListSeparator>.SetPos(Sprache.Position startPosition, int length)
         {
             SetPosition(startPosition, length);
 

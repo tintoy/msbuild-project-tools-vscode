@@ -18,7 +18,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     The node kind.
         /// </summary>
-        public override ExpressionKind Kind => ExpressionKind.ListItem;
+        public override ExpressionKind Kind => ExpressionKind.SimpleListItem;
 
         /// <summary>
         ///     The item value.

@@ -86,7 +86,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (nodeAtPosition is SimpleListItem itemAtPosition)
                 return itemAtPosition;
 
-            if (nodeAtPosition is SimpleListSeparator separatorAtPosition)
+            if (nodeAtPosition is ListSeparator separatorAtPosition)
             {
                 // If the position is on or before a separator then choose the preceding item; otherwise, choose the next item.
                 int separatorPosition = separatorAtPosition.AbsoluteStart + separatorAtPosition.SeparatorOffset;

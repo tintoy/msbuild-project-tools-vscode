@@ -70,5 +70,41 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
                 Assert.Equal(right.Name, expectedRightSymbol);
             });
         }
+
+        /// <summary>
+        ///     Verify that the ComparisonExpression parser can successfully parse the specified input.
+        /// </summary>
+        /// <param name="input">
+        ///     The source text to parse.
+        /// </param>
+        /// <param name="expectedComparisonKind">
+        ///     The expected comparison kind.
+        /// </param>
+        /// <param name="expectedLeftContent">
+        ///     The expected content of the left-hand string.
+        /// </param>
+        /// <param name="expectedRightContent">
+        ///     The expected content of the left-hand string.
+        /// </param>
+        [InlineData("'ABC'=='XYZ'", ComparisonKind.Equality, "ABC", "XYZ")]
+        [InlineData("'ABC' == 'XYZ'", ComparisonKind.Equality, "ABC", "XYZ")]
+        [InlineData("'ABC'!='XYZ'", ComparisonKind.Inequality, "ABC", "XYZ")]
+        [InlineData("'ABC' != 'XYZ'", ComparisonKind.Inequality, "ABC", "XYZ")]
+        [Theory(DisplayName = "ComparisonExpression parser succeeds with quoted strings ")]
+        public void ParseComparisonExpression_QuotedStrings_Success(string input, ComparisonKind expectedComparisonKind, string expectedLeftContent, string expectedRightContent)
+        {
+            AssertParser.SucceedsWith(Parsers.Comparison, input, actualComparison =>
+            {
+                Assert.Equal(expectedComparisonKind, actualComparison.ComparisonKind);
+
+                Assert.NotNull(actualComparison.Left);
+                QuotedStringLiteral left = Assert.IsType<QuotedStringLiteral>(actualComparison.Left);
+                Assert.Equal(left.Content, expectedLeftContent);
+
+                Assert.NotNull(actualComparison.Right);
+                QuotedStringLiteral right = Assert.IsType<QuotedStringLiteral>(actualComparison.Right);
+                Assert.Equal(right.Content, expectedRightContent);
+            });
+        }
     }
 }

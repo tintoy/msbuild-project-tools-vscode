@@ -3,15 +3,15 @@ using Sprache;
 namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
 {
     /// <summary>
-    ///     Represents an MSBuild quoted-string expression.
+    ///     Represents an MSBuild quoted-string literal expression.
     /// </summary>
-    public class QuotedStringExpression
-        : ExpressionNode, IPositionAware<QuotedStringExpression>
+    public class QuotedStringLiteral
+        : ExpressionNode, IPositionAware<QuotedStringLiteral>
     {
         /// <summary>
-        ///     Create a new <see cref="QuotedStringExpression"/>.
+        ///     Create a new <see cref="QuotedStringLiteral"/>.
         /// </summary>
-        public QuotedStringExpression()
+        public QuotedStringLiteral()
         {
         }
 
@@ -37,7 +37,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <returns>
         ///     The <see cref="ExpressionNode"/>.
         /// </returns>
-        QuotedStringExpression IPositionAware<QuotedStringExpression>.SetPos(Sprache.Position startPosition, int length)
+        QuotedStringLiteral IPositionAware<QuotedStringLiteral>.SetPos(Sprache.Position startPosition, int length)
         {
             SetPosition(startPosition, length);
 

@@ -51,7 +51,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         [Theory(DisplayName = "QuotedStringExpression parser succeeds ")]
         public void Parse_Success(string input, string expectedContent)
         {
-            AssertParser.SucceedsWith(Parsers.QuotedString, input, actualQuotedString =>
+            AssertParser.SucceedsWith(Parsers.QuotedStringLiteral, input, actualQuotedString =>
             {
                 Assert.Equal(expectedContent, actualQuotedString.Content);
             });

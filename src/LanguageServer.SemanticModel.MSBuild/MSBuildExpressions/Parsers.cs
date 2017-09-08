@@ -76,6 +76,53 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         );
 
         /// <summary>
+        ///     Parse a symbol in an MSBuild expression.
+        /// </summary>
+        public static readonly Parser<SymbolExpression> Symbol = Parse.Positioned(
+            from identifier in Tokens.Identifier
+            select new SymbolExpression
+            {
+                Name = identifier
+            }
+        );
+
+        /// <summary>
+        ///     Parse an equality operator.
+        /// </summary>
+        public static Parser<ComparisonKind> EqualityOperator =
+            from equalityOperator in Tokens.EqualityOperator
+            select ComparisonKind.Equality;
+
+        /// <summary>
+        ///     Parse an inequality operator.
+        /// </summary>
+        public static Parser<ComparisonKind> InequalityOperator =
+            from equalityOperator in Tokens.InequalityOperator
+            select ComparisonKind.Inequality;
+
+        /// <summary>
+        ///     Parse a comparison operator.
+        /// </summary>
+        public static Parser<ComparisonKind> ComparisonOperator = EqualityOperator.Or(InequalityOperator);
+
+        /// <summary>
+        ///     Parse an MSBuild comparison expression.
+        /// </summary>
+        public static readonly Parser<ComparisonExpression> Comparison = Parse.Positioned(
+            from leftOperand in Symbol
+            from leftWhitespace in Parse.WhiteSpace.Many()
+            from comparisonKind in ComparisonOperator
+            from rightWhitespace in Parse.WhiteSpace.Many()
+            from rightOperand in Symbol
+            select new ComparisonExpression
+            {
+                ComparisonKind = comparisonKind,
+                Left = leftOperand,
+                Right = rightOperand
+            }
+        );
+
+        /// <summary>
         ///     Create sequence containing the item.
         /// </summary>
         /// <typeparam name="T">

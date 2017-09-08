@@ -23,6 +23,16 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     A quoted string.
         /// </summary>
-        QuotedString
+        QuotedString,
+
+        /// <summary>
+        ///     A comparison expression.
+        /// </summary>
+        Comparison,
+
+        /// <summary>
+        ///     A generic symbol.
+        /// </summary>
+        Symbol
     }
 }

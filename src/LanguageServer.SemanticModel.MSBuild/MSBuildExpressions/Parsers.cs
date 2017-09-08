@@ -182,11 +182,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ///     Parse an MSBuild comparison expression.
         /// </summary>
         public static readonly Parser<ComparisonExpression> Comparison = Parse.Positioned(
-            from leftOperand in Symbol
+            from leftOperand in Parse.Ref(() => Expression)
             from leftWhitespace in Parse.WhiteSpace.Many()
             from comparisonKind in ComparisonOperator
             from rightWhitespace in Parse.WhiteSpace.Many()
-            from rightOperand in Symbol
+            from rightOperand in Parse.Ref(() => Expression)
             select new ComparisonExpression
             {
                 ComparisonKind = comparisonKind,
@@ -200,7 +200,10 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// </summary>
         public static readonly Parser<ExpressionNode> Expression =
             from leadingWhitespace in Parse.WhiteSpace.Many()
-            from expression in QuotedString.Or<ExpressionNode>(Comparison) // .Or()...
+            from expression in
+                QuotedString.As<ExpressionNode>()
+                    .Or(Symbol)
+                    .Or(Comparison) // .Or()...
             from trailingWhitespace in Parse.WhiteSpace.Many()
             select expression;
 
@@ -285,5 +288,19 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         {
             yield return optionalItem.GetOrElse(valueIfNotDefined);
         }
+
+        /// <summary>
+        ///     Cast the parser result type.
+        /// </summary>
+        /// <typeparam name="TResult">
+        ///     The parser result type.
+        /// </typeparam>
+        /// <param name="parser">
+        ///     The parser.
+        /// </param>
+        /// <returns>
+        ///     The parser, as one for a sub-type of <typeparamref name="TResult"/>.
+        /// </returns>
+        static Parser<TResult> As<TResult>(this Parser<TResult> parser) => parser;
     }
 }

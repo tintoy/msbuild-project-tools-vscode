@@ -179,14 +179,19 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         public static Parser<ComparisonKind> ComparisonOperator = EqualityOperator.Or(InequalityOperator);
 
         /// <summary>
+        ///     Parse a binary-expression operand.
+        /// </summary>
+        public static Parser<ExpressionNode> BinaryOperand = Symbol.As<ExpressionNode>().Or(QuotedStringLiteral);
+
+        /// <summary>
         ///     Parse an MSBuild comparison expression.
         /// </summary>
         public static readonly Parser<ComparisonExpression> Comparison = Parse.Positioned(
-            from leftOperand in Parse.Ref(() => Expression)
+            from leftOperand in BinaryOperand
             from leftWhitespace in Parse.WhiteSpace.Many()
             from comparisonKind in ComparisonOperator
             from rightWhitespace in Parse.WhiteSpace.Many()
-            from rightOperand in Parse.Ref(() => Expression)
+            from rightOperand in BinaryOperand
             select new ComparisonExpression
             {
                 ComparisonKind = comparisonKind,
@@ -201,11 +206,20 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         public static readonly Parser<ExpressionNode> Expression =
             from leadingWhitespace in Parse.WhiteSpace.Many()
             from expression in
-                QuotedStringLiteral.As<ExpressionNode>()
-                    .Or(Symbol)
-                    .Or(Comparison) // .Or()...
+                Comparison.As<ExpressionNode>()
+                    .Or(QuotedStringLiteral)
+                    .Or(Symbol) // .Or()...
             from trailingWhitespace in Parse.WhiteSpace.Many()
             select expression;
+
+        /// <summary>
+        ///     Parse the root of an expression tree.
+        /// </summary>
+        public static readonly Parser<ExpressionNode> Root =
+            from leadingWhitespace in Parse.WhiteSpace.Many()
+            from root in Expression.Or(QuotedStringLiteral)
+            from trailingWhitespace in Parse.WhiteSpace.Many()
+            select root;
 
         /// <summary>
         ///     Create sequence containing the item.

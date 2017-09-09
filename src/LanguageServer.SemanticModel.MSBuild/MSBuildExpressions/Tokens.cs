@@ -36,6 +36,21 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         public static Parser<char> EvalClose = Parse.Char(')');
 
         /// <summary>
+        ///     Parse a logical-AND operator, "And".
+        /// </summary>
+        public static Parser<string> AndOperator = Parse.String("And").Text();
+
+        /// <summary>
+        ///     Parse a logical-OR operator, "Or".
+        /// </summary>
+        public static Parser<string> OrOperator = Parse.String("Or").Text();
+
+        /// <summary>
+        ///     Parse a logical-NOT operator, "Not".
+        /// </summary>
+        public static Parser<string> NotOperator = Parse.String("Not").Text();
+
+        /// <summary>
         ///     Parse an equality operator, "==".
         /// </summary>
         public static Parser<string> EqualityOperator = Parse.String("==").Text();

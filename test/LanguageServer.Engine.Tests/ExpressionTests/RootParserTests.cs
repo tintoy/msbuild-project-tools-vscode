@@ -57,7 +57,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         [Theory(DisplayName = "Root parser succeeds with symbols ")]
         public void ParseRoot_Comparison_Symbols_Success(string input, ComparisonKind expectedComparisonKind, string expectedLeftSymbol, string expectedRightSymbol)
         {
-            AssertParser.SucceedsWith(Parsers.Expression, input, actualExpression =>
+            AssertParser.SucceedsWith(Parsers.Root, input, actualExpression =>
             {
                 ComparisonExpression actualComparison = Assert.IsType<ComparisonExpression>(actualExpression);
 

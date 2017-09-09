@@ -46,24 +46,13 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         Comparison,
 
         /// <summary>
+        ///     A logical expression (e.g. And, Or, Not).
+        /// </summary>
+        Logical,
+
+        /// <summary>
         ///     A generic symbol.
         /// </summary>
         Symbol
-    }
-
-    /// <summary>
-    ///     Represents a kind of MSBuild comparison expression.
-    /// </summary>
-    public enum ComparisonKind
-    {
-        /// <summary>
-        ///     Equality ("==").
-        /// </summary>
-        Equality,
-
-        /// <summary>
-        ///     Inequality ("!=").
-        /// </summary>
-        Inequality
     }
 }

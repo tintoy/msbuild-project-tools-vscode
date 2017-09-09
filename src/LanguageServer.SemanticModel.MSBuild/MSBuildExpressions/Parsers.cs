@@ -205,6 +205,27 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         );
 
         /// <summary>
+        ///     Parse a logical-AND operator.
+        /// </summary>
+        public static Parser<LogicalOperatorKind> AndOperator =
+            from andOperator in Tokens.AndOperator
+            select LogicalOperatorKind.And;
+
+        /// <summary>
+        ///     Parse a logical-OR operator.
+        /// </summary>
+        public static Parser<LogicalOperatorKind> OrOperator =
+            from orOperator in Tokens.OrOperator
+            select LogicalOperatorKind.Or;
+
+        /// <summary>
+        ///     Parse a logical-NOT operator.
+        /// </summary>
+        public static Parser<LogicalOperatorKind> NotOperator =
+            from orOperator in Tokens.NotOperator
+            select LogicalOperatorKind.Not;
+
+        /// <summary>
         ///     Parse an equality operator.
         /// </summary>
         public static Parser<ComparisonKind> EqualityOperator =
@@ -226,17 +247,15 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     Parse a binary-expression operand.
         /// </summary>
-        public static Parser<ExpressionNode> BinaryOperand = Symbol.As<ExpressionNode>().Or(QuotedString);
+        public static Parser<ExpressionNode> ComparisonOperand = Symbol.As<ExpressionNode>().Or(QuotedString);
 
         /// <summary>
         ///     Parse an MSBuild comparison expression.
         /// </summary>
         public static readonly Parser<ComparisonExpression> Comparison = Parse.Positioned(
-            from leftOperand in BinaryOperand
-            from leftWhitespace in Parse.WhiteSpace.Many()
-            from comparisonKind in ComparisonOperator
-            from rightWhitespace in Parse.WhiteSpace.Many()
-            from rightOperand in BinaryOperand
+            from leftOperand in ComparisonOperand
+            from comparisonKind in ComparisonOperator.Token()
+            from rightOperand in ComparisonOperand
             select new ComparisonExpression
             {
                 ComparisonKind = comparisonKind,
@@ -246,14 +265,53 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         );
 
         /// <summary>
+        ///     Parse a logical-expression operand.
+        /// </summary>
+        public static Parser<ExpressionNode> LogicalOperand = Comparison.As<ExpressionNode>().Or(Evaluation).Or(QuotedString);
+
+        /// <summary>
+        ///     Parse a logical binary expression.
+        /// </summary>
+        public static readonly Parser<LogicalExpression> LogicalBinary = Parse.Positioned(
+            from leftOperand in LogicalOperand
+            from operatorKind in AndOperator.Or(OrOperator).Token()
+            from rightOperand in LogicalOperand
+            select new LogicalExpression
+            {
+                OperatorKind = operatorKind,
+                Children = ImmutableList.Create(leftOperand, rightOperand)
+            }
+        );
+
+        /// <summary>
+        ///     Parse a logical unary expression.
+        /// </summary>
+        public static readonly Parser<LogicalExpression> LogicalUnary = Parse.Positioned(
+            from operatorKind in NotOperator.Token()
+            from leftOperand in LogicalOperand
+            select new LogicalExpression
+            {
+                OperatorKind = operatorKind,
+                Children = ImmutableList.Create(leftOperand)
+            }
+        );
+
+        /// <summary>
+        ///     Parse a logical expression.
+        /// </summary>
+        public static readonly Parser<LogicalExpression> Logical = LogicalUnary.Or(LogicalBinary);
+
+        /// <summary>
         ///     Parse an expression.
         /// </summary>
         public static readonly Parser<ExpressionNode> Expression =
             from leadingWhitespace in Parse.WhiteSpace.Many()
             from expression in
-                Comparison.As<ExpressionNode>()
+                Logical.As<ExpressionNode>()
+                    .Or(Comparison)
                     .Or(QuotedString)
-                    .Or(Symbol) // .Or()...
+                    .Or(Evaluation)
+                    .Or(Symbol)
             from trailingWhitespace in Parse.WhiteSpace.Many()
             select expression;
 

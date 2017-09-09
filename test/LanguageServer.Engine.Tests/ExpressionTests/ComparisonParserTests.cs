@@ -1,6 +1,4 @@
-using Sprache;
 using System;
-using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -8,13 +6,13 @@ using Xunit.Abstractions;
 
 namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
 {
-    using SemanticModel;
     using SemanticModel.MSBuildExpressions;
 
     /// <summary>
     ///     Tests for parsing of MSBuild comparison expressions.
     /// </summary>
     public class ComparisonParserTests
+        : ParserTests
     {
         /// <summary>
         ///     Create a new comparison expression parser test-suite.
@@ -23,17 +21,9 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         ///     Output for the current test.
         /// </param>
         public ComparisonParserTests(ITestOutputHelper testOutput)
+            : base(testOutput)
         {
-            if (testOutput == null)
-                throw new ArgumentNullException(nameof(testOutput));
-
-            TestOutput = testOutput;
         }
-
-        /// <summary>
-        ///     Output for the current test.
-        /// </summary>
-        ITestOutputHelper TestOutput { get; }
 
         /// <summary>
         ///     Verify that the ComparisonExpression parser can successfully parse the specified input.
@@ -84,7 +74,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         ///     The expected content of the left-hand string.
         /// </param>
         /// <param name="expectedRightContent">
-        ///     The expected content of the left-hand string.
+        ///     The expected content of the right-hand string.
         /// </param>
         [InlineData("'ABC'=='XYZ'", ComparisonKind.Equality, "ABC", "XYZ")]
         [InlineData("'ABC' == 'XYZ'", ComparisonKind.Equality, "ABC", "XYZ")]

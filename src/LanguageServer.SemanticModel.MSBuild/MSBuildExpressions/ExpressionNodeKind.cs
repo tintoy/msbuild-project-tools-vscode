@@ -36,6 +36,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         QuotedString,
 
         /// <summary>
+        ///     A quoted string literal.
+        /// </summary>
+        QuotedStringLiteral,
+
+        /// <summary>
         ///     A comparison expression.
         /// </summary>
         Comparison,

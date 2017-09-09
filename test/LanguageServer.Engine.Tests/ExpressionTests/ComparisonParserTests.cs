@@ -98,12 +98,12 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
                 Assert.Equal(expectedComparisonKind, actualComparison.ComparisonKind);
 
                 Assert.NotNull(actualComparison.Left);
-                QuotedStringLiteral left = Assert.IsType<QuotedStringLiteral>(actualComparison.Left);
-                Assert.Equal(left.Content, expectedLeftContent);
-
+                QuotedString left = Assert.IsType<QuotedString>(actualComparison.Left);
+                Assert.Equal(expectedLeftContent, left.StringContent);
+                
                 Assert.NotNull(actualComparison.Right);
-                QuotedStringLiteral right = Assert.IsType<QuotedStringLiteral>(actualComparison.Right);
-                Assert.Equal(right.Content, expectedRightContent);
+                QuotedString right = Assert.IsType<QuotedString>(actualComparison.Right);
+                Assert.Equal(expectedRightContent, right.StringContent);
             });
         }
     }

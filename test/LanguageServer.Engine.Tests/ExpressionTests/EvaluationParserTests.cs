@@ -45,7 +45,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         [InlineData("$( Foo )", "Foo")]
         [InlineData("$( Foo)",  "Foo")]
         [InlineData("$(Foo )",  "Foo")]
-        [Theory(DisplayName = "QuotedStringExpression parser succeeds with symbol ")]
+        [Theory(DisplayName = "Evaluation parser succeeds with symbol ")]
         public void Parse_Symbol_Success(string input, string expectedSymbolName)
         {
             AssertParser.SucceedsWith(Parsers.Evaluation, input, actualEvaluation =>
@@ -65,7 +65,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         /// </param>
         [InlineData("$(1Foo)")]
         [InlineData("$(Foo.Bar)")]
-        [Theory(DisplayName = "QuotedStringExpression parser fails ")]
+        [Theory(DisplayName = "Evaluation parser fails ")]
         public void Parse_Symbol_Failure(string input)
         {
             AssertParser.Fails(Parsers.Evaluation, input);

@@ -3,35 +3,30 @@ using Sprache;
 namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
 {
     /// <summary>
-    ///     Represents an MSBuild quoted-string literal expression.
+    ///     Represents a run of contiguous characters in an MSBuild quoted-string literal expression.
     /// </summary>
     /// <remarks>
-    ///     Quoted strings can contain sub-expressions, but quoted string literals cannot.
+    ///     'Foo $(XXX)' will be parsed as StringContent("Foo ") and Evaluation(Symbol("XXX")).
     /// </remarks>
-    public class QuotedStringLiteral
-        : QuotedString, IPositionAware<QuotedStringLiteral>
+    public class StringContent
+        : ExpressionNode, IPositionAware<StringContent>
     {
         /// <summary>
-        ///     Create a new <see cref="QuotedStringLiteral"/>.
+        ///     Create a new <see cref="StringContent"/>.
         /// </summary>
-        public QuotedStringLiteral()
+        public StringContent()
         {
         }
 
         /// <summary>
         ///     The node kind.
         /// </summary>
-        public override ExpressionKind Kind => ExpressionKind.QuotedStringLiteral;
+        public override ExpressionKind Kind => ExpressionKind.QuotedString;
 
         /// <summary>
         ///     The string content.
         /// </summary>
         public string Content { get; set; }
-
-        /// <summary>
-        ///     The quoted string's textual content.
-        /// </summary>
-        public override string StringContent => Content;
 
         /// <summary>
         ///     Update positioning information.
@@ -45,7 +40,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <returns>
         ///     The <see cref="ExpressionNode"/>.
         /// </returns>
-        QuotedStringLiteral IPositionAware<QuotedStringLiteral>.SetPos(Sprache.Position startPosition, int length)
+        StringContent IPositionAware<StringContent>.SetPos(Sprache.Position startPosition, int length)
         {
             SetPosition(startPosition, length);
 

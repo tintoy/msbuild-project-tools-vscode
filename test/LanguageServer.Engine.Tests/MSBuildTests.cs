@@ -41,6 +41,8 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// </summary>
         public ITestOutputHelper TestOutput { get; }
 
+        // TODO: More realistic tests for working with MSBuild evaluation projects.
+
         /// <summary>
         ///     Dump all UsingTask elements in an MSBuild project.
         /// </summary>

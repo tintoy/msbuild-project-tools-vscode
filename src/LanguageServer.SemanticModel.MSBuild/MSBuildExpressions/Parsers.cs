@@ -154,15 +154,42 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         );
 
         /// <summary>
+        ///     Parse a run of contiguous characters in a single-quoted string (excluding <see cref="Tokens.Dollar"/> or the closing <see cref="Tokens.SingleQuote"/>).
+        /// </summary>
+        public static readonly Parser<StringContent> SingleQuotedStringContent =
+            from content in Tokens.SingleQuotedStringChar.Many().Text()
+            select new StringContent
+            {
+                Content = content
+            };
+
+        /// <summary>
         ///     Parse an MSBuild quoted-string-literal expression.
         /// </summary>
         public static readonly Parser<QuotedStringLiteral> QuotedStringLiteral = Parse.Positioned(
             from leadingQuote in Tokens.SingleQuote
-            from content in Tokens.SingleQuotedStringChar.Many().Text()
+            from content in SingleQuotedStringContent
             from trailingQuote in Tokens.SingleQuote
             select new QuotedStringLiteral
             {
-                Content = content
+                Children = ImmutableList.Create<ExpressionNode>(content),
+                Content = content.Content
+            }
+        );
+
+        /// <summary>
+        ///     Parse an MSBuild quoted-string-literal expression.
+        /// </summary>
+        public static readonly Parser<QuotedString> QuotedString = Parse.Positioned(
+            from leadingQuote in Tokens.SingleQuote
+            from contents in
+                SingleQuotedStringContent.As<ExpressionNode>()
+                    .Or(Evaluation)
+                    .Many()
+            from trailingQuote in Tokens.SingleQuote
+            select new QuotedString
+            {
+                Children = ImmutableList.CreateRange(contents)
             }
         );
 
@@ -199,7 +226,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     Parse a binary-expression operand.
         /// </summary>
-        public static Parser<ExpressionNode> BinaryOperand = Symbol.As<ExpressionNode>().Or(QuotedStringLiteral);
+        public static Parser<ExpressionNode> BinaryOperand = Symbol.As<ExpressionNode>().Or(QuotedString);
 
         /// <summary>
         ///     Parse an MSBuild comparison expression.
@@ -225,7 +252,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
             from leadingWhitespace in Parse.WhiteSpace.Many()
             from expression in
                 Comparison.As<ExpressionNode>()
-                    .Or(QuotedStringLiteral)
+                    .Or(QuotedString)
                     .Or(Symbol) // .Or()...
             from trailingWhitespace in Parse.WhiteSpace.Many()
             select expression;
@@ -235,7 +262,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// </summary>
         public static readonly Parser<ExpressionNode> Root =
             from leadingWhitespace in Parse.WhiteSpace.Many()
-            from root in Expression.Or(QuotedStringLiteral)
+            from root in Expression.Or(QuotedString)
             from trailingWhitespace in Parse.WhiteSpace.Many()
             select root;
 

@@ -72,7 +72,12 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     Parse any character valid within a single-quoted string.
         /// </summary>
-        public static Parser<char> SingleQuotedStringChar = EscapedChar.Or(Parse.AnyChar.Except(SingleQuote));
+        public static Parser<char> SingleQuotedStringChar =
+            EscapedChar.Or(
+                Parse.AnyChar.Except(
+                    SingleQuote.Or(Dollar)
+                )
+            );
 
         /// <summary>
         ///     Parse a quoted string.

@@ -26,14 +26,24 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         public static Parser<char> Dollar = Parse.Char('$');
 
         /// <summary>
+        ///     Parse a left parenthesis, "(".
+        /// </summary>
+        public static Parser<char> LParen = Parse.Char('(');
+
+        /// <summary>
+        ///     Parse a left parenthesis, "(".
+        /// </summary>
+        public static Parser<char> RParen = Parse.Char(')');
+
+        /// <summary>
         ///     Parse the opening of an evaluation expression, "$(".
         /// </summary>
-        public static Parser<IEnumerable<char>> EvalOpen = Parse.String("$(");
+        public static Parser<IEnumerable<char>> EvalOpen = Parse.String("$(").Named("eval open");
 
         /// <summary>
         ///     Parse the close of an evaluation expression, ")".
         /// </summary>
-        public static Parser<char> EvalClose = Parse.Char(')');
+        public static Parser<char> EvalClose = RParen.Named("eval close");
 
         /// <summary>
         ///     Parse a logical-AND operator, "And".

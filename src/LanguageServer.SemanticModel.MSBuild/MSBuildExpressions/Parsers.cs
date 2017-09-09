@@ -205,27 +205,6 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         );
 
         /// <summary>
-        ///     Parse a logical-AND operator.
-        /// </summary>
-        public static Parser<LogicalOperatorKind> AndOperator =
-            from andOperator in Tokens.AndOperator
-            select LogicalOperatorKind.And;
-
-        /// <summary>
-        ///     Parse a logical-OR operator.
-        /// </summary>
-        public static Parser<LogicalOperatorKind> OrOperator =
-            from orOperator in Tokens.OrOperator
-            select LogicalOperatorKind.Or;
-
-        /// <summary>
-        ///     Parse a logical-NOT operator.
-        /// </summary>
-        public static Parser<LogicalOperatorKind> NotOperator =
-            from orOperator in Tokens.NotOperator
-            select LogicalOperatorKind.Not;
-
-        /// <summary>
         ///     Parse an equality operator.
         /// </summary>
         public static Parser<ComparisonKind> EqualityOperator =
@@ -264,10 +243,33 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
             }
         );
 
+
+        /// <summary>
+        ///     Parse a logical-AND operator.
+        /// </summary>
+        public static Parser<LogicalOperatorKind> AndOperator =
+            from andOperator in Tokens.AndOperator
+            select LogicalOperatorKind.And;
+
+        /// <summary>
+        ///     Parse a logical-OR operator.
+        /// </summary>
+        public static Parser<LogicalOperatorKind> OrOperator =
+            from orOperator in Tokens.OrOperator
+            select LogicalOperatorKind.Or;
+
+        /// <summary>
+        ///     Parse a logical-NOT operator.
+        /// </summary>
+        public static Parser<LogicalOperatorKind> NotOperator =
+            from orOperator in Tokens.NotOperator
+            select LogicalOperatorKind.Not;
+
+
         /// <summary>
         ///     Parse a logical-expression operand.
         /// </summary>
-        public static Parser<ExpressionNode> LogicalOperand = Comparison.As<ExpressionNode>().Or(Evaluation).Or(QuotedString);
+        public static Parser<ExpressionNode> LogicalOperand = Refs.GroupedExpression.Or(Comparison).Or(Evaluation).Or(QuotedString);
 
         /// <summary>
         ///     Parse a logical binary expression.
@@ -305,24 +307,48 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ///     Parse an expression.
         /// </summary>
         public static readonly Parser<ExpressionNode> Expression =
-            from leadingWhitespace in Parse.WhiteSpace.Many()
+            Logical.As<ExpressionNode>()
+                .Or(Comparison)
+                .Or(QuotedString)
+                .Or(Evaluation)
+                .Or(Symbol);
+
+        /// <summary>
+        ///     A grouped expression (surrounded by parentheses).
+        /// </summary>
+        public static readonly Parser<GroupExpression> GroupedExpression = Parse.Positioned(
+            from lparen in Tokens.LParen
             from expression in
-                Logical.As<ExpressionNode>()
-                    .Or(Comparison)
-                    .Or(QuotedString)
-                    .Or(Evaluation)
-                    .Or(Symbol)
-            from trailingWhitespace in Parse.WhiteSpace.Many()
-            select expression;
+                GroupedExpression.As<ExpressionNode>()
+                    .Or(Expression)
+                    .Token()
+            from rparen in Tokens.RParen
+            select new GroupExpression
+            {
+                Children = ImmutableList.Create(expression)
+            }
+        );
 
         /// <summary>
         ///     Parse the root of an expression tree.
         /// </summary>
-        public static readonly Parser<ExpressionNode> Root =
-            from leadingWhitespace in Parse.WhiteSpace.Many()
-            from root in Expression.Or(QuotedString)
-            from trailingWhitespace in Parse.WhiteSpace.Many()
-            select root;
+        public static readonly Parser<ExpressionNode> Root = GroupedExpression.Or(Expression).Or(QuotedString).Token();
+
+        /// <summary>
+        ///     Late-bound references to parsers.
+        /// </summary>
+        static class Refs
+        {
+            /// <summary>
+            ///     Late-bound reference to the <see cref="Parsers.Expression"/> parser.
+            /// </summary>
+            public static readonly Parser<ExpressionNode> Expression = Parse.Ref(() => Parsers.Expression);
+
+            /// <summary>
+            ///     Late-bound reference to the <see cref="Parsers.GroupedExpression"/> parser.
+            /// </summary>
+            public static readonly Parser<ExpressionNode> GroupedExpression = Parse.Ref(() => Parsers.GroupedExpression);
+        }
 
         /// <summary>
         ///     Create sequence containing the item.

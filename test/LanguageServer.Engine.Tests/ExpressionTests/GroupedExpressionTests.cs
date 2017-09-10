@@ -35,8 +35,11 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         ///     The expected expression kind.
         /// </param>
         [InlineData("(Not ABC)", ExpressionKind.Logical)]
+        [InlineData("((Not ABC))", ExpressionKind.Logical)]
         [InlineData("('ABC' != 'DEF')", ExpressionKind.Comparison)]
+        [InlineData("(('ABC' != 'DEF'))", ExpressionKind.Comparison)]
         [InlineData("(Not ('ABC' != 'DEF'))", ExpressionKind.Logical)]
+        [InlineData("(Not (('ABC' != 'DEF')))", ExpressionKind.Logical)]
         [Theory(DisplayName = "GroupedExpression parser succeeds ")]
         public void Parse_Success(string input, ExpressionKind expectedExpressionKind)
         {

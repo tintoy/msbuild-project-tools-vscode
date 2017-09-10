@@ -139,9 +139,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ///     Parse an MSBuild evaluation expression.
         /// </summary>
         public static Parser<Evaluation> Evaluation = Parse.Positioned(
-            from evalOpen in Tokens.EvalOpen
-            from body in Tokens.Identifier.Token() // .Or()...
-            from evalClose in Tokens.EvalClose
+            from evalOpen in Tokens.EvalOpen.Named("open evaluation")
+            from body in Tokens.Identifier.Token().Named("evaluation body") // .Or()...
+            from evalClose in Tokens.EvalClose.Named("close evaluation")
             select new Evaluation
             {
                 Children = ImmutableList.Create<ExpressionNode>(
@@ -157,7 +157,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ///     Parse a run of contiguous characters in a single-quoted string (excluding <see cref="Tokens.Dollar"/> or the closing <see cref="Tokens.SingleQuote"/>).
         /// </summary>
         public static readonly Parser<StringContent> SingleQuotedStringContent =
-            from content in Tokens.SingleQuotedStringChar.Many().Text()
+            from content in Tokens.SingleQuotedStringChar.Many().Text().Named("string content")
             select new StringContent
             {
                 Content = content
@@ -167,9 +167,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ///     Parse an MSBuild quoted-string-literal expression.
         /// </summary>
         public static readonly Parser<QuotedStringLiteral> QuotedStringLiteral = Parse.Positioned(
-            from leadingQuote in Tokens.SingleQuote
-            from content in SingleQuotedStringContent
-            from trailingQuote in Tokens.SingleQuote
+            from leadingQuote in Tokens.SingleQuote.Named("open quoted string literal")
+            from content in SingleQuotedStringContent.Named("quoted string literal content")
+            from trailingQuote in Tokens.SingleQuote.Named("close quoted string literal")
             select new QuotedStringLiteral
             {
                 Children = ImmutableList.Create<ExpressionNode>(content),
@@ -181,41 +181,42 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ///     Parse an MSBuild quoted-string-literal expression.
         /// </summary>
         public static readonly Parser<QuotedString> QuotedString = Parse.Positioned(
-            from leadingQuote in Tokens.SingleQuote
+            from leadingQuote in Tokens.SingleQuote.Named("open quoted string")
             from contents in
                 SingleQuotedStringContent.As<ExpressionNode>()
                     .Or(Evaluation)
                     .Many()
-            from trailingQuote in Tokens.SingleQuote
+                    .Named("quoted string content")
+            from trailingQuote in Tokens.SingleQuote.Named("close quoted string")
             select new QuotedString
             {
                 Children = ImmutableList.CreateRange(contents)
             }
-        );
+        ).Named("quoted string");
 
         /// <summary>
         ///     Parse a symbol in an MSBuild expression.
         /// </summary>
         public static readonly Parser<SymbolExpression> Symbol = Parse.Positioned(
-            from identifier in Tokens.Identifier
+            from identifier in Tokens.Identifier.Named("identifier")
             select new SymbolExpression
             {
                 Name = identifier
             }
-        );
+        ).Named("symbol");
 
         /// <summary>
         ///     Parse an equality operator.
         /// </summary>
         public static Parser<ComparisonKind> EqualityOperator =
-            from equalityOperator in Tokens.EqualityOperator
+            from equalityOperator in Tokens.EqualityOperator.Named("equality operator")
             select ComparisonKind.Equality;
 
         /// <summary>
         ///     Parse an inequality operator.
         /// </summary>
         public static Parser<ComparisonKind> InequalityOperator =
-            from equalityOperator in Tokens.InequalityOperator
+            from equalityOperator in Tokens.InequalityOperator.Named("inequality operator")
             select ComparisonKind.Inequality;
 
         /// <summary>
@@ -232,9 +233,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ///     Parse an MSBuild comparison expression.
         /// </summary>
         public static readonly Parser<ComparisonExpression> Comparison = Parse.Positioned(
-            from leftOperand in ComparisonOperand
-            from comparisonKind in ComparisonOperator.Token()
-            from rightOperand in ComparisonOperand
+            from leftOperand in ComparisonOperand.Named("left operand")
+            from comparisonKind in ComparisonOperator.Token().Named("comparison operator")
+            from rightOperand in ComparisonOperand.Named("right operand")
             select new ComparisonExpression
             {
                 ComparisonKind = comparisonKind,
@@ -248,21 +249,21 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ///     Parse a logical-AND operator.
         /// </summary>
         public static Parser<LogicalOperatorKind> AndOperator =
-            from andOperator in Tokens.AndOperator
+            from andOperator in Tokens.AndOperator.Named("logical-AND operator")
             select LogicalOperatorKind.And;
 
         /// <summary>
         ///     Parse a logical-OR operator.
         /// </summary>
         public static Parser<LogicalOperatorKind> OrOperator =
-            from orOperator in Tokens.OrOperator
+            from orOperator in Tokens.OrOperator.Named("logical-OR operator")
             select LogicalOperatorKind.Or;
 
         /// <summary>
         ///     Parse a logical-NOT operator.
         /// </summary>
         public static Parser<LogicalOperatorKind> NotOperator =
-            from orOperator in Tokens.NotOperator
+            from orOperator in Tokens.NotOperator.Named("logical-NOT operator")
             select LogicalOperatorKind.Not;
 
         /// <summary>
@@ -277,9 +278,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ///     Parse a logical binary expression.
         /// </summary>
         public static readonly Parser<LogicalExpression> LogicalBinary = Parse.Positioned(
-            from leftOperand in LogicalOperand
-            from operatorKind in AndOperator.Or(OrOperator).Token()
-            from rightOperand in LogicalOperand
+            from leftOperand in LogicalOperand.Named("left operand")
+            from operatorKind in AndOperator.Or(OrOperator).Token().Named("binary operator")
+            from rightOperand in LogicalOperand.Named("right operand")
             select new LogicalExpression
             {
                 OperatorKind = operatorKind,
@@ -291,8 +292,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ///     Parse a logical unary expression.
         /// </summary>
         public static readonly Parser<LogicalExpression> LogicalUnary = Parse.Positioned(
-            from operatorKind in NotOperator.Token()
-            from rightOperand in LogicalOperand
+            from operatorKind in NotOperator.Token().Named("unary operator")
+            from rightOperand in LogicalOperand.Named("right operand")
             select new LogicalExpression
             {
                 OperatorKind = operatorKind,
@@ -319,12 +320,12 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ///     A grouped expression (surrounded by parentheses).
         /// </summary>
         public static readonly Parser<ExpressionNode> GroupedExpression = Parse.Positioned(
-            from lparen in Tokens.LParen
+            from lparen in Tokens.LParen.Named("open sub-expression")
             from expression in
                 GroupedExpression
                     .Or(Expression)
                     .Token()
-            from rparen in Tokens.RParen
+            from rparen in Tokens.RParen.Named("close sub-expression")
             select expression
         );
 

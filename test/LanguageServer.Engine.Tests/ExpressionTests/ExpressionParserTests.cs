@@ -37,9 +37,9 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         [InlineData("ABC",            ExpressionKind.Symbol      )]
         [InlineData("Not ABC",        ExpressionKind.Logical     )]
         [InlineData("ABC And DEF",    ExpressionKind.Logical     )]
-        [InlineData("$(ABC)",         ExpressionKind.Evaluate  )]
+        [InlineData("$(ABC)",         ExpressionKind.Evaluate    )]
         [InlineData("'ABC'",          ExpressionKind.QuotedString)]
-        [InlineData("'ABC' != 'DEF'", ExpressionKind.Compare  )]
+        [InlineData("'ABC' != 'DEF'", ExpressionKind.Compare     )]
         [Theory(DisplayName = "Expression parser succeeds ")]
         public void Parse_Success(string input, ExpressionKind expectedExpressionKind)
         {

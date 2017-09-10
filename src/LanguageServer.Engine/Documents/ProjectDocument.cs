@@ -60,6 +60,11 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         public bool IsMSBuildProjectCached { get; private set; }
 
         /// <summary>
+        ///     Is parsing of MSBuild expressions enabled?
+        /// </summary>
+        public bool EnableExpressions { get; set; }
+
+        /// <summary>
         ///     Create a new <see cref="ProjectDocument"/>.
         /// </summary>
         /// <param name="workspace">

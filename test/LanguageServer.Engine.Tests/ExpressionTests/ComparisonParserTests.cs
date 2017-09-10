@@ -26,7 +26,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         }
 
         /// <summary>
-        ///     Verify that the ComparisonExpression parser can successfully parse the specified input.
+        ///     Verify that the Compare parser can successfully parse the specified input.
         /// </summary>
         /// <param name="input">
         ///     The source text to parse.
@@ -44,7 +44,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         [InlineData("ABC == XYZ", ComparisonKind.Equality, "ABC", "XYZ")]
         [InlineData("ABC!=XYZ",   ComparisonKind.Inequality, "ABC", "XYZ")]
         [InlineData("ABC != XYZ", ComparisonKind.Inequality, "ABC", "XYZ")]
-        [Theory(DisplayName = "ComparisonExpression parser succeeds with symbols ")]
+        [Theory(DisplayName = "Compare parser succeeds with symbols ")]
         public void Parse_Symbols_Success(string input, ComparisonKind expectedComparisonKind, string expectedLeftSymbol, string expectedRightSymbol)
         {
             AssertParser.SucceedsWith(Parsers.Comparison, input, actualComparison =>
@@ -52,11 +52,11 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
                 Assert.Equal(expectedComparisonKind, actualComparison.ComparisonKind);
 
                 Assert.NotNull(actualComparison.Left);
-                SymbolExpression left = Assert.IsType<SymbolExpression>(actualComparison.Left);
+                Symbol left = Assert.IsType<Symbol>(actualComparison.Left);
                 Assert.Equal(left.Name, expectedLeftSymbol);
 
                 Assert.NotNull(actualComparison.Right);
-                SymbolExpression right = Assert.IsType<SymbolExpression>(actualComparison.Right);
+                Symbol right = Assert.IsType<Symbol>(actualComparison.Right);
                 Assert.Equal(right.Name, expectedRightSymbol);
             });
         }
@@ -85,21 +85,21 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         {
             AssertParser.SucceedsWith(Parsers.GroupedExpression, input, actual =>
             {
-                ComparisonExpression actualComparison = Assert.IsType<ComparisonExpression>(actual);
+                Compare actualComparison = Assert.IsType<Compare>(actual);
                 Assert.Equal(expectedComparisonKind, actualComparison.ComparisonKind);
 
                 Assert.NotNull(actualComparison.Left);
-                SymbolExpression left = Assert.IsType<SymbolExpression>(actualComparison.Left);
+                Symbol left = Assert.IsType<Symbol>(actualComparison.Left);
                 Assert.Equal(left.Name, expectedLeftSymbol);
 
                 Assert.NotNull(actualComparison.Right);
-                SymbolExpression right = Assert.IsType<SymbolExpression>(actualComparison.Right);
+                Symbol right = Assert.IsType<Symbol>(actualComparison.Right);
                 Assert.Equal(right.Name, expectedRightSymbol);
             });
         }
 
         /// <summary>
-        ///     Verify that the ComparisonExpression parser can successfully parse the specified input.
+        ///     Verify that the Compare parser can successfully parse the specified input.
         /// </summary>
         /// <param name="input">
         ///     The source text to parse.
@@ -117,8 +117,8 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         [InlineData("'ABC' == 'XYZ'", ComparisonKind.Equality, "ABC", "XYZ")]
         [InlineData("'ABC'!='XYZ'", ComparisonKind.Inequality, "ABC", "XYZ")]
         [InlineData("'ABC' != 'XYZ'", ComparisonKind.Inequality, "ABC", "XYZ")]
-        [Theory(DisplayName = "ComparisonExpression parser succeeds with quoted strings ")]
-        public void ParseComparisonExpression_QuotedStrings_Success(string input, ComparisonKind expectedComparisonKind, string expectedLeftContent, string expectedRightContent)
+        [Theory(DisplayName = "Compare parser succeeds with quoted strings ")]
+        public void ParseCompare_QuotedStrings_Success(string input, ComparisonKind expectedComparisonKind, string expectedLeftContent, string expectedRightContent)
         {
             AssertParser.SucceedsWith(Parsers.Comparison, input, actualComparison =>
             {

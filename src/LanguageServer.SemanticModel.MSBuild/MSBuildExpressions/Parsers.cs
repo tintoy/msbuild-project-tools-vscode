@@ -138,14 +138,14 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     Parse an MSBuild evaluation expression.
         /// </summary>
-        public static Parser<Evaluation> Evaluation = Parse.Positioned(
+        public static Parser<Evaluate> Evaluation = Parse.Positioned(
             from evalOpen in Tokens.EvalOpen.Named("open evaluation")
             from body in Tokens.Identifier.Token().Named("evaluation body") // .Or()...
             from evalClose in Tokens.EvalClose.Named("close evaluation")
-            select new Evaluation
+            select new Evaluate
             {
                 Children = ImmutableList.Create<ExpressionNode>(
-                    new SymbolExpression
+                    new Symbol
                     {
                         Name = body
                     }
@@ -197,9 +197,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     Parse a symbol in an MSBuild expression.
         /// </summary>
-        public static readonly Parser<SymbolExpression> Symbol = Parse.Positioned(
+        public static readonly Parser<Symbol> Symbol = Parse.Positioned(
             from identifier in Tokens.Identifier.Named("identifier")
-            select new SymbolExpression
+            select new Symbol
             {
                 Name = identifier
             }
@@ -232,11 +232,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     Parse an MSBuild comparison expression.
         /// </summary>
-        public static readonly Parser<ComparisonExpression> Comparison = Parse.Positioned(
+        public static readonly Parser<Compare> Comparison = Parse.Positioned(
             from leftOperand in ComparisonOperand.Named("left operand")
             from comparisonKind in ComparisonOperator.Token().Named("comparison operator")
             from rightOperand in ComparisonOperand.Named("right operand")
-            select new ComparisonExpression
+            select new Compare
             {
                 ComparisonKind = comparisonKind,
                 Left = leftOperand,

@@ -109,10 +109,10 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         {
             AssertParser.SucceedsWith(Parsers.QuotedString, input, actualQuotedString =>
             {
-                Evaluation evaluation = actualQuotedString.Evaluations.FirstOrDefault();
+                Evaluate evaluation = actualQuotedString.Evaluations.FirstOrDefault();
                 Assert.NotNull(evaluation);
 
-                SymbolExpression symbol = evaluation.Children.OfType<SymbolExpression>().FirstOrDefault();
+                Symbol symbol = evaluation.Children.OfType<Symbol>().FirstOrDefault();
                 Assert.NotNull(symbol);
 
                 Assert.Equal(expectedSymbolName, symbol.Name);

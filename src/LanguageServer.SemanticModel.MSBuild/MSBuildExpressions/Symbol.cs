@@ -3,22 +3,27 @@ using Sprache;
 namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
 {
     /// <summary>
-    ///     Represents an MSBuild evaluation expression.
+    ///     Represents an MSBuild comparison expression.
     /// </summary>
-    public class Evaluation
-        : ExpressionContainerNode, IPositionAware<Evaluation>
+    public class Symbol
+        : ExpressionNode, IPositionAware<Symbol>
     {
         /// <summary>
-        ///     Create a new <see cref="Evaluation"/>.
+        ///     Create a new <see cref="Symbol"/>.
         /// </summary>
-        public Evaluation()
+        public Symbol()
         {
         }
 
         /// <summary>
         ///     The node kind.
         /// </summary>
-        public override ExpressionKind Kind => ExpressionKind.QuotedString;
+        public override ExpressionKind Kind => ExpressionKind.Symbol;
+
+        /// <summary>
+        ///     The symbol name.
+        /// </summary>
+        public string Name { get; internal set; }
 
         /// <summary>
         ///     Update positioning information.
@@ -32,7 +37,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <returns>
         ///     The <see cref="ExpressionNode"/>.
         /// </returns>
-        Evaluation IPositionAware<Evaluation>.SetPos(Sprache.Position startPosition, int length)
+        Symbol IPositionAware<Symbol>.SetPos(Sprache.Position startPosition, int length)
         {
             SetPosition(startPosition, length);
 

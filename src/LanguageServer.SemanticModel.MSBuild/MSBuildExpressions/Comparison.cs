@@ -5,25 +5,35 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
     /// <summary>
     ///     Represents an MSBuild comparison expression.
     /// </summary>
-    public class SymbolExpression
-        : ExpressionNode, IPositionAware<SymbolExpression>
+    public class Compare
+        : ExpressionNode, IPositionAware<Compare>
     {
         /// <summary>
-        ///     Create a new <see cref="SymbolExpression"/>.
+        ///     Create a new <see cref="Compare"/>.
         /// </summary>
-        public SymbolExpression()
+        public Compare()
         {
         }
 
         /// <summary>
         ///     The node kind.
         /// </summary>
-        public override ExpressionKind Kind => ExpressionKind.Symbol;
+        public override ExpressionKind Kind => ExpressionKind.Compare;
 
         /// <summary>
-        ///     The symbol name.
+        ///     The kind of comparison represented by the expression.
         /// </summary>
-        public string Name { get; internal set; }
+        public ComparisonKind ComparisonKind { get; internal set; }
+
+        /// <summary>
+        ///     The left-hand operand.
+        /// </summary>
+        public ExpressionNode Left { get; internal set; }
+
+        /// <summary>
+        ///     The right-hand operand.
+        /// </summary>
+        public ExpressionNode Right { get; internal set; }
 
         /// <summary>
         ///     Update positioning information.
@@ -37,7 +47,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <returns>
         ///     The <see cref="ExpressionNode"/>.
         /// </returns>
-        SymbolExpression IPositionAware<SymbolExpression>.SetPos(Sprache.Position startPosition, int length)
+        Compare IPositionAware<Compare>.SetPos(Sprache.Position startPosition, int length)
         {
             SetPosition(startPosition, length);
 

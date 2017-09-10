@@ -31,21 +31,21 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         /// <param name="input">
         ///     The source text to parse.
         /// </param>
-        /// <param name="expectedExpressionKind">
-        ///     The expected expression kind.
+        /// <param name="expectedRootExpressionKind">
+        ///     The expected kind of the root expression.
         /// </param>
-        [InlineData("(Not ABC)", ExpressionKind.Logical)]
-        [InlineData("((Not ABC))", ExpressionKind.Logical)]
-        [InlineData("('ABC' != 'DEF')", ExpressionKind.Comparison)]
-        [InlineData("(('ABC' != 'DEF'))", ExpressionKind.Comparison)]
-        [InlineData("(Not ('ABC' != 'DEF'))", ExpressionKind.Logical)]
-        [InlineData("(Not (('ABC' != 'DEF')))", ExpressionKind.Logical)]
+        [InlineData("(Not ABC)",                ExpressionKind.Logical     )]
+        [InlineData("((Not ABC))",              ExpressionKind.Logical     )]
+        [InlineData("('ABC' != 'DEF')",         ExpressionKind.Compare  )]
+        [InlineData("(('ABC' != 'DEF'))",       ExpressionKind.Compare  )]
+        [InlineData("(Not ('ABC' != 'DEF'))",   ExpressionKind.Logical     )]
+        [InlineData("(Not (('ABC' != 'DEF')))", ExpressionKind.Logical     )]
         [Theory(DisplayName = "GroupedExpression parser succeeds ")]
-        public void Parse_Success(string input, ExpressionKind expectedExpressionKind)
+        public void Parse_Success(string input, ExpressionKind expectedRootExpressionKind)
         {
             AssertParser.SucceedsWith(Parsers.GroupedExpression, input, actualExpression =>
             {
-                Assert.Equal(expectedExpressionKind, actualExpression.Kind);
+                Assert.Equal(expectedRootExpressionKind, actualExpression.Kind);
             });
         }
     }

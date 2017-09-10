@@ -52,7 +52,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
             {
                 Assert.Equal(1, actualEvaluation.Children.Count);
 
-                SymbolExpression actualSymbol = Assert.IsType<SymbolExpression>(actualEvaluation.Children[0]);
+                Symbol actualSymbol = Assert.IsType<Symbol>(actualEvaluation.Children[0]);
                 Assert.Equal(expectedSymbolName, actualSymbol.Name);
             });
         }

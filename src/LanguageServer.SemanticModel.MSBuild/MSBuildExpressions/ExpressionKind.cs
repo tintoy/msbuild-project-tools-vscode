@@ -36,14 +36,14 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         QuotedString,
 
         /// <summary>
-        ///     A quoted string literal.
+        ///     An evaluation expression, "$(xxx)".
         /// </summary>
-        QuotedStringLiteral,
+        Evaluate,
 
         /// <summary>
         ///     A comparison expression.
         /// </summary>
-        Comparison,
+        Compare,
 
         /// <summary>
         ///     A logical expression (e.g. And, Or, Not).

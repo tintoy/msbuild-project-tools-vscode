@@ -28,7 +28,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         }
 
         /// <summary>
-        ///     Verify that the ComparisonExpression parser can successfully parse a logical binary expression composed of 2 comparisons between quoted strings.
+        ///     Verify that the Compare parser can successfully parse a logical binary expression composed of 2 comparisons between quoted strings.
         /// </summary>
         /// <param name="input">
         ///     The source text to parse.
@@ -75,7 +75,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
                 Assert.Equal(expectedLogicalOperatorKind, actualLogical.OperatorKind);
 
                 // Left-hand comparison.
-                ComparisonExpression leftComparison = Assert.IsType<ComparisonExpression>(actualLogical.Left);
+                Compare leftComparison = Assert.IsType<Compare>(actualLogical.Left);
                 Assert.Equal(expectedLeftComparisonKind, leftComparison.ComparisonKind);
 
                 QuotedString leftLeftString = Assert.IsType<QuotedString>(leftComparison.Left);
@@ -85,7 +85,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
                 Assert.Equal(expectedLeftRightString, leftRightString.StringContent);
 
                 // Right-hand comparison.
-                ComparisonExpression rightComparison = Assert.IsType<ComparisonExpression>(actualLogical.Right);
+                Compare rightComparison = Assert.IsType<Compare>(actualLogical.Right);
                 Assert.Equal(expectedRightComparisonKind, rightComparison.ComparisonKind);
 
                 QuotedString rightLeftString = Assert.IsType<QuotedString>(rightComparison.Left);
@@ -114,7 +114,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
             {
                 Assert.Equal(LogicalOperatorKind.Not, actualLogical.OperatorKind);
 
-                SymbolExpression rightSymbol = Assert.IsType<SymbolExpression>(actualLogical.Right);
+                Symbol rightSymbol = Assert.IsType<Symbol>(actualLogical.Right);
                 Assert.Equal(expectedSymbol, rightSymbol.Name);
             });
         }
@@ -137,13 +137,13 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
                 LogicalExpression actualLogical = Assert.IsType<LogicalExpression>(actual);
                 Assert.Equal(LogicalOperatorKind.Not, actualLogical.OperatorKind);
 
-                SymbolExpression rightSymbol = Assert.IsType<SymbolExpression>(actualLogical.Right);
+                Symbol rightSymbol = Assert.IsType<Symbol>(actualLogical.Right);
                 Assert.Equal(expectedSymbol, rightSymbol.Name);
             });
         }
 
         /// <summary>
-        ///     Verify that the ComparisonExpression parser can successfully parse a logical unary expression composed of a comparison between quoted strings.
+        ///     Verify that the Compare parser can successfully parse a logical unary expression composed of a comparison between quoted strings.
         /// </summary>
         /// <param name="input">
         ///     The source text to parse.
@@ -165,7 +165,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
             {
                 Assert.Equal(LogicalOperatorKind.Not, actualLogical.OperatorKind);
 
-                ComparisonExpression comparison = Assert.IsType<ComparisonExpression>(actualLogical.Right);
+                Compare comparison = Assert.IsType<Compare>(actualLogical.Right);
                 Assert.Equal(expectedComparisonKind, comparison.ComparisonKind);
 
                 QuotedString leftString = Assert.IsType<QuotedString>(comparison.Left);

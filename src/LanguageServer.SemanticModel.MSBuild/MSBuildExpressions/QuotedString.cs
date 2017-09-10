@@ -26,7 +26,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     Evaluation expressions (if any) contained in the string.
         /// </summary>
-        public IEnumerable<Evaluation> Evaluations => Children.OfType<Evaluation>();
+        public IEnumerable<Evaluate> Evaluations => Children.OfType<Evaluate>();
 
         /// <summary>
         ///     The quoted string's textual content (without evaluation expressions).

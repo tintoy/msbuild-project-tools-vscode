@@ -21,7 +21,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     The node kind.
         /// </summary>
-        public override ExpressionKind Kind => ExpressionKind.QuotedStringLiteral;
+        public override ExpressionKind Kind => ExpressionKind.QuotedString;
 
         /// <summary>
         ///     The string content.

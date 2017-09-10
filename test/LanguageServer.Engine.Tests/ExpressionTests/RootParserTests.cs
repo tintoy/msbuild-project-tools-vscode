@@ -59,17 +59,49 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         {
             AssertParser.SucceedsWith(Parsers.Root, input, actualExpression =>
             {
-                ComparisonExpression actualComparison = Assert.IsType<ComparisonExpression>(actualExpression);
+                Compare actualComparison = Assert.IsType<Compare>(actualExpression);
 
                 Assert.Equal(expectedComparisonKind, actualComparison.ComparisonKind);
 
                 Assert.NotNull(actualComparison.Left);
-                SymbolExpression left = Assert.IsType<SymbolExpression>(actualComparison.Left);
+                Symbol left = Assert.IsType<Symbol>(actualComparison.Left);
                 Assert.Equal(left.Name, expectedLeftSymbol);
 
                 Assert.NotNull(actualComparison.Right);
-                SymbolExpression right = Assert.IsType<SymbolExpression>(actualComparison.Right);
+                Symbol right = Assert.IsType<Symbol>(actualComparison.Right);
                 Assert.Equal(right.Name, expectedRightSymbol);
+            });
+        }
+
+        /// <summary>
+        ///     Verify that the Root parser can successfully parse the specified input.
+        /// </summary>
+        /// <param name="input">
+        ///     The source text to parse.
+        /// </param>
+        /// <param name="expectedRootExpressionKind">
+        ///     The expected kind of the root expression.
+        /// </param>
+        [InlineData("ABC",                        ExpressionKind.Symbol      )]
+        [InlineData("'ABC'",                      ExpressionKind.QuotedString)]
+        [InlineData("$(ABC)",                     ExpressionKind.Evaluate  )]
+        [InlineData("Not ABC",                    ExpressionKind.Logical     )]
+        [InlineData("(Not ABC)",                  ExpressionKind.Logical     )]
+        [InlineData("ABC And DEF",                ExpressionKind.Logical     )]
+        [InlineData("((Not ABC))",                ExpressionKind.Logical     )]
+        [InlineData("'ABC' != 'DEF'",             ExpressionKind.Compare  )]
+        [InlineData("ABC And (Not DEF)",          ExpressionKind.Logical     )]
+        [InlineData("('ABC' != 'DEF')",           ExpressionKind.Compare  )]
+        [InlineData("(('ABC' != 'DEF'))",         ExpressionKind.Compare  )]
+        [InlineData("(Not ('ABC' != 'DEF'))",     ExpressionKind.Logical     )]
+        [InlineData("(Not (('ABC' != 'DEF')))",   ExpressionKind.Logical     )]
+        [InlineData("ABC And (Not (DEF Or GHI))", ExpressionKind.Logical     )]
+        [Theory(DisplayName = "Root parser succeeds with expression kind ")]
+        public void ParseRoot_Logical_Success(string input, ExpressionKind expectedRootExpressionKind)
+        {
+            AssertParser.SucceedsWith(Parsers.Root, input, actualExpression =>
+            {
+                Assert.Equal(expectedRootExpressionKind, actualExpression.Kind);
             });
         }
 
@@ -97,7 +129,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         {
             AssertParser.SucceedsWith(Parsers.Root, input, actualExpression =>
             {
-                ComparisonExpression actualComparison = Assert.IsType<ComparisonExpression>(actualExpression);
+                Compare actualComparison = Assert.IsType<Compare>(actualExpression);
 
                 Assert.Equal(expectedComparisonKind, actualComparison.ComparisonKind);
 

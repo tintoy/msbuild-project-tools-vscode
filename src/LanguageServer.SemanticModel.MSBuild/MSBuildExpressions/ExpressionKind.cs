@@ -46,6 +46,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ItemGroup,
 
         /// <summary>
+        ///     A function-call expression, "XXX(A,B,C)".
+        /// </summary>
+        FunctionCall,
+
+        /// <summary>
         ///     A comparison expression.
         /// </summary>
         Compare,

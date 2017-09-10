@@ -21,6 +21,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         public static Parser<char> Period = Parse.Char('.').Named("token: period");
 
         /// <summary>
+        ///     Parse a period, ",".
+        /// </summary>
+        public static Parser<char> Comma = Parse.Char(',').Named("token: comma");
+
+        /// <summary>
         ///     Parse a dollar sign, "$".
         /// </summary>
         public static Parser<char> Dollar = Parse.Char('$').Named("token: dollar");

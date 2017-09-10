@@ -31,7 +31,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 string expectations = String.Empty;
                 if (parseResult.Expectations.Any())
                 {
-                    expectations = String.Format(" (expected: [{0}])",
+                    expectations = String.Format(" (expected at {0}: {1})",
+                        parseResult.Remainder,
                         String.Join(", ", parseResult.Expectations.Select(
                             expectation => String.Format("'{0}'", expectation)
                         ))
@@ -39,7 +40,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 }
 
                 throw new ParseException(
-                    String.Format("Failed to parse expression{0}", expectations)
+                    String.Format("Failed to parse expression{0}.", expectations)
                 );
             }
 
@@ -63,10 +64,19 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             var parseResult = Parsers.SimpleLists.List.TryParse(expression);
             if (!parseResult.WasSuccessful)
             {
+                string expectations = String.Empty;
+                if (parseResult.Expectations.Any())
+                {
+                    expectations = String.Format(" (expected at {0}: {1})",
+                        parseResult.Remainder,
+                        String.Join(", ", parseResult.Expectations.Select(
+                            expectation => String.Format("'{0}'", expectation)
+                        ))
+                    );
+                }
+
                 throw new ParseException(
-                    String.Format("Failed to parse simple list ({0})",
-                        parseResult.Expectations.FirstOrDefault() ?? "unknown error"
-                    )
+                    String.Format("Failed to parse simple list{0}.", expectations)
                 );
             }
 

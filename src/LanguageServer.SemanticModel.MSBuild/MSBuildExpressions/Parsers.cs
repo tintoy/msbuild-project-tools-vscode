@@ -139,6 +139,63 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         }
 
         /// <summary>
+        ///     Parsers for MSBuild function-call expressions.
+        /// </summary>
+        public static class FunctionCalls
+        {
+            /// <summary>
+            ///     Parse a function argument.
+            /// </summary>
+            public static readonly Parser<ExpressionNode> Argument =
+                QuotedString.As<ExpressionNode>()
+                    .Or(Symbol)
+                    .Or(Evaluation)
+                    .Or(ItemGroup)
+                    .Named("function argument");
+
+            /// <summary>
+            ///     Parse a function argument list.
+            /// </summary>
+            public static readonly Parser<IEnumerable<ExpressionNode>> ArgumentList =
+                from openingParenthesis in Tokens.LParen.Token().Named("open function argument list")
+                from functionArguments in Argument.Token().DelimitedBy(Tokens.Comma).Named("function argument list")
+                from closingParenthesis in Tokens.RParen.Token().Named("close function argument list")
+                select functionArguments;
+
+            /// <summary>
+            ///     Parse a global function-call.
+            /// </summary>
+            public static readonly Parser<FunctionCall> Global = Parse.Positioned(
+                from functionName in Symbol.Named("function name")
+                from functionArguments in ArgumentList.Named("function argument list")
+                select new FunctionCall
+                {
+                    FunctionKind = FunctionKind.Global,
+                    Name = functionName.Name,
+                    Children = ImmutableList.CreateRange(functionArguments)
+                }
+            ).Named("global function call");
+
+            /// <summary>
+            ///     Parse an instance method function-call.
+            /// </summary>
+            public static readonly Parser<FunctionCall> InstanceMethod = Parse.Positioned(
+                from target in Symbol.Token().Once().Named("function call method target")
+                from period in Tokens.Period.Token()
+                from methodName in Symbol.Token().Named("function name")
+                from functionArguments in ArgumentList.Named("function argument list")
+                select new FunctionCall
+                {
+                    FunctionKind = FunctionKind.InstanceMethod,
+                    Name = methodName.Name,
+                    Children = ImmutableList.CreateRange(
+                        target.Concat(functionArguments)
+                    )
+                }
+            ).Named("instance method call");
+        }
+
+        /// <summary>
         ///     Parse an MSBuild evaluation expression.
         /// </summary>
         public static Parser<Evaluate> Evaluation = Parse.Positioned(

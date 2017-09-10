@@ -89,7 +89,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
                 expectation => String.Format("'{0}'", expectation)
             ));
 
-            Assert.True(result.WasSuccessful, $"Parsing of '{input}' failed unexpectedly (expected: {expectations}).");
+            Assert.True(result.WasSuccessful, $"Parsing of '{input}' failed unexpectedly (expected at {result.Remainder}: {expectations}).");
 
             resultAssertion(result.Value);
         }

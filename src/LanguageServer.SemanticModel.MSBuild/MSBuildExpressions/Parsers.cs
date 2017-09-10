@@ -265,11 +265,13 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
             from orOperator in Tokens.NotOperator
             select LogicalOperatorKind.Not;
 
-
         /// <summary>
         ///     Parse a logical-expression operand.
         /// </summary>
-        public static Parser<ExpressionNode> LogicalOperand = Refs.GroupedExpression.Or(Comparison).Or(Evaluation).Or(QuotedString);
+        /// <remarks>
+        ///     TODO: Work out why we can't just put Refs.GroupedExpression.Or(Refs.Expression) here.
+        /// </remarks>
+        public static Parser<ExpressionNode> LogicalOperand = Refs.GroupedExpression.Or(Comparison).Or(Evaluation).Or(QuotedString).Or(Symbol);
 
         /// <summary>
         ///     Parse a logical binary expression.
@@ -290,11 +292,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// </summary>
         public static readonly Parser<LogicalExpression> LogicalUnary = Parse.Positioned(
             from operatorKind in NotOperator.Token()
-            from leftOperand in LogicalOperand
+            from rightOperand in LogicalOperand
             select new LogicalExpression
             {
                 OperatorKind = operatorKind,
-                Children = ImmutableList.Create(leftOperand)
+                Children = ImmutableList.Create(rightOperand)
             }
         );
 
@@ -316,17 +318,14 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     A grouped expression (surrounded by parentheses).
         /// </summary>
-        public static readonly Parser<GroupExpression> GroupedExpression = Parse.Positioned(
+        public static readonly Parser<ExpressionNode> GroupedExpression = Parse.Positioned(
             from lparen in Tokens.LParen
             from expression in
-                GroupedExpression.As<ExpressionNode>()
+                GroupedExpression
                     .Or(Expression)
                     .Token()
             from rparen in Tokens.RParen
-            select new GroupExpression
-            {
-                Children = ImmutableList.Create(expression)
-            }
+            select expression
         );
 
         /// <summary>

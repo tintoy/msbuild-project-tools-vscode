@@ -51,11 +51,6 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         Logical,
 
         /// <summary>
-        ///     A grouped expression (surrounded by parentheses).
-        /// </summary>
-        Group,
-
-        /// <summary>
         ///     A generic symbol.
         /// </summary>
         Symbol

@@ -83,9 +83,9 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         [Theory(DisplayName = "GroupedExpression parser succeeds with grouped comparison of symbols ")]
         public void Parse_Grouped_Symbols_Success(string input, ComparisonKind expectedComparisonKind, string expectedLeftSymbol, string expectedRightSymbol)
         {
-            AssertParser.SucceedsWith(Parsers.GroupedExpression, input, actualGroup =>
+            AssertParser.SucceedsWith(Parsers.GroupedExpression, input, actual =>
             {
-                ComparisonExpression actualComparison = Assert.IsType<ComparisonExpression>(actualGroup.GroupedExpression);
+                ComparisonExpression actualComparison = Assert.IsType<ComparisonExpression>(actual);
                 Assert.Equal(expectedComparisonKind, actualComparison.ComparisonKind);
 
                 Assert.NotNull(actualComparison.Left);

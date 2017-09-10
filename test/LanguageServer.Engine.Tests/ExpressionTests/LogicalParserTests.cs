@@ -95,5 +95,85 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
                 Assert.Equal(expectedRightRightString, rightRightString.StringContent);
             });
         }
+
+        /// <summary>
+        ///     Verify that the LogicalExpression parser can successfully parse a logical unary-NOT expression composed of a symbol.
+        /// </summary>
+        /// <param name="input">
+        ///     The source text to parse.
+        /// </param>
+        /// <param name="expectedSymbol">
+        ///     The expected name of the symbol.
+        /// </param>
+        [InlineData("Not ABC", "ABC")]
+        [InlineData("Not (ABC)", "ABC")]
+        [Theory(DisplayName = "LogicalExpression parser succeeds with unary NOT of string comparison ")]
+        public void Parse_Unary_Not_Symbol_Success(string input, string expectedSymbol)
+        {
+            AssertParser.SucceedsWith(Parsers.LogicalUnary, input, actualLogical =>
+            {
+                Assert.Equal(LogicalOperatorKind.Not, actualLogical.OperatorKind);
+
+                SymbolExpression rightSymbol = Assert.IsType<SymbolExpression>(actualLogical.Right);
+                Assert.Equal(expectedSymbol, rightSymbol.Name);
+            });
+        }
+
+        /// <summary>
+        ///     Verify that the GroupedExpression parser can successfully parse a logical unary-NOT expression composed of a symbol.
+        /// </summary>
+        /// <param name="input">
+        ///     The source text to parse.
+        /// </param>
+        /// <param name="expectedSymbol">
+        ///     The expected name of the symbol.
+        /// </param>
+        [InlineData("(Not ABC)", "ABC")]
+        [Theory(DisplayName = "GroupedExpression parser succeeds with unary NOT of string comparison ")]
+        public void Parse_Grouped_Unary_Not_Symbol_Success(string input, string expectedSymbol)
+        {
+            AssertParser.SucceedsWith(Parsers.GroupedExpression, input, actual =>
+            {
+                LogicalExpression actualLogical = Assert.IsType<LogicalExpression>(actual);
+                Assert.Equal(LogicalOperatorKind.Not, actualLogical.OperatorKind);
+
+                SymbolExpression rightSymbol = Assert.IsType<SymbolExpression>(actualLogical.Right);
+                Assert.Equal(expectedSymbol, rightSymbol.Name);
+            });
+        }
+
+        /// <summary>
+        ///     Verify that the ComparisonExpression parser can successfully parse a logical unary expression composed of a comparison between quoted strings.
+        /// </summary>
+        /// <param name="input">
+        ///     The source text to parse.
+        /// </param>
+        /// <param name="expectedComparisonKind">
+        ///     The expected comparison kind.
+        /// </param>
+        /// <param name="expectedLeftString">
+        ///     The expected name of the left-hand string in the left-hand comparison.
+        /// </param>
+        /// <param name="expectedRightString">
+        ///     The expected name of the right-hand string in the left-hand comparison.
+        /// </param>
+        [InlineData("Not ('ABC' == 'DEF')", ComparisonKind.Equality, "ABC", "DEF")]
+        [Theory(DisplayName = "LogicalExpression parser succeeds with unary NOT of string comparison ")]
+        public void Parse_Unary_Not_Comparison_QuotedString_Success(string input, ComparisonKind expectedComparisonKind, string expectedLeftString, string expectedRightString)
+        {
+            AssertParser.SucceedsWith(Parsers.Logical, input, actualLogical =>
+            {
+                Assert.Equal(LogicalOperatorKind.Not, actualLogical.OperatorKind);
+
+                ComparisonExpression comparison = Assert.IsType<ComparisonExpression>(actualLogical.Right);
+                Assert.Equal(expectedComparisonKind, comparison.ComparisonKind);
+
+                QuotedString leftString = Assert.IsType<QuotedString>(comparison.Left);
+                Assert.Equal(expectedLeftString, leftString.StringContent);
+
+                QuotedString rightString = Assert.IsType<QuotedString>(comparison.Right);
+                Assert.Equal(expectedRightString, rightString.StringContent);
+            });
+        }
     }
 }

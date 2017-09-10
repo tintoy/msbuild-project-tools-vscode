@@ -11,11 +11,6 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
     static class Tokens
     {
         /// <summary>
-        ///     Parse a semicolon, ";".
-        /// </summary>
-        public static Parser<char> Semicolon = Parse.Char(';').Named("token: semicolon");
-
-        /// <summary>
         ///     Parse a period, ".".
         /// </summary>
         public static Parser<char> Period = Parse.Char('.').Named("token: period");
@@ -36,14 +31,34 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         public static Parser<char> At = Parse.Char('@').Named("token: at");
 
         /// <summary>
+        ///     Parse a colon, ":".
+        /// </summary>
+        public static Parser<char> Colon = Parse.Char(':').Named("token: colon");
+
+        /// <summary>
+        ///     Parse a semicolon, ";".
+        /// </summary>
+        public static Parser<char> Semicolon = Parse.Char(';').Named("token: semicolon");
+
+        /// <summary>
         ///     Parse a left parenthesis, "(".
         /// </summary>
         public static Parser<char> LParen = Parse.Char('(').Named("token: left parenthesis");
 
         /// <summary>
-        ///     Parse a left parenthesis, "(".
+        ///     Parse a right parenthesis, ")".
         /// </summary>
         public static Parser<char> RParen = Parse.Char(')').Named("token: right parenthesis");
+
+        /// <summary>
+        ///     Parse a left bracket, "[".
+        /// </summary>
+        public static Parser<char> LBracket = Parse.Char('[').Named("token: left bracket");
+
+        /// <summary>
+        ///     Parse a right bracket, "]".
+        /// </summary>
+        public static Parser<char> RBracket = Parse.Char(']').Named("token: right bracket");
 
         /// <summary>
         ///     Parse the opening of an evaluation expression, "$(".

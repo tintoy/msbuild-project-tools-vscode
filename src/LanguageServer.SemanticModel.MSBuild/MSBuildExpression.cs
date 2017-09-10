@@ -15,11 +15,14 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     Parse an MSBuild expression.
         /// </summary>
         /// <param name="expression">
-        ///     the expression to parse.
+        ///     The expression to parse.
         /// </param>
         /// <returns>
         ///     An <see cref="ExpressionNode"/> representing the root of the expression tree.
         /// </returns>
+        /// <exception cref="ParseException">
+        ///     The expression could not be parsed.
+        /// </exception>
         public static ExpressionNode Parse(string expression)
         {
             if (expression == null)
@@ -40,11 +43,41 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 }
 
                 throw new ParseException(
-                    String.Format("Failed to parse expression{0}.", expectations)
+                    String.Format("Failed to parse expression '{0}'{1}.", expression, expectations)
                 );
             }
 
             return parseResult.Value.EnsureRelationships();
+        }
+
+        /// <summary>
+        ///     Try to parse an MSBuild expression.
+        /// </summary>
+        /// <param name="expression">
+        ///     The expression to parse.
+        /// </param>
+        /// <param name="parsedExpression">
+        ///     If successful, receives an <see cref="ExpressionNode"/> representing the root of the expression tree.
+        /// </param>
+        /// <returns>
+        ///     <c>true</c>, if the expression was successfully parsed; otherwise, <c>false</c>.
+        /// </returns>
+        public static bool TryParse(string expression, out ExpressionNode parsedExpression)
+        {
+            if (expression == null)
+                throw new ArgumentNullException(nameof(expression));
+
+            var parseResult = Parsers.Root.TryParse(expression);
+            if (parseResult.WasSuccessful)
+            {
+                parsedExpression = parseResult.Value;
+
+                return true;
+            }
+
+            parsedExpression = null;
+
+            return false;
         }
 
         /// <summary>

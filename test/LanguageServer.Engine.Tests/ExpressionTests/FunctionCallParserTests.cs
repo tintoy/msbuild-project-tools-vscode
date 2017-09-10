@@ -78,6 +78,34 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         }
 
         /// <summary>
+        ///     Verify that the FunctionCall parser can successfully parse a static method-call expression with a single argument.
+        /// </summary>
+        /// <param name="input">
+        ///     The source text to parse.
+        /// </param>
+        /// <param name="expectedArgumentKind">
+        ///     The expected argument kind.
+        /// </param>
+        [InlineData("[Foo]::Exists(Bar)", ExpressionKind.Symbol)]
+        [InlineData("[Foo]::Exists($(Bar))", ExpressionKind.Evaluate)]
+        [InlineData("[Foo]::Exists('Bar.txt')", ExpressionKind.QuotedString)]
+        [InlineData("[Foo.Bar]::Exists(Baz)", ExpressionKind.Symbol)]
+        [InlineData("[Foo.Bar]::Exists($(Baz))", ExpressionKind.Evaluate)]
+        [InlineData("[Foo.Bar]::Exists('Baz.txt')", ExpressionKind.QuotedString)]
+        [Theory(DisplayName = "FunctionCall parser succeeds for static method call with a single argument ")]
+        public void Parse_StaticMethod_SingleArgument_String_Success(string input, ExpressionKind expectedArgumentKind)
+        {
+            AssertParser.SucceedsWith(Parsers.FunctionCalls.StaticMethod, input, actualFunctionCall =>
+            {
+                Assert.Equal(FunctionKind.StaticMethod, actualFunctionCall.FunctionKind);
+                Assert.Collection(actualFunctionCall.Arguments, actualArgument =>
+                {
+                    Assert.Equal(expectedArgumentKind, actualArgument.Kind);
+                });
+            });
+        }
+
+        /// <summary>
         ///     Verify that the function-call argument list parser can successfully parse the specified input.
         /// </summary>
         /// <param name="input">

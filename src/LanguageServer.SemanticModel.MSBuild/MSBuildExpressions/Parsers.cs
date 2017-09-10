@@ -195,9 +195,27 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
             ).Named("instance method call");
 
             /// <summary>
+            ///     Parse a static method function-call.
+            /// </summary>
+            public static readonly Parser<FunctionCall> StaticMethod = Parse.Positioned(
+                from target in TypeRef.Token().Once().Named("function call method target")
+                from doubleColon in Tokens.Colon.Repeat(2)
+                from methodName in Symbol.Token().Named("function name")
+                from functionArguments in ArgumentList.Named("function argument list")
+                select new FunctionCall
+                {
+                    FunctionKind = FunctionKind.StaticMethod,
+                    Name = methodName.Name,
+                    Children = ImmutableList.CreateRange(
+                        target.Concat(functionArguments)
+                    )
+                }
+            ).Named("instance method call");
+
+            /// <summary>
             ///     Parse any kind of function-call expression.
             /// </summary>
-            public static readonly Parser<FunctionCall> Any = InstanceMethod.Or(Global);
+            public static readonly Parser<FunctionCall> Any = StaticMethod.Or(InstanceMethod).Or(Global);
         }
 
         /// <summary>
@@ -286,6 +304,29 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
                 Name = identifier
             }
         ).Named("symbol");
+
+        /// <summary>
+        ///     Parse a symbol in an MSBuild expression.
+        /// </summary>
+        public static readonly Parser<Symbol> QualifiedSymbol = Parse.Positioned(
+            from identifiers in Tokens.Identifier.DelimitedBy(Tokens.Period).Array().Named("identifiers")
+            
+            select new Symbol
+            {
+                Name = identifiers[identifiers.Length - 1],
+                Namespace = String.Join(".", identifiers.Take(identifiers.Length - 1))
+            }
+        ).Named("qualified symbol");
+
+        /// <summary>
+        ///     Parse a type-reference expression.
+        /// </summary>
+        public static readonly Parser<Symbol> TypeRef = Parse.Positioned(
+            from openType in Tokens.LBracket.Token().Named("open TypeRef name")
+            from type in QualifiedSymbol.Token().Named("TypeRef name")
+            from closeType in Tokens.RBracket.Token().Named("close TypeRef name")
+            select type
+        ).Named("type reference");
 
         /// <summary>
         ///     Parse an equality operator.
@@ -506,6 +547,73 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         static IEnumerable<T> ToSequenceOrElse<T>(this IOption<T> optionalItem, T valueIfNotDefined)
         {
             yield return optionalItem.GetOrElse(valueIfNotDefined);
+        }
+
+        /// <summary>
+        ///     Create a new sequence that contains all elements in the source sequence except the last element.
+        /// </summary>
+        /// <typeparam name="TSource">
+        ///     The type of element contained in the source sequence.
+        /// </typeparam>
+        /// <param name="source">
+        ///     The source sequence.
+        /// </param>
+        /// <returns>
+        ///     The new sequence.
+        /// </returns>
+        static IEnumerable<TSource> DropLast<TSource>(this IEnumerable<TSource> source)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (source is IList<TSource> list)
+            {
+                for (int index = 0; index < list.Count - 1; index++)
+                    yield return list[index];
+
+                yield break;
+            }
+
+            using (IEnumerator<TSource> sequence = source.GetEnumerator())
+            {
+                if (!sequence.MoveNext())
+                    yield break;
+
+                TSource previousElement = sequence.Current;
+                while (sequence.MoveNext())
+                {
+                    yield return previousElement;
+
+                    previousElement = sequence.Current;
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Convert the parsed sequence to an array.
+        /// </summary>
+        /// <typeparam name="TResult">
+        ///     The parser result type.
+        /// </typeparam>
+        /// <param name="parser">
+        ///     The parser whose result is a sequence of <typeparamref name="TResult"/>.
+        /// </param>
+        /// <returns>
+        ///     A parser whose result type is an array of <typeparamref name="TResult"/>.
+        /// </returns>
+        static Parser<TResult[]> Array<TResult>(this Parser<IEnumerable<TResult>> parser)
+        {
+            if (parser == null)
+                throw new ArgumentNullException(nameof(parser));
+
+            return input =>
+            {
+                IResult<IEnumerable<TResult>> result = parser(input);
+                if (result.WasSuccessful)
+                    return Result.Success(result.Value.ToArray(), result.Remainder);
+
+                return Result.Failure<TResult[]>(result.Remainder, result.Message, result.Expectations);
+            };
         }
 
         /// <summary>

@@ -3,7 +3,7 @@ using Sprache;
 namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
 {
     /// <summary>
-    ///     Represents an MSBuild logical expression (e.g. And, Or, Not).
+    ///     Represents an MSBuild logical expression (e.g. AND, OR, NOT).
     /// </summary>
     public class LogicalExpression
         : ExpressionContainerNode, IPositionAware<LogicalExpression>

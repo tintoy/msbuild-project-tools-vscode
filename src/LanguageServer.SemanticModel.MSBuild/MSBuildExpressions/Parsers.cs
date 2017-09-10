@@ -154,7 +154,20 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
                     }
                 )
             }
-        );
+        ).Named("evaluation");
+
+        /// <summary>
+        ///     Parse an MSBuild item group expression.
+        /// </summary>
+        public static Parser<ItemGroup> ItemGroup = Parse.Positioned(
+            from evalOpen in Tokens.ItemGroupOpen.Named("open item group")
+            from name in Tokens.Identifier.Token().Named("item group name")
+            from evalClose in Tokens.ItemGroupClose.Named("close item group")
+            select new ItemGroup
+            {
+                Name = name
+            }
+        ).Named("item group");
 
         /// <summary>
         ///     Parse a run of contiguous characters in a single-quoted string (excluding <see cref="Tokens.Dollar"/> or the closing <see cref="Tokens.SingleQuote"/>).
@@ -188,6 +201,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
             from contents in
                 SingleQuotedStringContent.As<ExpressionNode>()
                     .Or(Evaluation)
+                    .Or(ItemGroup)
                     .Many()
                     .Named("quoted string content")
             from trailingQuote in Tokens.SingleQuote.Named("close quoted string")
@@ -281,6 +295,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
             GroupedExpression
                 .Or(Comparison)
                 .Or(Evaluation)
+                .Or(ItemGroup)
                 .Or(QuotedString)
                 .Or(Symbol)
         );
@@ -325,6 +340,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
                 .Or(Comparison)
                 .Or(QuotedString)
                 .Or(Evaluation)
+                .Or(ItemGroup)
                 .Or(Symbol);
 
         /// <summary>

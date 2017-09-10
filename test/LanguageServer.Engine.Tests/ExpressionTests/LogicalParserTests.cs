@@ -105,8 +105,9 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         /// <param name="expectedSymbol">
         ///     The expected name of the symbol.
         /// </param>
-        [InlineData("Not ABC", "ABC")]
-        [InlineData("Not (ABC)", "ABC")]
+        [InlineData("! ABC",   "ABC")]
+        [InlineData("!(ABC)",  "ABC")]
+        [InlineData("! (ABC)", "ABC")]
         [Theory(DisplayName = "LogicalExpression parser succeeds with unary NOT of string comparison ")]
         public void Parse_Unary_Not_Symbol_Success(string input, string expectedSymbol)
         {
@@ -128,7 +129,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         /// <param name="expectedSymbol">
         ///     The expected name of the symbol.
         /// </param>
-        [InlineData("(Not ABC)", "ABC")]
+        [InlineData("(! ABC)", "ABC")]
         [Theory(DisplayName = "GroupedExpression parser succeeds with unary NOT of string comparison ")]
         public void Parse_Grouped_Unary_Not_Symbol_Success(string input, string expectedSymbol)
         {
@@ -157,7 +158,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         /// <param name="expectedRightString">
         ///     The expected name of the right-hand string in the left-hand comparison.
         /// </param>
-        [InlineData("Not ('ABC' == 'DEF')", ComparisonKind.Equality, "ABC", "DEF")]
+        [InlineData("!('ABC' == 'DEF')", ComparisonKind.Equality, "ABC", "DEF")]
         [Theory(DisplayName = "LogicalExpression parser succeeds with unary NOT of string comparison ")]
         public void Parse_Unary_Not_Comparison_QuotedString_Success(string input, ComparisonKind expectedComparisonKind, string expectedLeftString, string expectedRightString)
         {

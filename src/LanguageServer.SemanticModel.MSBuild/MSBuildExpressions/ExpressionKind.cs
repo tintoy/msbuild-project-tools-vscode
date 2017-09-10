@@ -41,12 +41,17 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         Evaluate,
 
         /// <summary>
+        ///     An item group expression, "@(xxx)".
+        /// </summary>
+        ItemGroup,
+
+        /// <summary>
         ///     A comparison expression.
         /// </summary>
         Compare,
 
         /// <summary>
-        ///     A logical expression (e.g. And, Or, Not).
+        ///     A logical expression (e.g. AND, OR, NOT).
         /// </summary>
         Logical,
 

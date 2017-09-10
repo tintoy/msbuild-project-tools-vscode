@@ -26,6 +26,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         public static Parser<char> Dollar = Parse.Char('$').Named("token: dollar");
 
         /// <summary>
+        ///     Parse an at sign, "@".
+        /// </summary>
+        public static Parser<char> At = Parse.Char('@').Named("token: at");
+
+        /// <summary>
         ///     Parse a left parenthesis, "(".
         /// </summary>
         public static Parser<char> LParen = Parse.Char('(').Named("token: left parenthesis");
@@ -46,6 +51,16 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         public static Parser<char> EvalClose = RParen.Named("token: eval close");
 
         /// <summary>
+        ///     Parse the opening of an item group expression, "@(".
+        /// </summary>
+        public static Parser<IEnumerable<char>> ItemGroupOpen = Parse.String("@(").Named("token: item group open");
+
+        /// <summary>
+        ///     Parse the close of an item group expression, ")".
+        /// </summary>
+        public static Parser<char> ItemGroupClose = RParen.Named("token: item group close");
+
+        /// <summary>
         ///     Parse a logical-AND operator, "And".
         /// </summary>
         public static Parser<string> AndOperator = Parse.String("And").Text().Named("token: logical-AND operator");
@@ -56,9 +71,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         public static Parser<string> OrOperator = Parse.String("Or").Text().Named("token: logical-OR operator");
 
         /// <summary>
-        ///     Parse a logical-NOT operator, "Not".
+        ///     Parse a logical-NOT operator, "!".
         /// </summary>
-        public static Parser<string> NotOperator = Parse.String("Not").Text().Named("token: logical-NOT operator");
+        public static Parser<string> NotOperator = Parse.String("!").Text().Named("token: logical-NOT operator");
 
         /// <summary>
         ///     Parse an equality operator, "==".
@@ -104,7 +119,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         public static Parser<char> SingleQuotedStringChar =
             EscapedChar.Or(
                 Parse.AnyChar.Except(
-                    SingleQuote.Or(Dollar)
+                    SingleQuote.Or(Dollar).Or(At) // FIXME: Technically these should be EvalOpen and ItemGroupOpen; a single "$" or "@" is legal.
                 )
             ).Named("token: single-quoted string character");
 

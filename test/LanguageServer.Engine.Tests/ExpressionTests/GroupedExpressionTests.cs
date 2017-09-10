@@ -34,12 +34,12 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         /// <param name="expectedRootExpressionKind">
         ///     The expected kind of the root expression.
         /// </param>
-        [InlineData("(Not ABC)",                ExpressionKind.Logical     )]
-        [InlineData("((Not ABC))",              ExpressionKind.Logical     )]
-        [InlineData("('ABC' != 'DEF')",         ExpressionKind.Compare  )]
-        [InlineData("(('ABC' != 'DEF'))",       ExpressionKind.Compare  )]
-        [InlineData("(Not ('ABC' != 'DEF'))",   ExpressionKind.Logical     )]
-        [InlineData("(Not (('ABC' != 'DEF')))", ExpressionKind.Logical     )]
+        [InlineData("(! ABC)",                ExpressionKind.Logical )]
+        [InlineData("((! ABC))",              ExpressionKind.Logical )]
+        [InlineData("('ABC' != 'DEF')",       ExpressionKind.Compare )]
+        [InlineData("(('ABC' != 'DEF'))",     ExpressionKind.Compare )]
+        [InlineData("(! ('ABC' != 'DEF'))",   ExpressionKind.Logical )]
+        [InlineData("(! (('ABC' != 'DEF')))", ExpressionKind.Logical )]
         [Theory(DisplayName = "GroupedExpression parser succeeds ")]
         public void Parse_Success(string input, ExpressionKind expectedRootExpressionKind)
         {

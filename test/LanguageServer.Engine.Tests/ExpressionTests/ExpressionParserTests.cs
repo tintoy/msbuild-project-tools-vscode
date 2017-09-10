@@ -35,7 +35,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         ///     The expected expression kind.
         /// </param>
         [InlineData("ABC",            ExpressionKind.Symbol      )]
-        [InlineData("Not ABC",        ExpressionKind.Logical     )]
+        [InlineData("! ABC",          ExpressionKind.Logical     )]
         [InlineData("ABC And DEF",    ExpressionKind.Logical     )]
         [InlineData("$(ABC)",         ExpressionKind.Evaluate    )]
         [InlineData("'ABC'",          ExpressionKind.QuotedString)]

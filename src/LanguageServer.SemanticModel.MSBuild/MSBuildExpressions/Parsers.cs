@@ -11,6 +11,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
     /// <summary>
     ///     Parsers for MSBuild expression syntax.
     /// </summary>
+    /// <remarks>
+    ///     AF: Be careful when combining Parse.Ref with Parse.Or; you want to use Parse.Ref(() => X.Or(Y)) not Parse.Ref(() => X).Or(Parse.Ref(() => Y)).
+    /// </remarks>
     static class Parsers
     {
         /// <summary>
@@ -227,6 +230,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     Parse a binary-expression operand.
         /// </summary>
+        /// <remarks>
+        ///     In order to avoid creating a left-recursive grammar, we can't just use Expression here; instead, we have to spell out what's allowed in a comparison operand.
+        /// </remarks>
         public static Parser<ExpressionNode> ComparisonOperand = Symbol.As<ExpressionNode>().Or(QuotedString);
 
         /// <summary>
@@ -243,7 +249,6 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
                 Right = rightOperand
             }
         );
-
 
         /// <summary>
         ///     Parse a logical-AND operator.
@@ -270,9 +275,15 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ///     Parse a logical-expression operand.
         /// </summary>
         /// <remarks>
-        ///     TODO: Work out why we can't just put Refs.GroupedExpression.Or(Refs.Expression) here.
+        ///     In order to avoid creating a left-recursive grammar, we can't just use Expression here; instead, we have to spell out what's allowed in a logical operand.
         /// </remarks>
-        public static Parser<ExpressionNode> LogicalOperand = Refs.GroupedExpression.Or(Comparison).Or(Evaluation).Or(QuotedString).Or(Symbol);
+        public static Parser<ExpressionNode> LogicalOperand = Parse.Ref(() =>
+            GroupedExpression
+                .Or(Comparison)
+                .Or(Evaluation)
+                .Or(QuotedString)
+                .Or(Symbol)
+        );
 
         /// <summary>
         ///     Parse a logical binary expression.
@@ -333,22 +344,6 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ///     Parse the root of an expression tree.
         /// </summary>
         public static readonly Parser<ExpressionNode> Root = GroupedExpression.Or(Expression).Or(QuotedString).Token();
-
-        /// <summary>
-        ///     Late-bound references to parsers.
-        /// </summary>
-        static class Refs
-        {
-            /// <summary>
-            ///     Late-bound reference to the <see cref="Parsers.Expression"/> parser.
-            /// </summary>
-            public static readonly Parser<ExpressionNode> Expression = Parse.Ref(() => Parsers.Expression);
-
-            /// <summary>
-            ///     Late-bound reference to the <see cref="Parsers.GroupedExpression"/> parser.
-            /// </summary>
-            public static readonly Parser<ExpressionNode> GroupedExpression = Parse.Ref(() => Parsers.GroupedExpression);
-        }
 
         /// <summary>
         ///     Create sequence containing the item.

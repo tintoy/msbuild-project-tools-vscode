@@ -13,67 +13,67 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     Parse a semicolon, ";".
         /// </summary>
-        public static Parser<char> Semicolon = Parse.Char(';');
+        public static Parser<char> Semicolon = Parse.Char(';').Named("token: semicolon");
 
         /// <summary>
         ///     Parse a period, ".".
         /// </summary>
-        public static Parser<char> Period = Parse.Char('.');
+        public static Parser<char> Period = Parse.Char('.').Named("token: period");
 
         /// <summary>
         ///     Parse a dollar sign, "$".
         /// </summary>
-        public static Parser<char> Dollar = Parse.Char('$');
+        public static Parser<char> Dollar = Parse.Char('$').Named("token: dollar");
 
         /// <summary>
         ///     Parse a left parenthesis, "(".
         /// </summary>
-        public static Parser<char> LParen = Parse.Char('(');
+        public static Parser<char> LParen = Parse.Char('(').Named("token: left parenthesis");
 
         /// <summary>
         ///     Parse a left parenthesis, "(".
         /// </summary>
-        public static Parser<char> RParen = Parse.Char(')');
+        public static Parser<char> RParen = Parse.Char(')').Named("token: right parenthesis");
 
         /// <summary>
         ///     Parse the opening of an evaluation expression, "$(".
         /// </summary>
-        public static Parser<IEnumerable<char>> EvalOpen = Parse.String("$(").Named("eval open");
+        public static Parser<IEnumerable<char>> EvalOpen = Parse.String("$(").Named("token: eval open");
 
         /// <summary>
         ///     Parse the close of an evaluation expression, ")".
         /// </summary>
-        public static Parser<char> EvalClose = RParen.Named("eval close");
+        public static Parser<char> EvalClose = RParen.Named("token: eval close");
 
         /// <summary>
         ///     Parse a logical-AND operator, "And".
         /// </summary>
-        public static Parser<string> AndOperator = Parse.String("And").Text();
+        public static Parser<string> AndOperator = Parse.String("And").Text().Named("token: logical-AND operator");
 
         /// <summary>
         ///     Parse a logical-OR operator, "Or".
         /// </summary>
-        public static Parser<string> OrOperator = Parse.String("Or").Text();
+        public static Parser<string> OrOperator = Parse.String("Or").Text().Named("token: logical-OR operator");
 
         /// <summary>
         ///     Parse a logical-NOT operator, "Not".
         /// </summary>
-        public static Parser<string> NotOperator = Parse.String("Not").Text();
+        public static Parser<string> NotOperator = Parse.String("Not").Text().Named("token: logical-NOT operator");
 
         /// <summary>
         ///     Parse an equality operator, "==".
         /// </summary>
-        public static Parser<string> EqualityOperator = Parse.String("==").Text();
+        public static Parser<string> EqualityOperator = Parse.String("==").Text().Named("token: equality operator");
 
         /// <summary>
         ///     Parse an inequality operator, "!=".
         /// </summary>
-        public static Parser<string> InequalityOperator = Parse.String("!=").Text();
+        public static Parser<string> InequalityOperator = Parse.String("!=").Text().Named("token: inequality operator");
 
         /// <summary>
         ///     Parse a single quote, "'".
         /// </summary>
-        public static Parser<char> SingleQuote = Parse.Char('\'');
+        public static Parser<char> SingleQuote = Parse.Char('\'').Named("token: single quote");
 
         /// <summary>
         ///     Parse a single hexadecimal digit, "[0-9A-F]".
@@ -83,16 +83,20 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
                 (character >= '0' && character <= '9')
                 ||
                 (character >= 'A' && character <= 'F'),
-            description: "hexadecimal digit"
+            
+            description: "token: hexadecimal digit"
         );
 
         /// <summary>
         ///     Parse an escaped character, "%xx" (where "x" is a hexadecimal digit, and the resulting number represents the ASCII character code).
         /// </summary>
-        public static Parser<char> EscapedChar =
+        public static Parser<char> EscapedChar = Parse.Named(
             from escape in Parse.Char('%')
             from hexDigits in HexDigit.Repeat(2).Text()
-            select (char)Byte.Parse(hexDigits, NumberStyles.HexNumber);
+            select (char)Byte.Parse(hexDigits, NumberStyles.HexNumber),
+            
+            name: "token: escaped character"
+        );
 
         /// <summary>
         ///     Parse any character valid within a single-quoted string.
@@ -102,43 +106,49 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
                 Parse.AnyChar.Except(
                     SingleQuote.Or(Dollar)
                 )
-            );
+            ).Named("token: single-quoted string character");
 
         /// <summary>
         ///     Parse a quoted string.
         /// </summary>
-        public static Parser<IEnumerable<char>> QuotedString =
+        public static Parser<IEnumerable<char>> QuotedString = Parse.Named(
             from leftQuote in SingleQuote
             from stringContents in SingleQuotedStringChar.Many()
             from rightQuote in SingleQuote
-            select stringContents;
+            select stringContents,
+            
+            name: "token: quoted string"
+        );
 
         /// <summary>
         ///     Parse any character valid within a semicolon-delimited list.
         /// </summary>
-        public static Parser<char> ListChar = Parse.AnyChar.Except(Tokens.Semicolon);
+        public static Parser<char> ListChar = Parse.AnyChar.Except(Semicolon).Named("token: list character");
 
         /// <summary>
         ///     Parse a list of strings delimited by semicolons, "ABC;DEF", as character sequences.
         /// </summary>
-        public static readonly Parser<IEnumerable<IEnumerable<char>>> DelimitedList = ListChar.Many().DelimitedBy(Semicolon);
+        public static readonly Parser<IEnumerable<IEnumerable<char>>> DelimitedList = ListChar.Many().DelimitedBy(Semicolon).Named("token: delimited list");
 
         /// <summary>
         ///     Parse a list of strings delimited by semicolons, "ABC;DEF", as strings.
         /// </summary>
-        public static readonly Parser<IEnumerable<IEnumerable<char>>> DelimitedListOfStrings = ListChar.Many().Text().DelimitedBy(Semicolon);
+        public static readonly Parser<IEnumerable<IEnumerable<char>>> DelimitedListOfStrings = ListChar.Many().Text().DelimitedBy(Semicolon).Named("token: delimited string list");
 
         /// <summary>
         ///     Parse an identifier, "ABC".
         /// </summary>
-        public static Parser<string> Identifier =
+        public static Parser<string> Identifier = Parse.Named(
             from first in Parse.Letter
             from rest in Parse.LetterOrDigit.Many().Text()
-            select first + rest;
+            select first + rest,
+            
+            name: "token: identifier"
+        );
 
         /// <summary>
         ///     Parse a qualified identifier, "ABC.DEF".
         /// </summary>
-        public static Parser<IEnumerable<string>> QualifiedIdentifier = Identifier.DelimitedBy(Period);
+        public static Parser<IEnumerable<string>> QualifiedIdentifier = Identifier.DelimitedBy(Period).Named("token: qualified identifier");
     }
 }

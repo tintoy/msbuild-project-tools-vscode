@@ -33,7 +33,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         ITestOutputHelper TestOutput { get; }
 
         /// <summary>
-        ///     Verify that the EvaluationExpression parser can successfully parse the specified input.
+        ///     Verify that the Evaluation parser can successfully parse the specified input.
         /// </summary>
         /// <param name="input">
         ///     The source text to parse.
@@ -54,6 +54,30 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
 
                 Symbol actualSymbol = Assert.IsType<Symbol>(actualEvaluation.Children[0]);
                 Assert.Equal(expectedSymbolName, actualSymbol.Name);
+            });
+        }
+
+        /// <summary>
+        ///     Verify that the Evaluation parser can successfully parse the specified input.
+        /// </summary>
+        /// <param name="input">
+        ///     The source text to parse.
+        /// </param>
+        /// <param name="expectedFunctionName">
+        ///     The expected function name.
+        /// </param>
+        [InlineData("$( Foo() )",        "Foo")] // Fails: "expected at Line 1, Column 7: 'close evaluation'"
+        [InlineData("$( Foo('Bar') )",   "Foo")]
+        [InlineData("$(Foo.Bar('Baz'))", "Bar")]
+        [Theory(DisplayName = "Evaluation parser succeeds with function-call ")]
+        public void Parse_FunctionCall_Success(string input, string expectedFunctionName)
+        {
+            AssertParser.SucceedsWith(Parsers.Evaluation, input, actualEvaluation =>
+            {
+                Assert.Equal(1, actualEvaluation.Children.Count);
+
+                FunctionCall actualFunctionCall = Assert.IsType<FunctionCall>(actualEvaluation.Children[0]);
+                Assert.Equal(expectedFunctionName, actualFunctionCall.Name);
             });
         }
 

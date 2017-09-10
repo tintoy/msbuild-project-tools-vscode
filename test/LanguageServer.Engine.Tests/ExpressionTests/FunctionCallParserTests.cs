@@ -28,7 +28,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         }
 
         /// <summary>
-        ///     Verify that the Compare parser can successfully parse a global function-call expression with a single argument.
+        ///     Verify that the FunctionCall parser can successfully parse a global function-call expression with a single argument.
         /// </summary>
         /// <param name="input">
         ///     The source text to parse.
@@ -39,7 +39,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         [InlineData("Exists(Foo)",       ExpressionKind.Symbol      )]
         [InlineData("Exists($(Foo))",    ExpressionKind.Evaluate    )]
         [InlineData("Exists('Foo.txt')", ExpressionKind.QuotedString)]
-        [Theory(DisplayName = "FunctionCallExpression parser succeeds for global function call with a single argument ")]
+        [Theory(DisplayName = "FunctionCall parser succeeds for global function call with a single argument ")]
         public void Parse_Global_SingleArgument_String_Success(string input, ExpressionKind expectedArgumentKind)
         {
             AssertParser.SucceedsWith(Parsers.FunctionCalls.Global, input, actualFunctionCall =>
@@ -53,7 +53,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         }
 
         /// <summary>
-        ///     Verify that the Compare parser can successfully parse an instance method-call expression with a single argument.
+        ///     Verify that the FunctionCall parser can successfully parse an instance method-call expression with a single argument.
         /// </summary>
         /// <param name="input">
         ///     The source text to parse.
@@ -64,7 +64,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         [InlineData("Foo.Exists(Bar)",       ExpressionKind.Symbol      )]
         [InlineData("Foo.Exists($(Bar))",    ExpressionKind.Evaluate    )]
         [InlineData("Foo.Exists('Bar.txt')", ExpressionKind.QuotedString)]
-        [Theory(DisplayName = "FunctionCallExpression parser succeeds for instance method call with a single argument ")]
+        [Theory(DisplayName = "FunctionCall parser succeeds for instance method call with a single argument ")]
         public void Parse_InstanceMethod_SingleArgument_String_Success(string input, ExpressionKind expectedArgumentKind)
         {
             AssertParser.SucceedsWith(Parsers.FunctionCalls.InstanceMethod, input, actualFunctionCall =>
@@ -74,6 +74,27 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
                 {
                     Assert.Equal(expectedArgumentKind, actualArgument.Kind);
                 });
+            });
+        }
+
+        /// <summary>
+        ///     Verify that the function-call argument list parser can successfully parse the specified input.
+        /// </summary>
+        /// <param name="input">
+        ///     The input to parse.
+        /// </param>
+        /// <param name="expectedArgumentCount">
+        ///     The expected number of arguments.
+        /// </param>
+        [InlineData("()", 0)]
+        [InlineData("('a')", 1)]
+        [InlineData("('a', 'b')", 2)]
+        [Theory(DisplayName = "ArgumentList parser succeeds ")]
+        public void ArgumentList_Success(string input, int expectedArgumentCount)
+        {
+            AssertParser.SucceedsWith(Parsers.FunctionCalls.ArgumentList, input, actualArgumentList =>
+            {
+                Assert.Equal(expectedArgumentCount, actualArgumentList.Count());
             });
         }
     }

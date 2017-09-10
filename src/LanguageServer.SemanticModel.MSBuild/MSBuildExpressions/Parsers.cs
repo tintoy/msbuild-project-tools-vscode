@@ -72,7 +72,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
                 from firstItem in Item.Once<ExpressionNode>()
                 from remainingItems in SeparatorWithItem.Many()
                 let items =
-                    leadingSeparator.ToFlattenedSequenceIfDefined()
+                    leadingSeparator.ToSequenceIfDefined()
                         .Concat(firstItem)
                         .Concat(
                             remainingItems.Flatten()
@@ -126,7 +126,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
                 from firstItem in Expression.Once()
                 from remainingItems in SeparatorWithItem.Many()
                 let items =
-                    leadingSeparator.ToFlattenedSequenceIfDefined()
+                    leadingSeparator.ToSequenceIfDefined()
                         .Concat(firstItem)
                         .Concat(
                             remainingItems.Flatten()
@@ -158,9 +158,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
             /// </summary>
             public static readonly Parser<IEnumerable<ExpressionNode>> ArgumentList =
                 from openingParenthesis in Tokens.LParen.Token().Named("open function argument list")
-                from functionArguments in Argument.Token().DelimitedBy(Tokens.Comma).Named("function argument list")
+                from functionArguments in Argument.Token().DelimitedBy(Tokens.Comma).Named("function argument list").Optional()
                 from closingParenthesis in Tokens.RParen.Token().Named("close function argument list")
-                select functionArguments;
+                select functionArguments.ToSequenceIfDefined();
 
             /// <summary>
             ///     Parse a global function-call.
@@ -193,23 +193,31 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
                     )
                 }
             ).Named("instance method call");
+
+            /// <summary>
+            ///     Parse any kind of function-call expression.
+            /// </summary>
+            public static readonly Parser<FunctionCall> Any = InstanceMethod.Or(Global);
         }
+
+        /// <summary>
+        ///     Parse the body of an evaluation expression.
+        /// </summary>
+        public static Parser<ExpressionNode> EvaluationBody = Parse.Ref(() =>
+            FunctionCalls.Any.As<ExpressionNode>()
+                .Or(Symbol)
+        );
 
         /// <summary>
         ///     Parse an MSBuild evaluation expression.
         /// </summary>
         public static Parser<Evaluate> Evaluation = Parse.Positioned(
             from evalOpen in Tokens.EvalOpen.Named("open evaluation")
-            from body in Tokens.Identifier.Token().Named("evaluation body") // .Or()...
+            from body in EvaluationBody.Token().Named("evaluation body")
             from evalClose in Tokens.EvalClose.Named("close evaluation")
             select new Evaluate
             {
-                Children = ImmutableList.Create<ExpressionNode>(
-                    new Symbol
-                    {
-                        Name = body
-                    }
-                )
+                Children = ImmutableList.Create(body)
             }
         ).Named("evaluation");
 
@@ -457,7 +465,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         }
 
         /// <summary>
-        ///     Create flattened sequence that contains the optional items if they defined.
+        ///     Create a sequence that contains the optional items if they defined.
         /// </summary>
         /// <typeparam name="T">
         ///     The item type.
@@ -468,7 +476,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <returns>
         ///     If <see cref="IOption{T}.IsDefined"/> is <c>true</c>, a single-element sequence containing the item; otherwise, an empty sequence.
         /// </returns>
-        static IEnumerable<T> ToFlattenedSequenceIfDefined<T>(this IOption<IEnumerable<T>> optionalItems)
+        static IEnumerable<T> ToSequenceIfDefined<T>(this IOption<IEnumerable<T>> optionalItems)
         {
             if (optionalItems == null)
                 throw new ArgumentNullException(nameof(optionalItems));

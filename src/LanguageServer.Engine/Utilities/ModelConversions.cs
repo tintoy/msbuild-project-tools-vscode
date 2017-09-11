@@ -41,7 +41,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         public static Position ToNative(this Lsp.Models.Position position)
         {
             if (position == null)
-                return null;
+                return Position.Zero;
 
             // LSP is zero-based.
             return Position.FromZeroBased(

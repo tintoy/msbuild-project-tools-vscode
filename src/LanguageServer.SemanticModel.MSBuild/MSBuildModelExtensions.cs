@@ -67,7 +67,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         public static Position ToNative(this ElementLocation location)
         {
             if (location == null)
-                return null;
+                return Position.Zero;
 
             if (location.Line == 0)
                 return Position.Invalid;

@@ -114,7 +114,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// <param name="expectedColumn">
         ///     The resulting position's expected column number.
         /// </param>
-        [InlineData(2, 2, 2, 2, 4, 4)]
+        [InlineData(2, 2, 2, 2, 3, 3)]
         [InlineData(5, 17, 2, 5, 6, 21)]
         [Theory(DisplayName = "Position.WithOrigin is correct for one-based positions ")]
         public void OneBased_WithOrigin_OneBased(int line, int column, int originLine, int originColumn, int expectedLine, int expectedColumn)

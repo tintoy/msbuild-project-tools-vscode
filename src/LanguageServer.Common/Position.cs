@@ -5,7 +5,7 @@ namespace MSBuildProjectTools.LanguageServer
     /// <summary>
     ///     Represents a position in a text document.
     /// </summary>
-    public class Position
+    public struct Position
         : IEquatable<Position>, IComparable<Position>, IComparable<Range>
     {
         /// <summary>
@@ -194,7 +194,10 @@ namespace MSBuildProjectTools.LanguageServer
         /// </returns>
         public override bool Equals(object other)
         {
-            return Equals(other as Position);
+            if (other is Position otherPosition)
+                return Equals(otherPosition);
+
+            return false;
         }
 
         /// <summary>
@@ -206,7 +209,7 @@ namespace MSBuildProjectTools.LanguageServer
         public override int GetHashCode()
         {
             int hashCode = 17;
-            
+
             unchecked
             {
                 hashCode += IsZeroBased ? LineNumber : LineNumber - 1;

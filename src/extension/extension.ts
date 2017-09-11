@@ -43,6 +43,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     
         if (configuration.language.enable && couldEnableLanguageService) {
             await createLanguageClient(context);
+
+            context.subscriptions.push(
+                handleExpressionAutoClose()
+            );
         } else {
             await createClassicCompletionProvider(context, couldEnableLanguageService);
     
@@ -58,10 +62,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             );
         }
     });
-
-    context.subscriptions.push(
-        handleExpressionAutoClose()
-    );
 }
 
 /**

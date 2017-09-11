@@ -154,16 +154,16 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
 
             // TODO: Use binary search.
 
-            Range lastMatchingRange = null;
+            Range lastMatchingRange = Range.Zero;
             foreach (Range objectRange in _nodeRanges)
             {
-                if (lastMatchingRange != null && objectRange.End > lastMatchingRange.End)
+                if (lastMatchingRange != Range.Zero && objectRange.End > lastMatchingRange.End)
                     break; // We've moved past the end of the last matching range.
 
                 if (objectRange.Contains(position))
                     lastMatchingRange = objectRange;
             }   
-            if (lastMatchingRange == null)
+            if (lastMatchingRange == Range.Zero)
                 return null;
 
             return _nodesByStartPosition[lastMatchingRange.Start];

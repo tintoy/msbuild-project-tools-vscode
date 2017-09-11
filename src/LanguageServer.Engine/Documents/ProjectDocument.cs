@@ -477,9 +477,9 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         ///     The target position.
         /// </param>
         /// <returns>
-        ///     The expression node and range.
+        ///     The expression node and its range (relative to the containing XML).
         /// </returns>
-        public (ExpressionNode expression, Range range) GetMSBuildExpressionAtPosition(Position position)
+        public (ExpressionNode expression, Range expressionRange) GetMSBuildExpressionAtPosition(Position position)
         {
             if (position == null)
                 throw new ArgumentNullException(nameof(position));
@@ -510,7 +510,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                 {
                     Log.Information("Found no interesting XML @ {Position:l}", position);
 
-                    return (null, null);
+                    return (null, Range.Zero);
                 }
 
                 ExpressionNode expressionRoot;
@@ -518,7 +518,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                 {
                     Log.Verbose("Failed to parse expression {Expression}.", expressionText);
 
-                    return (null, null);
+                    return (null, Range.Zero);
                 }
 
                 Log.Verbose("Expression root is {ExpressionKind} @ {ExpressionRange:l}",
@@ -538,12 +538,12 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                 {
                     Log.Verbose("No expression found at {ExpressionPosition}.", expressionPosition);
 
-                    return (null, null);
+                    return (null, Range.Zero);
                 }
 
                 return (
                     expression: expressionAtPosition,
-                    range: expressionAtPosition.Range.WithOrigin(expressionStartPosition)
+                    expressionRange: expressionAtPosition.Range.WithOrigin(expressionStartPosition)
                 );
             }
         }

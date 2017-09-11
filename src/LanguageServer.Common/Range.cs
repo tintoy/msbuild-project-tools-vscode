@@ -10,11 +10,19 @@ namespace MSBuildProjectTools.LanguageServer
     /// <remarks>
     ///     The range includes the start position, but does not (for the purposes of <see cref="Contains(Position)"/> include the end position.
     /// </remarks>
-    public class Range
+    public struct Range
         : IEquatable<Range>, IComparable<Range>
     {
         /// <summary>
-        ///     An empty range [1,1..1,1).
+        ///     The zero range [0,0..0,0).
+        /// </summary>
+        /// <remarks>
+        ///     Indicates lack of a range value; use <see cref="Empty"/> to indicate the origin.
+        /// </remarks>
+        public static readonly Range Zero = new Range(start: Position.Zero, end: Position.Zero);
+
+        /// <summary>
+        ///     The empty range [1,1..1,1).
         /// </summary>
         public static readonly Range Empty = new Range(start: Position.Origin, end: Position.Origin);
 
@@ -213,7 +221,10 @@ namespace MSBuildProjectTools.LanguageServer
         /// </returns>
         public override bool Equals(object other)
         {
-            return Equals(other as Range);
+            if (other is Range otherRange)
+                return Equals(otherRange);
+
+            return false;
         }
 
         /// <summary>

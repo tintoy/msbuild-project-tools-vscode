@@ -112,9 +112,6 @@ namespace MSBuildProjectTools.LanguageServer
         /// </returns>
         public Position Move(int lineCount = 0, int columnCount = 0)
         {
-            if (lineCount == 0 && columnCount == 0)
-                return this;
-
             return new Position(LineNumber + lineCount, ColumnNumber + columnCount, IsZeroBased);
         }
 

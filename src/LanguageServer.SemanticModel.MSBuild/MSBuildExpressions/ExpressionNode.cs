@@ -48,7 +48,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     The node's textual range.
         /// </summary>
-        public Range Range { get; internal set; } = Range.Empty;
+        public Range Range { get; internal set; } = Range.Zero;
 
         /// <summary>
         ///     The node's starting position.

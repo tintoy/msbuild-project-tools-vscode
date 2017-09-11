@@ -1,3 +1,5 @@
+using System;
+
 namespace MSBuildProjectTools.LanguageServer.Utilities
 {
     using SemanticModel;
@@ -82,7 +84,7 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         public static Range ToNative(this Lsp.Models.Range range)
         {
             if (range == null)
-                return null;
+                throw new ArgumentNullException(nameof(range));
 
             return new Range(
                 range.Start.ToNative(),

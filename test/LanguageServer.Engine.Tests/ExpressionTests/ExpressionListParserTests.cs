@@ -55,8 +55,6 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
             });
         }
 
-        // TODO: Implement tests!
-
         /// <summary>
         ///     Generate test actions for the specified generic item values.
         /// </summary>

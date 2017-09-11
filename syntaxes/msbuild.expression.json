@@ -1,6 +1,6 @@
 {
     "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-    "injectionSelector": "string",
+    "injectionSelector": "text.xml.msbuild",
     "name": "MSBuildExpression",
     "scopeName": "text.xml.msbuild.expression",
     "patterns": [{

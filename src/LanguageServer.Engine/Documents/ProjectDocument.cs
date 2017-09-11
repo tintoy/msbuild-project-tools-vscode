@@ -1,5 +1,6 @@
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Exceptions;
+using Microsoft.Build.Execution;
 using Microsoft.Language.Xml;
 using Nito.AsyncEx;
 using NuGet.Configuration;
@@ -16,8 +17,8 @@ using System.Xml;
 
 namespace MSBuildProjectTools.LanguageServer.Documents
 {
-    using Microsoft.Build.Execution;
     using SemanticModel;
+    using SemanticModel.MSBuildExpressions;
     using Utilities;
 
     /// <summary>
@@ -467,6 +468,108 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                 throw new InvalidOperationException($"MSBuild project '{ProjectFile.FullName}' is a cached (out-of-date) copy because the project XML is currently invalid; positional lookups can't work in this scenario.");
 
             return MSBuildLocator.Find(position);
+        }
+
+        /// <summary>
+        ///     Get the MSBuild expression at the specified position.
+        /// </summary>
+        /// <param name="position">
+        ///     The target position.
+        /// </param>
+        /// <returns>
+        ///     The expression node and range.
+        /// </returns>
+        public (ExpressionNode expression, Range range) GetMSBuildExpressionAtPosition(Position position)
+        {
+            if (position == null)
+                throw new ArgumentNullException(nameof(position));
+            
+            string expressionText;
+            Range relativeToRange;
+
+            XSNode nodeAtPosition = XmlLocator.FindNode(position);
+            if (nodeAtPosition is XSElementText text)
+            {
+                expressionText = text.Text;
+                relativeToRange = text.Range;
+            }
+            else if (nodeAtPosition is XSAttribute attribute && attribute.ValueRange.Contains(position))
+            {
+                expressionText = attribute.Value;
+                relativeToRange = attribute.ValueRange;
+            }
+            else
+                return (null, null);
+
+            ExpressionNode rootNode;
+            if (!MSBuildExpression.TryParse(expressionText, out rootNode))
+                return (null, null);
+
+            int basePosition = XmlPositions.GetAbsolutePosition(relativeToRange.Start);
+            int targetPosition = XmlPositions.GetAbsolutePosition(position) - basePosition;
+
+            ExpressionNode expressionAtPosition = rootNode.FindDeepestNodeAt(targetPosition);
+            if (expressionAtPosition == null)
+                return (null, null);
+
+            return (
+                expression: expressionAtPosition,
+                range: GetRange(expressionAtPosition, relativeToRange)
+            );
+        }
+
+        /// <summary>
+        ///     Get the expression's containing range.
+        /// </summary>
+        /// <param name="expression">
+        ///     The MSBuild expression.
+        /// </param>
+        /// <param name="relativeTo">
+        ///     The range of the <see cref="XSNode"/> that contains the expression.
+        /// </param>
+        /// <returns>
+        ///     The containing <see cref="Range"/>.
+        /// </returns>
+        public Range GetRange(ExpressionNode expression, Range relativeTo)
+        {
+            if (expression == null)
+                throw new ArgumentNullException(nameof(expression));
+            
+            if (relativeTo == null)
+                throw new ArgumentNullException(nameof(relativeTo));
+            
+            return GetRange(expression, relativeTo.Start);
+        }
+
+        /// <summary>
+        ///     Get the expression's containing range.
+        /// </summary>
+        /// <param name="expression">
+        ///     The MSBuild expression.
+        /// </param>
+        /// <param name="relativeToPosition">
+        ///     The starting position of the <see cref="XSNode"/> that contains the expression.
+        /// </param>
+        /// <returns>
+        ///     The containing <see cref="Range"/>.
+        /// </returns>
+        public Range GetRange(ExpressionNode expression, Position relativeToPosition)
+        {
+            if (expression == null)
+                throw new ArgumentNullException(nameof(expression));
+
+            if (relativeToPosition == null)
+                throw new ArgumentNullException(nameof(relativeToPosition));
+
+            if (!HasXml)
+                throw new InvalidOperationException($"XML for project '{ProjectFile.FullName}' is not loaded.");
+                
+            int absoluteBasePosition = XmlPositions.GetAbsolutePosition(relativeToPosition);
+
+            return XmlPositions.GetRange(
+                absoluteBasePosition + expression.AbsoluteStart,
+                absoluteBasePosition + expression.AbsoluteEnd
+            );
         }
 
         /// <summary>

@@ -483,39 +483,69 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         {
             if (position == null)
                 throw new ArgumentNullException(nameof(position));
+
+            using (OperationContext("Get MSBuild expression at position"))
+            {
+                Log.Verbose("Search for expression node @ {@Position}", position);
             
-            string expressionText;
-            Range relativeToRange;
+                string expressionText;
+                Position expressionStartPosition;
 
-            XSNode nodeAtPosition = XmlLocator.FindNode(position);
-            if (nodeAtPosition is XSElementText text)
-            {
-                expressionText = text.Text;
-                relativeToRange = text.Range;
+                XSNode nodeAtPosition = XmlLocator.FindNode(position);
+                if (nodeAtPosition is XSElementText text)
+                {
+                    Log.Verbose("Found XSElementText @ {Range:l}", text.Range);
+
+                    expressionText = text.Text;
+                    expressionStartPosition = text.Range.Start;
+                }
+                else if (nodeAtPosition is XSAttribute attribute && attribute.ValueRange.Contains(position))
+                {
+                    Log.Verbose("Found XSAttribute value @ {Range:l}", attribute.ValueRange);
+
+                    expressionText = attribute.Value;
+                    expressionStartPosition = attribute.ValueRange.Start;
+                }
+                else
+                {
+                    Log.Information("Found no interesting XML @ {Position:l}", position);
+
+                    return (null, null);
+                }
+
+                ExpressionNode expressionRoot;
+                if (!MSBuildExpression.TryParse(expressionText, out expressionRoot))
+                {
+                    Log.Verbose("Failed to parse expression {Expression}.", expressionText);
+
+                    return (null, null);
+                }
+
+                Log.Verbose("Expression root is {ExpressionKind} @ {ExpressionRange:l}",
+                    expressionRoot.Kind,
+                    expressionRoot.Range
+                );
+
+                Position expressionPosition = position.RelativeTo(expressionStartPosition);
+                
+                Log.Verbose("Relative position is {ExpressionPosition} (relative to {ExpressionStartPosition}).",
+                    expressionPosition,
+                    expressionStartPosition
+                );
+
+                ExpressionNode expressionAtPosition = expressionRoot.FindDeepestNodeAt(expressionPosition);
+                if (expressionAtPosition == null)
+                {
+                    Log.Verbose("No expression found at {ExpressionPosition}.", expressionPosition);
+
+                    return (null, null);
+                }
+
+                return (
+                    expression: expressionAtPosition,
+                    range: expressionAtPosition.Range.WithOrigin(expressionStartPosition)
+                );
             }
-            else if (nodeAtPosition is XSAttribute attribute && attribute.ValueRange.Contains(position))
-            {
-                expressionText = attribute.Value;
-                relativeToRange = attribute.ValueRange;
-            }
-            else
-                return (null, null);
-
-            ExpressionNode rootNode;
-            if (!MSBuildExpression.TryParse(expressionText, out rootNode))
-                return (null, null);
-
-            int basePosition = XmlPositions.GetAbsolutePosition(relativeToRange.Start);
-            int targetPosition = XmlPositions.GetAbsolutePosition(position) - basePosition;
-
-            ExpressionNode expressionAtPosition = rootNode.FindDeepestNodeAt(targetPosition);
-            if (expressionAtPosition == null)
-                return (null, null);
-
-            return (
-                expression: expressionAtPosition,
-                range: GetRange(expressionAtPosition, relativeToRange)
-            );
         }
 
         /// <summary>
@@ -681,5 +711,22 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         ///     A code to identify the diagnostic type.
         /// </param>
         protected void AddHintDiagnostic(string message, Range range, string diagnosticCode) => AddDiagnostic(Lsp.Models.DiagnosticSeverity.Hint, message, range, diagnosticCode);
+
+        /// <summary>
+        ///     Create a <see cref="Serilog.Context.LogContext"/> representing an operation.
+        /// </summary>
+        /// <param name="operationDescription">
+        ///     The operation description.
+        /// </param>
+        /// <returns>
+        ///     An <see cref="IDisposable"/> representing the log context.
+        /// </returns>
+        protected IDisposable OperationContext(string operationDescription)
+        {
+            if (String.IsNullOrWhiteSpace(operationDescription))
+                throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'operationDescription'.", nameof(operationDescription));
+
+            return Serilog.Context.LogContext.PushProperty("Operation", operationDescription);
+        }
     }
 }

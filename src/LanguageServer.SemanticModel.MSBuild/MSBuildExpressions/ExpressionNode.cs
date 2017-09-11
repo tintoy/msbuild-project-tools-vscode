@@ -46,6 +46,29 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         public int AbsoluteEnd { get; internal set; }
 
         /// <summary>
+        ///     The node's textual range.
+        /// </summary>
+        public Range Range { get; internal set; } = Range.Empty;
+
+        /// <summary>
+        ///     The node's starting position.
+        /// </summary>
+        public Position Start => Range.Start;
+
+        /// <summary>
+        ///     The node's ending position.
+        /// </summary>
+        public Position End => Range.End;
+
+        /// <summary>
+        ///     Get a string representation of the expression node.
+        /// </summary>
+        /// <returns>
+        ///     The string representation.
+        /// </returns>
+        public override string ToString() => $"MSBuild {Kind} @ {Range}";
+
+        /// <summary>
         ///     Update positioning information.
         /// </summary>
         /// <param name="startPosition">

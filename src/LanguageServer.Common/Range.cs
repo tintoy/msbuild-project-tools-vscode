@@ -126,6 +126,46 @@ namespace MSBuildProjectTools.LanguageServer
         }
 
         /// <summary>
+        ///     Create a new <see cref="Range"/> relative to the specified target position.
+        /// </summary>
+        /// <param name="position">
+        ///     The target position.
+        /// </param>
+        /// <returns>
+        ///     The new <see cref="Range"/>.
+        /// </returns>
+        public Range RelativeTo(Position position)
+        {
+            if (position == null)
+                throw new ArgumentNullException(nameof(position));
+
+            return new Range(
+                Start.RelativeTo(position),
+                End.RelativeTo(position)
+            );
+        }
+
+        /// <summary>
+        ///     Create a new <see cref="Range"/> using the specified target position as the origin.
+        /// </summary>
+        /// <param name="position">
+        ///     The target position.
+        /// </param>
+        /// <returns>
+        ///     The new <see cref="Range"/>.
+        /// </returns>
+        public Range WithOrigin(Position position)
+        {
+            if (position == null)
+                throw new ArgumentNullException(nameof(position));
+
+            return new Range(
+                Start.WithOrigin(position),
+                End.WithOrigin(position)
+            );
+        }
+
+        /// <summary>
         ///     Determine whether the range contains the specified position.
         /// </summary>
         /// <param name="position">

@@ -84,6 +84,64 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         }
 
         /// <summary>
+        ///     Find the least-deeply-nested <see cref="ExpressionNode"/> at the specified position.
+        /// </summary>
+        /// <param name="nodes">
+        ///     The root node at which the search is started.
+        /// </param>
+        /// <param name="atPosition">
+        ///     The target position.
+        /// </param>
+        /// <returns>
+        ///     The <see cref="ExpressionNode"/> or <c>null</c> if no node was found at the specified position.
+        /// </returns>
+        public static ExpressionNode FindNodeAt(this IEnumerable<ExpressionNode> nodes, Position atPosition)
+        {
+            if (nodes == null)
+                throw new ArgumentNullException(nameof(nodes));
+
+            return nodes.FirstOrDefault(
+                node => atPosition >= node.Start && atPosition < node.End
+            );
+        }
+
+        /// <summary>
+        ///     Find the most-deeply-nested <see cref="ExpressionNode"/> at the specified position.
+        /// </summary>
+        /// <param name="node">
+        ///     The root node at which the search is started.
+        /// </param>
+        /// <param name="atPosition">
+        ///     The target position (0-based offset from start of source text).
+        /// </param>
+        /// <returns>
+        ///     The <see cref="ExpressionNode"/> or <c>null</c> if no node was found at the specified position.
+        /// </returns>
+        public static ExpressionNode FindDeepestNodeAt(this ExpressionNode node, Position atPosition)
+        {
+            if (node == null)
+                throw new ArgumentNullException(nameof(node));
+
+            if (atPosition < node.Start || atPosition > node.End)
+                return null;
+
+            if (node is ExpressionContainerNode containerNode)
+            {
+                ExpressionNode nodeAtPosition = containerNode.Children.FindNodeAt(atPosition);
+                if (nodeAtPosition != null)
+                {
+                    ExpressionNode deeperNodeAtPosition = nodeAtPosition.FindDeepestNodeAt(atPosition);
+                    if (deeperNodeAtPosition != null)
+                        return deeperNodeAtPosition;
+                }
+
+                return node;
+            }
+            else
+                return node;
+        }
+
+        /// <summary>
         ///     Find the most-deeply-nested <see cref="ExpressionNode"/> at the specified position.
         /// </summary>
         /// <param name="node">

@@ -56,6 +56,7 @@ namespace MSBuildProjectTools.LanguageServer
 
             var loggerConfiguration = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
+                .Enrich.FromLogContext()
                 .WriteTo.LanguageServer(languageServer, configuration.LogLevelSwitch);
 
             if (!String.IsNullOrWhiteSpace(configuration.Seq.Url))

@@ -5,6 +5,7 @@ using System.Linq;
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
     using MSBuildExpressions;
+    using Utilities;
 
     /// <summary>
     ///     Helper methods for working with MSBuild expressions.
@@ -47,7 +48,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 );
             }
 
-            return parseResult.Value.EnsureRelationships();
+            return parseResult.Value.PostParse(
+                new TextPositions(expression)
+            );
         }
 
         /// <summary>
@@ -70,7 +73,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             var parseResult = Parsers.Root.TryParse(expression);
             if (parseResult.WasSuccessful)
             {
-                parsedExpression = parseResult.Value;
+                parsedExpression = parseResult.Value.PostParse(
+                    new TextPositions(expression)
+                );
 
                 return true;
             }
@@ -113,7 +118,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 );
             }
 
-            return parseResult.Value.EnsureRelationships();
+            return parseResult.Value.PostParse(
+                new TextPositions(expression)
+            );
         }
     }
 }

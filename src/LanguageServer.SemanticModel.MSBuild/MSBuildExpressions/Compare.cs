@@ -36,6 +36,14 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         public ExpressionNode Right => Children[1];
 
         /// <summary>
+        ///     Get a string representation of the expression node.
+        /// </summary>
+        /// <returns>
+        ///     The string representation.
+        /// </returns>
+        public override string ToString() => $"MSBuild Compare ({ComparisonKind}) expression @ {Range}";
+
+        /// <summary>
         ///     Update positioning information.
         /// </summary>
         /// <param name="startPosition">

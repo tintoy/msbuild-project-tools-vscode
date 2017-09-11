@@ -119,6 +119,66 @@ namespace MSBuildProjectTools.LanguageServer
         }
 
         /// <summary>
+        ///     Create a new <see cref="Position"/> relative to the specified target position.
+        /// </summary>
+        /// <param name="position">
+        ///     The target position.
+        /// </param>
+        /// <returns>
+        ///     The new position.
+        /// </returns>
+        public Position RelativeTo(Position position)
+        {
+            if (position == null)
+                throw new ArgumentNullException(nameof(position));
+
+            if (IsOneBased)
+                position = position.ToOneBased();
+            else if (IsZeroBased)
+                position = position.ToZeroBased();
+
+            int relativeLines = -position.LineNumber;
+            if (IsOneBased)
+                relativeLines++;
+
+            int relativeColumns = -position.ColumnNumber;
+            if (IsOneBased)
+                relativeColumns++;
+
+            return Move(relativeLines, relativeColumns);
+        }
+
+        /// <summary>
+        ///     Create a new <see cref="Position"/> using the specified target position as the origin.
+        /// </summary>
+        /// <param name="position">
+        ///     The target position.
+        /// </param>
+        /// <returns>
+        ///     The new position.
+        /// </returns>
+        public Position WithOrigin(Position position)
+        {
+            if (position == null)
+                throw new ArgumentNullException(nameof(position));
+
+            if (IsOneBased)
+                position = position.ToOneBased();
+            else if (IsZeroBased)
+                position = position.ToZeroBased();
+
+            int relativeLines = position.LineNumber;
+            if (IsOneBased)
+                relativeLines--;
+
+            int relativeColumns = position.ColumnNumber;
+            if (IsOneBased)
+                relativeColumns--;
+
+            return Move(relativeLines, relativeColumns);
+        }
+
+        /// <summary>
         ///     Create an <see cref="Range"/> that starts and ends at the <see cref="Position"/>.
         /// </summary>
         /// <returns>

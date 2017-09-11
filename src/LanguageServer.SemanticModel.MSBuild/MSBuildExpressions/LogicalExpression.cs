@@ -41,6 +41,14 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         public ExpressionNode Left => IsBinary ? Children[0] : null;
 
         /// <summary>
+        ///     Get a string representation of the expression node.
+        /// </summary>
+        /// <returns>
+        ///     The string representation.
+        /// </returns>
+        public override string ToString() => $"MSBuild Logical ({OperatorKind}) expression @ {Range}";
+
+        /// <summary>
         ///     The right-hand operand.
         /// </summary>
         public ExpressionNode Right

@@ -10,6 +10,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
 {
     using SemanticModel;
     using SemanticModel.MSBuildExpressions;
+    using Utilities;
 
     /// <summary>
     ///     Tests for parsing of MSBuild comparison expressions.
@@ -178,7 +179,9 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         {
             AssertParser.SucceedsWith(Parsers.Root, input, actualExpression =>
             {
-                actualExpression.EnsureRelationships();
+                actualExpression.PostParse(
+                    new TextPositions(input)
+                );
 
                 ExpressionNode actualNodeAtPosition = actualExpression.FindDeepestNodeAt(absolutePosition);
                 Assert.NotNull(actualNodeAtPosition);

@@ -11,7 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-    
+
 namespace MSBuildProjectTools.LanguageServer.Handlers
 {
     using ContentProviders;
@@ -124,35 +124,32 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 if (msbuildObjectAtPosition == null)
                     return null;
 
-                if (msbuildObjectAtPosition is MSBuildSdkImport import)
+                if (msbuildObjectAtPosition is MSBuildSdkImport sdkImportAtPosition)
                 {
-                    if (msbuildObjectAtPosition is MSBuildSdkImport sdkImportAtPosition)
-                    {
-                        // TODO: Parse imported project and determine location of root element (use that range instead).
-                        Location[] locations =
-                            sdkImportAtPosition.ImportedProjectRoots.Select(
-                                importedProjectRoot => new Location
-                                {
-                                    Range = Range.Empty.ToLsp(),
-                                    Uri = VSCodeDocumentUri.FromFileSystemPath(importedProjectRoot.Location.File)
-                                }
-                            )
-                            .ToArray();
-
-                        return new LocationOrLocations(locations);
-                    }
-                    else if (msbuildObjectAtPosition is MSBuildImport importAtPosition)
-                    {
-                        // TODO: Parse imported project and determine location of root element (use that range instead).
-                        return new LocationOrLocations(
-                            importAtPosition.ImportedProjectRoots.Select(
-                                importedProjectRoot => new Location
+                    // TODO: Parse imported project and determine location of root element (use that range instead).
+                    Location[] locations =
+                        sdkImportAtPosition.ImportedProjectRoots.Select(
+                            importedProjectRoot => new Location
                             {
                                 Range = Range.Empty.ToLsp(),
                                 Uri = VSCodeDocumentUri.FromFileSystemPath(importedProjectRoot.Location.File)
                             }
-                        ));
-                    }
+                        )
+                        .ToArray();
+
+                    return new LocationOrLocations(locations);
+                }
+                else if (msbuildObjectAtPosition is MSBuildImport importAtPosition)
+                {
+                    // TODO: Parse imported project and determine location of root element (use that range instead).
+                    return new LocationOrLocations(
+                        importAtPosition.ImportedProjectRoots.Select(
+                            importedProjectRoot => new Location
+                            {
+                                Range = Range.Empty.ToLsp(),
+                                Uri = VSCodeDocumentUri.FromFileSystemPath(importedProjectRoot.Location.File)
+                            }
+                    ));
                 }
             }
 
@@ -175,7 +172,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         {
             if (parameters == null)
                 throw new ArgumentNullException(nameof(parameters));
-            
+
             try
             {
                 return await OnDefinition(parameters, cancellationToken);

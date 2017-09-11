@@ -14,6 +14,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
     using ContentProviders;
     using Documents;
     using SemanticModel;
+    using SemanticModel.MSBuildExpressions;
     using Utilities;
 
     /// <summary>
@@ -132,47 +133,130 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 if (location.IsElement(out XSElement element))
                 {
                     msbuildObject = projectDocument.GetMSBuildObjectAtPosition(element.Start);
+                    switch (msbuildObject)
+                    {
+                        case MSBuildProperty property:
+                        {
+                            hoverContent = contentProvider.Property(property);
 
-                    if (msbuildObject is MSBuildProperty propertyFromElement)
-                        hoverContent = contentProvider.Property(propertyFromElement);
-                    else if (msbuildObject is MSBuildUnusedProperty unusedPropertyFromElement)
-                        hoverContent = contentProvider.UnusedProperty(unusedPropertyFromElement);
-                    else if (msbuildObject is MSBuildItemGroup itemGroupFromElement)
-                        hoverContent = contentProvider.ItemGroup(itemGroupFromElement);
-                    else if (msbuildObject is MSBuildUnusedItemGroup unusedItemGroupFromElement)
-                        hoverContent = contentProvider.UnusedItemGroup(unusedItemGroupFromElement);
-                    else if (msbuildObject is MSBuildTarget targetFromElement)
-                        hoverContent = contentProvider.Target(targetFromElement);
-                    else if (msbuildObject is MSBuildImport importFromElement)
-                        hoverContent = contentProvider.Import(importFromElement);
-                    else if (msbuildObject is MSBuildUnresolvedImport unresolvedImportFromElement)
-                        hoverContent = contentProvider.UnresolvedImport(unresolvedImportFromElement);
+                            break;
+                        }
+                        case MSBuildUnusedProperty unusedProperty:
+                        {
+                            hoverContent = contentProvider.UnusedProperty(unusedProperty);
+
+                            break;
+                        }
+                        case MSBuildItemGroup itemGroup:
+                        {
+                            hoverContent = contentProvider.ItemGroup(itemGroup);
+
+                            break;
+                        }
+                        case MSBuildUnusedItemGroup unusedItemGroup:
+                        {
+                            hoverContent = contentProvider.UnusedItemGroup(unusedItemGroup);
+
+                            break;
+                        }
+                        case MSBuildTarget target:
+                        {
+                            hoverContent = contentProvider.Target(target);
+
+                            break;
+                        }
+                        case MSBuildImport import:
+                        {
+                            hoverContent = contentProvider.Import(import);
+
+                            break;
+                        }
+                        case MSBuildUnresolvedImport unresolvedImport:
+                        {
+                            hoverContent = contentProvider.UnresolvedImport(unresolvedImport);
+
+                            break;
+                        }
+                    }
                 }
                 else if (location.IsElementText(out XSElementText text))
                 {
                     msbuildObject = projectDocument.GetMSBuildObjectAtPosition(text.Element.Start);
+                    switch (msbuildObject)
+                    {
+                        case MSBuildProperty property:
+                        {
+                            if (projectDocument.EnableExpressions)
+                            {
+                                ExpressionNode expression;
+                                Range expressionRange;
+                            
+                                (expression, expressionRange) = projectDocument.GetMSBuildExpressionAtPosition(location.Position);
+                                if (expression != null)
+                                {
+                                    return new Hover
+                                    {
+                                        Contents = $"{expression.Kind} expression at {expressionRange}",
+                                        Range = expressionRange.ToLsp()
+                                    };
+                                }
+                            }
 
-                    if (msbuildObject is MSBuildProperty propertyFromText)
-                        hoverContent = contentProvider.Property(propertyFromText);
-                    else if (msbuildObject is MSBuildUnusedProperty unusedPropertyFromText)
-                        hoverContent = contentProvider.UnusedProperty(unusedPropertyFromText);
+                            hoverContent = contentProvider.Property(property);
+
+                            break;
+                        }
+                        case MSBuildUnusedProperty unusedProperty:
+                        {
+                            hoverContent = contentProvider.UnusedProperty(unusedProperty);
+
+                            break;
+                        }
+                    }
                 }
                 else if (location.IsAttribute(out XSAttribute attribute))
                 {
                     msbuildObject = projectDocument.GetMSBuildObjectAtPosition(attribute.Element.Start);
+                    switch (msbuildObject)
+                    {
+                        case MSBuildItemGroup itemGroup:
+                        {
+                            hoverContent = contentProvider.ItemGroupMetadata(itemGroup, attribute.Name);
 
-                    if (msbuildObject is MSBuildItemGroup itemGroupFromAttribute)
-                        hoverContent = contentProvider.ItemGroupMetadata(itemGroupFromAttribute, attribute.Name);
-                    else if (msbuildObject is MSBuildUnusedItemGroup unusedItemGroupFromAttribute)
-                        hoverContent = contentProvider.UnusedItemGroupMetadata(unusedItemGroupFromAttribute, attribute.Name);
-                    else if (msbuildObject is MSBuildSdkImport sdkImportFromAttribute)
-                        hoverContent = contentProvider.SdkImport(sdkImportFromAttribute);
-                    else if (msbuildObject is MSBuildUnresolvedSdkImport unresolvedSdkImportFromAttribute)
-                        hoverContent = contentProvider.UnresolvedSdkImport(unresolvedSdkImportFromAttribute);
-                    else if (msbuildObject is MSBuildImport importFromAttribute)
-                        hoverContent = contentProvider.Import(importFromAttribute);
-                    else if (attribute.Name == "Condition")
-                        hoverContent = contentProvider.Condition(attribute.Element.Name, attribute.Value);
+                            break;
+                        }
+                        case MSBuildUnusedItemGroup unusedItemGroup:
+                        {
+                            hoverContent = contentProvider.UnusedItemGroupMetadata(unusedItemGroup, attribute.Name);
+
+                            break;
+                        }
+                        case MSBuildSdkImport sdkImport:
+                        {
+                            hoverContent = contentProvider.SdkImport(sdkImport);
+
+                            break;
+                        }
+                        case MSBuildUnresolvedSdkImport unresolvedSdkImport:
+                        {
+                            hoverContent = contentProvider.UnresolvedSdkImport(unresolvedSdkImport);
+
+                            break;
+                        }
+                        case MSBuildImport import:
+                        {
+                            hoverContent = contentProvider.Import(import);
+
+                            break;
+                        }
+                        default:
+                        {
+                            if (attribute.Name == "Condition")
+                                hoverContent = contentProvider.Condition(attribute.Element.Name, attribute.Value);
+
+                            break;
+                        }
+                    }
                 }
 
                 if (hoverContent == null)

@@ -137,15 +137,12 @@ namespace MSBuildProjectTools.LanguageServer
             else if (IsZeroBased)
                 position = position.ToZeroBased();
 
-            int relativeLines = -position.LineNumber;
-            if (IsOneBased)
-                relativeLines++;
+            Position origin = IsOneBased ? Origin : Zero;
 
-            int relativeColumns = -position.ColumnNumber;
-            if (IsOneBased)
-                relativeColumns++;
-
-            return Move(relativeLines, relativeColumns);
+            return Move(
+                lineCount: origin.LineNumber - position.LineNumber,
+                columnCount: origin.ColumnNumber - position.ColumnNumber
+            );
         }
 
         /// <summary>
@@ -157,6 +154,9 @@ namespace MSBuildProjectTools.LanguageServer
         /// <returns>
         ///     The new position.
         /// </returns>
+        /// <remarks>
+        ///     Moves the current position away from the origin by the target position's line and column counts.
+        /// </remarks>
         public Position WithOrigin(Position position)
         {
             if (position == null)
@@ -167,15 +167,12 @@ namespace MSBuildProjectTools.LanguageServer
             else if (IsZeroBased)
                 position = position.ToZeroBased();
 
-            int relativeLines = position.LineNumber;
-            if (IsOneBased)
-                relativeLines--;
+            Position origin = IsOneBased ? Origin : Zero;
 
-            int relativeColumns = position.ColumnNumber;
-            if (IsOneBased)
-                relativeColumns--;
-
-            return Move(relativeLines, relativeColumns);
+            return Move(
+                lineCount: position.LineNumber - origin.LineNumber,
+                columnCount: position.ColumnNumber - origin.ColumnNumber
+            );
         }
 
         /// <summary>
@@ -208,7 +205,18 @@ namespace MSBuildProjectTools.LanguageServer
         /// </returns>
         public override int GetHashCode()
         {
-            return LineNumber * 100000 + ColumnNumber;
+            int hashCode = 17;
+            
+            unchecked
+            {
+                hashCode += IsZeroBased ? LineNumber : LineNumber - 1;
+                hashCode *= 37;
+
+                hashCode += IsZeroBased ? ColumnNumber : ColumnNumber - 1;
+                hashCode *= 37;
+            }
+
+            return hashCode;
         }
 
         /// <summary>
@@ -224,7 +232,12 @@ namespace MSBuildProjectTools.LanguageServer
         {
             if (other == null)
                 return false;
-            
+
+            if (IsOneBased)
+                other = other.ToOneBased();
+            else if (IsZeroBased)
+                other = other.ToZeroBased();
+
             return other.LineNumber == LineNumber && other.ColumnNumber == ColumnNumber;
         }
 
@@ -241,6 +254,11 @@ namespace MSBuildProjectTools.LanguageServer
         {
             if (other == null)
                 throw new ArgumentNullException(nameof(other));
+
+            if (IsOneBased)
+                other = other.ToOneBased();
+            else if (IsZeroBased)
+                other = other.ToZeroBased();
             
             int lineComparison = LineNumber.CompareTo(other.LineNumber);
             if (lineComparison != 0)

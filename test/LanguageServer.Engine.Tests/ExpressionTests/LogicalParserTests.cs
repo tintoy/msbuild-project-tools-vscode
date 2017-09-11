@@ -108,7 +108,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         [InlineData("! ABC",   "ABC")]
         [InlineData("!(ABC)",  "ABC")]
         [InlineData("! (ABC)", "ABC")]
-        [Theory(DisplayName = "LogicalExpression parser succeeds with unary NOT of string comparison ")]
+        [Theory(DisplayName = "LogicalExpression parser succeeds with unary NOT of symbol ")]
         public void Parse_Unary_Not_Symbol_Success(string input, string expectedSymbol)
         {
             AssertParser.SucceedsWith(Parsers.LogicalUnary, input, actualLogical =>
@@ -130,7 +130,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         ///     The expected name of the symbol.
         /// </param>
         [InlineData("(! ABC)", "ABC")]
-        [Theory(DisplayName = "GroupedExpression parser succeeds with unary NOT of string comparison ")]
+        [Theory(DisplayName = "GroupedExpression parser succeeds with grouped unary NOT of symbol ")]
         public void Parse_Grouped_Unary_Not_Symbol_Success(string input, string expectedSymbol)
         {
             AssertParser.SucceedsWith(Parsers.GroupedExpression, input, actual =>

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Serilog.Core;
@@ -52,6 +53,12 @@ namespace MSBuildProjectTools.LanguageServer
         /// </summary>
         [JsonProperty("seqLogging", ObjectCreationHandling = ObjectCreationHandling.Reuse)]
         public SeqLoggingConfiguration Seq { get; } = new SeqLoggingConfiguration();
+
+        /// <summary>
+        ///     Experimental features (if any) that are currently enabled?
+        /// </summary>
+        [JsonProperty("experimentalFeatures", ObjectCreationHandling = ObjectCreationHandling.Reuse)]
+        public HashSet<string> EnableExperimentalFeatures { get; } = new HashSet<string>();
     }
 
     /// <summary>

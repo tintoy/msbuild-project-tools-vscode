@@ -142,5 +142,49 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
                 Assert.Equal(expectedRightContent, right.StringContent);
             });
         }
+
+        /// <summary>
+        ///     Verify that the root parser can successfully parse an expression such that a most-deeply-nested node can be found by index within the source text.
+        /// </summary>
+        /// <param name="input">
+        ///     The source text to parse.
+        /// </param>
+        /// <param name="absolutePosition">
+        ///     The absolute position, within the source text, of the node to find.
+        /// </param>
+        /// <param name="expectedExpressionKind">
+        ///     The expected expression kind.
+        /// </param>
+        /// <param name="expectedParentExpressionKind">
+        ///     The expected parent expression kind (if any).
+        /// </param>
+        [InlineData("ABC",                                 00, ExpressionKind.Symbol      , null                       )]
+        [InlineData("! ABC",                               00, ExpressionKind.Logical     , null                       )]
+        [InlineData("! ABC",                               02, ExpressionKind.Symbol      , ExpressionKind.Logical     )]
+        [InlineData("ABC And DEF",                         00, ExpressionKind.Symbol      , ExpressionKind.Logical     )]
+        [InlineData("ABC And DEF",                         04, ExpressionKind.Logical     , null                       )]
+        [InlineData("ABC And DEF",                         08, ExpressionKind.Symbol      , ExpressionKind.Logical     )]
+        [InlineData("$(ABC)",                              00, ExpressionKind.Evaluate    , null                       )]
+        [InlineData("$(ABC)",                              02, ExpressionKind.Symbol      , ExpressionKind.Evaluate    )]
+        [InlineData("'ABC'",                               00, ExpressionKind.QuotedString, null                       )]
+        [InlineData("'ABC' != 'DEF'",                      00, ExpressionKind.QuotedString, ExpressionKind.Compare     )]
+        [InlineData(" '$(YetAnotherProperty)' == 'true' ", 01, ExpressionKind.QuotedString, ExpressionKind.Compare     )]
+        [InlineData(" '$(YetAnotherProperty)' == 'true' ", 02, ExpressionKind.Evaluate,     ExpressionKind.QuotedString)]
+        [InlineData(" '$(YetAnotherProperty)' == 'true' ", 03, ExpressionKind.Evaluate    , ExpressionKind.QuotedString)]
+        [InlineData(" '$(YetAnotherProperty)' == 'true' ", 04, ExpressionKind.Symbol      , ExpressionKind.Evaluate    )]
+        [InlineData(" '$(YetAnotherProperty)' == 'true' ", 26, ExpressionKind.Compare     , null                       )]
+        [Theory(DisplayName = "Root parser succeeds for node at position ")]
+        public void FindDeepestNode_Success(string input, int absolutePosition, ExpressionKind expectedExpressionKind, ExpressionKind? parentExpressionKind)
+        {
+            AssertParser.SucceedsWith(Parsers.Root, input, actualExpression =>
+            {
+                actualExpression.EnsureRelationships();
+
+                ExpressionNode actualNodeAtPosition = actualExpression.FindDeepestNodeAt(absolutePosition);
+                Assert.NotNull(actualNodeAtPosition);
+                Assert.Equal(expectedExpressionKind, actualNodeAtPosition.Kind);
+                Assert.Equal(parentExpressionKind, actualNodeAtPosition.Parent?.Kind);
+            });
+        }
     }
 }

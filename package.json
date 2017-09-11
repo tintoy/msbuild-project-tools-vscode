@@ -120,6 +120,14 @@
                                     "type": "boolean",
                                     "default": false,
                                     "description": "Trace all communication between VSCode and the MSBuild language service?"
+                                },
+                                "experimentalFeatures": {
+                                    "type":"array",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "default": [],
+                                    "description": "The names of experimental features (if any) to enable. If you're not sure what this is, you probably don't need it."
                                 }
                             }
                         },

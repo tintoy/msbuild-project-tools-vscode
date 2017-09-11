@@ -31,6 +31,19 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         /// <param name="input">
         ///     The source text to parse.
         /// </param>
+        [InlineData(" '$(YetAnotherProperty)' == 'true' ")]
+        [Theory(DisplayName = "Compare parser succeeds with input ")]
+        public void Parse_Success(string input)
+        {
+            AssertParser.Succeeds(Parsers.Comparison, input);
+        }
+
+        /// <summary>
+        ///     Verify that the Compare parser can successfully parse the specified input.
+        /// </summary>
+        /// <param name="input">
+        ///     The source text to parse.
+        /// </param>
         /// <param name="expectedComparisonKind">
         ///     The expected comparison kind.
         /// </param>

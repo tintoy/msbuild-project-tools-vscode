@@ -359,14 +359,13 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ///     Parse an MSBuild comparison expression.
         /// </summary>
         public static readonly Parser<Compare> Comparison = Parse.Positioned(
-            from leftOperand in ComparisonOperand.Named("left operand")
+            from leftOperand in ComparisonOperand.Token().Named("left operand")
             from comparisonKind in ComparisonOperator.Token().Named("comparison operator")
-            from rightOperand in ComparisonOperand.Named("right operand")
+            from rightOperand in ComparisonOperand.Token().Named("right operand")
             select new Compare
             {
                 ComparisonKind = comparisonKind,
-                Left = leftOperand,
-                Right = rightOperand
+                Children = ImmutableList.Create(leftOperand, rightOperand)
             }
         );
 
@@ -410,9 +409,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ///     Parse a logical binary expression.
         /// </summary>
         public static readonly Parser<LogicalExpression> LogicalBinary = Parse.Positioned(
-            from leftOperand in LogicalOperand.Named("left operand")
+            from leftOperand in LogicalOperand.Token().Named("left operand")
             from operatorKind in AndOperator.Or(OrOperator).Token().Named("binary operator")
-            from rightOperand in LogicalOperand.Named("right operand")
+            from rightOperand in LogicalOperand.Token().Named("right operand")
             select new LogicalExpression
             {
                 OperatorKind = operatorKind,
@@ -425,7 +424,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// </summary>
         public static readonly Parser<LogicalExpression> LogicalUnary = Parse.Positioned(
             from operatorKind in NotOperator.Token().Named("unary operator")
-            from rightOperand in LogicalOperand.Named("right operand")
+            from rightOperand in LogicalOperand.Token().Named("right operand")
             select new LogicalExpression
             {
                 OperatorKind = operatorKind,

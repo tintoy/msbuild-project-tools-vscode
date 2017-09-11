@@ -14,6 +14,20 @@ namespace MSBuildProjectTools.LanguageServer.Tests
     public static class AssertParser
     {
         /// <summary>
+        ///     Assert that the parser successfully parses the specified input.
+        /// </summary>
+        /// <param name="parser">
+        ///     The parser under test.
+        /// </param>
+        /// <param name="input">
+        ///     The test input.
+        /// </param>
+        public static void Succeeds<T>(Parser<T> parser, string input)
+        {
+            SucceedsWith(parser, input, successResult => { });
+        }
+
+        /// <summary>
         ///     Assert that a parser succeeds with a single result.
         /// </summary>
         /// <param name="parser">
@@ -89,7 +103,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
                 expectation => String.Format("'{0}'", expectation)
             ));
 
-            Assert.True(result.WasSuccessful, $"Parsing of '{input}' failed unexpectedly (expected at {result.Remainder}: {expectations}).");
+            Assert.True(result.WasSuccessful, $"Parsing of '{input}' failed unexpectedly (expected [{expectations}] at {result.Remainder}).");
 
             resultAssertion(result.Value);
         }

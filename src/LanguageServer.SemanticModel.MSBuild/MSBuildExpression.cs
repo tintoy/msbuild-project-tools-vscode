@@ -34,11 +34,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 string expectations = String.Empty;
                 if (parseResult.Expectations.Any())
                 {
-                    expectations = String.Format(" (expected at {0}: {1})",
-                        parseResult.Remainder,
+                    expectations = String.Format(" (expected {0} at {1})",
                         String.Join(", ", parseResult.Expectations.Select(
                             expectation => String.Format("'{0}'", expectation)
-                        ))
+                        )),
+                        parseResult.Remainder
                     );
                 }
 
@@ -100,11 +100,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 string expectations = String.Empty;
                 if (parseResult.Expectations.Any())
                 {
-                    expectations = String.Format(" (expected at {0}: {1})",
-                        parseResult.Remainder,
+                    expectations = String.Format(" (expected {0} at {1})",
                         String.Join(", ", parseResult.Expectations.Select(
                             expectation => String.Format("'{0}'", expectation)
-                        ))
+                        )),
+                        parseResult.Remainder
                     );
                 }
 

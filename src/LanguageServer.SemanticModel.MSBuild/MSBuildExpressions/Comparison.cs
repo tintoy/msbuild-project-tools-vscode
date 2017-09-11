@@ -6,7 +6,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
     ///     Represents an MSBuild comparison expression.
     /// </summary>
     public class Compare
-        : ExpressionNode, IPositionAware<Compare>
+        : ExpressionContainerNode, IPositionAware<Compare>
     {
         /// <summary>
         ///     Create a new <see cref="Compare"/>.
@@ -28,12 +28,12 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     The left-hand operand.
         /// </summary>
-        public ExpressionNode Left { get; internal set; }
+        public ExpressionNode Left => Children[0];
 
         /// <summary>
         ///     The right-hand operand.
         /// </summary>
-        public ExpressionNode Right { get; internal set; }
+        public ExpressionNode Right => Children[1];
 
         /// <summary>
         ///     Update positioning information.

@@ -13,22 +13,7 @@
     "autoClosingPairs": [
         ["<", ">"],
         ["'", "'"],
-        ["\"", "\""],
-        {
-            "open": "$(",
-            "close": ")",
-            "notIn": []
-        },
-        {
-            "open": "@(",
-            "close": ")",
-            "notIn": []
-        },
-        {
-            "open": "%(",
-            "close": ")",
-            "notIn": []
-        }
+        ["\"", "\""]
     ],
     "surroundingPairs": [
         ["<", ">"],

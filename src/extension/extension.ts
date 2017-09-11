@@ -58,6 +58,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             );
         }
     });
+
+    context.subscriptions.push(
+        handleExpressionAutoClose()
+    );
 }
 
 /**
@@ -251,4 +255,56 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
     );
     await languageClient.onReady();
     outputChannel.appendLine('MSBuild language service is running.');
+}
+
+/**
+ * Handle document-change events to automatically insert a closing parenthesis for common MSBuild expressions.
+ */
+function handleExpressionAutoClose(): vscode.Disposable
+{
+    return vscode.workspace.onDidChangeTextDocument(async args =>
+    {
+        if (args.document.languageId !== 'msbuild')
+            return;
+
+        if (args.contentChanges.length !== 1)
+            return;
+
+        const contentChange = args.contentChanges[0];
+        if (contentChange.text === '(')
+        {
+            const range = contentChange.range.with(
+                contentChange.range.start.translate(0, -1),
+                contentChange.range.end.translate(0, 1)
+            );
+
+            const openExpression = args.document.getText(range);
+            switch (openExpression)
+            {
+                case '$(': // Eval open
+                case '@(': // Item group open
+                case '%(': // Item metadata open
+                {
+                    break;
+                }
+                default:
+                {
+                    console.log(`Inserted '${args.contentChanges[0].text}' @ ${contentChange.range.start.line},${contentChange.range.start.character}`);
+
+                    return;
+                }
+            }
+
+            const closedExpression = openExpression + ')';
+
+            await vscode.window.activeTextEditor.edit(editor =>
+            {
+                editor.replace(range, closedExpression);
+            });
+
+            // Move between the parentheses.
+            const target = vscode.window.activeTextEditor.selection.start;
+            vscode.window.activeTextEditor.selection = new vscode.Selection(target, target);
+        }
+    });
 }

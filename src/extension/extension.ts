@@ -19,6 +19,7 @@ let configuration: Settings;
 let legacySettingsPresent = false;
 let statusBarItem: vscode.StatusBarItem;
 let outputChannel: vscode.OutputChannel;
+const featureFlags = new Set<string>();
 
 /**
  * Called when the extension is activated.
@@ -62,6 +63,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             );
         }
     });
+
+    context.subscriptions.push(
+        vscode.workspace.onDidChangeConfiguration(async args =>
+        {
+            await loadConfiguration();
+        })
+    );
 }
 
 /**
@@ -78,6 +86,13 @@ async function loadConfiguration(): Promise<void> {
     const workspaceConfiguration = vscode.workspace.getConfiguration();
 
     configuration = workspaceConfiguration.get<Settings>('msbuildProjectTools');
+    featureFlags.clear();
+    if (configuration.language.experimentalFeatures)
+    {
+        configuration.language.experimentalFeatures.forEach(
+            featureFlag => featureFlags.add(featureFlag)
+        );
+    }
     
     // Use settings in old format, if present.
     const legacyConfiguration = workspaceConfiguration.msbuildProjectFileTools;
@@ -128,6 +143,11 @@ interface LanguageSettings {
      * Seq logging settings.
      */
     seqLogging?: SeqLoggingSettings;
+
+    /**
+     * Experimental feature flags.
+     */
+    experimentalFeatures?: string[];
 }
 
 /**
@@ -264,6 +284,9 @@ function handleExpressionAutoClose(): vscode.Disposable
 {
     return vscode.workspace.onDidChangeTextDocument(async args =>
     {
+        if (!featureFlags.has('expressions'))
+            return;
+
         if (args.document.languageId !== 'msbuild')
             return;
 

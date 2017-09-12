@@ -21,6 +21,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         public abstract ExpressionKind Kind { get; }
 
         /// <summary>
+        ///     Is the expression represented by the node valid?
+        /// </summary>
+        public virtual bool IsValid => true;
+
+        /// <summary>
         ///     The node's parent (if any).
         /// </summary>
         public ExpressionNode Parent { get; internal set; }

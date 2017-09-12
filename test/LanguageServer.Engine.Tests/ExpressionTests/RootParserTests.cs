@@ -58,10 +58,12 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         [Theory(DisplayName = "Root parser succeeds with symbols ")]
         public void ParseRoot_Comparison_Symbols_Success(string input, ComparisonKind expectedComparisonKind, string expectedLeftSymbol, string expectedRightSymbol)
         {
-            AssertParser.SucceedsWith(Parsers.Root, input, actualExpression =>
+            AssertParser.SucceedsWith(Parsers.Root, input, actualRoot =>
             {
-                Compare actualComparison = Assert.IsType<Compare>(actualExpression);
+                Assert.Equal(1, actualRoot.Children.Count);
+                ExpressionNode actualExpression = actualRoot.Children[0];
 
+                Compare actualComparison = Assert.IsType<Compare>(actualExpression);
                 Assert.Equal(expectedComparisonKind, actualComparison.ComparisonKind);
 
                 Assert.NotNull(actualComparison.Left);
@@ -100,8 +102,11 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         [Theory(DisplayName = "Root parser succeeds with expression kind ")]
         public void ParseRoot_Logical_Success(string input, ExpressionKind expectedRootExpressionKind)
         {
-            AssertParser.SucceedsWith(Parsers.Root, input, actualExpression =>
+            AssertParser.SucceedsWith(Parsers.Root, input, actualRoot =>
             {
+                Assert.Equal(1, actualRoot.Children.Count);
+                ExpressionNode actualExpression = actualRoot.Children[0];
+
                 Assert.Equal(expectedRootExpressionKind, actualExpression.Kind);
             });
         }
@@ -128,8 +133,11 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         [Theory(DisplayName = "Root parser succeeds with quoted strings ")]
         public void ParseRoot_QuotedStrings_Success(string input, ComparisonKind expectedComparisonKind, string expectedLeftContent, string expectedRightContent)
         {
-            AssertParser.SucceedsWith(Parsers.Root, input, actualExpression =>
+            AssertParser.SucceedsWith(Parsers.Root, input, actualRoot =>
             {
+                Assert.Equal(1, actualRoot.Children.Count);
+                ExpressionNode actualExpression = actualRoot.Children[0];
+
                 Compare actualComparison = Assert.IsType<Compare>(actualExpression);
 
                 Assert.Equal(expectedComparisonKind, actualComparison.ComparisonKind);
@@ -159,21 +167,21 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         /// <param name="expectedParentExpressionKind">
         ///     The expected parent expression kind (if any).
         /// </param>
-        [InlineData("ABC",                                 00, ExpressionKind.Symbol      , null                       )]
-        [InlineData("! ABC",                               00, ExpressionKind.Logical     , null                       )]
-        [InlineData("! ABC",                               02, ExpressionKind.Symbol      , ExpressionKind.Logical     )]
-        [InlineData("ABC And DEF",                         00, ExpressionKind.Symbol      , ExpressionKind.Logical     )]
-        [InlineData("ABC And DEF",                         04, ExpressionKind.Logical     , null                       )]
-        [InlineData("ABC And DEF",                         08, ExpressionKind.Symbol      , ExpressionKind.Logical     )]
-        [InlineData("$(ABC)",                              00, ExpressionKind.Evaluate    , null                       )]
-        [InlineData("$(ABC)",                              02, ExpressionKind.Symbol      , ExpressionKind.Evaluate    )]
-        [InlineData("'ABC'",                               00, ExpressionKind.QuotedString, null                       )]
+        [InlineData("ABC",                                 00, ExpressionKind.Symbol,       ExpressionKind.Root        )]
+        [InlineData("! ABC",                               00, ExpressionKind.Logical,      ExpressionKind.Root        )]
+        [InlineData("! ABC",                               02, ExpressionKind.Symbol,       ExpressionKind.Logical     )]
+        [InlineData("ABC And DEF",                         00, ExpressionKind.Symbol,       ExpressionKind.Logical     )]
+        [InlineData("ABC And DEF",                         04, ExpressionKind.Logical,      ExpressionKind.Root        )]
+        [InlineData("ABC And DEF",                         08, ExpressionKind.Symbol,       ExpressionKind.Logical     )]
+        [InlineData("$(ABC)",                              00, ExpressionKind.Evaluate,     ExpressionKind.Root        )]
+        [InlineData("$(ABC)",                              02, ExpressionKind.Symbol,       ExpressionKind.Evaluate    )]
+        [InlineData("'ABC'",                               00, ExpressionKind.QuotedString, ExpressionKind.Root        )]
         [InlineData("'ABC' != 'DEF'",                      00, ExpressionKind.QuotedString, ExpressionKind.Compare     )]
         [InlineData(" '$(YetAnotherProperty)' == 'true' ", 01, ExpressionKind.QuotedString, ExpressionKind.Compare     )]
         [InlineData(" '$(YetAnotherProperty)' == 'true' ", 02, ExpressionKind.Evaluate,     ExpressionKind.QuotedString)]
-        [InlineData(" '$(YetAnotherProperty)' == 'true' ", 03, ExpressionKind.Evaluate    , ExpressionKind.QuotedString)]
-        [InlineData(" '$(YetAnotherProperty)' == 'true' ", 04, ExpressionKind.Symbol      , ExpressionKind.Evaluate    )]
-        [InlineData(" '$(YetAnotherProperty)' == 'true' ", 26, ExpressionKind.Compare     , null                       )]
+        [InlineData(" '$(YetAnotherProperty)' == 'true' ", 03, ExpressionKind.Evaluate,     ExpressionKind.QuotedString)]
+        [InlineData(" '$(YetAnotherProperty)' == 'true' ", 04, ExpressionKind.Symbol,       ExpressionKind.Evaluate    )]
+        [InlineData(" '$(YetAnotherProperty)' == 'true' ", 26, ExpressionKind.Compare,      ExpressionKind.Root        )]
         [Theory(DisplayName = "Root parser succeeds for node at position ")]
         public void FindDeepestNode_Success(string input, int absolutePosition, ExpressionKind expectedExpressionKind, ExpressionKind? parentExpressionKind)
         {

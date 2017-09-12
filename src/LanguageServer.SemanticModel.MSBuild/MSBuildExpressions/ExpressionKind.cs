@@ -6,6 +6,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
     public enum ExpressionKind
     {
         /// <summary>
+        ///     The root of an expression tree.
+        /// </summary>
+        Root,
+
+        /// <summary>
         ///     A semicolon-delimited list of simple items.
         /// </summary>
         SimpleList,

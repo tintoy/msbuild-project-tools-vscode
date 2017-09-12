@@ -513,8 +513,8 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                     return (null, Range.Zero);
                 }
 
-                ExpressionNode expressionRoot;
-                if (!MSBuildExpression.TryParse(expressionText, out expressionRoot))
+                ExpressionTree expressionTree;
+                if (!MSBuildExpression.TryParse(expressionText, out expressionTree))
                 {
                     Log.Verbose("Failed to parse expression {Expression}.", expressionText);
 
@@ -522,8 +522,8 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                 }
 
                 Log.Verbose("Expression root is {ExpressionKind} @ {ExpressionRange:l}",
-                    expressionRoot.Kind,
-                    expressionRoot.Range
+                    expressionTree.Kind,
+                    expressionTree.Range
                 );
 
                 Position expressionPosition = position.RelativeTo(expressionStartPosition);
@@ -533,13 +533,18 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                     expressionStartPosition
                 );
 
-                ExpressionNode expressionAtPosition = expressionRoot.FindDeepestNodeAt(expressionPosition);
+                ExpressionNode expressionAtPosition = expressionTree.FindDeepestNodeAt(expressionPosition);
                 if (expressionAtPosition == null)
                 {
                     Log.Verbose("No expression found at {ExpressionPosition}.", expressionPosition);
 
                     return (null, Range.Zero);
                 }
+
+                Log.Verbose("Found {ExpressionKind} expression at {ExpressionPosition}",
+                    expressionAtPosition.Kind,
+                    expressionPosition
+                );
 
                 return (
                     expression: expressionAtPosition,

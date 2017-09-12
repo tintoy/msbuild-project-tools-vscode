@@ -42,6 +42,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         public bool IsQualified => !String.IsNullOrWhiteSpace(Namespace);
 
         /// <summary>
+        ///     Is the symbol valid?
+        /// </summary>
+        public override bool IsValid => !String.IsNullOrWhiteSpace(Name);
+
+        /// <summary>
         ///     Get a string representation of the expression node.
         /// </summary>
         /// <returns>

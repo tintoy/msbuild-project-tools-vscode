@@ -19,12 +19,12 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The expression to parse.
         /// </param>
         /// <returns>
-        ///     An <see cref="ExpressionNode"/> representing the root of the expression tree.
+        ///     An <see cref="ExpressionTree"/> representing the root of the expression tree.
         /// </returns>
         /// <exception cref="ParseException">
         ///     The expression could not be parsed.
         /// </exception>
-        public static ExpressionNode Parse(string expression)
+        public static ExpressionTree Parse(string expression)
         {
             if (expression == null)
                 throw new ArgumentNullException(nameof(expression));
@@ -60,12 +60,12 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The expression to parse.
         /// </param>
         /// <param name="parsedExpression">
-        ///     If successful, receives an <see cref="ExpressionNode"/> representing the root of the expression tree.
+        ///     If successful, receives an <see cref="ExpressionTree"/> representing the root of the expression tree.
         /// </param>
         /// <returns>
         ///     <c>true</c>, if the expression was successfully parsed; otherwise, <c>false</c>.
         /// </returns>
-        public static bool TryParse(string expression, out ExpressionNode parsedExpression)
+        public static bool TryParse(string expression, out ExpressionTree parsedExpression)
         {
             if (expression == null)
                 throw new ArgumentNullException(nameof(expression));

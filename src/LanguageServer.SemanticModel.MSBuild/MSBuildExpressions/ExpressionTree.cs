@@ -3,27 +3,22 @@ using Sprache;
 namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
 {
     /// <summary>
-    ///     Represents an MSBuild evaluation expression.
+    ///     Represents the root of an MSBuild expression tree.
     /// </summary>
-    public class Evaluate
-        : ExpressionContainerNode, IPositionAware<Evaluate>
+    public class ExpressionTree
+        : ExpressionContainerNode, IPositionAware<ExpressionTree>
     {
         /// <summary>
-        ///     Create a new <see cref="Evaluate"/>.
+        ///     Create a new <see cref="ExpressionTree"/>.
         /// </summary>
-        public Evaluate()
+        public ExpressionTree()
         {
         }
 
         /// <summary>
         ///     The node kind.
         /// </summary>
-        public override ExpressionKind Kind => ExpressionKind.Evaluate;
-
-        /// <summary>
-        ///     Is the evaluation expression valid (i.e. has exactly one child)?
-        /// </summary>
-        public override bool IsValid => Children.Count == 1;
+        public override ExpressionKind Kind => ExpressionKind.Root;
 
         /// <summary>
         ///     Update positioning information.
@@ -37,7 +32,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <returns>
         ///     The <see cref="ExpressionNode"/>.
         /// </returns>
-        Evaluate IPositionAware<Evaluate>.SetPos(Sprache.Position startPosition, int length)
+        ExpressionTree IPositionAware<ExpressionTree>.SetPos(Sprache.Position startPosition, int length)
         {
             SetPosition(startPosition, length);
 

@@ -231,11 +231,14 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// </summary>
         public static Parser<Evaluate> Evaluation = Parse.Positioned(
             from evalOpen in Tokens.EvalOpen.Named("open evaluation")
-            from body in EvaluationBody.Token().Named("evaluation body")
+            from body in EvaluationBody.Token().Optional().Named("evaluation body")
             from evalClose in Tokens.EvalClose.Named("close evaluation")
             select new Evaluate
             {
-                Children = ImmutableList.Create(body)
+                Children =
+                    body.IsDefined
+                        ? ImmutableList.Create(body.Get())
+                        : ImmutableList<ExpressionNode>.Empty
             }
         ).Named("evaluation");
 
@@ -461,10 +464,18 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
             select expression
         );
 
+        // TODO: Implement ExpressionTree (an ExpressionNode representing the root of an expression tree).
+
         /// <summary>
         ///     Parse the root of an expression tree.
         /// </summary>
-        public static readonly Parser<ExpressionNode> Root = GroupedExpression.Or(Expression).Or(QuotedString).Token();
+        public static readonly Parser<ExpressionTree> Root = Parse.Positioned(
+            from expressions in GroupedExpression.Or(Expression).Or(QuotedString).Token().Many()
+            select new ExpressionTree
+            {
+                Children = ImmutableList.CreateRange(expressions)
+            }
+        );
 
         /// <summary>
         ///     Create sequence containing the item.

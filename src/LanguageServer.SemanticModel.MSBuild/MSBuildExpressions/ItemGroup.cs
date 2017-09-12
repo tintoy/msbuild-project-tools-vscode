@@ -1,3 +1,4 @@
+using System;
 using Sprache;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
@@ -19,6 +20,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ///     The item group name.
         /// </summary>
         public string Name { get; internal set; }
+
+        /// <summary>
+        ///     Is the item group expression valid?
+        /// </summary>
+        public override bool IsValid => !String.IsNullOrWhiteSpace(Name);
 
         /// <summary>
         ///     The node kind.

@@ -14,18 +14,18 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
     using Utilities;
 
     /// <summary>
-    ///     Completion provider for property expressions.
+    ///     Completion provider for item group expressions.
     /// </summary>
-    public class PropertyExpressionCompletion
+    public class ItemGroupExpressionCompletion
         : CompletionProvider
     {
         /// <summary>
-        ///     Create a new <see cref="PropertyExpressionCompletion"/>.
+        ///     Create a new <see cref="ItemGroupExpressionCompletion"/>.
         /// </summary>
         /// <param name="logger">
         ///     The application logger.
         /// </param>
-        public PropertyExpressionCompletion(ILogger logger)
+        public ItemGroupExpressionCompletion(ILogger logger)
             : base(logger)
         {
         }
@@ -33,7 +33,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         /// <summary>
         ///     The provider display name.
         /// </summary>
-        public override string Name => "Property Expressions";
+        public override string Name => "ItemGroup Expressions";
 
         /// <summary>
         ///     Provide completions for the specified location.
@@ -88,9 +88,9 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 
                 if (expression.Kind == ExpressionKind.Root)
                     expressionRange = location.Position.ToEmptyRange(); // We're between expressions, so just insert.
-                else if (expression.Kind != ExpressionKind.Evaluate)
+                else if (expression.Kind != ExpressionKind.ItemGroup)
                 {
-                    Log.Verbose("Not offering any completions for {XmlLocation:l} (this provider only supports MSBuild Evaluation expressions, not {ExpressionKind} expressions).", location, expression.Kind);
+                    Log.Verbose("Not offering any completions for {XmlLocation:l} (this provider only supports MSBuild ItemGroup expressions, not {ExpressionKind} expressions).", location, expression.Kind);
 
                     return null;
                 }
@@ -115,7 +115,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         }
 
         /// <summary>
-        ///     Get property element completions.
+        ///     Get item group element completions.
         /// </summary>
         /// <param name="projectDocument">
         ///     The <see cref="ProjectDocument"/> for which completions will be offered.
@@ -133,46 +133,45 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 
             Lsp.Models.Range replaceRangeLsp = replaceRange.ToLsp();
 
-            HashSet<string> offeredPropertyNames = new HashSet<string>();
+            HashSet<string> offeredItemGroupNames = new HashSet<string>();
 
-            // Well-known properties.
-            foreach (string wellKnownPropertyName in MSBuildSchemaHelp.WellKnownPropertyNames)
+            // Well-known item types.
+            foreach (string itemType in MSBuildSchemaHelp.WellKnownItemTypes)
             {
-                if (!offeredPropertyNames.Add(wellKnownPropertyName))
+                if (!offeredItemGroupNames.Add(itemType))
                     continue;
 
-                yield return PropertyCompletionItem(wellKnownPropertyName, replaceRangeLsp,
-                    description: MSBuildSchemaHelp.ForProperty(wellKnownPropertyName)
+                yield return ItemGroupCompletionItem(itemType, replaceRangeLsp,
+                    description: MSBuildSchemaHelp.ForItemType(itemType)
                 );
             }
             
             if (!projectDocument.HasMSBuildProject)
                 yield break; // Without a valid MSBuild project (even a cached one will do), we can't inspect existing MSBuild properties.
 
-            int otherPropertyPriority = Priority + 10;
+            int otherItemGroupPriority = Priority + 10;
 
-            string[] otherPropertyNames =
-                projectDocument.MSBuildProject.Properties
-                    .Select(property => property.Name)
-                    .Where(propertyName => !propertyName.StartsWith("_")) // Ignore private properties.
+            string[] otherItemTypes =
+                projectDocument.MSBuildProject.ItemTypes
+                    .Where(itemType => !itemType.StartsWith("_")) // Ignore private item groups.
                     .ToArray();
-            foreach (string propertyName in otherPropertyNames)
+            foreach (string otherItemType in otherItemTypes)
             {
-                if (!offeredPropertyNames.Add(propertyName))
+                if (!offeredItemGroupNames.Add(otherItemType))
                     continue;
 
                 // TODO: Add a configuration option to hide these completions.
-                yield return PropertyCompletionItem(propertyName, replaceRangeLsp, otherPropertyPriority,
-                    description: "Property defined in this project (or a project it imports)."
+                yield return ItemGroupCompletionItem(otherItemType, replaceRangeLsp, otherItemGroupPriority,
+                    description: "Item group defined in this project (or a project it imports)."
                 );
             }
         }
 
         /// <summary>
-        ///     Create a standard <see cref="CompletionItem"/> for the specified MSBuild property.
+        ///     Create a standard <see cref="CompletionItem"/> for the specified MSBuild item group.
         /// </summary>
-        /// <param name="propertyName">
-        ///     The MSBuild property name.
+        /// <param name="itemType">
+        ///     The MSBuild item group name.
         /// </param>
         /// <param name="replaceRange">
         ///     The range of text that will be replaced by the completion.
@@ -186,16 +185,16 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         /// <returns>
         ///     The <see cref="CompletionItem"/>.
         /// </returns>
-        CompletionItem PropertyCompletionItem(string propertyName, Lsp.Models.Range replaceRange, int? priority = null, string description = null)
+        CompletionItem ItemGroupCompletionItem(string itemType, Lsp.Models.Range replaceRange, int? priority = null, string description = null)
         {
             return new CompletionItem
             {
-                Label = $"$({propertyName})",
+                Label = $"@({itemType})",
                 Documentation = description,
-                SortText = $"{priority ?? Priority}$({propertyName})",
+                SortText = $"{priority ?? Priority}@({itemType})",
                 TextEdit = new TextEdit
                 {
-                    NewText = $"$({propertyName})",
+                    NewText = $"@({itemType})",
                     Range = replaceRange
                 }
             };

@@ -247,11 +247,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// </summary>
         public static Parser<ItemGroup> ItemGroup = Parse.Positioned(
             from evalOpen in Tokens.ItemGroupOpen.Named("open item group")
-            from name in Tokens.Identifier.Token().Named("item group name")
+            from name in Tokens.Identifier.Token().Optional().Named("item group name")
             from evalClose in Tokens.ItemGroupClose.Named("close item group")
             select new ItemGroup
             {
-                Name = name
+                Name = name.IsDefined ? name.Get() : String.Empty
             }
         ).Named("item group");
 

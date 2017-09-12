@@ -289,22 +289,22 @@ function handleExpressionAutoClose(): vscode.Disposable
                 }
                 default:
                 {
-                    console.log(`Inserted '${args.contentChanges[0].text}' @ ${contentChange.range.start.line},${contentChange.range.start.character}`);
-
                     return;
                 }
             }
 
+            // Replace open expression with a closed one.
             const closedExpression = openExpression + ')';
-
-            await vscode.window.activeTextEditor.edit(editor =>
-            {
-                editor.replace(range, closedExpression);
-            });
+            await vscode.window.activeTextEditor.edit(
+                edit => edit.replace(range, closedExpression)
+            );
 
             // Move between the parentheses.
-            const target = vscode.window.activeTextEditor.selection.start;
-            vscode.window.activeTextEditor.selection = new vscode.Selection(target, target);
+            const completionPosition = vscode.window.activeTextEditor.selection.start;
+            vscode.window.activeTextEditor.selection = new vscode.Selection(completionPosition, completionPosition);
+
+            // Trigger completion.
+            const result = await vscode.commands.executeCommand('editor.action.triggerSuggest');
         }
     });
 }

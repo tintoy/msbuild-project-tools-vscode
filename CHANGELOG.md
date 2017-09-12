@@ -2,12 +2,9 @@
 
 ## v0.2.6
 
-* Fix go-to-definition for regular-style project imports.
-* _Experimental:_ Add completions for MSBuild property  and item expressions (`$()` and `@()`).
-
-## v0.2.5
-
 * Bug-fix: attribute completions should be available on elements that don't currently have any attributes.
+* Bug-fix: go-to-definition should also work for regular-style project imports (not just SDK-style imports).
+* _Experimental:_ Add completions for MSBuild property  and item expressions (`$()` and `@()`).
 
 ## v0.2.4
 

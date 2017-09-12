@@ -31,6 +31,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         public static Parser<char> At = Parse.Char('@').Named("token: at");
 
         /// <summary>
+        ///     Parse a percentage sign, "%".
+        /// </summary>
+        public static Parser<char> Percent = Parse.Char('%').Named("token: percent");
+
+        /// <summary>
         ///     Parse a colon, ":".
         /// </summary>
         public static Parser<char> Colon = Parse.Char(':').Named("token: colon");
@@ -79,6 +84,16 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ///     Parse the close of an item group expression, ")".
         /// </summary>
         public static Parser<char> ItemGroupClose = RParen.Named("token: item group close");
+
+        /// <summary>
+        ///     Parse the opening of an item metadata expression, "%(".
+        /// </summary>
+        public static Parser<IEnumerable<char>> ItemMetadataOpen = Parse.String("%(").Named("token: item metadata open");
+
+        /// <summary>
+        ///     Parse the close of an item metadata expression, ")".
+        /// </summary>
+        public static Parser<char> ItemMetadataClose = RParen.Named("token: item metadata close");
 
         /// <summary>
         ///     Parse a logical-AND operator, "And".

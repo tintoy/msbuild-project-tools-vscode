@@ -229,6 +229,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     Parse an MSBuild evaluation expression.
         /// </summary>
+        /// <remarks>
+        ///     The symbol between the parentheses is optional so we can still provide completions for "$()".
+        /// </remarks>
         public static Parser<Evaluate> Evaluation = Parse.Positioned(
             from evalOpen in Tokens.EvalOpen.Named("open evaluation")
             from body in EvaluationBody.Token().Optional().Named("evaluation body")
@@ -245,6 +248,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     Parse an MSBuild item group expression.
         /// </summary>
+        /// <remarks>
+        ///     The symbol between the parentheses is optional so we can still provide completions for "@()".
+        /// </remarks>
         public static Parser<ItemGroup> ItemGroup = Parse.Positioned(
             from evalOpen in Tokens.ItemGroupOpen.Named("open item group")
             from name in Tokens.Identifier.Token().Optional().Named("item group name")
@@ -254,6 +260,28 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
                 Name = name.IsDefined ? name.Get() : String.Empty
             }
         ).Named("item group");
+
+        /// <summary>
+        ///     Parse an MSBuild item metadata expression, "%(ItemType.MetadataName") or "%(MetadataName)".
+        /// </summary>
+        /// <remarks>
+        ///     The symbols between the parentheses are optional so we can still provide completions for "%()".
+        /// </remarks>
+        public static Parser<ItemMetadata> ItemMetadata = Parse.Positioned(
+            from evalOpen in Tokens.ItemGroupOpen.Named("open item metadata")
+            from itemTypeOrMetadataName in Symbol.Token().Optional().Named("item type or metadata name")
+            from separator in Tokens.Period.Token().Optional().Named("item type separator")
+            from metadataName in Symbol.Token().Optional().Named("item metadata name")
+            from evalClose in Tokens.ItemGroupClose.Named("close item metadata")
+            select new ItemMetadata
+            {
+                Children = ImmutableList.CreateRange<ExpressionNode>(
+                    itemTypeOrMetadataName.ToSequenceIfDefined().Concat(
+                        metadataName.ToSequenceIfDefined()
+                    )
+                )
+            }
+        ).Named("item metadata");
 
         /// <summary>
         ///     Parse a run of contiguous characters in a single-quoted string (excluding <see cref="Tokens.Dollar"/> or the closing <see cref="Tokens.SingleQuote"/>).

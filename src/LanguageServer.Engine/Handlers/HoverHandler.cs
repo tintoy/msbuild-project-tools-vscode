@@ -186,22 +186,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                     {
                         case MSBuildProperty property:
                         {
-                            if (projectDocument.EnableExpressions)
-                            {
-                                ExpressionNode expression;
-                                Range expressionRange;
-                            
-                                (expression, expressionRange) = projectDocument.GetMSBuildExpressionAtPosition(location.Position);
-                                if (expression != null)
-                                {
-                                    return new Hover
-                                    {
-                                        Contents = $"{expression.Kind} expression at {expressionRange}",
-                                        Range = expressionRange.ToLsp()
-                                    };
-                                }
-                            }
-
                             hoverContent = contentProvider.Property(property);
 
                             break;

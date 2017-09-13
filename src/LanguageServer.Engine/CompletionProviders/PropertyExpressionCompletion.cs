@@ -149,6 +149,9 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             if (!projectDocument.HasMSBuildProject)
                 yield break; // Without a valid MSBuild project (even a cached one will do), we can't inspect existing MSBuild properties.
 
+            if (!projectDocument.Workspace.Configuration.CompletionsFromProject.Contains(CompletionSource.Property))
+                yield break;
+
             int otherPropertyPriority = Priority + 10;
 
             string[] otherPropertyNames =
@@ -161,7 +164,6 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 if (!offeredPropertyNames.Add(propertyName))
                     continue;
 
-                // TODO: Add a configuration option to hide these completions.
                 yield return PropertyCompletionItem(propertyName, replaceRangeLsp, otherPropertyPriority,
                     description: "Property defined in this project (or a project it imports)."
                 );

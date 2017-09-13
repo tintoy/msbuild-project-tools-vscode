@@ -149,6 +149,10 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             if (!projectDocument.HasMSBuildProject)
                 yield break; // Without a valid MSBuild project (even a cached one will do), we can't inspect existing MSBuild properties.
 
+
+            if (!projectDocument.Workspace.Configuration.CompletionsFromProject.Contains(CompletionSource.ItemType))
+                yield break;
+
             int otherItemGroupPriority = Priority + 10;
 
             string[] otherItemTypes =
@@ -160,7 +164,6 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 if (!offeredItemGroupNames.Add(otherItemType))
                     continue;
 
-                // TODO: Add a configuration option to hide these completions.
                 yield return ItemGroupCompletionItem(otherItemType, replaceRangeLsp, otherItemGroupPriority,
                     description: "Item group defined in this project (or a project it imports)."
                 );

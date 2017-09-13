@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.7
+
+* Add setting to control which types of objects from the current projects are included when offering completions.
+
 ## v0.2.6
 
 * Bug-fix: attribute completions should be available on elements that don't currently have any attributes.

@@ -55,6 +55,12 @@ namespace MSBuildProjectTools.LanguageServer
         public SeqLoggingConfiguration Seq { get; } = new SeqLoggingConfiguration();
 
         /// <summary>
+        ///     Types of object from the current project to include when offering completions.
+        /// </summary>
+        [JsonProperty("completionsFromProject", ObjectCreationHandling = ObjectCreationHandling.Reuse)]
+        public HashSet<CompletionSource> CompletionsFromProject { get; } = new HashSet<CompletionSource>();
+
+        /// <summary>
         ///     Experimental features (if any) that are currently enabled?
         /// </summary>
         [JsonProperty("experimentalFeatures", ObjectCreationHandling = ObjectCreationHandling.Reuse)]
@@ -107,5 +113,31 @@ namespace MSBuildProjectTools.LanguageServer
         /// </summary>
         [JsonIgnore]
         public LoggingLevelSwitch LogLevelSwitch { get; } = new LoggingLevelSwitch(LogEventLevel.Verbose);
+    }
+
+    /// <summary>
+    ///     Represents a data-source for completion.
+    /// </summary>
+    public enum CompletionSource
+    {
+        /// <summary>
+        ///     Item types.
+        /// </summary>
+        ItemType,
+
+        /// <summary>
+        ///     Item metadata names.
+        /// </summary>
+        ItemMetadata,
+
+        /// <summary>
+        ///     Property names.
+        /// </summary>
+        Property,
+
+        /// <summary>
+        ///     Target names.
+        /// </summary>
+        Target
     }
 }

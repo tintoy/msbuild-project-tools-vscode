@@ -76,7 +76,8 @@ namespace MSBuildProjectTools.LanguageServer.CustomProtocol
             if (settings == null)
                 return;
 
-            // Temporary workaround - Populate reuses existing HashSet.
+            // Temporary workaround - JsonSerializer.Populate reuses existing HashSet.
+            configuration.CompletionsFromProject.Clear();
             configuration.EnableExperimentalFeatures.Clear();
 
             using (JsonReader reader = settings.CreateReader())

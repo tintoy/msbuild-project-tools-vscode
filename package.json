@@ -2,7 +2,7 @@
     "name": "msbuild-project-tools",
     "displayName": "MSBuild project tools",
     "description": "Tools for working with MSBuild project files (such as auto-complete for package Ids / versions).",
-    "version": "0.2.6",
+    "version": "0.2.7",
     "publisher": "tintoy",
     "license": "MIT",
     "repository": {
@@ -120,6 +120,25 @@
                                     "type": "boolean",
                                     "default": false,
                                     "description": "Trace all communication between VSCode and the MSBuild language service?"
+                                },
+                                "completionsFromProject": {
+                                    "title": "Include completions the current project.",
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "enum": [
+                                            "ItemType",
+                                            "ItemMetadata",
+                                            "Property",
+                                            "Target"
+                                        ]
+                                    },
+                                    "default": [
+                                        "ItemType",
+                                        "ItemMetadata",
+                                        "Property"
+                                    ],
+                                    "description": "Types of objects defined in the current project to include when offering completions."
                                 },
                                 "experimentalFeatures": {
                                     "type":"array",

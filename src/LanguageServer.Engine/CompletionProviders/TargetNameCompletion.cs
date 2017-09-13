@@ -152,10 +152,12 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             }
 
             // All other (public) targets defined in the project.
-            // TODO: Add a configuration option to hide these additional completions (some folks may not want the full list).
 
             if (!projectDocument.HasMSBuildProject)
                 yield break; // Without a valid MSBuild project (even a cached one will do), we can't inspect existing MSBuild targets.
+
+            if (!projectDocument.Workspace.Configuration.CompletionsFromProject.Contains(CompletionSource.Target))
+                yield break;
 
             int otherTargetPriority = Priority + 10;
             ProjectTargetInstance[] otherTargets =

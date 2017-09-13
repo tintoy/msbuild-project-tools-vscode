@@ -78,9 +78,14 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (nodes == null)
                 throw new ArgumentNullException(nameof(nodes));
 
-            return nodes.FirstOrDefault(
-                node => atPosition >= node.AbsoluteStart && atPosition < node.AbsoluteEnd
-            );
+            return nodes.FirstOrDefault(node =>
+            {
+                // Special case for "virtual" nodes (they take up no space, but we want to match them when searching).
+                if (node.IsVirtual)
+                    return atPosition == node.AbsoluteStart;    
+                
+                return node.AbsoluteLength > 0 && atPosition >= node.AbsoluteStart && atPosition < node.AbsoluteEnd;
+            });
         }
 
         /// <summary>
@@ -216,6 +221,48 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             throw new InvalidOperationException(
                 $"Encountered unexpected node type '{nodeAtPosition.GetType().FullName}' inside a SimpleList expression."
             );
+        }
+
+        /// <summary>
+        ///     Filter the expressions to exclude virtual expression nodes.
+        /// </summary>
+        /// <typeparam name="TExpression">
+        ///     The expression sequence type.
+        /// </typeparam>
+        /// <param name="expressions">
+        ///     The sequence of expressions to filter.
+        /// </param>
+        /// <returns>
+        ///     The filtered sequence of expressions.
+        /// </returns>
+        public static IEnumerable<TExpression> NonVirtual<TExpression>(this IEnumerable<TExpression> expressions)
+            where TExpression : ExpressionNode
+        {
+            if (expressions == null)
+                throw new ArgumentNullException(nameof(expressions));
+
+            return expressions.Where(expression => !expression.IsVirtual);
+        }
+
+        /// <summary>
+        ///     Filter the expressions to exclude invalid expressions.
+        /// </summary>
+        /// <typeparam name="TExpression">
+        ///     The expression sequence type.
+        /// </typeparam>
+        /// <param name="expressions">
+        ///     The sequence of expressions to filter.
+        /// </param>
+        /// <returns>
+        ///     The filtered sequence of expressions.
+        /// </returns>
+        public static IEnumerable<TExpression> ValidOnly<TExpression>(this IEnumerable<TExpression> expressions)
+            where TExpression : ExpressionNode
+        {
+            if (expressions == null)
+                throw new ArgumentNullException(nameof(expressions));
+
+            return expressions.Where(expression => expression.IsValid);
         }
     }
 }

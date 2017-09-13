@@ -181,6 +181,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         [InlineData("%(ABC.DEF)",                          05, ExpressionKind.ItemMetadata, ExpressionKind.Root        )]
         [InlineData("%(ABC.DEF)",                          06, ExpressionKind.Symbol,       ExpressionKind.ItemMetadata)]
         [InlineData("%(ABC.DEF)",                          07, ExpressionKind.Symbol,       ExpressionKind.ItemMetadata)]
+        [InlineData("%(ABC.)",                             06, ExpressionKind.Symbol,       ExpressionKind.ItemMetadata)]
         [InlineData("'ABC'",                               00, ExpressionKind.QuotedString, ExpressionKind.Root        )]
         [InlineData("'ABC' != 'DEF'",                      00, ExpressionKind.QuotedString, ExpressionKind.Compare     )]
         [InlineData(" '$(YetAnotherProperty)' == 'true' ", 01, ExpressionKind.QuotedString, ExpressionKind.Compare     )]

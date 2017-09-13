@@ -24,6 +24,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         public override ExpressionKind Kind => ExpressionKind.QuotedString;
 
         /// <summary>
+        ///     String content is never virtual.
+        /// </summary>
+        public override bool IsVirtual => false;
+
+        /// <summary>
         ///     The string content.
         /// </summary>
         public string Content { get; set; }

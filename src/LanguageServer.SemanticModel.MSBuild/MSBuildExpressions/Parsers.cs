@@ -50,11 +50,10 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
             /// </summary>
             public static readonly Parser<IEnumerable<ExpressionNode>> LeadingSeparator =
                 from leadingEmptyItem in
-                    Parse.Return(new SimpleListItem
+                    ReturnPositioned(() => new SimpleListItem
                     {
                         Value = String.Empty
                     })
-                    .Positioned()
                 from separator in Separator.Once()
                 select leadingEmptyItem.ToSequence().Concat<ExpressionNode>(separator);
 
@@ -271,19 +270,20 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ///     The symbols between the parentheses are optional so we can still provide completions for "%()".
         ///     
         ///     We model the item type and metadata name as 2 separate symbols because we have scenarios where we want to address them separately.
+        ///     We also allow for more than 2 symbols so we can still parse metata expressions where <see cref="ItemMetadata.IsValid"/> would be <c>false</c>.
         /// </remarks>
         public static Parser<ItemMetadata> ItemMetadata = Parse.Positioned(
             from metadataOpen in Tokens.ItemMetadataOpen.Named("open item metadata")
-            from itemTypeOrMetadataName in Symbol.Token().Optional().Named("item type or metadata name")
-            from separator in Tokens.Period.Token().Optional().Named("item type separator")
-            from metadataName in Symbol.Token().Optional().Named("item metadata name")
+            from itemTypeAndOrMetadataName in
+                Symbol.Token().Or(EmptySymbol)
+                    .DelimitedBy(Tokens.Period)
+                    .Optional()
+                    .Named("item type and / or metadata name")
             from metadataClose in Tokens.ItemMetadataClose.Named("close item metadata")
             select new ItemMetadata
             {
                 Children = ImmutableList.CreateRange<ExpressionNode>(
-                    itemTypeOrMetadataName.ToSequenceIfDefined().Concat(
-                        metadataName.ToSequenceIfDefined()
-                    )
+                    itemTypeAndOrMetadataName.ToSequenceIfDefined()
                 )
             }
         ).Named("item metadata");
@@ -345,13 +345,14 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     Parse an empty symbol in an MSBuild expression.
         /// </summary>
-        public static readonly Parser<Symbol> EmptySymbol =
-            Parse.Return(new Symbol
+        public static readonly Parser<Symbol> EmptySymbol = Parse.Positioned(
+            from emptyIdentifier in Parse.WhiteSpace.Many().Text()
+
+            select new Symbol
             {
-                Name = String.Empty
-            })
-            .Positioned()
-            .Named("empty symbol");
+                Name = emptyIdentifier
+            }
+        ).Named("empty symbol");
 
         /// <summary>
         ///     Parse a symbol in an MSBuild expression.
@@ -686,5 +687,29 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ///     The parser, as one for a sub-type of <typeparamref name="TResult"/>.
         /// </returns>
         static Parser<TResult> As<TResult>(this Parser<TResult> parser) => parser;
+
+        /// <summary>
+        ///     Create a parser that returns a constant value, capturing position information.
+        /// </summary>
+        /// <typeparam name="TResult">
+        ///     The parser's result type.
+        /// </typeparam>
+        /// <param name="createResult">
+        ///     A delegate that creates the parser's result value.
+        /// </param>
+        /// <returns>
+        ///     The new parser.
+        /// </returns>
+        static Parser<TResult> ReturnPositioned<TResult>(Func<TResult> createResult)
+            where TResult : IPositionAware<TResult>
+        {
+            return input => Result.Success(
+                value: createResult().SetPos(
+                    startPos: new Sprache.Position(input.Position, input.Line, input.Column),
+                    length: 0
+                ),
+                remainder: input
+            );
+        }
     }
 }

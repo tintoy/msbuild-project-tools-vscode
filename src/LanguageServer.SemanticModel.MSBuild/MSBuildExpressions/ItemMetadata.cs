@@ -63,7 +63,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     Is the item metadata expression valid?
         /// </summary>
-        public override bool IsValid => HasName;
+        public override bool IsValid => !String.IsNullOrWhiteSpace(Name);
 
         /// <summary>
         ///     The node kind.

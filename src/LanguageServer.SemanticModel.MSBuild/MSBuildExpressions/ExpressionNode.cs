@@ -26,6 +26,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         public virtual bool IsValid => true;
 
         /// <summary>
+        ///     Does the node represent a "virtual" expression (i.e. one that is present purely to aid intellisense)?
+        /// </summary>
+        public virtual bool IsVirtual => AbsoluteLength == 0; // Default heuristic considers nodes that take up no space to be virtual.
+
+        /// <summary>
         ///     The node's parent (if any).
         /// </summary>
         public ExpressionNode Parent { get; internal set; }
@@ -49,6 +54,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ///     The node's absolute starting position (0-based).
         /// </summary>
         public int AbsoluteEnd { get; internal set; }
+
+        /// <summary>
+        ///     The node's absolute length, in characters.
+        /// </summary>
+        public int AbsoluteLength => AbsoluteEnd - AbsoluteStart;
 
         /// <summary>
         ///     The node's textual range.

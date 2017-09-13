@@ -7,6 +7,7 @@ using Xunit.Abstractions;
 namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
 {
     using SemanticModel.MSBuildExpressions;
+    using Utilities;
 
     /// <summary>
     ///     Tests for parsing of MSBuild item metadata expressions.
@@ -51,6 +52,10 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         {
             AssertParser.SucceedsWith(Parsers.ItemMetadata, input, actualItemMetadata =>
             {
+                actualItemMetadata.PostParse(
+                    new TextPositions(input)
+                );
+
                 Assert.Equal(expectedMetadataName, actualItemMetadata.Name);
             });
         }
@@ -71,6 +76,8 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         [InlineData("%( Foo.Bar )", "Foo", "Bar")]
         [InlineData("%( Foo .Bar)", "Foo", "Bar")]
         [InlineData("%(Foo.Bar )",  "Foo", "Bar")]
+        [InlineData("%(Foo.)",      "Foo",  ""  )]
+        [InlineData("%(Foo. )",     "Foo",  " " )]
         [Theory(DisplayName = "ItemMetadata parser succeeds ")]
         public void Parse_Qualified_Success(string input, string expectedItemType, string expectedMetadataName)
         {

@@ -24,6 +24,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         public override ExpressionKind Kind => ExpressionKind.QuotedString;
 
         /// <summary>
+        ///     Quoted strings are never virtual.
+        /// </summary>
+        public override bool IsVirtual => false;
+
+        /// <summary>
         ///     Evaluation expressions (if any) contained in the string.
         /// </summary>
         public IEnumerable<Evaluate> Evaluations => Children.OfType<Evaluate>();

@@ -68,11 +68,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </returns>
         Task OnDidChangeConfiguration(DidChangeConfigurationObjectParams parameters)
         {
-            Log.Information("Before OnDidChangeConfiguration {@Config}", Configuration);
-
             Configuration.UpdateFrom(parameters);
-
-            Log.Information("After OnDidChangeConfiguration {@Config}", Configuration);
 
             if (ConfigurationChanged != null)
                 ConfigurationChanged(this, EventArgs.Empty);

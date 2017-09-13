@@ -1,4 +1,5 @@
 using Lsp.Models;
+using Microsoft.Build.Evaluation;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -93,7 +94,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 );
 
                 completions.AddRange(
-                    GetCompletionItems(projectDocument, expressionRange)
+                    GetCompletionItems(projectDocument, expressionRange, expression as ItemMetadata)
                 );
             }
 
@@ -103,7 +104,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 return null;
 
             return new CompletionList(completions,
-                isIncomplete: false // Consider this list to be exhaustive
+                isIncomplete: true // We need to be re-queried to catch the switch from unqualified to qualified metadata.
             );
         }
 
@@ -116,10 +117,13 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         /// <param name="replaceRange">
         ///     The range of text to be replaced by the completions.
         /// </param>
+        /// <param name="metadataExpression">
+        ///     The metadata expression (if any) being completed.
+        /// </param>
         /// <returns>
         ///     A sequence of <see cref="CompletionItem"/>s.
         /// </returns>
-        public IEnumerable<CompletionItem> GetCompletionItems(ProjectDocument projectDocument, Range replaceRange)
+        public IEnumerable<CompletionItem> GetCompletionItems(ProjectDocument projectDocument, Range replaceRange, ItemMetadata metadataExpression)
         {
             if (projectDocument == null)
                 throw new ArgumentNullException(nameof(projectDocument));
@@ -129,7 +133,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 
             Lsp.Models.Range replaceRangeLsp = replaceRange.ToLsp();
 
-            // Built-in metadata.
+            // Built-in metadata (unqualified).
 
             yield return UnqualifiedMetadataCompletionItem("FullPath", replaceRangeLsp,
                 description: "Contains the full path of the item."
@@ -165,30 +169,128 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 description: "Contains the timestamp from the last time the item was last accessed."
             );
 
-            // Qualified metadata for the current item type (from project state).
+            // We can't go any further if we can't inspect project state.
+            if (!projectDocument.HasMSBuildProject)
+                yield break;
 
-            int priority = Priority + 200;
+            int priority = Priority + 300;
 
-            // TODO: Implement!
-
-            // Qualified metadata for other well-known item types (only if we don't already have an item type).
-
-            priority = Priority + 500;
-
-            const string wellKnownMetadataPrefix = "*.";
-            foreach (string metadataKey in MSBuildSchemaHelp.WellKnownItemMetadata) // TODO: Find a better way to capture well-known item types / metadata names
+            string itemType = metadataExpression.ItemType;
+            if (metadataExpression != null && metadataExpression.HasItemType)
             {
-                if (metadataKey.StartsWith(wellKnownMetadataPrefix))
-                    continue;
+                // Qualified metadata for the current item type.
+                SortedSet<string> metadataNames = new SortedSet<string>(
+                    projectDocument.MSBuildProject.GetItems(itemType)
+                        .SelectMany(
+                            item => item.Metadata.Select(metadata => metadata.Name)
+                        )
+                        .Where(
+                            metadataName => !MSBuildHelper.IsWellKnownItemMetadata(metadataName)
+                        )
+                );
 
-                string[] keySegments = metadataKey.Split(new char[] { '.' }, count: 2);
-                string itemType = keySegments[0];
-                string metadataName = keySegments[1];
+                foreach (string metadataName in metadataNames)
+                {
+                    yield return QualifiedMetadataCompletionItem(itemType, metadataName, replaceRangeLsp, priority,
+                        description: MSBuildSchemaHelp.ForItemMetadata(itemType, metadataName)
+                    );
+                }
 
-                yield return QualifiedMetadataCompletionItem(itemType, metadataName, replaceRangeLsp, priority,
-                    description: MSBuildSchemaHelp.ForItemMetadata(itemType, metadataName)
+                // Well-known item metadata (qualified).
+
+                priority = 500;
+
+                yield return QualifiedMetadataCompletionItem(itemType, "FullPath", replaceRangeLsp, priority,
+                    description: "Contains the full path of the item."
+                );
+                yield return QualifiedMetadataCompletionItem(itemType, "RootDir", replaceRangeLsp, priority,
+                    description: "Contains the root directory of the item."
+                );
+                yield return QualifiedMetadataCompletionItem(itemType, "Filename", replaceRangeLsp, priority,
+                    description: "Contains the file name of the item, without the extension."
+                );
+                yield return QualifiedMetadataCompletionItem(itemType, "Extension", replaceRangeLsp, priority,
+                    description: "Contains the file name extension of the item."
+                );
+                yield return QualifiedMetadataCompletionItem(itemType, "RelativeDir", replaceRangeLsp, priority,
+                    description: "Contains the path specified in the Include attribute, up to the final slash or backslash."
+                );
+                yield return QualifiedMetadataCompletionItem(itemType, "Directory", replaceRangeLsp, priority,
+                    description: "Contains the directory of the item, without the root directory."
+                );
+                yield return QualifiedMetadataCompletionItem(itemType, "RecursiveDir", replaceRangeLsp, priority,
+                    description: "If the Include attribute contains the wildcard **, this metadata specifies the part of the path that replaces the wildcard."
+                );
+                yield return QualifiedMetadataCompletionItem(itemType, "Identity", replaceRangeLsp, priority,
+                    description: "The item specified in the Include attribute."
+                );
+                yield return QualifiedMetadataCompletionItem(itemType, "ModifiedTime", replaceRangeLsp, priority,
+                    description: "Contains the timestamp from the last time the item was modified."
+                );
+                yield return QualifiedMetadataCompletionItem(itemType, "CreatedTime", replaceRangeLsp, priority,
+                    description: "Contains the timestamp from the last time the item was created."
+                );
+                yield return QualifiedMetadataCompletionItem(itemType, "AccessedTime", replaceRangeLsp, priority,
+                    description: "Contains the timestamp from the last time the item was last accessed."
                 );
             }
+            else if (metadataExpression == null || !metadataExpression.HasItemType)
+            {
+                // Item types defined in the project.
+                foreach (string definedItemType in projectDocument.MSBuildProject.ItemTypes)
+                {
+                    yield return ItemTypeCompletionItem(definedItemType, replaceRangeLsp, priority,
+                        description: MSBuildSchemaHelp.ForItemType(definedItemType)
+                    );
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Create a standard <see cref="CompletionItem"/> for the specified MSBuild item type.
+        /// </summary>
+        /// <param name="itemType">
+        ///     The MSBuild item metadata name.
+        /// </param>
+        /// <param name="replaceRange">
+        ///     The range of text that will be replaced by the completion.
+        /// </param>
+        /// <param name="priority">
+        ///     The item sort priority (defaults to <see cref="CompletionProvider.Priority"/>).
+        /// </param>
+        /// <param name="description">
+        ///     An optional description for the item.
+        /// </param>
+        /// <returns>
+        ///     The <see cref="CompletionItem"/>.
+        /// </returns>
+        CompletionItem ItemTypeCompletionItem(string itemType, Lsp.Models.Range replaceRange, int? priority = null, string description = null)
+        {
+            return new CompletionItem
+            {
+                Label = $"%({itemType})",
+                Kind = CompletionItemKind.Class,
+                Documentation = description,
+                FilterText = $"%({itemType}.)", // Trailing "." ensures the user can type "." to switch to qualified item metadata expression without breaking completion.
+                SortText = $"{priority ?? Priority}%({itemType})",
+                TextEdit = new TextEdit
+                {
+                    NewText = $"%({itemType}.)",
+                    Range = replaceRange
+                },
+                Command = new Command
+                {
+                    // Move back inside the parentheses so they can continue completion.
+                    // TODO: Replace this with custom extension command to first invoke "cursorMove", then "editor.action.triggerSuggest".
+                    Name = "cursorMove",
+                    Arguments = new Lsp.ObjectContainer(new
+                    {
+                        value = 1,
+                        to = "left",
+                        by = "character"
+                    })
+                }
+            };
         }
 
         /// <summary>
@@ -214,8 +316,9 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             return new CompletionItem
             {
                 Label = $"%({metadataName})",
+                Kind = CompletionItemKind.Field,
                 Documentation = description,
-                FilterText = $"%({metadataName}.)", // Trailing "." ensures the user can type "." to switch to qualified item metadata expression without breaking completion.
+                FilterText = $"%({metadataName})",
                 SortText = $"{priority ?? Priority}%({metadataName})",
                 TextEdit = new TextEdit
                 {
@@ -252,6 +355,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             {
                 Label = $"%({itemType}.{metadataName})",
                 Documentation = description,
+                Kind = CompletionItemKind.Property,
                 SortText = $"{priority ?? Priority}%({itemType}.{metadataName})",
                 TextEdit = new TextEdit
                 {

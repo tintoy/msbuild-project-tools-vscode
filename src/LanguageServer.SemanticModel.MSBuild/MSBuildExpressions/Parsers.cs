@@ -292,7 +292,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ///     Parse a run of contiguous characters in a single-quoted string (excluding <see cref="Tokens.Dollar"/> or the closing <see cref="Tokens.SingleQuote"/>).
         /// </summary>
         public static readonly Parser<StringContent> SingleQuotedStringContent =
-            from content in Tokens.SingleQuotedStringChar.Many().Text().Named("string content")
+            from content in Tokens.SingleQuotedStringChar.AtLeastOnce().Text().Named("string content")
             select new StringContent
             {
                 Content = content

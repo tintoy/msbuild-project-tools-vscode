@@ -24,7 +24,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     Is the item group expression valid?
         /// </summary>
-        public override bool IsValid => !String.IsNullOrWhiteSpace(Name);
+        public override bool IsValid => !String.IsNullOrWhiteSpace(Name) && base.IsValid;
 
         /// <summary>
         ///     The node kind.

@@ -23,7 +23,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     Is the evaluation expression valid (i.e. has exactly one child)?
         /// </summary>
-        public override bool IsValid => Children.Count == 1;
+        public override bool IsValid => Children.Count == 1 && base.IsValid;
 
         /// <summary>
         ///     Update positioning information.

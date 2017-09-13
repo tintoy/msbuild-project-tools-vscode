@@ -1,4 +1,5 @@
 using Sprache;
+using System.Linq;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
 {
@@ -23,7 +24,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     Is the expression represented by the node valid?
         /// </summary>
-        public virtual bool IsValid => true;
+        public virtual bool IsValid => !this.DescendantNodes().Any(node => node.IsValid);
 
         /// <summary>
         ///     Does the node represent a "virtual" expression (i.e. one that is present purely to aid intellisense)?

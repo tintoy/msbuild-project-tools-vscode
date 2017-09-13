@@ -25,6 +25,7 @@
     ],
     "activationEvents": [
         "workspaceContains:NuGet.config",
+        "workspaceContains:global.json",
         "workspaceContains:**/*.*proj",
         "workspaceContains:**/*.props",
         "workspaceContains:**/*.targets",

@@ -24,7 +24,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         );
 
         /// <summary>
-        ///     The names of well-known MSBuild item types.
+        ///     The qualified names of well-known MSBuild item metadata.
         /// </summary>
         public static IEnumerable<string> WellKnownItemMetadata => Items.Keys.Where(
             itemType => itemType.IndexOf('.') != -1

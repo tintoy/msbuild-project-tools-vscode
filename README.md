@@ -22,7 +22,7 @@ You need .NET Core 2.0.0 or newer installed to use the language service (but you
 * _Language service feature:_ Go-to-definition is implemented for both SDK-style and regular project imports.
 * Basic syntax highlighting of MSBuild expressions in attribute values.  
   To see this highlighting, change the editor language from `XML` to `MSBuild`.
-* _Language service feature:_ Completions for `$()` property and `@()` item expressions (_experimental_).  
+* _Language service feature:_ Completions for `$()` property, `@()` item, and `%()` item metadata expressions (_experimental_).  
   To enable these completions, add the string `expressions` to the `msbuildProjectTools.language.experimentalFeatures` setting, then change the editor language from `XML` to `MSBuild`.
 
 ### File extensions

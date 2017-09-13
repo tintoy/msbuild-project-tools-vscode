@@ -255,9 +255,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ///     The symbol between the parentheses is optional so we can still provide completions for "@()".
         /// </remarks>
         public static Parser<ItemGroup> ItemGroup = Parse.Positioned(
-            from evalOpen in Tokens.ItemGroupOpen.Named("open item group")
+            from itemGroupOpen in Tokens.ItemGroupOpen.Named("open item group")
             from name in Symbol.Or(EmptySymbol).Token().Named("item group name")
-            from evalClose in Tokens.ItemGroupClose.Named("close item group")
+            from itemGroupClose in Tokens.ItemGroupClose.Named("close item group")
             select new ItemGroup
             {
                 Children = ImmutableList.Create<ExpressionNode>(name)
@@ -269,13 +269,15 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// </summary>
         /// <remarks>
         ///     The symbols between the parentheses are optional so we can still provide completions for "%()".
+        ///     
+        ///     We model the item type and metadata name as 2 separate symbols because we have scenarios where we want to address them separately.
         /// </remarks>
         public static Parser<ItemMetadata> ItemMetadata = Parse.Positioned(
-            from evalOpen in Tokens.ItemMetadataOpen.Named("open item metadata")
+            from metadataOpen in Tokens.ItemMetadataOpen.Named("open item metadata")
             from itemTypeOrMetadataName in Symbol.Token().Optional().Named("item type or metadata name")
-            from separator in Tokens.Period.Token().Optional().Named("item type separator") // TODO: Refactor to use something like QualifiedOneLevelSymbol parser (Symbol with name and namespace, but namespace contains only a single segment, no other "."s).
+            from separator in Tokens.Period.Token().Optional().Named("item type separator")
             from metadataName in Symbol.Token().Optional().Named("item metadata name")
-            from evalClose in Tokens.ItemMetadataClose.Named("close item metadata")
+            from metadataClose in Tokens.ItemMetadataClose.Named("close item metadata")
             select new ItemMetadata
             {
                 Children = ImmutableList.CreateRange<ExpressionNode>(

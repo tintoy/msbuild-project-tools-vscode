@@ -184,7 +184,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             {
                 Label = $"$({propertyName})",
                 Documentation = description,
-                SortText = $"{priority ?? Priority}$({propertyName})",
+                SortText = $"{priority ?? Priority:0000}$({propertyName})",
                 TextEdit = new TextEdit
                 {
                     NewText = $"$({propertyName})",

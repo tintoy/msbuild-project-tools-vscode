@@ -85,7 +85,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                     return null;
                 }
                 
-                Log.Verbose("Offering completions to replace Evaluate expression @ {ReplaceRange:l}",
+                Log.Verbose("Offering completions to replace ItemGroup expression @ {ReplaceRange:l}",
                     expressionRange
                 );
 
@@ -184,7 +184,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             {
                 Label = $"@({itemType})",
                 Documentation = description,
-                SortText = $"{priority ?? Priority}@({itemType})",
+                SortText = $"{priority ?? Priority:0000}@({itemType})",
                 TextEdit = new TextEdit
                 {
                     NewText = $"@({itemType})",

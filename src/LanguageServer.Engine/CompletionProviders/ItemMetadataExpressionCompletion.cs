@@ -68,8 +68,6 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 if (!projectDocument.EnableExpressions)
                     return null;
 
-                // TODO: Check containing element (or element of containing attribute) to see whether we're in a location that permits unqualified metadata expressions.
-
                 ExpressionNode expression;
                 Range expressionRange;
                 if (!location.IsExpression(out expression, out expressionRange))
@@ -79,28 +77,59 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                     return null;
                 }
 
+                // AF: This code is getting complicated; refactor, please.
+
                 if (expression is Symbol)
                     expression = expression.Parent; // The containing expression.
 
+                bool offerItemTypes = true; // By default, we offer item types.
+                string targetItemType = null;
                 if (expression is ExpressionTree)
                     expressionRange = location.Position.ToEmptyRange(); // We're between expressions, so just insert.
-                else if (expression.Kind != ExpressionKind.ItemMetadata)
+                else if (expression is ItemMetadata metadataExpression && metadataExpression.HasItemType)
                 {
-                    Log.Verbose("Not offering any completions for {XmlLocation:l} (this provider only supports MSBuild ItemMetadata expressions, not {ExpressionKind} expressions).", location, expression.Kind);
+                    targetItemType = metadataExpression.ItemType;
+                    offerItemTypes = false; // We don't offer item types if one is already specified in the metadata expression.
+                }
+                
+                bool offerUnqualifiedCompletions = false;
+                if (location.IsAttribute(out XSAttribute attribute) && attribute.Element.ParentElement?.Name == "ItemGroup")
+                {
+                    // An attribute on an item element.
+                    targetItemType = targetItemType ?? attribute.Element.Name;
+                    offerUnqualifiedCompletions = true;
+                }
+                else if (location.IsElementText(out XSElementText elementText) && elementText.Element.ParentElement?.Name == "ItemGroup")
+                {
+                    // Text inside a an item element's metadata element.
+                    offerUnqualifiedCompletions = true;
+                    targetItemType = targetItemType ?? elementText.Element.Name;
+                }
+                else if (location.IsWhitespace(out XSWhitespace whitespace) && whitespace.ParentElement?.ParentElement?.Name == "ItemGroup")
+                {
+                    // Whitespace inside a an item element's metadata element.
+                    offerUnqualifiedCompletions = true;
+                    targetItemType = targetItemType ?? whitespace.ParentElement.Name;
+                }
+                else
+                {
+                    Log.Verbose("Not offering any completions for {XmlLocation:l} (not a location where metadata expressions are supported).", location);
 
                     return null;
                 }
                 
-                Log.Verbose("Offering completions to replace Evaluate expression @ {ReplaceRange:l}",
-                    expressionRange
+                Log.Verbose("Offering completions to replace ItemMetadata expression @ {ReplaceRange:l} (OfferItemTypes={OfferItemTypes}, OfferUnqualifiedCompletions={OfferUnqualifiedCompletions})",
+                    expressionRange,
+                    offerItemTypes,
+                    offerUnqualifiedCompletions
                 );
 
                 completions.AddRange(
-                    GetCompletionItems(projectDocument, expressionRange, expression as ItemMetadata)
+                    GetCompletionItems(projectDocument, expressionRange, targetItemType, offerItemTypes, offerUnqualifiedCompletions)
                 );
             }
 
-            Log.Verbose("Offering {CompletionCount} completion(s) for {XmlLocation:l}", completions.Count, location);
+            Log.Verbose("Offering {CompletionCount} completion(s) for {XmlLocation:l}.", completions.Count, location);
 
             if (completions.Count == 0)
                 return null;
@@ -119,13 +148,19 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         /// <param name="replaceRange">
         ///     The range of text to be replaced by the completions.
         /// </param>
-        /// <param name="metadataExpression">
-        ///     The metadata expression (if any) being completed.
+        /// <param name="targetItemType">
+        ///     The target item type (if known) for the metadata expression being completed.
+        /// </param>
+        /// <param name="offerItemTypes">
+        ///     Offer completions for item types?
+        /// </param>
+        /// <param name="offerUnqualifiedCompletions">
+        ///     Offer completions for unqualified metadata expressions?
         /// </param>
         /// <returns>
         ///     A sequence of <see cref="CompletionItem"/>s.
         /// </returns>
-        public IEnumerable<CompletionItem> GetCompletionItems(ProjectDocument projectDocument, Range replaceRange, ItemMetadata metadataExpression)
+        public IEnumerable<CompletionItem> GetCompletionItems(ProjectDocument projectDocument, Range replaceRange, string targetItemType, bool offerItemTypes, bool offerUnqualifiedCompletions)
         {
             if (projectDocument == null)
                 throw new ArgumentNullException(nameof(projectDocument));
@@ -135,90 +170,28 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 
             Lsp.Models.Range replaceRangeLsp = replaceRange.ToLsp();
 
-            // Built-in metadata (unqualified).
+            int priority = Priority;
 
-            yield return UnqualifiedMetadataCompletionItem("FullPath", replaceRangeLsp,
-                description: "Contains the full path of the item."
-            );
-            yield return UnqualifiedMetadataCompletionItem("RootDir", replaceRangeLsp,
-                description: "Contains the root directory of the item."
-            );
-            yield return UnqualifiedMetadataCompletionItem("Filename", replaceRangeLsp,
-                description: "Contains the file name of the item, without the extension."
-            );
-            yield return UnqualifiedMetadataCompletionItem("Extension", replaceRangeLsp,
-                description: "Contains the file name extension of the item."
-            );
-            yield return UnqualifiedMetadataCompletionItem("RelativeDir", replaceRangeLsp,
-                description: "Contains the path specified in the Include attribute, up to the final slash or backslash."
-            );
-            yield return UnqualifiedMetadataCompletionItem("Directory", replaceRangeLsp,
-                description: "Contains the directory of the item, without the root directory."
-            );
-            yield return UnqualifiedMetadataCompletionItem("RecursiveDir", replaceRangeLsp,
-                description: "If the Include attribute contains the wildcard **, this metadata specifies the part of the path that replaces the wildcard."
-            );
-            yield return UnqualifiedMetadataCompletionItem("Identity", replaceRangeLsp,
-                description: "The item specified in the Include attribute."
-            );
-            yield return UnqualifiedMetadataCompletionItem("ModifiedTime", replaceRangeLsp,
-                description: "Contains the timestamp from the last time the item was modified."
-            );
-            yield return UnqualifiedMetadataCompletionItem("CreatedTime", replaceRangeLsp,
-                description: "Contains the timestamp from the last time the item was created."
-            );
-            yield return UnqualifiedMetadataCompletionItem("AccessedTime", replaceRangeLsp,
-                description: "Contains the timestamp from the last time the item was last accessed."
-            );
+            // Built-in metadata (unqualified).
+            if (offerUnqualifiedCompletions)
+            {
+                foreach (string wellknownMetadataName in MSBuildHelper.WellknownMetadataNames)
+                {
+                    yield return UnqualifiedMetadataCompletionItem(wellknownMetadataName, replaceRangeLsp, priority,
+                        description: MSBuildSchemaHelp.ForItemMetadata("*", wellknownMetadataName)
+                    );
+                }
+            }
 
             // We can't go any further if we can't inspect project state.
             if (!projectDocument.HasMSBuildProject)
                 yield break;
 
-            int priority;
-            string targetItemType = metadataExpression.ItemType;
-            if (metadataExpression != null && metadataExpression.HasItemType)
+            
+            if (!String.IsNullOrWhiteSpace(targetItemType))
             {
-                priority = Priority + 300;
+                priority += 100;
                 
-                // Well-known item metadata (qualified).
-                yield return QualifiedMetadataCompletionItem(targetItemType, "FullPath", replaceRangeLsp, priority,
-                    description: "Contains the full path of the item."
-                );
-                yield return QualifiedMetadataCompletionItem(targetItemType, "RootDir", replaceRangeLsp, priority,
-                    description: "Contains the root directory of the item."
-                );
-                yield return QualifiedMetadataCompletionItem(targetItemType, "Filename", replaceRangeLsp, priority,
-                    description: "Contains the file name of the item, without the extension."
-                );
-                yield return QualifiedMetadataCompletionItem(targetItemType, "Extension", replaceRangeLsp, priority,
-                    description: "Contains the file name extension of the item."
-                );
-                yield return QualifiedMetadataCompletionItem(targetItemType, "RelativeDir", replaceRangeLsp, priority,
-                    description: "Contains the path specified in the Include attribute, up to the final slash or backslash."
-                );
-                yield return QualifiedMetadataCompletionItem(targetItemType, "Directory", replaceRangeLsp, priority,
-                    description: "Contains the directory of the item, without the root directory."
-                );
-                yield return QualifiedMetadataCompletionItem(targetItemType, "RecursiveDir", replaceRangeLsp, priority,
-                    description: "If the Include attribute contains the wildcard **, this metadata specifies the part of the path that replaces the wildcard."
-                );
-                yield return QualifiedMetadataCompletionItem(targetItemType, "Identity", replaceRangeLsp, priority,
-                    description: "The item specified in the Include attribute."
-                );
-                yield return QualifiedMetadataCompletionItem(targetItemType, "ModifiedTime", replaceRangeLsp, priority,
-                    description: "Contains the timestamp from the last time the item was modified."
-                );
-                yield return QualifiedMetadataCompletionItem(targetItemType, "CreatedTime", replaceRangeLsp, priority,
-                    description: "Contains the timestamp from the last time the item was created."
-                );
-                yield return QualifiedMetadataCompletionItem(targetItemType, "AccessedTime", replaceRangeLsp, priority,
-                    description: "Contains the timestamp from the last time the item was last accessed."
-                );
-
-                priority = Priority + 500;
-
-                // Qualified metadata for the current item type.
                 SortedSet<string> metadataNames = new SortedSet<string>(
                     projectDocument.MSBuildProject.GetItems(targetItemType)
                         .SelectMany(
@@ -229,16 +202,43 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                         )
                 );
 
+                priority += 100;
+
+                // Metadata for the current item type (unqualified).
+                if (offerUnqualifiedCompletions)
+                {
+                    foreach (string metadataName in metadataNames)
+                    {
+                        yield return UnqualifiedMetadataCompletionItem(metadataName, replaceRangeLsp, priority,
+                            description: MSBuildSchemaHelp.ForItemMetadata(targetItemType, metadataName) ?? "Item metadata declared in this project."
+                        );
+                    }
+                }
+
+                priority += 100;
+
+                // Well-known item metadata (qualified).
+                foreach (string wellknownMetadataName in MSBuildHelper.WellknownMetadataNames)
+                {
+                    yield return QualifiedMetadataCompletionItem(targetItemType, wellknownMetadataName, replaceRangeLsp, priority,
+                        description: MSBuildSchemaHelp.ForItemMetadata("*", wellknownMetadataName)
+                    );
+                }
+
+                priority += 100;
+
+                // Metadata for the current item type (qualified).
                 foreach (string metadataName in metadataNames)
                 {
                     yield return QualifiedMetadataCompletionItem(targetItemType, metadataName, replaceRangeLsp, priority,
-                        description: MSBuildSchemaHelp.ForItemMetadata(targetItemType, metadataName)
+                        description: MSBuildSchemaHelp.ForItemMetadata(targetItemType, metadataName) ?? "Item metadata declared in this project."
                     );
                 }
             }
-            else if (metadataExpression == null || !metadataExpression.HasItemType)
+
+            if (offerItemTypes)
             {
-                priority = Priority + 300;
+                priority += 100;
 
                 // Item types defined in the project.
                 foreach (string itemType in projectDocument.MSBuildProject.ItemTypes)
@@ -247,7 +247,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                         continue;
 
                     yield return ItemTypeCompletionItem(itemType, replaceRangeLsp, priority,
-                        description: MSBuildSchemaHelp.ForItemType(itemType)
+                        description: MSBuildSchemaHelp.ForItemType(itemType) ?? "Item type declared in this project."
                     );
                 }
             }
@@ -279,7 +279,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 Kind = CompletionItemKind.Class,
                 Documentation = description,
                 FilterText = $"%({itemType}.)", // Trailing "." ensures the user can type "." to switch to qualified item metadata expression without breaking completion.
-                SortText = $"{priority ?? Priority}%({itemType})",
+                SortText = $"{priority ?? Priority:0000}%({itemType})",
                 TextEdit = new TextEdit
                 {
                     NewText = $"%({itemType}.)",
@@ -325,7 +325,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 Kind = CompletionItemKind.Field,
                 Documentation = description,
                 FilterText = $"%({metadataName})",
-                SortText = $"{priority ?? Priority}%({metadataName})",
+                SortText = $"{priority ?? Priority:0000}%({metadataName})",
                 TextEdit = new TextEdit
                 {
                     NewText = $"%({metadataName})",
@@ -362,7 +362,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 Label = $"%({itemType}.{metadataName})",
                 Documentation = description,
                 Kind = CompletionItemKind.Property,
-                SortText = $"{priority ?? Priority}%({itemType}.{metadataName})",
+                SortText = $"{priority ?? Priority:0000}%({itemType}.{metadataName})",
                 TextEdit = new TextEdit
                 {
                     NewText = $"%({itemType}.{metadataName})",

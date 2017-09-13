@@ -77,7 +77,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                     }
                     case XSWhitespace whitespace:
                     {
-                        return whitespace.Parent;
+                        return whitespace.ParentElement;
                     }
                     default:
                     {

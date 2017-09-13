@@ -24,7 +24,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (parent == null)
                 throw new ArgumentNullException(nameof(parent));
             
-            Parent = parent;
+            ParentElement = parent;
         }
 
         /// <summary>
@@ -40,7 +40,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <summary>
         ///     The <see cref="XSElement"/> that contains the whitespace.
         /// </summary>
-        public XSElement Parent { get; }
+        public XSElement ParentElement { get; }
 
         /// <summary>
         ///     Does the <see cref="XSNode"/> represent valid XML?

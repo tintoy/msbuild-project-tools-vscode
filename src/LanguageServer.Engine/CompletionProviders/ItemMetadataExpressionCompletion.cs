@@ -68,6 +68,8 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 if (!projectDocument.EnableExpressions)
                     return null;
 
+                // TODO: Check containing element (or element of containing attribute) to see whether we're in a location that permits unqualified metadata expressions.
+
                 ExpressionNode expression;
                 Range expressionRange;
                 if (!location.IsExpression(out expression, out expressionRange))
@@ -173,74 +175,79 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             if (!projectDocument.HasMSBuildProject)
                 yield break;
 
-            int priority = Priority + 300;
-
-            string itemType = metadataExpression.ItemType;
+            int priority;
+            string targetItemType = metadataExpression.ItemType;
             if (metadataExpression != null && metadataExpression.HasItemType)
             {
+                priority = Priority + 300;
+                
+                // Well-known item metadata (qualified).
+                yield return QualifiedMetadataCompletionItem(targetItemType, "FullPath", replaceRangeLsp, priority,
+                    description: "Contains the full path of the item."
+                );
+                yield return QualifiedMetadataCompletionItem(targetItemType, "RootDir", replaceRangeLsp, priority,
+                    description: "Contains the root directory of the item."
+                );
+                yield return QualifiedMetadataCompletionItem(targetItemType, "Filename", replaceRangeLsp, priority,
+                    description: "Contains the file name of the item, without the extension."
+                );
+                yield return QualifiedMetadataCompletionItem(targetItemType, "Extension", replaceRangeLsp, priority,
+                    description: "Contains the file name extension of the item."
+                );
+                yield return QualifiedMetadataCompletionItem(targetItemType, "RelativeDir", replaceRangeLsp, priority,
+                    description: "Contains the path specified in the Include attribute, up to the final slash or backslash."
+                );
+                yield return QualifiedMetadataCompletionItem(targetItemType, "Directory", replaceRangeLsp, priority,
+                    description: "Contains the directory of the item, without the root directory."
+                );
+                yield return QualifiedMetadataCompletionItem(targetItemType, "RecursiveDir", replaceRangeLsp, priority,
+                    description: "If the Include attribute contains the wildcard **, this metadata specifies the part of the path that replaces the wildcard."
+                );
+                yield return QualifiedMetadataCompletionItem(targetItemType, "Identity", replaceRangeLsp, priority,
+                    description: "The item specified in the Include attribute."
+                );
+                yield return QualifiedMetadataCompletionItem(targetItemType, "ModifiedTime", replaceRangeLsp, priority,
+                    description: "Contains the timestamp from the last time the item was modified."
+                );
+                yield return QualifiedMetadataCompletionItem(targetItemType, "CreatedTime", replaceRangeLsp, priority,
+                    description: "Contains the timestamp from the last time the item was created."
+                );
+                yield return QualifiedMetadataCompletionItem(targetItemType, "AccessedTime", replaceRangeLsp, priority,
+                    description: "Contains the timestamp from the last time the item was last accessed."
+                );
+
+                priority = Priority + 500;
+
                 // Qualified metadata for the current item type.
                 SortedSet<string> metadataNames = new SortedSet<string>(
-                    projectDocument.MSBuildProject.GetItems(itemType)
+                    projectDocument.MSBuildProject.GetItems(targetItemType)
                         .SelectMany(
                             item => item.Metadata.Select(metadata => metadata.Name)
                         )
                         .Where(
-                            metadataName => !MSBuildHelper.IsWellKnownItemMetadata(metadataName)
+                            metadataName => !MSBuildHelper.IsWellKnownItemMetadata(metadataName) && !MSBuildHelper.IsPrivateMetadata(metadataName)
                         )
                 );
 
                 foreach (string metadataName in metadataNames)
                 {
-                    yield return QualifiedMetadataCompletionItem(itemType, metadataName, replaceRangeLsp, priority,
-                        description: MSBuildSchemaHelp.ForItemMetadata(itemType, metadataName)
+                    yield return QualifiedMetadataCompletionItem(targetItemType, metadataName, replaceRangeLsp, priority,
+                        description: MSBuildSchemaHelp.ForItemMetadata(targetItemType, metadataName)
                     );
                 }
-
-                // Well-known item metadata (qualified).
-
-                priority = 500;
-
-                yield return QualifiedMetadataCompletionItem(itemType, "FullPath", replaceRangeLsp, priority,
-                    description: "Contains the full path of the item."
-                );
-                yield return QualifiedMetadataCompletionItem(itemType, "RootDir", replaceRangeLsp, priority,
-                    description: "Contains the root directory of the item."
-                );
-                yield return QualifiedMetadataCompletionItem(itemType, "Filename", replaceRangeLsp, priority,
-                    description: "Contains the file name of the item, without the extension."
-                );
-                yield return QualifiedMetadataCompletionItem(itemType, "Extension", replaceRangeLsp, priority,
-                    description: "Contains the file name extension of the item."
-                );
-                yield return QualifiedMetadataCompletionItem(itemType, "RelativeDir", replaceRangeLsp, priority,
-                    description: "Contains the path specified in the Include attribute, up to the final slash or backslash."
-                );
-                yield return QualifiedMetadataCompletionItem(itemType, "Directory", replaceRangeLsp, priority,
-                    description: "Contains the directory of the item, without the root directory."
-                );
-                yield return QualifiedMetadataCompletionItem(itemType, "RecursiveDir", replaceRangeLsp, priority,
-                    description: "If the Include attribute contains the wildcard **, this metadata specifies the part of the path that replaces the wildcard."
-                );
-                yield return QualifiedMetadataCompletionItem(itemType, "Identity", replaceRangeLsp, priority,
-                    description: "The item specified in the Include attribute."
-                );
-                yield return QualifiedMetadataCompletionItem(itemType, "ModifiedTime", replaceRangeLsp, priority,
-                    description: "Contains the timestamp from the last time the item was modified."
-                );
-                yield return QualifiedMetadataCompletionItem(itemType, "CreatedTime", replaceRangeLsp, priority,
-                    description: "Contains the timestamp from the last time the item was created."
-                );
-                yield return QualifiedMetadataCompletionItem(itemType, "AccessedTime", replaceRangeLsp, priority,
-                    description: "Contains the timestamp from the last time the item was last accessed."
-                );
             }
             else if (metadataExpression == null || !metadataExpression.HasItemType)
             {
+                priority = Priority + 300;
+
                 // Item types defined in the project.
-                foreach (string definedItemType in projectDocument.MSBuildProject.ItemTypes)
+                foreach (string itemType in projectDocument.MSBuildProject.ItemTypes)
                 {
-                    yield return ItemTypeCompletionItem(definedItemType, replaceRangeLsp, priority,
-                        description: MSBuildSchemaHelp.ForItemType(definedItemType)
+                    if (MSBuildHelper.IsPrivateItemType(itemType))
+                        continue;
+
+                    yield return ItemTypeCompletionItem(itemType, replaceRangeLsp, priority,
+                        description: MSBuildSchemaHelp.ForItemType(itemType)
                     );
                 }
             }
@@ -281,14 +288,13 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 Command = new Command
                 {
                     // Move back inside the parentheses so they can continue completion.
-                    // TODO: Replace this with custom extension command to first invoke "cursorMove", then "editor.action.triggerSuggest".
-                    Name = "cursorMove",
-                    Arguments = new Lsp.ObjectContainer(new
+                    Name = "msbuildProjectTools.internal.moveAndSuggest",
+                    Arguments = new object[]
                     {
-                        value = 1,
-                        to = "left",
-                        by = "character"
-                    })
+                        "left",      // moveTo
+                        "character", // moveBy
+                        1            // moveCount
+                    }
                 }
             };
         }

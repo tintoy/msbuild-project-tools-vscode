@@ -127,6 +127,39 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         }
 
         /// <summary>
+        ///     Does the specified property name represent a private property?
+        /// </summary>
+        /// <param name="propertyName">
+        ///     The property name.
+        /// </param>
+        /// <returns>
+        ///     <c>true</c>, if the property name starts with an underscore; otherwise, <c>false</c>.
+        /// </returns>
+        public static bool IsPrivateProperty(string propertyName) => propertyName?.StartsWith("_") ?? false;
+
+        /// <summary>
+        ///     Does the specified metadata name represent a private property?
+        /// </summary>
+        /// <param name="metadataName">
+        ///     The metadata name.
+        /// </param>
+        /// <returns>
+        ///     <c>true</c>, if the metadata name starts with an underscore; otherwise, <c>false</c>.
+        /// </returns>
+        public static bool IsPrivateMetadata(string metadataName) => metadataName?.StartsWith("_") ?? false;
+
+        /// <summary>
+        ///     Does the specified item type represent a private property?
+        /// </summary>
+        /// <param name="itemType">
+        ///     The item type.
+        /// </param>
+        /// <returns>
+        ///     <c>true</c>, if the item type starts with an underscore; otherwise, <c>false</c>.
+        /// </returns>
+        public static bool IsPrivateItemType(string itemType) => itemType?.StartsWith("_") ?? false;
+
+        /// <summary>
         ///     Determine whether the specified metadata name represents well-known (built-in) item metadata.
         /// </summary>
         /// <param name="metadataName">

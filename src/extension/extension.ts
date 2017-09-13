@@ -11,6 +11,7 @@ import * as dotnet from './utils/dotnet';
 import * as executables from './utils/executables';
 import { PackageReferenceCompletionProvider, getNuGetV3AutoCompleteEndPoints } from './providers/package-reference-completion';
 import { handleBusyNotifications } from './notifications';
+import { registerInternalCommands } from './internal-commands';
 
 /**
  * Enable the MSBuild language service?
@@ -70,6 +71,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             await loadConfiguration();
         })
     );
+
+    registerInternalCommands(context);
 }
 
 /**
@@ -296,6 +299,9 @@ function handleExpressionAutoClose(): vscode.Disposable
         const contentChange = args.contentChanges[0];
         if (contentChange.text === '(')
         {
+            if (isOriginPosition(contentChange.range.start))
+                return; // We're at the start of the document; no previous character to check.
+
             const range = contentChange.range.with(
                 contentChange.range.start.translate(0, -1),
                 contentChange.range.end.translate(0, 1)
@@ -322,12 +328,21 @@ function handleExpressionAutoClose(): vscode.Disposable
                 edit => edit.replace(range, closedExpression)
             );
 
-            // Move between the parentheses.
-            const completionPosition = vscode.window.activeTextEditor.selection.start;
-            vscode.window.activeTextEditor.selection = new vscode.Selection(completionPosition, completionPosition);
-
-            // Trigger completion.
-            const result = await vscode.commands.executeCommand('editor.action.triggerSuggest');
+            // Move between the parentheses and trigger completion.
+            await vscode.commands.executeCommand('msbuildProjectTools.internal.moveAndSuggest',
+                'left',      // moveTo
+                'character', // moveBy
+                1            // moveCount
+            );
         }
     });
+}
+
+/**
+ * Determine whether the specified {@link vscode.Position} represents the origin position.
+ * 
+ * @param position The {@link vscode.Position} to examine.
+ */
+function isOriginPosition(position: vscode.Position): boolean {
+    return position.line === 0 && position.character === 0;
 }

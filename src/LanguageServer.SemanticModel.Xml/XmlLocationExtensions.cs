@@ -64,6 +64,35 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="location">
         ///     The XML location.
         /// </param>
+        /// <param name="whitespace">
+        ///     Receives the <see cref="XSWhitespace"/> (if any) at the location.
+        /// </param>
+        /// <returns>
+        ///     <c>true</c>, if the location represents whitespace within element content; otherwise, <c>false</c>.
+        /// </returns>
+        public static bool IsWhitespace(this XmlLocation location, out XSWhitespace whitespace)
+        {
+            if (location == null)
+                throw new ArgumentNullException(nameof(location));
+
+            if (location.IsWhitespace())
+            {
+                whitespace = (XSWhitespace)location.Node;
+
+                return true;
+            }
+
+            whitespace = null;
+
+            return false;
+        }
+
+        /// <summary>
+        ///     Does the location represent whitespace?
+        /// </summary>
+        /// <param name="location">
+        ///     The XML location.
+        /// </param>
         /// <returns>
         ///     <c>true</c>, if the location represents whitespace within element content; otherwise, <c>false</c>.
         /// </returns>

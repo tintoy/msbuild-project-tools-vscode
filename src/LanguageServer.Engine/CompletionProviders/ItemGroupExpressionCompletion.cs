@@ -67,21 +67,11 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 if (!projectDocument.EnableExpressions)
                     return null;
 
-                XSElementText text;
-                if (!location.IsElementText(out text))
-                {
-                    Log.Verbose("Not offering any completions for {XmlLocation:l} (not in element text).", location);
-
-                    return null;
-                }
-
                 ExpressionNode expression;
                 Range expressionRange;
-            
-                (expression, expressionRange) = projectDocument.GetMSBuildExpressionAtPosition(location.Position);
-                if (expression == null)
+                if (!location.IsExpression(out expression, out expressionRange))
                 {
-                    Log.Verbose("Not offering any completions for {XmlLocation:l} (not on a valid MSBuild expression).", location);
+                    Log.Verbose("Not offering any completions for {XmlLocation:l} (not on an expression or a location where an expression can be added).", location);
 
                     return null;
                 }

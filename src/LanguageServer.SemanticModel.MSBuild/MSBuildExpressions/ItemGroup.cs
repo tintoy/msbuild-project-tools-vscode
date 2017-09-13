@@ -7,7 +7,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
     ///     Represents an MSBuild item group expression.
     /// </summary>
     public class ItemGroup
-        : ExpressionNode, IPositionAware<ItemGroup>
+        : ExpressionContainerNode, IPositionAware<ItemGroup>
     {
         /// <summary>
         ///     Create a new <see cref="ItemGroup"/>.
@@ -19,7 +19,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <summary>
         ///     The item group name.
         /// </summary>
-        public string Name { get; internal set; }
+        public string Name => GetChild<Symbol>(0).Name;
 
         /// <summary>
         ///     Is the item group expression valid?

@@ -49,11 +49,13 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
             ///     Parse a simple MSBuild list's leading item separator.
             /// </summary>
             public static readonly Parser<IEnumerable<ExpressionNode>> LeadingSeparator =
+                from leadingEmptyItem in
+                    Parse.Return(new SimpleListItem
+                    {
+                        Value = String.Empty
+                    })
+                    .Positioned()
                 from separator in Separator.Once()
-                let leadingEmptyItem = new SimpleListItem
-                {
-                    Value = String.Empty
-                }
                 select leadingEmptyItem.ToSequence().Concat<ExpressionNode>(separator);
 
             /// <summary>
@@ -151,6 +153,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
                     .Or(Symbol)
                     .Or(Evaluation)
                     .Or(ItemGroup)
+                    .Or(ItemMetadata)
                     .Named("function argument");
 
             /// <summary>
@@ -253,11 +256,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// </remarks>
         public static Parser<ItemGroup> ItemGroup = Parse.Positioned(
             from evalOpen in Tokens.ItemGroupOpen.Named("open item group")
-            from name in Tokens.Identifier.Token().Optional().Named("item group name")
+            from name in Symbol.Or(EmptySymbol).Token().Named("item group name")
             from evalClose in Tokens.ItemGroupClose.Named("close item group")
             select new ItemGroup
             {
-                Name = name.IsDefined ? name.Get() : String.Empty
+                Children = ImmutableList.Create<ExpressionNode>(name)
             }
         ).Named("item group");
 
@@ -268,11 +271,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ///     The symbols between the parentheses are optional so we can still provide completions for "%()".
         /// </remarks>
         public static Parser<ItemMetadata> ItemMetadata = Parse.Positioned(
-            from evalOpen in Tokens.ItemGroupOpen.Named("open item metadata")
+            from evalOpen in Tokens.ItemMetadataOpen.Named("open item metadata")
             from itemTypeOrMetadataName in Symbol.Token().Optional().Named("item type or metadata name")
-            from separator in Tokens.Period.Token().Optional().Named("item type separator")
+            from separator in Tokens.Period.Token().Optional().Named("item type separator") // TODO: Refactor to use something like QualifiedOneLevelSymbol parser (Symbol with name and namespace, but namespace contains only a single segment, no other "."s).
             from metadataName in Symbol.Token().Optional().Named("item metadata name")
-            from evalClose in Tokens.ItemGroupClose.Named("close item metadata")
+            from evalClose in Tokens.ItemMetadataClose.Named("close item metadata")
             select new ItemMetadata
             {
                 Children = ImmutableList.CreateRange<ExpressionNode>(
@@ -316,6 +319,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
                 SingleQuotedStringContent.As<ExpressionNode>()
                     .Or(Evaluation)
                     .Or(ItemGroup)
+                    .Or(ItemMetadata)
                     .Many()
                     .Named("quoted string content")
             from trailingQuote in Tokens.SingleQuote.Named("close quoted string")
@@ -335,6 +339,17 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
                 Name = identifier
             }
         ).Named("symbol");
+
+        /// <summary>
+        ///     Parse an empty symbol in an MSBuild expression.
+        /// </summary>
+        public static readonly Parser<Symbol> EmptySymbol =
+            Parse.Return(new Symbol
+            {
+                Name = String.Empty
+            })
+            .Positioned()
+            .Named("empty symbol");
 
         /// <summary>
         ///     Parse a symbol in an MSBuild expression.
@@ -432,6 +447,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
                 .Or(Comparison)
                 .Or(Evaluation)
                 .Or(ItemGroup)
+                .Or(ItemMetadata)
                 .Or(QuotedString)
                 .Or(Symbol)
         );
@@ -477,6 +493,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
                 .Or(QuotedString)
                 .Or(Evaluation)
                 .Or(ItemGroup)
+                .Or(ItemMetadata)
                 .Or(Symbol);
 
         /// <summary>

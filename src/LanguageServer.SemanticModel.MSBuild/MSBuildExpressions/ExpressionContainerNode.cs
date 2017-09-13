@@ -1,4 +1,4 @@
-﻿using Sprache;
+using Sprache;
 using System.Collections.Immutable;
 using System;
 

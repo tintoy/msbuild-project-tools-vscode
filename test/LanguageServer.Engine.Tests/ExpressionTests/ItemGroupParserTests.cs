@@ -41,6 +41,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         /// <param name="expectedItemGroupName">
         ///     The expected symbol name.
         /// </param>
+        [InlineData("@()",      ""   )]
         [InlineData("@(Foo)",   "Foo")]
         [InlineData("@( Foo )", "Foo")]
         [InlineData("@( Foo)",  "Foo")]

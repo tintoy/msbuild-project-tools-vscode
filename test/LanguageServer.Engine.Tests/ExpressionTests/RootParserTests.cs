@@ -56,7 +56,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         [InlineData("ABC!=XYZ", ComparisonKind.Inequality, "ABC", "XYZ")]
         [InlineData("ABC != XYZ", ComparisonKind.Inequality, "ABC", "XYZ")]
         [Theory(DisplayName = "Root parser succeeds with symbols ")]
-        public void ParseRoot_Comparison_Symbols_Success(string input, ComparisonKind expectedComparisonKind, string expectedLeftSymbol, string expectedRightSymbol)
+        public void Parse_Comparison_Symbols_Success(string input, ComparisonKind expectedComparisonKind, string expectedLeftSymbol, string expectedRightSymbol)
         {
             AssertParser.SucceedsWith(Parsers.Root, input, actualRoot =>
             {
@@ -100,7 +100,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         [InlineData("(! (('ABC' != 'DEF')))",   ExpressionKind.Logical     )]
         [InlineData("ABC And (! (DEF Or GHI))", ExpressionKind.Logical     )]
         [Theory(DisplayName = "Root parser succeeds with expression kind ")]
-        public void ParseRoot_Logical_Success(string input, ExpressionKind expectedRootExpressionKind)
+        public void Parse_Logical_Success(string input, ExpressionKind expectedRootExpressionKind)
         {
             AssertParser.SucceedsWith(Parsers.Root, input, actualRoot =>
             {
@@ -131,7 +131,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         [InlineData("'ABC'!='XYZ'", ComparisonKind.Inequality, "ABC", "XYZ")]
         [InlineData("'ABC' != 'XYZ'", ComparisonKind.Inequality, "ABC", "XYZ")]
         [Theory(DisplayName = "Root parser succeeds with quoted strings ")]
-        public void ParseRoot_QuotedStrings_Success(string input, ComparisonKind expectedComparisonKind, string expectedLeftContent, string expectedRightContent)
+        public void Parse_QuotedStrings_Success(string input, ComparisonKind expectedComparisonKind, string expectedLeftContent, string expectedRightContent)
         {
             AssertParser.SucceedsWith(Parsers.Root, input, actualRoot =>
             {
@@ -175,6 +175,12 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         [InlineData("ABC And DEF",                         08, ExpressionKind.Symbol,       ExpressionKind.Logical     )]
         [InlineData("$(ABC)",                              00, ExpressionKind.Evaluate,     ExpressionKind.Root        )]
         [InlineData("$(ABC)",                              02, ExpressionKind.Symbol,       ExpressionKind.Evaluate    )]
+        [InlineData("@(ABC)",                              02, ExpressionKind.Symbol,       ExpressionKind.ItemGroup   )]
+        [InlineData("%(ABC)",                              02, ExpressionKind.Symbol,       ExpressionKind.ItemMetadata)]
+        [InlineData("%(ABC.DEF)",                          02, ExpressionKind.Symbol,       ExpressionKind.ItemMetadata)]
+        [InlineData("%(ABC.DEF)",                          05, ExpressionKind.ItemMetadata, ExpressionKind.Root        )]
+        [InlineData("%(ABC.DEF)",                          06, ExpressionKind.Symbol,       ExpressionKind.ItemMetadata)]
+        [InlineData("%(ABC.DEF)",                          07, ExpressionKind.Symbol,       ExpressionKind.ItemMetadata)]
         [InlineData("'ABC'",                               00, ExpressionKind.QuotedString, ExpressionKind.Root        )]
         [InlineData("'ABC' != 'DEF'",                      00, ExpressionKind.QuotedString, ExpressionKind.Compare     )]
         [InlineData(" '$(YetAnotherProperty)' == 'true' ", 01, ExpressionKind.QuotedString, ExpressionKind.Compare     )]

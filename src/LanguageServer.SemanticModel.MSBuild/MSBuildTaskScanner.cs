@@ -37,6 +37,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             ProcessStartInfo scannerStartInfo = new ProcessStartInfo("dotnet")
             {
                 Arguments = $"\"{reflectorAssemblyPath}\" \"{taskAssemblyPath}\"",
+                CreateNoWindow = true,
                 UseShellExecute = false,
                 RedirectStandardOutput = true
             };

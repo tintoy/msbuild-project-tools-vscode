@@ -10,9 +10,12 @@ using System.Threading.Tasks;
 using System.Linq;
 using System.Threading;
 using System.IO;
+using System.Reactive.Disposables;
 
 namespace MSBuildProjectTools.LanguageServer.Handlers
 {
+    using Utilities;
+
     /// <summary>
     ///     The base class for language server event handlers.
     /// </summary>
@@ -48,7 +51,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         protected ILanguageServer Server { get; }
 
         /// <summary>
-        ///     Add log context for an operation.
+        ///     Add an activity / log-context scope for an operation.
         /// </summary>
         /// <param name="operationName">
         ///     The operation name.
@@ -61,7 +64,10 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             if (String.IsNullOrWhiteSpace(operationName))
                 throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'operationName'.", nameof(operationName));
             
-            return Serilog.Context.LogContext.PushProperty("Operation", operationName);
+            return new CompositeDisposable(
+                ActivityCorrelationManager.BeginActivityScope(),
+                Serilog.Context.LogContext.PushProperty("Operation", operationName)
+            );
         }
     }
 }

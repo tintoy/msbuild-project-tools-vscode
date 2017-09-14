@@ -12,6 +12,7 @@ namespace MSBuildProjectTools.LanguageServer
     using Documents;
     using Handlers;
     using Logging;
+    using Utilities;
 
     /// <summary>
     ///     The MSBuild language server.
@@ -52,6 +53,7 @@ namespace MSBuildProjectTools.LanguageServer
         /// </returns>
         static async Task AsyncMain()
         {
+            using (ActivityCorrelationManager.BeginActivityScope())
             using (IContainer container = BuildContainer())
             {
                 var server = container.Resolve<Lsp.LanguageServer>();

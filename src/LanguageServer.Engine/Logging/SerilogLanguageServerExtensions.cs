@@ -8,9 +8,9 @@ namespace MSBuildProjectTools.LanguageServer.Logging
     using Handlers;
 
     /// <summary>
-    ///     Extension methods for configuring Serilog to log to a language server.
+    ///     Extension methods for configuring Serilog.
     /// </summary>
-    public static class LoggerConfigurationLanguageServerExtensions
+    public static class SerilogLanguageServerExtensions
     {
         /// <summary>
         ///     Write log events to the language server logging facility.
@@ -41,6 +41,23 @@ namespace MSBuildProjectTools.LanguageServer.Logging
             return loggerSinkConfiguration.Sink(
                 new LanguageServerLoggingSink(languageServer, levelSwitch)
             );
+        }
+
+        /// <summary>
+        ///     Enrich log events with the current logical activity Id (if any).
+        /// </summary>
+        /// <param name="loggerEnrichmentConfiguration">
+        ///     The logger enrichment configuration.
+        /// </param>
+        /// <returns>
+        ///     The logger configuration.
+        /// </returns>
+        public static LoggerConfiguration WithCurrentActivityId(this LoggerEnrichmentConfiguration loggerEnrichmentConfiguration)
+        {
+            if (loggerEnrichmentConfiguration == null)
+                throw new ArgumentNullException(nameof(loggerEnrichmentConfiguration));
+            
+            return loggerEnrichmentConfiguration.With<ActivityIdEnricher>();
         }
     }
 }

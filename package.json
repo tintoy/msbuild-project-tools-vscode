@@ -76,6 +76,12 @@
                                     "default": false,
                                     "description": "Disable tooltips when hovering on XML in MSBuild project files?"
                                 },
+                                "logFile": {
+                                    "title": "Language service log file.",
+                                    "type": "string",
+                                    "default": null,
+                                    "description": "If specified, the language service will log to this file."
+                                },
                                 "logLevel": {
                                     "title": "Language service logging level.",
                                     "type": "string",
@@ -99,12 +105,12 @@
                                             "description": "The URL of the Seq server (Seq logging will be enabled if this is specified)."
                                         },
                                         "apiKey": {
-                                            "type":"string",
+                                            "type": "string",
                                             "default": null,
                                             "description": "The API key (if any) to use when authenticating to Seq."
                                         },
                                         "logLevel": {
-                                            "type":"string",
+                                            "type": "string",
                                             "enum": [
                                                 "Error",
                                                 "Warning",
@@ -142,7 +148,7 @@
                                     "description": "Types of objects defined in the current project to include when offering completions."
                                 },
                                 "experimentalFeatures": {
-                                    "type":"array",
+                                    "type": "array",
                                     "items": {
                                         "type": "string"
                                     },
@@ -175,18 +181,16 @@
                 }
             }
         },
-        "snippets": [
-            {
+        "snippets": [{
                 "language": "msbuild",
                 "path": "./snippets/msbuild-project.json"
             },
             {
                 "language": "xml",
                 "path": "./snippets/msbuild-project.json"
-            }            
+            }
         ],
-        "grammars": [
-            {
+        "grammars": [{
                 "scopeName": "text.xml.msbuild.expression",
                 "injectTo": [
                     "text.xml.msbuild"
@@ -199,20 +203,18 @@
                 "path": "./syntaxes/msbuild.json"
             }
         ],
-        "languages": [
-            {
-                "id": "msbuild",
-                "aliases": [
-                    "MSBuild"
-                ],
-                "extensions": [
-                    "csproj",
-                    "props",
-                    "targets"
-                ],
-                "configuration": "./language-configuration.json"
-            }
-        ]
+        "languages": [{
+            "id": "msbuild",
+            "aliases": [
+                "MSBuild"
+            ],
+            "extensions": [
+                "csproj",
+                "props",
+                "targets"
+            ],
+            "configuration": "./language-configuration.json"
+        }]
     },
     "scripts": {
         "vscode:prepublish": "tsc -p ./",

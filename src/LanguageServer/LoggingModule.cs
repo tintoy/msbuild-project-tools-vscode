@@ -1,5 +1,6 @@
 using Autofac;
 using Serilog;
+using Serilog.Events;
 using System;
 
 namespace MSBuildProjectTools.LanguageServer
@@ -71,6 +72,7 @@ namespace MSBuildProjectTools.LanguageServer
             {
                 loggerConfiguration = loggerConfiguration.WriteTo.File(
                     path: logFilePath,
+                    restrictedToMinimumLevel: LogEventLevel.Verbose,
                     outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}/{Operation}] {Message}{NewLine}{Exception}",
                     flushToDiskInterval: TimeSpan.FromSeconds(1)
                 );

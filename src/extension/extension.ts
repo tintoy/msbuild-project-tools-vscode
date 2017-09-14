@@ -13,14 +13,14 @@ import { PackageReferenceCompletionProvider, getNuGetV3AutoCompleteEndPoints } f
 import { handleBusyNotifications } from './notifications';
 import { registerInternalCommands } from './internal-commands';
 
-/**
- * Enable the MSBuild language service?
- */
 let configuration: Settings;
 let legacySettingsPresent = false;
+let languageClient: LanguageClient;
 let statusBarItem: vscode.StatusBarItem;
 let outputChannel: vscode.OutputChannel;
+
 const featureFlags = new Set<string>();
+const languageServerEnvironment = Object.assign({}, process.env);
 
 /**
  * Called when the extension is activated.
@@ -131,6 +131,11 @@ interface LanguageSettings {
      * Enable the language service?
      */
     enable: boolean;
+
+    /**
+     * The log file (if any) that the language service should log to.
+     */
+    logFile?: string;
 
     /**
      * Enable verbose tracing of messages between the language client and language service?
@@ -248,11 +253,14 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
         revealOutputChannelOn: RevealOutputChannelOn.Error
     };
 
-    const serverEnvironment = {};
     const seqLoggingSettings = configuration.language.seqLogging;
     if (seqLoggingSettings && seqLoggingSettings.url) {
-        serverEnvironment['MSBUILD_PROJECT_TOOLS_SEQ_URL'] = configuration.language.seqLogging.url;
-        serverEnvironment['MSBUILD_PROJECT_TOOLS_SEQ_API_KEY'] = configuration.language.seqLogging.apiKey;
+        languageServerEnvironment['MSBUILD_PROJECT_TOOLS_SEQ_URL'] = configuration.language.seqLogging.url;
+        languageServerEnvironment['MSBUILD_PROJECT_TOOLS_SEQ_API_KEY'] = configuration.language.seqLogging.apiKey;
+    }
+
+    if (configuration.language.logFile) {
+        languageServerEnvironment['MSBUILD_PROJECT_TOOLS_LOG_FILE'] = configuration.language.logFile;
     }
 
     const dotNetExecutable = await executables.find('dotnet');
@@ -261,11 +269,11 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
         command: dotNetExecutable,
         args: [ serverAssembly ],
         options: {
-            env: Object.assign({}, process.env, serverEnvironment)
+            env: languageServerEnvironment
         }
     };
 
-    let languageClient = new LanguageClient('MSBuild Project Tools', serverOptions, clientOptions);
+    languageClient = new LanguageClient('MSBuild Project Tools', serverOptions, clientOptions);
     if (configuration.language.trace)
         languageClient.trace = Trace.Verbose;
 

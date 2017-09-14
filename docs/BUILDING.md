@@ -11,7 +11,7 @@ To build:
 
 1. `npm install`
 2. `dotnet restore`
-3. `dotnet publish src/LanguageServer/LanguageServer.Host.csproj -o $PWD/out/language-server`
+3. `dotnet publish src/LanguageServer/LanguageServer.csproj -o $PWD/out/language-server`
 
 To debug:
 

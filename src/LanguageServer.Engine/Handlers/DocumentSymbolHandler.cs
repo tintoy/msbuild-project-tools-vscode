@@ -216,15 +216,18 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             if (parameters == null)
                 throw new ArgumentNullException(nameof(parameters));
             
-            try
+            using (BeginOperation("OnDocumentSymbols"))
             {
-                return await OnDocumentSymbols(parameters, cancellationToken);
-            }
-            catch (Exception unexpectedError)
-            {
-                Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDocumentSymbols");
+                try
+                {
+                    return await OnDocumentSymbols(parameters, cancellationToken);
+                }
+                catch (Exception unexpectedError)
+                {
+                    Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDocumentSymbols");
 
-                return null;
+                    return null;
+                }
             }
         }
 

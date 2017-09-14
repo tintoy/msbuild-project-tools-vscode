@@ -104,13 +104,16 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             if (parameters == null)
                 throw new ArgumentNullException(nameof(parameters));
             
-            try
+            using (BeginOperation("OnDidChangeConfiguration"))
             {
-                await OnDidChangeConfiguration(parameters);
-            }
-            catch (Exception unexpectedError)
-            {
-                Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDidChangeConfiguration");
+                try
+                {
+                    await OnDidChangeConfiguration(parameters);
+                }
+                catch (Exception unexpectedError)
+                {
+                    Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDidChangeConfiguration");
+                }
             }
         }
 
@@ -123,6 +126,23 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         object IRegistration<object>.GetRegistrationOptions()
         {
             return null;
+        }
+
+        /// <summary>
+        ///     Add log context for an operation.
+        /// </summary>
+        /// <param name="operationName">
+        ///     The operation name.
+        /// </param>
+        /// <returns>
+        ///     An <see cref="IDisposable"/> representing the log-context scope.
+        /// </returns>
+        IDisposable BeginOperation(string operationName)
+        {
+            if (String.IsNullOrWhiteSpace(operationName))
+                throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'operationName'.", nameof(operationName));
+            
+            return Serilog.Context.LogContext.PushProperty("Operation", operationName);
         }
     }
 }

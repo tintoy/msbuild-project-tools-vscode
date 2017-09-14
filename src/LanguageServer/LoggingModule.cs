@@ -67,7 +67,19 @@ namespace MSBuildProjectTools.LanguageServer
                 );
             }
 
+            string logFilePath = Environment.GetEnvironmentVariable("MSBUILD_PROJECT_TOOLS_LOG_FILE");
+            if (!String.IsNullOrWhiteSpace(logFilePath))
+            {
+                loggerConfiguration = loggerConfiguration.WriteTo.File(
+                    path: logFilePath,
+                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}/{Operation}] {Message}{NewLine}{Exception}",
+                    flushToDiskInterval: TimeSpan.FromSeconds(1)
+                );
+            }
+
             ILogger logger = loggerConfiguration.CreateLogger();
+            
+            Log.CloseAndFlush();
             Log.Logger = logger;
 
             return logger;

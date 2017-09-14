@@ -357,13 +357,16 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             if (parameters == null)
                 throw new ArgumentNullException(nameof(parameters));
             
-            try
+            using (BeginOperation("OnDidOpenTextDocument"))
             {
-                await OnDidOpenTextDocument(parameters);
-            }
-            catch (Exception unexpectedError)
-            {
-                Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDidOpenTextDocument");
+                try
+                {
+                    await OnDidOpenTextDocument(parameters);
+                }
+                catch (Exception unexpectedError)
+                {
+                    Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDidOpenTextDocument");
+                }
             }
         }
 
@@ -381,13 +384,16 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             if (parameters == null)
                 throw new ArgumentNullException(nameof(parameters));
 
-            try
+            using (BeginOperation("OnDidCloseTextDocument"))
             {
-                await OnDidCloseTextDocument(parameters);
-            }
-            catch (Exception unexpectedError)
-            {
-                Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDidCloseTextDocument");
+                try
+                {
+                    await OnDidCloseTextDocument(parameters);
+                }
+                catch (Exception unexpectedError)
+                {
+                    Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDidCloseTextDocument");
+                }
             }
         }
 
@@ -405,13 +411,16 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             if (parameters == null)
                 throw new ArgumentNullException(nameof(parameters));
 
-            try
+            using (BeginOperation("OnDidChangeTextDocument"))
             {
-                await OnDidChangeTextDocument(parameters);
-            }
-            catch (Exception unexpectedError)
-            {
-                Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDidChangeTextDocument");
+                try
+                {
+                    await OnDidChangeTextDocument(parameters);
+                }
+                catch (Exception unexpectedError)
+                {
+                    Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDidChangeTextDocument");
+                }
             }
         }
 
@@ -429,13 +438,16 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             if (parameters == null)
                 throw new ArgumentNullException(nameof(parameters));
 
-            try
+            using (BeginOperation("OnDidSaveTextDocument"))
             {
-                await OnDidSaveTextDocument(parameters);
-            }
-            catch (Exception unexpectedError)
-            {
-                Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDidSaveTextDocument");
+                try
+                {
+                    await OnDidSaveTextDocument(parameters);
+                }
+                catch (Exception unexpectedError)
+                {
+                    Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDidSaveTextDocument");
+                }
             }
         }
 

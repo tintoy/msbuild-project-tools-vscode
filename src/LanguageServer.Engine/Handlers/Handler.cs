@@ -45,6 +45,23 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <summary>
         ///     The language server.
         /// </summary>
-        protected ILanguageServer Server { get; }      
+        protected ILanguageServer Server { get; }
+
+        /// <summary>
+        ///     Add log context for an operation.
+        /// </summary>
+        /// <param name="operationName">
+        ///     The operation name.
+        /// </param>
+        /// <returns>
+        ///     An <see cref="IDisposable"/> representing the log-context scope.
+        /// </returns>
+        protected IDisposable BeginOperation(string operationName)
+        {
+            if (String.IsNullOrWhiteSpace(operationName))
+                throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'operationName'.", nameof(operationName));
+            
+            return Serilog.Context.LogContext.PushProperty("Operation", operationName);
+        }
     }
 }

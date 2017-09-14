@@ -29,6 +29,8 @@ namespace MSBuildProjectTools.LanguageServer
 
             try
             {
+                ConfigureLogging();
+
                 AsyncMain().Wait();
             }
             catch (AggregateException aggregateError)
@@ -52,12 +54,18 @@ namespace MSBuildProjectTools.LanguageServer
         /// </returns>
         static async Task AsyncMain()
         {
+            Log.Verbose("Initialising components...");
+
             using (IContainer container = BuildContainer())
             {
                 var server = container.Resolve<Lsp.LanguageServer>();
 
+                Log.Verbose("Language server started.");
+
                 await server.Initialize();
                 await server.WasShutDown;
+
+                Log.Verbose("Language server has shut down.");
             }
         }
 
@@ -75,6 +83,26 @@ namespace MSBuildProjectTools.LanguageServer
             builder.RegisterModule<LanguageServerModule>();
 
             return builder.Build();
+        }
+
+        /// <summary>
+        ///     Configure logging-to-file (if required) for use before the language server has started.
+        /// </summary>
+        static void ConfigureLogging()
+        {
+            string logFilePath = Environment.GetEnvironmentVariable("MSBUILD_PROJECT_TOOLS_LOG_FILE");
+            if (!String.IsNullOrWhiteSpace(logFilePath))
+            {
+                Log.Logger = new LoggerConfiguration()
+                    .MinimumLevel.Verbose()
+                    .Enrich.FromLogContext()
+                    .WriteTo.File(
+                        path: logFilePath,
+                        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}/{Operation}] {Message}{NewLine}{Exception}",
+                        flushToDiskInterval: TimeSpan.FromSeconds(1)
+                    )
+                    .CreateLogger();
+            }
         }
     }
 }

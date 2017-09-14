@@ -173,15 +173,18 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             if (parameters == null)
                 throw new ArgumentNullException(nameof(parameters));
 
-            try
+            using (BeginOperation("OnDefinition"))
             {
-                return await OnDefinition(parameters, cancellationToken);
-            }
-            catch (Exception unexpectedError)
-            {
-                Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDefinition");
+                try
+                {
+                    return await OnDefinition(parameters, cancellationToken);
+                }
+                catch (Exception unexpectedError)
+                {
+                    Log.Error(unexpectedError, "Unhandled exception in {Method:l}.", "OnDefinition");
 
-                return null;
+                    return null;
+                }
             }
         }
 

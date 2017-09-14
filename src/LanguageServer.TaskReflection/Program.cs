@@ -52,6 +52,8 @@ namespace MSBuildProjectTools.LanguageServer.TaskReflection
 
             try
             {
+                // TODO: Consider looking for IntelliDoc XML file to resolve help for tasks and task parameters.
+
                 FileInfo tasksAssemblyFile = new FileInfo(args[0]);
                 if (!tasksAssemblyFile.Exists)
                 {
@@ -181,10 +183,21 @@ namespace MSBuildProjectTools.LanguageServer.TaskReflection
         {
             string message = formatArgs.Length > 0 ? String.Format(messageOrFormat, formatArgs) : messageOrFormat;
 
-            Console.WriteLine(JsonConvert.ToString(new
+            using (StringWriter output = new StringWriter())
+            using (JsonTextWriter jsonWriter = new JsonTextWriter(output))
             {
-                Message = message
-            }));
+                jsonWriter.Formatting = Formatting.Indented;
+
+                jsonWriter.WriteStartObject();
+                {
+                    jsonWriter.WritePropertyName("Message");
+                    jsonWriter.WriteValue(message);
+                }
+                jsonWriter.WriteEndObject();
+
+                jsonWriter.Flush();
+                Console.WriteLine(output);
+            }
         }
     }
 }

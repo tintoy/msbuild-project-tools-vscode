@@ -255,8 +255,6 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
         serverEnvironment['MSBUILD_PROJECT_TOOLS_SEQ_API_KEY'] = configuration.language.seqLogging.apiKey;
     }
 
-    serverEnvironment['MSBUILD_PROJECT_TOOLS_LOG_FILE'] = 'D:\\Stage\\LanguageService.log';
-
     const dotNetExecutable = await executables.find('dotnet');
     const serverAssembly = context.asAbsolutePath('out/language-server/MSBuildProjectTools.LanguageServer.Host.dll');
     const serverOptions: ServerOptions = {

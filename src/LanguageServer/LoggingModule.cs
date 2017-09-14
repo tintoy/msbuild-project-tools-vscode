@@ -56,8 +56,7 @@ namespace MSBuildProjectTools.LanguageServer
 
             var loggerConfiguration = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
-                .Enrich.FromLogContext()
-                .WriteTo.LanguageServer(languageServer, configuration.LogLevelSwitch);
+                .Enrich.FromLogContext();
 
             if (!String.IsNullOrWhiteSpace(configuration.Seq.Url))
             {
@@ -77,10 +76,12 @@ namespace MSBuildProjectTools.LanguageServer
                 );
             }
 
+            loggerConfiguration = loggerConfiguration.WriteTo.LanguageServer(languageServer, configuration.LogLevelSwitch);
+
             ILogger logger = loggerConfiguration.CreateLogger();
-            
-            Log.CloseAndFlush();
             Log.Logger = logger;
+
+            Log.Verbose("Logger initialised.");
 
             return logger;
         }

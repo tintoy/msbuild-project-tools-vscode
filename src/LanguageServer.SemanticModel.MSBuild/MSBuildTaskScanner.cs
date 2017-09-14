@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using Newtonsoft.Json.Linq;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
@@ -46,7 +47,17 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 using (StreamReader scannerOutput = scannerProcess.StandardOutput)
                 using (JsonTextReader scannerJson = new JsonTextReader(scannerOutput))
                 {
-                    return new JsonSerializer().Deserialize<List<MSBuildTaskMetadata>>(scannerJson);
+                    if (scannerProcess.ExitCode == 0)
+                        return new JsonSerializer().Deserialize<List<MSBuildTaskMetadata>>(scannerJson);
+
+                    JObject errorJson = JObject.Load(scannerJson);
+                    string message = errorJson.Value<string>("Message");
+                    if (String.IsNullOrWhiteSpace(message))
+                        message = $"An unexpected error occurred while scanning assembly '{taskAssemblyPath}' for tasks.";
+
+                    // TODO: Custom exception type.
+
+                    throw new Exception(message);
                 }
             }
         }

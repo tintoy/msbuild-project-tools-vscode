@@ -287,21 +287,22 @@ function handleExpressionAutoClose(): vscode.Disposable
 {
     return vscode.workspace.onDidChangeTextDocument(async args =>
     {
-        if (!featureFlags.has('expressions'))
-            return;
-
         if (args.document.languageId !== 'msbuild')
             return;
 
-        if (args.contentChanges.length !== 1)
+        if (!featureFlags.has('expressions'))
             return;
 
+        if (args.contentChanges.length !== 1)
+            return; // Completion doesn't make sense with multiple cursors.
+
         const contentChange = args.contentChanges[0];
+        if (isOriginPosition(contentChange.range.start))
+            return; // We're at the start of the document; no previous character to check.
+
         if (contentChange.text === '(')
         {
-            if (isOriginPosition(contentChange.range.start))
-                return; // We're at the start of the document; no previous character to check.
-
+            // Select the previous character and the one they just typed.
             const range = contentChange.range.with(
                 contentChange.range.start.translate(0, -1),
                 contentChange.range.end.translate(0, 1)

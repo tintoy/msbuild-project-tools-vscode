@@ -94,18 +94,28 @@ namespace MSBuildProjectTools.LanguageServer.TaskReflection
                     .ToArray();
 
                 using (StringWriter output = new StringWriter())
-                using (JsonTextWriter jsonWriter = new JsonTextWriter(output))
+                using (JsonTextWriter json = new JsonTextWriter(output))
                 {
-                    jsonWriter.Formatting = Formatting.Indented;
-                    jsonWriter.WriteStartArray();
+                    json.Formatting = Formatting.Indented;
+                    json.WriteStartObject();
+                    
+                    json.WritePropertyName("assemblyName");
+                    json.WriteValue(tasksAssembly.FullName);
+
+                    json.WritePropertyName("assemblyPath");
+                    json.WriteValue(tasksAssemblyFile.FullName);
+
+                    json.WritePropertyName("timestampUtc");
+                    json.WriteValue(tasksAssemblyFile.LastWriteTimeUtc);
+
+                    json.WritePropertyName("tasks");
+                    json.WriteStartArray();
 
                     foreach (Type taskType in taskTypes)
                     {
-                        jsonWriter.WriteStartObject();
-                        jsonWriter.WritePropertyName("Type");
-                        jsonWriter.WriteValue(taskType.FullName);
-                        jsonWriter.WritePropertyName("Assembly");
-                        jsonWriter.WriteValue(taskType.Assembly.FullName);
+                        json.WriteStartObject();
+                        json.WritePropertyName("typeName");
+                        json.WriteValue(taskType.FullName);
 
                         PropertyInfo[] properties =
                             taskType.GetProperties()
@@ -116,44 +126,46 @@ namespace MSBuildProjectTools.LanguageServer.TaskReflection
                                 )
                                 .ToArray();
 
-                        jsonWriter.WritePropertyName("Parameters");
-                        jsonWriter.WriteStartArray();
+                        json.WritePropertyName("parameters");
+                        json.WriteStartArray();
                         foreach (PropertyInfo property in properties)
                         {
                             if (!SupportedTaskParameterTypes.Contains(property.PropertyType.FullName) && !SupportedTaskParameterTypes.Contains(property.PropertyType.FullName + "[]"))
                                 continue;
 
-                            jsonWriter.WriteStartObject();
+                            json.WriteStartObject();
 
-                            jsonWriter.WritePropertyName("Name");
-                            jsonWriter.WriteValue(property.Name);
+                            json.WritePropertyName("parameterName");
+                            json.WriteValue(property.Name);
 
-                            jsonWriter.WritePropertyName("Type");
-                            jsonWriter.WriteValue(property.PropertyType.FullName);
+                            json.WritePropertyName("parameterType");
+                            json.WriteValue(property.PropertyType.FullName);
 
                             bool isRequired = property.GetCustomAttributes().Any(attribute => attribute.GetType().FullName == "Microsoft.Build.Framework.RequiredAttribute");
                             if (isRequired)
                             {
-                                jsonWriter.WritePropertyName("IsRequired");
-                                jsonWriter.WriteValue(true);
+                                json.WritePropertyName("required");
+                                json.WriteValue(true);
                             }
 
                             bool isOutput = property.GetCustomAttributes().Any(attribute => attribute.GetType().FullName == "Microsoft.Build.Framework.OutputAttribute");
                             if (isOutput)
                             {
-                                jsonWriter.WritePropertyName("IsOutput");
-                                jsonWriter.WriteValue(true);
+                                json.WritePropertyName("required");
+                                json.WriteValue(true);
                             }
 
-                            jsonWriter.WriteEndObject();
+                            json.WriteEndObject();
                         }
-                        jsonWriter.WriteEndArray();
+                        json.WriteEndArray();
 
-                        jsonWriter.WriteEndObject();
+                        json.WriteEndObject();
                     }
 
-                    jsonWriter.WriteEndArray();
-                    jsonWriter.Flush();
+                    json.WriteEndArray();
+
+                    json.WriteEndObject();
+                    json.Flush();
 
                     Console.WriteLine(output);
                 }

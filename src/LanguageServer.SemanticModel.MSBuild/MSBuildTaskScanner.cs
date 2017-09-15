@@ -8,11 +8,25 @@ using Newtonsoft.Json.Linq;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
+    // TODO: Asynchronously scan the project for UsingTask references, and then scan and cache the tasks.
+
     /// <summary>
     ///     Scans for MSBuild task assemblies for metadata.
     /// </summary>
     public static class MSBuildTaskScanner
     {
+        /// <summary>
+        ///     The assembly file containing the task-reflector tool.
+        /// </summary>
+        internal static FileInfo TaskReflectorAssemblyFile = new FileInfo(
+            Path.GetFullPath(
+                Path.Combine(
+                    Assembly.GetEntryAssembly().Location, "..", "task-reflection",
+                    "MSBuildProjectTools.LanguageServer.TaskReflection.dll"
+                )
+            )
+        );
+
         /// <summary>
         ///     Get task metadata for the specified assembly.
         /// </summary>
@@ -27,16 +41,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (string.IsNullOrWhiteSpace(taskAssemblyPath))
                 throw new ArgumentException($"Argument cannot be null, empty, or entirely composed of whitespace: {nameof(taskAssemblyPath)}.", nameof(taskAssemblyPath));
 
-            string reflectorAssemblyPath = Path.GetFullPath(
-                Path.Combine(
-                    Assembly.GetEntryAssembly().Location, "..", "task-reflection",
-                    "MSBuildProjectTools.LanguageServer.TaskReflection.dll"
-                )
-            );
-
             ProcessStartInfo scannerStartInfo = new ProcessStartInfo("dotnet")
             {
-                Arguments = $"\"{reflectorAssemblyPath}\" \"{taskAssemblyPath}\"",
+                Arguments = $"\"{TaskReflectorAssemblyFile.FullName}\" \"{taskAssemblyPath}\"",
                 CreateNoWindow = true,
                 UseShellExecute = false,
                 RedirectStandardOutput = true
@@ -65,6 +72,36 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
     }
 
     /// <summary>
+    ///     Metadata for an assembly containing MSBuild tasks.
+    /// </summary>
+    public class MSBuildTaskAssemblyMetadata
+    {
+        /// <summary>
+        ///     The assembly's full name.
+        /// </summary>
+        [JsonProperty("assemblyName")]
+        public DateTime AssemblyName { get; set; }
+
+        /// <summary>
+        ///     The full path to the assembly file.
+        /// </summary>
+        [JsonProperty("assemblyPath")]
+        public DateTime AssemblyPath { get; set; }
+
+        /// <summary>
+        ///     The assembly file's timestamp.
+        /// </summary>
+        [JsonProperty("timestampUtc")]
+        public DateTime TimestampUtc { get; set; }
+
+        /// <summary>
+        ///     Tasks defined in the assembly.
+        /// </summary>
+        [JsonProperty("tasks", ObjectCreationHandling = ObjectCreationHandling.Reuse)]
+        public List<MSBuildTaskMetadata> Tasks { get; } = new List<MSBuildTaskMetadata>();
+    }
+
+    /// <summary>
     ///     Metadata for an MSBuild task.
     /// </summary>
     public class MSBuildTaskMetadata
@@ -72,19 +109,19 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <summary>
         ///     The full name of the type that implements the task.
         /// </summary>
-        [JsonProperty("Type")]
+        [JsonProperty("typeName")]
         public string TypeName { get; set; }
 
         /// <summary>
         ///     The full name of the assembly that contains the task.
         /// </summary>
-        [JsonProperty("Assembly")]
+        [JsonProperty("assemblyName")]
         public string AssemblyName { get; set; }
 
         /// <summary>
         ///     The task parameters (if any).
         /// </summary>
-        [JsonProperty("Parameters", ObjectCreationHandling = ObjectCreationHandling.Reuse)]
+        [JsonProperty("parameters", ObjectCreationHandling = ObjectCreationHandling.Reuse)]
         public List<MSBuildTaskParameterMetadata> Parameters { get; } = new List<MSBuildTaskParameterMetadata>();
     }
 
@@ -96,25 +133,25 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <summary>
         ///     The parameter name.
         /// </summary>
-        [JsonProperty("Name")]
+        [JsonProperty("parameterName")]
         public string Name { get; set; }
 
         /// <summary>
         ///     The full name of the parameter's data type.
         /// </summary>
-        [JsonProperty("Type")]
+        [JsonProperty("parameterType")]
         public string TypeName { get; set; }
 
         /// <summary>
         ///     Is the parameter mandatory?
         /// </summary>
-        [JsonProperty("IsRequired")]
+        [JsonProperty("required")]
         public bool IsRequired { get; set; }
 
         /// <summary>
         ///     Is the parameter an output parameter?
         /// </summary>
-        [JsonProperty("IsOutput")]
+        [JsonProperty("output")]
         public bool IsOutput { get; set; }
     }
 }

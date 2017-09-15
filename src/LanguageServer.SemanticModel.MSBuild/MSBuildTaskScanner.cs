@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using Newtonsoft.Json.Linq;
+using System.Threading.Tasks;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
@@ -36,7 +37,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <returns>
         ///     A list of <see cref="MSBuildTaskMetadata"/> representing the tasks.
         /// </returns>
-        public static List<MSBuildTaskMetadata> GetAssemblyTaskMetadata(string taskAssemblyPath)
+        public static async Task<MSBuildTaskAssemblyMetadata> GetAssemblyTaskMetadata(string taskAssemblyPath)
         {
             if (string.IsNullOrWhiteSpace(taskAssemblyPath))
                 throw new ArgumentException($"Argument cannot be null, empty, or entirely composed of whitespace: {nameof(taskAssemblyPath)}.", nameof(taskAssemblyPath));
@@ -50,15 +51,26 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             };
             using (Process scannerProcess = Process.Start(scannerStartInfo))
             {
-                scannerProcess.WaitForExit();
+                // Start reading output asynchronously so the process's STDOUT buffer doesn't fill up.
+                Task<string> readOutput = scannerProcess.StandardOutput.ReadToEndAsync();
 
-                using (StreamReader scannerOutput = scannerProcess.StandardOutput)
+                bool exited = scannerProcess.WaitForExit(5000);
+                if (!exited)
+                {
+                    scannerProcess.Kill();
+
+                    throw new TimeoutException("Timed out after waiting 10 seconds for scanner process to exit.");
+                }
+
+                string output = await readOutput;
+
+                using (StringReader scannerOutput = new StringReader(output))
                 using (JsonTextReader scannerJson = new JsonTextReader(scannerOutput))
                 {
-                    if (scannerProcess.ExitCode == 0)
-                        return new JsonSerializer().Deserialize<List<MSBuildTaskMetadata>>(scannerJson);
+                    if (exited && scannerProcess.ExitCode == 0)
+                        return new JsonSerializer().Deserialize<MSBuildTaskAssemblyMetadata>(scannerJson);
 
-                    JObject errorJson = JObject.Load(scannerJson);
+                    JObject errorJson = JObject.Parse(output);
                     string message = errorJson.Value<string>("Message");
                     if (String.IsNullOrWhiteSpace(message))
                         message = $"An unexpected error occurred while scanning assembly '{taskAssemblyPath}' for tasks.";
@@ -80,13 +92,13 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The assembly's full name.
         /// </summary>
         [JsonProperty("assemblyName")]
-        public DateTime AssemblyName { get; set; }
+        public string AssemblyName { get; set; }
 
         /// <summary>
         ///     The full path to the assembly file.
         /// </summary>
         [JsonProperty("assemblyPath")]
-        public DateTime AssemblyPath { get; set; }
+        public string AssemblyPath { get; set; }
 
         /// <summary>
         ///     The assembly file's timestamp.
@@ -111,12 +123,6 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// </summary>
         [JsonProperty("typeName")]
         public string TypeName { get; set; }
-
-        /// <summary>
-        ///     The full name of the assembly that contains the task.
-        /// </summary>
-        [JsonProperty("assemblyName")]
-        public string AssemblyName { get; set; }
 
         /// <summary>
         ///     The task parameters (if any).

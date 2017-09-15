@@ -166,8 +166,10 @@ namespace MSBuildProjectTools.LanguageServer.TaskReflection
 
                     json.WriteEndObject();
                     json.Flush();
+                    output.Flush();
 
-                    Console.WriteLine(output);
+                    Console.Out.WriteLine(output);
+                    Console.Out.Flush();
                 }
 
                 return 0;
@@ -179,6 +181,10 @@ namespace MSBuildProjectTools.LanguageServer.TaskReflection
                 WriteErrorJson(unexpectedError.ToString());
 
                 return 1;
+            }
+            finally
+            {
+                Console.Out.Flush();
             }
         }
 
@@ -208,7 +214,8 @@ namespace MSBuildProjectTools.LanguageServer.TaskReflection
                 jsonWriter.WriteEndObject();
 
                 jsonWriter.Flush();
-                Console.WriteLine(output);
+                Console.Out.WriteLine(output);
+                Console.Out.Flush();
             }
         }
     }

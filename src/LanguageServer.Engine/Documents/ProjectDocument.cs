@@ -525,6 +525,48 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         }
 
         /// <summary>
+        ///     Retrieve metadata for all tasks defined in the project.
+        /// </summary>
+        /// <param name="cancellationToken">
+        ///     An optional cancellation token that can be used to cancel the operation.
+        /// </param>
+        /// <returns>
+        ///     A list of task assembly metadata.
+        /// </returns>
+        /// <remarks>
+        ///     Cache metadata (and persist cache to file).
+        /// </remarks>
+        public async Task<List<MSBuildTaskAssemblyMetadata>> GetMSBuildProjectTasks(CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (!HasMSBuildProject)
+                throw new InvalidOperationException($"MSBuild project '{ProjectFile.FullName}' is not loaded.");
+
+            string[] taskAssemblyFiles =
+                MSBuildProject.GetAllUsingTasks()
+                    .Where(usingTask => !String.IsNullOrWhiteSpace(usingTask.AssemblyFile))
+                    .Select(usingTask => MSBuildProject.ExpandString(usingTask.AssemblyFile))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            List<MSBuildTaskAssemblyMetadata> metadata = new List<MSBuildTaskAssemblyMetadata>();
+            foreach (string taskAssemblyFile in taskAssemblyFiles)
+            {
+                if (!File.Exists(taskAssemblyFile))
+                    continue;
+
+                cancellationToken.ThrowIfCancellationRequested();
+
+                metadata.Add(
+                    await MSBuildTaskScanner.GetAssemblyTaskMetadata(taskAssemblyFile)
+                );
+            }
+
+            return metadata;
+        }
+
+        /// <summary>
         ///     Attempt to load the underlying MSBuild project.
         /// </summary>
         /// <returns>

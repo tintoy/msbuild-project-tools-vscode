@@ -1,5 +1,10 @@
 # Change Log
 
+## v0.2.8
+
+* _Experimental:_ Add completions for task elements based on task types declared in the project.
+* _Experimental:_ Add completions for task attributes based on task types declared in the project.
+
 ## v0.2.7
 
 * Add setting to control which types of objects from the current projects are included when offering completions.

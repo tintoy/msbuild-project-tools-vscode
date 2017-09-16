@@ -24,6 +24,8 @@ You need .NET Core 2.0.0 or newer installed to use the language service (but you
   To see this highlighting, change the editor language from `XML` to `MSBuild`.
 * _Language service feature:_ Completions for `$()` property, `@()` item, and `%()` item metadata expressions (_experimental_).  
   To enable these completions, add the string `expressions` to the `msbuildProjectTools.language.experimentalFeatures` setting, then change the editor language from `XML` to `MSBuild`.
+* _Language service feature:_ Completions for task elements and attributes based on metadata for tasks declared in the project and its imported projects (_experimental_).  
+  To enable these completions, add the string `Tasks` to the `msbuildProjectTools.language.completionsFromProject` setting.
 
 ### File extensions
 

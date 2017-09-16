@@ -134,6 +134,8 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 
             foreach (string taskName in projectTasks.Keys.OrderBy(name => name))
                 yield return TaskElementCompletionItem(taskName, projectTasks[taskName], replaceRangeLsp);
+
+            // TODO: Offer task names for inline and assembly-name-based tasks.
         }
 
         /// <summary>

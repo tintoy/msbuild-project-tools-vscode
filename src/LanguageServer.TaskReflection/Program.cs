@@ -7,6 +7,8 @@ using System.Reflection;
 
 namespace MSBuildProjectTools.LanguageServer.TaskReflection
 {
+    using LanguageServer.Utilities;
+
     /// <summary>
     ///     A tool to scan an MSBuild task assembly and output information about the tasks it contains.
     /// </summary>
@@ -62,9 +64,9 @@ namespace MSBuildProjectTools.LanguageServer.TaskReflection
                     return 1;
                 }
 
-                string fallbackDirectory = Path.GetDirectoryName(
-                    Assembly.GetEntryAssembly().Location
-                );
+                DotNetRuntimeInfo runtimeInfo = DotNetRuntimeInfo.GetCurrent(tasksAssemblyFile.Directory.FullName);
+
+                string fallbackDirectory = runtimeInfo.BaseDirectory;
                 string baseDirectory = tasksAssemblyFile.DirectoryName;
 
                 DirectoryAssemblyLoadContext loadContext = new DirectoryAssemblyLoadContext(baseDirectory, fallbackDirectory);
@@ -114,6 +116,10 @@ namespace MSBuildProjectTools.LanguageServer.TaskReflection
                     foreach (Type taskType in taskTypes)
                     {
                         json.WriteStartObject();
+
+                        json.WritePropertyName("taskName");
+                        json.WriteValue(taskType.Name);
+
                         json.WritePropertyName("typeName");
                         json.WriteValue(taskType.FullName);
 

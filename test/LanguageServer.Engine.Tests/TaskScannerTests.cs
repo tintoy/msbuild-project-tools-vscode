@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Xunit;
@@ -9,7 +10,6 @@ using Xunit.Abstractions;
 namespace MSBuildProjectTools.LanguageServer.Tests
 {
     using SemanticModel;
-    using System.Linq;
     using Utilities;
     
     /// <summary>
@@ -43,8 +43,9 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// </param>
         [InlineData("NuGet.Build.Tasks.dll")]
         [InlineData("Microsoft.Build.Tasks.Core.dll")]
-        [Theory(DisplayName = "TaskScanner can get tasks from NuGet.BuildTasks assembly ")]
-        public async Task Scan_NuGetTasks_Success(string fileName)
+        [InlineData("Sdks/Microsoft.NET.Sdk/tools/netcoreapp1.0/Microsoft.NET.Build.Tasks.dll")]
+        [Theory(DisplayName = "TaskScanner can get tasks from framework task assembly ")]
+        public async Task Scan_FrameworkTaskAssembly_Success(string fileName)
         {
             string taskAssemblyFile = GetFrameworkTaskAssemblyFile(fileName);
             Assert.True(File.Exists(taskAssemblyFile), "Task assembly exists");
@@ -74,7 +75,9 @@ namespace MSBuildProjectTools.LanguageServer.Tests
 
             var runtimeInfo = DotNetRuntimeInfo.GetCurrent();
 
-            return Path.Combine(runtimeInfo.BaseDirectory, assemblyFileName);
+            return Path.Combine(runtimeInfo.BaseDirectory,
+                assemblyFileName.Replace('/', Path.DirectorySeparatorChar)
+            );
         }
 
         /// <summary>

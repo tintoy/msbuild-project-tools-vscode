@@ -9,6 +9,10 @@
     <Import Project="../Common.props" />
 
     <ItemGroup>
+      <Compile Include="..\LanguageServer.Common\Utilities\DotNetRuntimeInfo.cs" Link="DotNetRuntimeInfo.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     </ItemGroup>
 </Project>

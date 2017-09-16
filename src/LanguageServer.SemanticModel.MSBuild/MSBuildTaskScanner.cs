@@ -1,16 +1,14 @@
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using Newtonsoft.Json.Linq;
 using System.Threading.Tasks;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
-    // TODO: Asynchronously scan the project for UsingTask references, and then scan and cache the tasks.
-
     /// <summary>
     ///     Scans for MSBuild task assemblies for metadata.
     /// </summary>
@@ -22,7 +20,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         internal static FileInfo TaskReflectorAssemblyFile = new FileInfo(
             Path.GetFullPath(
                 Path.Combine(
-                    Assembly.GetEntryAssembly().Location, "..", "task-reflection",
+                    Assembly.GetEntryAssembly().Location, "..", "..", "task-reflection",
                     "MSBuildProjectTools.LanguageServer.TaskReflection.dll"
                 )
             )
@@ -41,6 +39,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         {
             if (string.IsNullOrWhiteSpace(taskAssemblyPath))
                 throw new ArgumentException($"Argument cannot be null, empty, or entirely composed of whitespace: {nameof(taskAssemblyPath)}.", nameof(taskAssemblyPath));
+
+            taskAssemblyPath = Path.GetFullPath(taskAssemblyPath);
 
             ProcessStartInfo scannerStartInfo = new ProcessStartInfo("dotnet")
             {
@@ -74,6 +74,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                     string message = errorJson.Value<string>("Message");
                     if (String.IsNullOrWhiteSpace(message))
                         message = $"An unexpected error occurred while scanning assembly '{taskAssemblyPath}' for tasks.";
+                    else
+                        message = $"An unexpected error occurred while scanning assembly '{taskAssemblyPath}' for tasks: {message}";
 
                     // TODO: Custom exception type.
 
@@ -118,6 +120,12 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
     /// </summary>
     public class MSBuildTaskMetadata
     {
+        /// <summary>
+        ///     The task name.
+        /// </summary>
+        [JsonProperty("taskName")]
+        public string Name { get; set; }
+
         /// <summary>
         ///     The full name of the type that implements the task.
         /// </summary>

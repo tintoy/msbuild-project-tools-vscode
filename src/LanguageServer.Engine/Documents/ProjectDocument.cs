@@ -531,12 +531,12 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         ///     An optional cancellation token that can be used to cancel the operation.
         /// </param>
         /// <returns>
-        ///     A list of task assembly metadata.
+        ///     A dictionary of task assembly metadata, keyed by assembly path.
         /// </returns>
         /// <remarks>
         ///     Cache metadata (and persist cache to file).
         /// </remarks>
-        public async Task<List<MSBuildTaskAssemblyMetadata>> GetMSBuildProjectTasks(CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<List<MSBuildTaskAssemblyMetadata>> GetMSBuildProjectTaskAssemblies(CancellationToken cancellationToken = default(CancellationToken))
         {
             if (!HasMSBuildProject)
                 throw new InvalidOperationException($"MSBuild project '{ProjectFile.FullName}' is not loaded.");
@@ -544,7 +544,13 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             string[] taskAssemblyFiles =
                 MSBuildProject.GetAllUsingTasks()
                     .Where(usingTask => !String.IsNullOrWhiteSpace(usingTask.AssemblyFile))
-                    .Select(usingTask => MSBuildProject.ExpandString(usingTask.AssemblyFile))
+                    .Select(usingTask => Path.GetFullPath(
+                        Path.Combine(
+                            usingTask.GetProjectDirectoryPath(),
+                            MSBuildProject.ExpandString(usingTask.AssemblyFile)
+                                .Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar)
+                        )
+                    ))
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToArray();
 
@@ -554,13 +560,16 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             foreach (string taskAssemblyFile in taskAssemblyFiles)
             {
                 if (!File.Exists(taskAssemblyFile))
+                {
+                    Log.Information("Skipped scan of task metadata for assembly {TaskAssemblyFile} (file not found).", taskAssemblyFile);
+
                     continue;
+                }
 
                 cancellationToken.ThrowIfCancellationRequested();
 
-                metadata.Add(
-                    await MSBuildTaskScanner.GetAssemblyTaskMetadata(taskAssemblyFile)
-                );
+                MSBuildTaskAssemblyMetadata assemblyMetadata = await MSBuildTaskScanner.GetAssemblyTaskMetadata(taskAssemblyFile);
+                metadata.Add(assemblyMetadata);
             }
 
             return metadata;

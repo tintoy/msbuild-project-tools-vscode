@@ -44,7 +44,6 @@
       <ProjectReference Include="../../src/LanguageServer.Engine/LanguageServer.Engine.csproj" />
       <ProjectReference Include="../../src/LanguageServer.SemanticModel.MSBuild/LanguageServer.SemanticModel.MSBuild.csproj" />
       <ProjectReference Include="../../src/LanguageServer.SemanticModel.Xml/LanguageServer.SemanticModel.Xml.csproj" />
-      <ProjectReference Include="..\..\src\LanguageServer.TaskReflection\LanguageServer.TaskReflection.csproj" />
     </ItemGroup>
 
     <ItemGroup>

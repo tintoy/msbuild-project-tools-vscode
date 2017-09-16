@@ -11,6 +11,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build" Version="15.3.409" />
     <PackageReference Include="Microsoft.Language.Xml" Version="1.1.14" />
+    <PackageReference Include="Nito.AsyncEx.Tasks" Version="1.0.1" />
+    <PackageReference Include="Nito.AsyncEx.Coordination" Version="1.0.1" />
     <PackageReference Include="NuGet.Client" Version="4.0.0" />
     <PackageReference Include="NuGet.Configuration" Version="4.0.0" />
     <PackageReference Include="NuGet.PackageManagement" Version="4.0.0" NoWarn="NU1701" />

@@ -157,15 +157,27 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         public string TypeName { get; set; }
 
         /// <summary>
+        ///     Is the parameter type an enum?
+        /// </summary>
+        [JsonIgnore]
+        public bool IsEnum => EnumMemberNames != null;
+
+        /// <summary>
+        ///     If the parameter type is an <see cref="Enum"/>, the names of the values that the parameter can contain.
+        /// </summary>
+        [JsonProperty("enum", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        public List<string> EnumMemberNames { get; set; }
+
+        /// <summary>
         ///     Is the parameter mandatory?
         /// </summary>
-        [JsonProperty("required")]
+        [JsonProperty("required", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         public bool IsRequired { get; set; }
 
         /// <summary>
         ///     Is the parameter an output parameter?
         /// </summary>
-        [JsonProperty("output")]
+        [JsonProperty("output", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         public bool IsOutput { get; set; }
     }
 }

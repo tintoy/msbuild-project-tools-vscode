@@ -13,6 +13,15 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
     public sealed class MSBuildTaskMetadataCache
     {
         /// <summary>
+        ///     Settings for serialisation of cache state.
+        /// </summary>
+        static readonly JsonSerializerSettings SerializerSettings = new JsonSerializerSettings
+        {
+            Formatting = Formatting.Indented,
+            DateFormatHandling = DateFormatHandling.IsoDateFormat
+        };
+
+        /// <summary>
         ///     Create a new <see cref="MSBuildTaskMetadataCache"/>.
         /// </summary>
         public MSBuildTaskMetadataCache()
@@ -88,7 +97,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 using (StreamReader input = File.OpenText(cacheFile))
                 using (JsonTextReader json = new JsonTextReader(input))
                 {
-                    new JsonSerializer().Populate(json, this);
+                    JsonSerializer.Create(SerializerSettings).Populate(json, this);
                 }
             }
         }
@@ -112,7 +121,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 using (StreamWriter output = File.CreateText(cacheFile))
                 using (JsonTextWriter json = new JsonTextWriter(output))
                 {
-                    new JsonSerializer().Serialize(json, this);
+                    JsonSerializer.Create(SerializerSettings).Serialize(json, this);
                 }
             }
         }        

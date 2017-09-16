@@ -313,6 +313,31 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         }
 
         /// <summary>
+        ///     Attempt to restore the task metadata cache from persisted state.
+        /// </summary>
+        /// <returns>
+        ///     <c>true</c>, if the task metadata cache was restored from persisted state; otherwise, <c>false</c>.
+        /// </returns>
+        public bool RestoreTaskMetadataCache()
+        {
+            if (!TaskMetadataCacheFile.Exists)
+                return false;
+
+            try
+            {
+                TaskMetadataCache.Load(TaskMetadataCacheFile.FullName);
+
+                return true;
+            }
+            catch (Exception cacheLoadError)
+            {
+                Log.Error(cacheLoadError, "An unexpected error occurred while restoring the task metadata cache.");
+
+                return false;
+            }
+        }
+
+        /// <summary>
         ///     Persist the task metadata cache to disk.
         /// </summary>
         public void PersistTaskMetadataCache()

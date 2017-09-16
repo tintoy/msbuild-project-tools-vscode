@@ -6,6 +6,7 @@ using Lsp.Protocol;
 using NuGet.Configuration;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Threading;
@@ -191,6 +192,15 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             Log.Verbose("===========================");
             if (projectDocument.HasMSBuildProject)
             {
+                if (Workspace.Configuration.CompletionsFromProject.Contains(CompletionSource.Task))
+                {
+                    Log.Verbose("Scanning task definitions for project {ProjectName}...", projectDocument.ProjectFile.Name);
+                    List<MSBuildTaskAssemblyMetadata> taskAssemblies = await projectDocument.GetMSBuildProjectTaskAssemblies();
+                    Log.Verbose("Scan complete for task definitions of project {ProjectName} ({AssemblyCount} assemblies scanned).", projectDocument.ProjectFile.Name, taskAssemblies.Count);
+
+                    Log.Verbose("===========================");
+                }
+
                 MSBuildObject[] msbuildObjects = projectDocument.MSBuildObjects.ToArray();
                 Log.Verbose("MSBuild project loaded ({MSBuildObjectCount} MSBuild objects).", msbuildObjects.Length);
 

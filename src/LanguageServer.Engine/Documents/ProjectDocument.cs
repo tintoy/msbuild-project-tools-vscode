@@ -568,9 +568,12 @@ namespace MSBuildProjectTools.LanguageServer.Documents
 
                 cancellationToken.ThrowIfCancellationRequested();
 
-                MSBuildTaskAssemblyMetadata assemblyMetadata = await MSBuildTaskScanner.GetAssemblyTaskMetadata(taskAssemblyFile);
+                MSBuildTaskAssemblyMetadata assemblyMetadata = await Workspace.TaskMetadataCache.GetAssemblyMetadata(taskAssemblyFile);
                 metadata.Add(assemblyMetadata);
             }
+
+            // Persist any changes to cached metadata.
+            Workspace.PersistTaskMetadataCache();
 
             return metadata;
         }

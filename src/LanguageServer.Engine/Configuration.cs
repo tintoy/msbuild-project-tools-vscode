@@ -138,6 +138,11 @@ namespace MSBuildProjectTools.LanguageServer
         /// <summary>
         ///     Target names.
         /// </summary>
-        Target
+        Target,
+
+        /// <summary>
+        ///     Task metadata (names, parameters, etc).
+        /// </summary>
+        Task
     }
 }

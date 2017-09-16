@@ -62,7 +62,12 @@ namespace MSBuildProjectTools.LanguageServer
 
             builder.RegisterType<Documents.Workspace>()
                 .AsSelf()
-                .SingleInstance();
+                .SingleInstance()
+                .OnActivated(activated =>
+                {
+                    Documents.Workspace workspace = activated.Instance;
+                    workspace.RestoreTaskMetadataCache();
+                });
 
             builder
                 .RegisterTypes(

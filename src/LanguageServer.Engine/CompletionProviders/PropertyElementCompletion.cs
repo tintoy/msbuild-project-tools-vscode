@@ -32,7 +32,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         /// <summary>
         ///     The provider display name.
         /// </summary>
-        public override string Name => "Top-level Elements";
+        public override string Name => "Property Elements";
 
         /// <summary>
         ///     Provide completions for the specified location.

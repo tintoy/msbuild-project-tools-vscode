@@ -31,7 +31,9 @@ namespace MSBuildProjectTools.LanguageServer.TaskReflection
             typeof(DateTime).FullName,
             typeof(Guid).FullName,
             "Microsoft.Build.Framework.ITaskItem",
-            "Microsoft.Build.Framework.ITaskItem2"
+            "Microsoft.Build.Framework.ITaskItem[]",
+            "Microsoft.Build.Framework.ITaskItem2",
+            "Microsoft.Build.Framework.ITaskItem2[]"
         };
 
         /// <summary>
@@ -126,9 +128,9 @@ namespace MSBuildProjectTools.LanguageServer.TaskReflection
                         PropertyInfo[] properties =
                             taskType.GetProperties()
                                 .Where(property =>
-                                    property.CanRead && property.GetGetMethod().IsPublic
+                                    (property.CanRead && property.GetGetMethod().IsPublic)
                                     ||
-                                    property.CanWrite && property.GetSetMethod().IsPublic
+                                    (property.CanWrite && property.GetSetMethod().IsPublic)
                                 )
                                 .ToArray();
 
@@ -136,7 +138,7 @@ namespace MSBuildProjectTools.LanguageServer.TaskReflection
                         json.WriteStartArray();
                         foreach (PropertyInfo property in properties)
                         {
-                            if (!SupportedTaskParameterTypes.Contains(property.PropertyType.FullName) && !SupportedTaskParameterTypes.Contains(property.PropertyType.FullName + "[]"))
+                            if (!SupportedTaskParameterTypes.Contains(property.PropertyType.FullName) && !SupportedTaskParameterTypes.Contains(property.PropertyType.FullName + "[]") && !property.PropertyType.IsEnum)
                                 continue;
 
                             json.WriteStartObject();
@@ -146,6 +148,15 @@ namespace MSBuildProjectTools.LanguageServer.TaskReflection
 
                             json.WritePropertyName("parameterType");
                             json.WriteValue(property.PropertyType.FullName);
+
+                            if (property.PropertyType.IsEnum)
+                            {
+                                json.WritePropertyName("enum");
+                                json.WriteStartArray();
+                                foreach (string enumMember in Enum.GetNames(property.PropertyType))
+                                    json.WriteValue(enumMember);
+                                json.WriteEndArray();
+                            }
 
                             bool isRequired = property.GetCustomAttributes().Any(attribute => attribute.GetType().FullName == "Microsoft.Build.Framework.RequiredAttribute");
                             if (isRequired)
@@ -157,7 +168,7 @@ namespace MSBuildProjectTools.LanguageServer.TaskReflection
                             bool isOutput = property.GetCustomAttributes().Any(attribute => attribute.GetType().FullName == "Microsoft.Build.Framework.OutputAttribute");
                             if (isOutput)
                             {
-                                json.WritePropertyName("required");
+                                json.WritePropertyName("output");
                                 json.WriteValue(true);
                             }
 

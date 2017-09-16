@@ -28,6 +28,16 @@ namespace MSBuildProjectTools.LanguageServer
                 new SynchronizationContext()
             );
 
+            // Auto-detect extension directory.
+            string extensionDir = Environment.GetEnvironmentVariable("MSBUILD_PROJECT_TOOLS_DIR");
+            if (String.IsNullOrWhiteSpace(extensionDir))
+            {
+                extensionDir = Path.Combine(
+                    Path.GetDirectoryName(typeof(Program).Assembly.Location), "..", ".."
+                );
+                Environment.SetEnvironmentVariable("MSBUILD_PROJECT_TOOLS_DIR", extensionDir);
+            }
+
             try
             {
                 AsyncMain().Wait();

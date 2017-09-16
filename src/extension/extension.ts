@@ -253,6 +253,8 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
         revealOutputChannelOn: RevealOutputChannelOn.Error
     };
 
+    languageServerEnvironment['MSBUILD_PROJECT_TOOLS_DIR'] = context.extensionPath;
+
     const seqLoggingSettings = configuration.language.seqLogging;
     if (seqLoggingSettings && seqLoggingSettings.url) {
         languageServerEnvironment['MSBUILD_PROJECT_TOOLS_SEQ_URL'] = configuration.language.seqLogging.url;

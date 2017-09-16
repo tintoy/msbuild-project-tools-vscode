@@ -242,7 +242,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                     continue;
 
                 string assemblyFile = Path.GetFullPath(Path.Combine(
-                    usingTask.GetProjectDirectoryPath(),
+                    usingTask.ContainingProject.DirectoryPath,
                     projectDocument.MSBuildProject.ExpandString(usingTask.AssemblyFile)
                 ));
 

@@ -541,18 +541,25 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             if (!HasMSBuildProject)
                 throw new InvalidOperationException($"MSBuild project '{ProjectFile.FullName}' is not loaded.");
 
-            string[] taskAssemblyFiles =
+            List<string> taskAssemblyFiles = new List<string>
+            {
+                // Include "built-in" tasks.
+                Path.Combine(DotNetRuntimeInfo.GetCurrent().BaseDirectory, "Microsoft.Build.Tasks.Core.dll"),
+                Path.Combine(DotNetRuntimeInfo.GetCurrent().BaseDirectory, "Roslyn", "Microsoft.Build.Tasks.CodeAnalysis.dll")
+            };
+
+            taskAssemblyFiles.AddRange(
                 MSBuildProject.GetAllUsingTasks()
                     .Where(usingTask => !String.IsNullOrWhiteSpace(usingTask.AssemblyFile))
                     .Select(usingTask => Path.GetFullPath(
                         Path.Combine(
-                            usingTask.GetProjectDirectoryPath(),
+                            usingTask.ContainingProject.DirectoryPath,
                             MSBuildProject.ExpandString(usingTask.AssemblyFile)
                                 .Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar)
                         )
                     ))
                     .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .ToArray();
+            );
 
             cancellationToken.ThrowIfCancellationRequested();
 

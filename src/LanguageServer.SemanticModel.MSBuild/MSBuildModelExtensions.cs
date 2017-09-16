@@ -55,22 +55,6 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 );
         }
 
-        /// <summary>
-        ///     Get the path of the directory that contains the project where the <see cref="ProjectUsingTaskElement"/> is declared.
-        /// </summary>
-        /// <param name="usingTask">
-        ///     The <see cref="ProjectUsingTaskElement"/>.
-        /// </param>
-        /// <returns>
-        ///     The project's directory path.
-        /// </returns>
-        public static string GetProjectDirectoryPath(this ProjectUsingTaskElement usingTask)
-        {
-            if (usingTask == null)
-                throw new ArgumentNullException(nameof(usingTask));
-            
-            return ((ProjectRootElement)usingTask.Parent).DirectoryPath;
-        }
 
         /// <summary>
         ///     Convert the MSBuild <see cref="ElementLocation"/> to its native equivalent.

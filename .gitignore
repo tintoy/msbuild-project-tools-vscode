@@ -3,6 +3,7 @@
 
 ## Extension
 out/
+data/
 
 ## NodeJS
 node_modules/

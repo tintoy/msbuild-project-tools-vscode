@@ -10,12 +10,12 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
     /// <summary>
     ///     Represents cached data for MSBuild task assemblies.
     /// </summary>
-    public sealed class MSBuildTaskAssemblyCache
+    public sealed class MSBuildTaskMetadataCache
     {
         /// <summary>
-        ///     Create a new <see cref="MSBuildTaskAssemblyCache"/>.
+        ///     Create a new <see cref="MSBuildTaskMetadataCache"/>.
         /// </summary>
-        public MSBuildTaskAssemblyCache()
+        public MSBuildTaskMetadataCache()
         {
         }
 
@@ -118,20 +118,20 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         }        
 
         /// <summary>
-        ///     Create a <see cref="MSBuildTaskAssemblyCache"/> using the state persisted in the specified file.
+        ///     Create a <see cref="MSBuildTaskMetadataCache"/> using the state persisted in the specified file.
         /// </summary>
         /// <param name="cacheFile">
         ///     The file containing persisted cache state.
         /// </param>
         /// <returns>
-        ///     The new <see cref="MSBuildTaskAssemblyCache"/>.
+        ///     The new <see cref="MSBuildTaskMetadataCache"/>.
         /// </returns>
-        public static MSBuildTaskAssemblyCache FromCacheFile(string cacheFile)
+        public static MSBuildTaskMetadataCache FromCacheFile(string cacheFile)
         {
             if (String.IsNullOrWhiteSpace(cacheFile))
                 throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'cacheFile'.", nameof(cacheFile));
             
-            MSBuildTaskAssemblyCache cache = new MSBuildTaskAssemblyCache();
+            MSBuildTaskMetadataCache cache = new MSBuildTaskMetadataCache();
             cache.Load(cacheFile);
             
             return cache;

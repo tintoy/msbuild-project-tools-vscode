@@ -28,18 +28,10 @@ namespace MSBuildProjectTools.LanguageServer
                 new SynchronizationContext()
             );
 
-            // Auto-detect extension directory.
-            string extensionDir = Environment.GetEnvironmentVariable("MSBUILD_PROJECT_TOOLS_DIR");
-            if (String.IsNullOrWhiteSpace(extensionDir))
-            {
-                extensionDir = Path.Combine(
-                    Path.GetDirectoryName(typeof(Program).Assembly.Location), "..", ".."
-                );
-                Environment.SetEnvironmentVariable("MSBUILD_PROJECT_TOOLS_DIR", extensionDir);
-            }
-
             try
             {
+                AutoDetectExtensionDirectory();
+
                 AsyncMain().Wait();
             }
             catch (AggregateException aggregateError)
@@ -87,6 +79,22 @@ namespace MSBuildProjectTools.LanguageServer
             builder.RegisterModule<LanguageServerModule>();
 
             return builder.Build();
+        }
+
+        /// <summary>
+        ///     Auto-detect the directory containing the extension's files.
+        /// </summary>
+        static void AutoDetectExtensionDirectory()
+        {
+            string extensionDir = Environment.GetEnvironmentVariable("MSBUILD_PROJECT_TOOLS_DIR");
+            if (String.IsNullOrWhiteSpace(extensionDir))
+            {
+                extensionDir = Path.Combine(
+                    Path.GetDirectoryName(typeof(Program).Assembly.Location), "..", ".."
+                );
+            }
+            extensionDir = Path.GetFullPath(extensionDir);
+            Environment.SetEnvironmentVariable("MSBUILD_PROJECT_TOOLS_DIR", extensionDir);
         }
     }
 }

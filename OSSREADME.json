@@ -11,5 +11,5 @@
     "version": "0.0.0",
     "license": "MIT",
     "repositoryURL": "https://github.com/Microsoft/msbuild",
-    "description": "Documentation / help content for well-known MSBuild elements, attributes, properties, and item types was derived from https://github.com/Microsoft/msbuild/blob/master/src/MSBuild/Microsoft.Build.CommonTypes.xsd"
+    "description": "Documentation / help content for well-known MSBuild elements, attributes, properties, and item types was derived from https://github.com/Microsoft/msbuild/blob/master/src/MSBuild/Microsoft.Build.CommonTypes.xsd, as well as https://github.com/MicrosoftDocs/visualstudio-docs/tree/master/docs/msbuild."
 }]

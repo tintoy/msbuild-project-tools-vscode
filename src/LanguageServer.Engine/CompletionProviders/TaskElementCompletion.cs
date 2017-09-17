@@ -133,8 +133,14 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 
             Lsp.Models.Range replaceRangeLsp = replaceRange.ToLsp();
 
+            IReadOnlyDictionary<string, Help.TaskHelp> taskHelp = projectDocument.Workspace.TaskHelp;
             foreach (string taskName in projectTasks.Keys.OrderBy(name => name))
-                yield return TaskElementCompletionItem(taskName, projectTasks[taskName], replaceRangeLsp);
+            {
+                Help.TaskHelp taskDocumentation;
+                taskHelp.TryGetValue(taskName, out taskDocumentation);
+
+                yield return TaskElementCompletionItem(taskName, projectTasks[taskName], taskDocumentation, replaceRangeLsp);
+            }
 
             // TODO: Offer task names for inline and assembly-name-based tasks.
         }
@@ -148,13 +154,16 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         /// <param name="taskMetadata">
         ///     The MSBuild task's metadata.
         /// </param>
+        /// <param name="taskDocumentation">
+        ///     Documentation for the task (if available).
+        /// </param>
         /// <param name="replaceRange">
         ///     The range of text that will be replaced by the completion.
         /// </param>
         /// <returns>
         ///     The <see cref="CompletionItem"/>.
         /// </returns>
-        CompletionItem TaskElementCompletionItem(string taskName, MSBuildTaskMetadata taskMetadata, Lsp.Models.Range replaceRange)
+        CompletionItem TaskElementCompletionItem(string taskName, MSBuildTaskMetadata taskMetadata, Help.TaskHelp taskDocumentation, Lsp.Models.Range replaceRange)
         {
             MSBuildTaskParameterMetadata[] requiredParameters = taskMetadata.Parameters.Where(parameter => parameter.IsRequired).ToArray();
             string requiredAttributes = String.Join(" ", requiredParameters.Select(
@@ -173,7 +182,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             {
                 Label = $"<{taskName}>",
                 Detail = "Task",
-                Documentation = $"Invoke task '{taskName}'.",
+                Documentation = taskDocumentation?.Description,
                 SortText = $"{Priority:0000}<{taskName}>",
                 TextEdit = new TextEdit
                 {
@@ -185,7 +194,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         }
 
         /// <summary>
-        ///     Get all tasks defined in the project (via 'UsingTask' elements).
+        ///     Get all tasks defined in the project.
         /// </summary>
         /// <param name="projectDocument">
         ///     The project document.

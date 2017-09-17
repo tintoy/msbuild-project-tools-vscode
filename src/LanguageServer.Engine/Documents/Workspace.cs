@@ -1,8 +1,10 @@
 using Lsp.Models;
 using Lsp.Protocol;
+using Newtonsoft.Json;
 using Serilog;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,6 +12,7 @@ using System.Xml;
 
 namespace MSBuildProjectTools.LanguageServer.Documents
 {
+    using Help;
     using SemanticModel;
     using Utilities;
 
@@ -56,12 +59,21 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                 throw new InvalidOperationException("Cannot determine current extension directory ('MSBUILD_PROJECT_TOOLS_DIR' environment variable is not present).");
 
             ExtensionDirectory = new DirectoryInfo(extensionDirectory);
+            ExtensionHelpDirectory = new DirectoryInfo(
+                Path.Combine(ExtensionDirectory.FullName, "help")
+            );
+            TaskHelpFile = new FileInfo(
+                Path.Combine(ExtensionHelpDirectory.FullName, "tasks.json")
+            );
+
             ExtensionDataDirectory = new DirectoryInfo(
                 Path.Combine(ExtensionDirectory.FullName, "data")
             );
             TaskMetadataCacheFile = new FileInfo(
                 Path.Combine(ExtensionDataDirectory.FullName, "task-metadata-cache.json")
             );
+
+            LoadHelp();
         }
 
          /// <summary>
@@ -121,6 +133,21 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         ///     The directory where extension data is stored.
         /// </summary>
         public DirectoryInfo ExtensionDataDirectory { get; }
+
+        /// <summary>
+        ///     The directory where extension help is stored.
+        /// </summary>
+        public DirectoryInfo ExtensionHelpDirectory { get; }
+
+        /// <summary>
+        ///     The file that stores help for well-known MSBuild tasks.
+        /// </summary>
+        public FileInfo TaskHelpFile { get; }
+
+        /// <summary>
+        ///     Help for well-known MSBuild tasks.
+        /// </summary>
+        public IReadOnlyDictionary<string, TaskHelp> TaskHelp { get; private set; }
 
         /// <summary>
         ///     The file that stores the persisted task metadata cache.
@@ -346,6 +373,18 @@ namespace MSBuildProjectTools.LanguageServer.Documents
                 ExtensionDataDirectory.Create();
 
             TaskMetadataCache.Save(TaskMetadataCacheFile.FullName);
+        }
+
+        /// <summary>
+        ///     Load help information for well-known objects.
+        /// </summary>
+        void LoadHelp()
+        {
+            using (StreamReader input = TaskHelpFile.OpenText())
+            using (JsonTextReader json = new JsonTextReader(input))
+            {
+                TaskHelp = Help.TaskHelp.FromJson(json);
+            }
         }
     }
 }

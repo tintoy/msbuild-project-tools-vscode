@@ -170,6 +170,9 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 
             Lsp.Models.Range replaceRangeLsp = replaceRange.ToLsp();
 
+            Help.TaskHelp taskDocs;
+            projectDocument.Workspace.TaskHelp.TryGetValue(taskMetadata.Name, out taskDocs);
+
             foreach (MSBuildTaskParameterMetadata taskParameter in taskMetadata.Parameters.OrderBy(parameter => parameter.Name))
             {
                 if (existingAttributeNames.Contains(taskParameter.Name))
@@ -178,7 +181,10 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 if (taskParameter.IsOutput)
                     continue;
 
-                yield return TaskAttributeCompletionItem(taskMetadata.Name, taskParameter, replaceRangeLsp, needsPadding);
+                Help.TaskParameterHelp parameterDocumentation = null;
+                taskDocs?.Parameters?.TryGetValue(taskParameter.Name, out parameterDocumentation);
+
+                yield return TaskAttributeCompletionItem(taskMetadata.Name, taskParameter, parameterDocumentation, replaceRangeLsp, needsPadding);
             }
         }
 
@@ -191,6 +197,9 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         /// <param name="parameterMetadata">
         ///     The MSBuild task's metadata.
         /// </param>
+        /// <param name="parameterDocumentation">
+        ///     Documentation (if available) for the task parameter.
+        /// </param>
         /// <param name="replaceRange">
         ///     The range of text that will be replaced by the completion.
         /// </param>
@@ -200,13 +209,13 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         /// <returns>
         ///     The <see cref="CompletionItem"/>.
         /// </returns>
-        CompletionItem TaskAttributeCompletionItem(string taskName, MSBuildTaskParameterMetadata parameterMetadata, Lsp.Models.Range replaceRange, PaddingType needsPadding)
+        CompletionItem TaskAttributeCompletionItem(string taskName, MSBuildTaskParameterMetadata parameterMetadata, Help.TaskParameterHelp parameterDocumentation, Lsp.Models.Range replaceRange, PaddingType needsPadding)
         {
             return new CompletionItem
             {
                 Label = parameterMetadata.Name,
                 Detail = "Task Parameter",
-                Documentation = $"Parameter '{parameterMetadata.Name}' of task '{taskName}'.",
+                Documentation = parameterDocumentation?.Description,
                 SortText = $"{Priority:0000}parameterMetadata.Name",
                 TextEdit = new TextEdit
                 {
@@ -218,7 +227,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         }
 
         /// <summary>
-        ///     Get all tasks defined in the project (via 'UsingTask' attributes).
+        ///     Get all tasks defined in the project.
         /// </summary>
         /// <param name="projectDocument">
         ///     The project document.
@@ -233,32 +242,13 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             
             MSBuildTaskMetadataCache taskMetadataCache = projectDocument.Workspace.TaskMetadataCache;
 
+            // We trust that all tasks discovered via GetMSBuildProjectTaskAssemblies are accessible in the current project.
+
             Dictionary<string, MSBuildTaskMetadata> tasks = new Dictionary<string, MSBuildTaskMetadata>();
-            foreach (ProjectUsingTaskElement usingTask in projectDocument.MSBuildProject.GetAllUsingTasks())
+            foreach (MSBuildTaskAssemblyMetadata assemblyMetadata in await projectDocument.GetMSBuildProjectTaskAssemblies())
             {
-                if (String.IsNullOrWhiteSpace(usingTask.AssemblyFile))
-                    continue;
-
-                if (String.IsNullOrWhiteSpace(usingTask.TaskName))
-                    continue;
-
-                string assemblyFile = Path.GetFullPath(Path.Combine(
-                    usingTask.ContainingProject.DirectoryPath,
-                    projectDocument.MSBuildProject.ExpandString(usingTask.AssemblyFile)
-                ));
-
-                MSBuildTaskAssemblyMetadata assemblyMetadata = await taskMetadataCache.GetAssemblyMetadata(assemblyFile);
-                if (assemblyMetadata == null)
-                    continue;
-
-                // TODO: Use dictionary of tasks by assembly and task name.
-                MSBuildTaskMetadata taskMetadata = assemblyMetadata.Tasks.FirstOrDefault(
-                    task => task.Name == usingTask.TaskName
-                );
-                if (taskMetadata == null)
-                    continue;
-
-                tasks[usingTask.TaskName] = taskMetadata;
+                foreach (MSBuildTaskMetadata task in assemblyMetadata.Tasks)
+                    tasks[task.Name] = task;
             }
 
             return tasks;

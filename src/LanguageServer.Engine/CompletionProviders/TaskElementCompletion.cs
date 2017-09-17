@@ -20,7 +20,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
     ///     Completion provider for the MSBuild task elements.
     /// </summary>
     public class TaskElementCompletion
-        : CompletionProvider
+        : TaskCompletionProvider
     {
         /// <summary>
         ///     Create a new <see cref="TaskElementCompletion"/>.
@@ -88,23 +88,26 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 
                     return null;
                 }
-                if (replaceElement == null)
+                
+                if (replaceElement != null)
+                {
+                    Log.Verbose("Offering completions to replace element {ElementName} @ {ReplaceRange:l}",
+                        replaceElement.Name,
+                        replaceElement.Range
+                    );
+
+                    Dictionary<string, MSBuildTaskMetadata> projectTasks = await GetProjectTasks(projectDocument);
+
+                    completions.AddRange(
+                        GetCompletionItems(projectDocument, projectTasks, replaceElement.Range)
+                    );
+                }
+                else
                 {
                     Log.Verbose("Not offering any completions for {XmlLocation:l} (no element to replace at this position).", location);
 
                     return null;
                 }
-
-                Log.Verbose("Offering completions to replace element {ElementName} @ {ReplaceRange:l}",
-                    replaceElement.Name,
-                    replaceElement.Range
-                );
-
-                Dictionary<string, MSBuildTaskMetadata> projectTasks = await GetProjectTasks(projectDocument);
-
-                completions.AddRange(
-                    GetCompletionItems(projectDocument, projectTasks, replaceElement.Range)
-                );
             }
 
             Log.Verbose("Offering {CompletionCount} completion(s) for {XmlLocation:l}", completions.Count, location);
@@ -188,34 +191,6 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 },
                 InsertTextFormat = InsertTextFormat.Snippet
             };
-        }
-
-        /// <summary>
-        ///     Get all tasks defined in the project.
-        /// </summary>
-        /// <param name="projectDocument">
-        ///     The project document.
-        /// </param>
-        /// <returns>
-        ///     A dictionary of task metadata, keyed by task name.
-        /// </returns>
-        async Task<Dictionary<string, MSBuildTaskMetadata>> GetProjectTasks(ProjectDocument projectDocument)
-        {
-            if (projectDocument == null)
-                throw new ArgumentNullException(nameof(projectDocument));
-            
-            MSBuildTaskMetadataCache taskMetadataCache = projectDocument.Workspace.TaskMetadataCache;
-
-            // We trust that all tasks discovered via GetMSBuildProjectTaskAssemblies are accessible in the current project.
-
-            Dictionary<string, MSBuildTaskMetadata> tasks = new Dictionary<string, MSBuildTaskMetadata>();
-            foreach (MSBuildTaskAssemblyMetadata assemblyMetadata in await projectDocument.GetMSBuildProjectTaskAssemblies())
-            {
-                foreach (MSBuildTaskMetadata task in assemblyMetadata.Tasks)
-                    tasks[task.Name] = task;
-            }
-
-            return tasks;
         }
     }
 }

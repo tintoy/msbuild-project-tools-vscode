@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 
 namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 {
-    using System.IO;
     using Documents;
     using SemanticModel;
     using Utilities;
@@ -18,16 +17,16 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
     /// <summary>
     ///     Completion provider for the MSBuild task attributes.
     /// </summary>
-    public class TaskAttributeCompletion
-        : CompletionProvider
+    public class TaskParameterCompletion
+        : TaskCompletionProvider
     {
         /// <summary>
-        ///     Create a new <see cref="TaskAttributeCompletion"/>.
+        ///     Create a new <see cref="TaskParameterCompletion"/>.
         /// </summary>
         /// <param name="logger">
         ///     The application logger.
         /// </param>
-        public TaskAttributeCompletion(ILogger logger)
+        public TaskParameterCompletion(ILogger logger)
             : base(logger)
         {
         }
@@ -180,7 +179,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 
                 string parameterDocumentation = MSBuildSchemaHelp.ForTaskParameter(taskMetadata.Name, taskParameter.Name);
 
-                yield return TaskAttributeCompletionItem(taskMetadata.Name, taskParameter, parameterDocumentation, replaceRangeLsp, needsPadding);
+                yield return TaskParameterCompletionItem(taskMetadata.Name, taskParameter, parameterDocumentation, replaceRangeLsp, needsPadding);
             }
         }
 
@@ -205,7 +204,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         /// <returns>
         ///     The <see cref="CompletionItem"/>.
         /// </returns>
-        CompletionItem TaskAttributeCompletionItem(string taskName, MSBuildTaskParameterMetadata parameterMetadata, string parameterDocumentation, Lsp.Models.Range replaceRange, PaddingType needsPadding)
+        CompletionItem TaskParameterCompletionItem(string taskName, MSBuildTaskParameterMetadata parameterMetadata, string parameterDocumentation, Lsp.Models.Range replaceRange, PaddingType needsPadding)
         {
             return new CompletionItem
             {
@@ -220,34 +219,6 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 },
                 InsertTextFormat = InsertTextFormat.Snippet
             };
-        }
-
-        /// <summary>
-        ///     Get all tasks defined in the project.
-        /// </summary>
-        /// <param name="projectDocument">
-        ///     The project document.
-        /// </param>
-        /// <returns>
-        ///     A dictionary of task metadata, keyed by task name.
-        /// </returns>
-        async Task<Dictionary<string, MSBuildTaskMetadata>> GetProjectTasks(ProjectDocument projectDocument)
-        {
-            if (projectDocument == null)
-                throw new ArgumentNullException(nameof(projectDocument));
-            
-            MSBuildTaskMetadataCache taskMetadataCache = projectDocument.Workspace.TaskMetadataCache;
-
-            // We trust that all tasks discovered via GetMSBuildProjectTaskAssemblies are accessible in the current project.
-
-            Dictionary<string, MSBuildTaskMetadata> tasks = new Dictionary<string, MSBuildTaskMetadata>();
-            foreach (MSBuildTaskAssemblyMetadata assemblyMetadata in await projectDocument.GetMSBuildProjectTaskAssemblies())
-            {
-                foreach (MSBuildTaskMetadata task in assemblyMetadata.Tasks)
-                    tasks[task.Name] = task;
-            }
-
-            return tasks;
         }
     }
 }

@@ -109,7 +109,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The nnames of well-known metadata for the specified item type.
         /// </summary>
         /// <param name="itemType">
-        ///     The item type.
+        ///     The item type, or "*" for global item metadata.
         /// </param>
         /// <param name="includeGlobals">
         ///     Include global (built-in) metadata names?
@@ -241,11 +241,10 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (String.IsNullOrWhiteSpace(metadataName))
                 throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'metadataName'.", nameof(metadataName));
 
-            string helpKey = String.Format("{0}.{1}", itemType, metadataName);
             if (ItemHelp.TryGetValue(itemType, out Help.ItemHelp itemHelp) && itemHelp.Metadata.TryGetValue(metadataName, out string metadataHelp))
                 return metadataHelp;
 
-            if (GlobalItemMetadataHelp.TryGetValue(helpKey, out string globalMetadataHelp))
+            if (GlobalItemMetadataHelp.TryGetValue(metadataName, out string globalMetadataHelp))
                 return globalMetadataHelp;
 
             return null;

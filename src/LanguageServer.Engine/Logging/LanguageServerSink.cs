@@ -18,7 +18,7 @@ namespace MSBuildProjectTools.LanguageServer.Logging
         /// <summary>
         ///     The language server to which events will be logged.
         /// </summary>
-        readonly Lsp.LanguageServer _languageServer;
+        readonly Lsp.ILanguageServer _languageServer;
 
         /// <summary>
         ///     The <see cref="LoggingLevelSwitch"/> that controls logging.
@@ -39,7 +39,7 @@ namespace MSBuildProjectTools.LanguageServer.Logging
         /// <param name="levelSwitch">
         ///     The <see cref="LoggingLevelSwitch"/> that controls logging.
         /// </param>
-        public LanguageServerLoggingSink(Lsp.LanguageServer languageServer, LoggingLevelSwitch levelSwitch)
+        public LanguageServerLoggingSink(Lsp.ILanguageServer languageServer, LoggingLevelSwitch levelSwitch)
         {
             if (languageServer == null)
                 throw new ArgumentNullException(nameof(languageServer));
@@ -50,12 +50,15 @@ namespace MSBuildProjectTools.LanguageServer.Logging
             _languageServer = languageServer;
             _levelSwitch = levelSwitch;
 
-            _languageServer.Shutdown += shutDownRequested =>
+            if (_languageServer is Lsp.LanguageServer realLanguageServer)
             {
-                Log.CloseAndFlush();
+                realLanguageServer.Shutdown += shutDownRequested =>
+                {
+                    Log.CloseAndFlush();
 
-                _hasServerShutDown = true;
-            };
+                    _hasServerShutDown = true;
+                };
+            }
         }
 
         /// <summary>

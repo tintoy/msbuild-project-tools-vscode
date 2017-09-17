@@ -27,7 +27,7 @@ namespace MSBuildProjectTools.LanguageServer.Logging
         /// <returns>
         ///     The logger configuration.
         /// </returns>
-        public static LoggerConfiguration LanguageServer(this LoggerSinkConfiguration loggerSinkConfiguration, Lsp.LanguageServer languageServer, LoggingLevelSwitch levelSwitch)
+        public static LoggerConfiguration LanguageServer(this LoggerSinkConfiguration loggerSinkConfiguration, Lsp.ILanguageServer languageServer, LoggingLevelSwitch levelSwitch)
         {
             if (loggerSinkConfiguration == null)
                 throw new ArgumentNullException(nameof(loggerSinkConfiguration));

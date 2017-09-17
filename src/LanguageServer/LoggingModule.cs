@@ -53,7 +53,7 @@ namespace MSBuildProjectTools.LanguageServer
             Configuration configuration = componentContext.Resolve<Configuration>();
             ConfigureSeq(configuration.Seq);
 
-            Lsp.LanguageServer languageServer = componentContext.Resolve<Lsp.LanguageServer>();
+            Lsp.ILanguageServer languageServer = componentContext.Resolve<Lsp.ILanguageServer>();
 
             var loggerConfiguration = new LoggerConfiguration()
                 .MinimumLevel.Verbose()

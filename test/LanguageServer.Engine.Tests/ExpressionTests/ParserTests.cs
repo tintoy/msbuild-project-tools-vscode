@@ -7,6 +7,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
     ///     The base class for parser test suites.
     /// </summary>
     public abstract class ParserTests
+        : TestBase
     {
         /// <summary>
         ///     Create a new parser test-suite.
@@ -15,16 +16,8 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         ///     Output for the current test.
         /// </param>
         protected ParserTests(ITestOutputHelper testOutput)
+            : base(testOutput)
         {
-            if (testOutput == null)
-                throw new ArgumentNullException(nameof(testOutput));
-
-            TestOutput = testOutput;
         }
-
-        /// <summary>
-        ///     Output for the current test.
-        /// </summary>
-        protected ITestOutputHelper TestOutput { get; }
     }
 }

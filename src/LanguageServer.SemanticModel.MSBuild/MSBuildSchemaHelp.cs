@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
@@ -9,6 +10,52 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
     /// </summary>
     public static class MSBuildSchemaHelp
     {
+        /// <summary>
+        ///     Type initialiser for <see cref="MSBuildSchemaHelp"/>.
+        /// </summary>
+        static MSBuildSchemaHelp()
+        {
+            string extensionDirectory = Environment.GetEnvironmentVariable("MSBUILD_PROJECT_TOOLS_DIR");
+            if (String.IsNullOrWhiteSpace(extensionDirectory))
+                throw new InvalidOperationException("Cannot determine current extension directory ('MSBUILD_PROJECT_TOOLS_DIR' environment variable is not present).");
+
+            extensionDirectory = Path.GetFullPath(extensionDirectory);
+            HelpDirectory = new DirectoryInfo(
+                Path.Combine(extensionDirectory, "help")
+            );
+            PropertyHelpFile = new FileInfo(
+                Path.Combine(HelpDirectory.FullName, "properties.json")
+            );
+            ItemHelpFile = new FileInfo(
+                Path.Combine(HelpDirectory.FullName, "items.json")
+            );
+            TaskHelpFile = new FileInfo(
+                Path.Combine(HelpDirectory.FullName, "tasks.json")
+            );
+
+            // TODO: Load and parse help.
+        }
+
+        /// <summary>
+        ///     The directory where extension help files are stored.
+        /// </summary>
+        public static DirectoryInfo HelpDirectory { get; }
+
+        /// <summary>
+        ///     The file that stores help for well-known MSBuild properties.
+        /// </summary>
+        public static FileInfo PropertyHelpFile { get; }
+
+        /// <summary>
+        ///     The file that stores help for well-known MSBuild item types and their metadata.
+        /// </summary>
+        public static FileInfo ItemHelpFile { get; }
+
+        /// <summary>
+        ///     The file that stores help for well-known MSBuild tasks.
+        /// </summary>
+        public static FileInfo TaskHelpFile { get; }
+
         /// <summary>
         ///     The names of well-known MSBuild properties.
         /// </summary>

@@ -1,0 +1,704 @@
+{
+    "AllowLocalNetworkLoopback": {
+        "description": "Flag indicating whether to allow local network loopback."
+    },
+    "AllowUnsafeBlocks": {
+        "description": "Allow unsafe code blocks."
+    },
+    "AppDesignerFolder": {
+        "description": "Name of folder for Application Designer"
+    },
+    "ApplicationRevision": {
+        "description": "integer"
+    },
+    "ApplicationVersion": {
+        "description": "Matches the expression \"\\d\\.\\d\\.\\d\\.(\\d|\\*)\""
+    },
+    "AppxAutoIncrementPackageRevision": {
+        "description": "Flag indicating whether to auto-increment package revision."
+    },
+    "AppxBundle": {
+        "description": "Flag indicating whether packaging targets will produce an app bundle."
+    },
+    "AppxBundleAutoResourcePackageQualifiers": {
+        "description": "'|'-delimited list of resource qualifiers which will be used for automatic resource pack splitting."
+    },
+    "AppxBundleDir": {
+        "description": "Full path to a folder where app bundle will be produced."
+    },
+    "AppxBundleFolderSuffix": {
+        "description": "Suffix to append to app bundle folder."
+    },
+    "AppxBundleMainPackageFileMapGeneratedFilesListPath": {
+        "description": "Full path to a log file containing a list of generated files during generation of main package file map."
+    },
+    "AppxBundleMainPackageFileMapIntermediatePath": {
+        "description": "Full path to an intermediate main package file map."
+    },
+    "AppxBundleMainPackageFileMapIntermediatePrefix": {
+        "description": "Prefix used for intermediate main package resources .pri and .map.txt files."
+    },
+    "AppxBundleMainPackageFileMapIntermediatePriPath": {
+        "description": "Full path to an intermediate main package .pri file."
+    },
+    "AppxBundleMainPackageFileMapPath": {
+        "description": "Full path to a main package file map."
+    },
+    "AppxBundleMainPackageFileMapPrefix": {
+        "description": "Prefix used for main package resources .pri and .map.txt files."
+    },
+    "AppxBundleMainPackageFileMapSuffix": {
+        "description": "Suffix used before extension of resource map files."
+    },
+    "AppxBundlePlatforms": {
+        "description": "'|'-delimited list of platforms which will be included in an app bundle."
+    },
+    "AppxBundlePriConfigXmlForMainPackageFileMapFileName": {
+        "description": "Full path to the priconfig.xml file used for generating main package file map."
+    },
+    "AppxBundlePriConfigXmlForSplittingFileName": {
+        "description": "Full path to the priconfig.xml file used for splitting resource packs."
+    },
+    "AppxBundleProducingPlatform": {
+        "description": "A platform which will be used to produce an app bundle."
+    },
+    "AppxBundleResourcePacksProducingPlatform": {
+        "description": "A platform which will be used to produce resource packs for an app bundle."
+    },
+    "AppxBundleSplitResourcesGeneratedFilesListPath": {
+        "description": "Full path to a log file containing a list of generated files during resource splitting."
+    },
+    "AppxBundleSplitResourcesPriPath": {
+        "description": "Full path to split resources .pri file."
+    },
+    "AppxBundleSplitResourcesPriPrefix": {
+        "description": "Prefix used for split resources .pri and .map.txt files."
+    },
+    "AppxBundleSplitResourcesQualifiersPath": {
+        "description": "Full path to a log file containing a detected qualifiers during resource splitting."
+    },
+    "AppxCopyLocalFilesOutputGroupIncludeXmlFiles": {
+        "description": "Flag indicating whether CopyLocal files group should include XML files."
+    },
+    "AppxCreatePriFilesForPortableLibrariesAdditionalMakepriExeParameters": {
+        "description": "Additional parameters to pass to makepri.exe when generating PRI file for a portable library."
+    },
+    "AppxDefaultHashAlgorithmId": {
+        "description": "Default hash algorithm ID}, used for signing an app package."
+    },
+    "AppxDefaultResourceQualifiers": {
+        "description": "'|'-delimited list of key=value pairs representing default resource qualifiers."
+    },
+    "AppxExpandPriContentAdditionalMakepriExeParameters": {
+        "description": "Additional parameters to pass to makepri.exe when extracting payload file names."
+    },
+    "AppxFilterOutUnusedLanguagesResourceFileMaps": {
+        "description": "Flag indicating whether to filter out unused language resource file maps."
+    },
+    "AppxGeneratePriEnabled": {
+        "description": "Flag indicating whether to generate resource index files (PRI files) during packaging."
+    },
+    "AppxGenerateProjectPriFileAdditionalMakepriExeParameters": {
+        "description": "Additional parameters to pass to makepri.exe when generating project PRI file."
+    },
+    "AppxHarvestWinmdRegistration": {
+        "description": "Flag indicating whether to enable harvesting of WinMD registration information."
+    },
+    "AppxLayoutDir": {
+        "description": "Full path to the folder where package layout will be prepared when producing an app bundle."
+    },
+    "AppxLayoutFolderName": {
+        "description": "Name of the folder where package layout will be prepared when producing an app bundle."
+    },
+    "AppxMSBuildTaskAssembly": {
+        "description": "Full path to packaging build tasks assembly."
+    },
+    "AppxMSBuildToolsPath": {
+        "description": "Full path to a folder containing packaging build targets and tasks assembly."
+    },
+    "AppxOSMaxVersionTested": {
+        "description": "Targeted maximum OS version tested."
+    },
+    "AppxOSMaxVersionTestedReplaceManifestVersion": {
+        "description": "Flag indicating whether maximum OS version tested in app manifest should be replaced."
+    },
+    "AppxOSMinVersion": {
+        "description": "Targeted minimum OS version."
+    },
+    "AppxOSMinVersionReplaceManifestVersion": {
+        "description": "Flag indicating whether minimum OS version in app manifest should be replaced."
+    },
+    "AppxPackage": {
+        "description": "Flag marking current project as capable of being packaged as an app package."
+    },
+    "AppxPackageAllowDebugFrameworkReferencesInManifest": {
+        "description": "Flag indicating whether to allow inclusion of debug framework references in an app manifest."
+    },
+    "AppxPackageArtifactsDir": {
+        "description": "Additional qualifier to append to AppxPackageDir."
+    },
+    "AppxPackageDir": {
+        "description": "Full path to a folder where app packages will be saved."
+    },
+    "AppxPackageDirName": {
+        "description": "Name of the folder where app packages are produced."
+    },
+    "AppxPackageFileMap": {
+        "description": "Full path to app package file map."
+    },
+    "AppxPackageIncludePrivateSymbols": {
+        "description": "Flag indicating whether to include private symbols in symbol packages."
+    },
+    "AppxPackageName": {
+        "description": "Name of the app package to generate."
+    },
+    "AppxPackageOutput": {
+        "description": "Full path to the app package file."
+    },
+    "AppxPackageRecipe": {
+        "description": "Full path to the app package recipe."
+    },
+    "AppxPackageSigningEnabled": {
+        "description": "Flag indicating whether to enable signing of app packages."
+    },
+    "AppxPackageTestDir": {
+        "description": "Name of the folder where test app packages will be copied"
+    },
+    "AppxPackageValidationEnabled": {
+        "description": "Flag indicating whether to enable validation of app packages."
+    },
+    "AppxPackagingInfoFile": {
+        "description": "Full path to the packaging info file which will contain paths to produced packages."
+    },
+    "AppxPrependPriInitialPath": {
+        "description": "Flag indicating whether to enable prepending initial path when indexing RESW and RESJSON files in class libraries."
+    },
+    "AppxPriConfigXmlDefaultSnippetPath": {
+        "description": "Path to an XML file containing default element for priconfi.xml file."
+    },
+    "AppxPriConfigXmlPackagingSnippetPath": {
+        "description": "Path to an XML file containing packaging element for priconfi.xml file."
+    },
+    "AppxPriInitialPath": {
+        "description": "Initial path when indexing RESW and RESJSON files in class libraries."
+    },
+    "AppxSkipUnchangedFiles": {
+        "description": "Flag indicating whether to skip unchanged files when copying files during creation of app packages."
+    },
+    "AppxStoreContainer": {
+        "description": "Name of the app store container to generate."
+    },
+    "AppxStrictManifestValidationEnabled": {
+        "description": "Flag indicating whether to enable strict manifest validation."
+    },
+    "AppxSymbolPackageEnabled": {
+        "description": "Flag indicating whether to generate a symbol package when an app package is created."
+    },
+    "AppxSymbolPackageOutput": {
+        "description": "Full path to the app symbol package file."
+    },
+    "AppxSymbolStrippedDir": {
+        "description": "Full path to a directory where stripped PDBs will be stored."
+    },
+    "AppxTestLayoutEnabled": {
+        "description": "Flag indicating whether to create test layout when an app package is created."
+    },
+    "AppxUseHardlinksIfPossible": {
+        "description": "Flag indicating whether to use hard links if possible when copying files during creation of app packages."
+    },
+    "AppxValidateAppxManifest": {
+        "description": "Flag indicating whether to validate app manifest."
+    },
+    "AppxValidateStoreManifest": {
+        "description": "Flag indicating whether to validate store manifest."
+    },
+    "AssemblyKeyContainerName": {
+        "description": "The name of the CAPI container that holds the strong-naming key used to sign the output assembly."
+    },
+    "AssemblyKeyProviderName": {
+        "description": "The name of the CAPI provider that provides the strong-naming key used to sign the output assembly."
+    },
+    "AssemblyName": {
+        "description": "Name of output assembly"
+    },
+    "AssemblyOriginatorKeyFile": {
+        "description": "The path of the strong-naming key (.snk) file used to sign the output assembly."
+    },
+    "AssemblyTitle": {
+        "description": "Description for the assembly manifest"
+    },
+    "AssemblyVersion": {
+        "description": "Numeric value of the version for the assembly manifest in the format major.minor.patch (e.g. 2.4.0)"
+    },
+    "Authors": {
+        "description": "A comma-separated list of NuGet packages authors"
+    },
+    "AutoGenerateBindingRedirects": {
+        "description": "Indicates whether BindingRedirect elements should be automatically generated for referenced assemblies."
+    },
+    "AutoIncrementPackageRevision": {
+        "description": "Flag indicating whether to enable auto increment of an app package revision."
+    },
+    "AutorunEnabled": {
+        "description": "boolean"
+    },
+    "BootstrapperComponentsLocation": {
+        "description": "HomeSite}, Relative}, or Absolute"
+    },
+    "BootstrapperEnabled": {
+        "description": "boolean"
+    },
+    "CodeAnalysisAdditionalOptions": {
+        "description": "Additional options to pass to the Code Analysis command line tool."
+    },
+    "CodeAnalysisApplyLogFileXsl": {
+        "description": "Indicates whether to apply the XSL style sheet specified in $(CodeAnalysisLogFileXsl) to the Code Analysis report. This report is specified in $(CodeAnalysisLogFile). The default is false."
+    },
+    "CodeAnalysisConsoleXsl": {
+        "description": "Path to the XSL style sheet that will be applied to the Code Analysis console output. The default is an empty string ('')}, which causes Code Analysis to use its default console output."
+    },
+    "CodeAnalysisCulture": {
+        "description": "Culture to use for Code Analysis spelling rules}, for example}, 'en-US' or 'en-AU'. The default is the current user interface language for Windows."
+    },
+    "CodeAnalysisFailOnMissingRules": {
+        "description": "Indicates whether Code Analysis should fail if a rule or rule set is missing. The default is false."
+    },
+    "CodeAnalysisForceOutput": {
+        "description": "Indicates whether Code Analysis generates a report file}, even when there are no active warnings or errors. The default is true."
+    },
+    "CodeAnalysisGenerateSuccessFile": {
+        "description": "Indicates whether Code Analysis generates a '$(CodeAnalysisInputAssembly).lastcodeanalysissucceeded' file in the output folder when no build-breaking errors occur. The default is true."
+    },
+    "CodeAnalysisIgnoreBuiltInRules": {
+        "description": "Indicates whether Code Analysis will ignore the default rule directories when searching for rules. The default is false."
+    },
+    "CodeAnalysisIgnoreBuiltInRuleSets": {
+        "description": "Indicates whether Code Analysis will ignore the default rule set directories when searching for rule sets. The default is false."
+    },
+    "CodeAnalysisIgnoreGeneratedCode": {
+        "description": "Indicates whether Code Analysis should fail silently when it analyzes invalid assemblies}, such as those without managed code. The default is true."
+    },
+    "CodeAnalysisIgnoreInvalidTargets": {
+        "description": "Indicates whether Code Analysis should silently fail when analyzing invalid assemblies}, such as those without managed code. The default is true."
+    },
+    "CodeAnalysisInputAssembly": {
+        "description": "Path to the assembly to be analyzed by Code Analysis. The default is '$(OutDir)$(TargetName)$(TargetExt)'."
+    },
+    "CodeAnalysisLogFile": {
+        "description": "Path to the output file for the Code Analysis report. The default is '$(CodeAnalysisInputAssembly).CodeAnalysisLog.xml'."
+    },
+    "CodeAnalysisLogFileXsl": {
+        "description": "Path to the XSL style sheet to reference in the Code Analysis output report. This report is specified in $(CodeAnalysisLogFile). The default is an empty string ('')."
+    },
+    "CodeAnalysisModuleSuppressionsFile": {
+        "description": "Name of the file}, without the path}, where Code Analysis project-level suppressions are stored. The default is 'GlobalSuppressions$(DefaultLanguageSourceExtension)'."
+    },
+    "CodeAnalysisOutputToConsole": {
+        "description": "Indicates whether to output Code Analysis warnings and errors to the console. The default is false."
+    },
+    "CodeAnalysisOverrideRuleVisibilities": {
+        "description": "Indicates whether to run all overridable Code Analysis rules against all targets. This will cause specific rules}, such as those within the Design and Naming categories}, to run against both public and internal APIs}, instead of only public APIs. The default is false."
+    },
+    "CodeAnalysisPath": {
+        "description": "Path to the Code Analysis installation folder. The default is '$(VSINSTALLDIR)\\Team Tools\\Static Analysis Tools\\FxCop'."
+    },
+    "CodeAnalysisPlatformPath": {
+        "description": "Path to the .NET Framework folder that contains platform assemblies}, such as mscorlib.dll and System.dll. The default is an empty string ('')."
+    },
+    "CodeAnalysisProject": {
+        "description": "Path to the Code Analysis project (*.fxcop) to load. The default is an empty string ('')."
+    },
+    "CodeAnalysisQuiet": {
+        "description": "Indicates whether to suppress all Code Analysis console output other than errors and warnings. This applies when $(CodeAnalysisOutputToConsole) is true. The default is false."
+    },
+    "CodeAnalysisRuleAssemblies": {
+        "description": "Semicolon-separated list of paths either to Code Analysis rule assemblies or to folders that contain Code Analysis rule assemblies. The paths are in the form '+|-]!]file|folder]'}, where '+' enables all rules in rule assembly}, '-' disables all rules in rule assembly}, and '!' causes all rules in rule assembly to be treated as errors. For example '+D:\\Projects\\Rules\\NamingRules.dll;+!D:\\Projects\\Rules\\SecurityRules.dll'. The default is '$(CodeAnalysisPath)\\Rules'."
+    },
+    "CodeAnalysisRuleDirectories": {
+        "description": "Semicolon-separated list of directories in which to search for rules when resolving a rule set. The default is '$(CodeAnalysisPath)\\Rules' unless the CodeAnalysisIgnoreBuiltInRules property is set to true."
+    },
+    "CodeAnalysisRules": {
+        "description": "Semicolon-separated list of Code Analysis rules. The rules are in the form '+|-]!]Category#CheckId'}, where '+' enables the rule}, '-' disables the rule}, and '!' causes the rule to be treated as an error. For example}, '-Microsoft.Naming#CA1700;+!Microsoft.Naming#CA1701'. The default is an empty string ('') which enables all rules."
+    },
+    "CodeAnalysisRuleSet": {
+        "description": "A .ruleset file which contains a list of rules to run during analysis. The string can be a full path}, a path relative to the project file}, or a file name. If a file name is specified}, the CodeAnalysisRuleSetDirectories property will be searched to find the file. The default is an empty string ('')."
+    },
+    "CodeAnalysisRuleSetDirectories": {
+        "description": "Semicolon-separated list of directories in which to search for rule sets. The default is '$(VSINSTALLDIR)\\Team Tools\\Static Analysis Tools\\Rule Sets' unless the CodeAnalysisIgnoreBuiltInRuleSets property is set to true."
+    },
+    "CodeAnalysisSaveMessagesToReport": {
+        "description": "Comma-separated list of the type ('Active'}, 'Excluded'}, or 'Absent') of warnings and errors to save to the output report file. The default is 'Active'."
+    },
+    "CodeAnalysisSearchGlobalAssemblyCache": {
+        "description": "Indicates whether Code Analysis should search the Global Assembly Cache (GAC) for missing references that are encountered during analysis. The default is true."
+    },
+    "CodeAnalysisSummary": {
+        "description": "Indicates whether to output a Code Analysis summary to the console after analysis. The default is false."
+    },
+    "CodeAnalysisTimeout": {
+        "description": "The time}, in seconds}, that Code Analysis should wait for analysis of a single item to complete before it aborts analysis. Specify 0 to cause Code Analysis to wait indefinitely. The default is 120."
+    },
+    "CodeAnalysisTreatWarningsAsErrors": {
+        "description": "Indicates whether to treat all Code Analysis warnings as errors. The default is false."
+    },
+    "CodeAnalysisUpdateProject": {
+        "description": "Indicates whether to update the Code Analysis project (*.fxcop) specified in $(CodeAnalysisProject). This applies when there are changes during analysis. The default is false."
+    },
+    "CodeAnalysisUseTypeNameInSuppression": {
+        "description": "Indicates whether to include the name of the rule when Code Analysis emits a suppression. The default is true."
+    },
+    "CodeAnalysisVerbose": {
+        "description": "Indicates whether to output verbose Code Analysis diagnostic info to the console. The default is false."
+    },
+    "Company": {
+        "description": "Company name for the assembly manifest"
+    },
+    "Configuration": {
+        "description": "The project build configuration (e.g. Debug}, Release)."
+    },
+    "Copyright": {
+        "description": "Copyright details for the NuGet package"
+    },
+    "CreateWebPageOnPublish": {
+        "description": "boolean"
+    },
+    "DebugSymbols": {
+        "description": "Whether to emit symbols (boolean)"
+    },
+    "DebugType": {
+        "description": "none}, pdbonly}, or full"
+    },
+    "DefaultLanguage": {
+        "description": "Default resource language."
+    },
+    "DefineConstants": {
+        "description": "Compile-time constants to be defined (e.g. DEBUG}, TRACE)."
+    },
+    "DefineDebug": {
+        "description": "Whether DEBUG is defined (boolean)"
+    },
+    "DefineTrace": {
+        "description": "Whether TRACE is defined (boolean)"
+    },
+    "DelaySign": {
+        "description": "Delay-sign the output assembly (boolean)."
+    },
+    "Description": {
+        "description": "A long description of the NuGet package for UI display"
+    },
+    "DisableFastUpToDateCheck": {
+        "description": "Whether Visual Studio should do its own faster up-to-date check before Building}, rather than invoke MSBuild to do a possibly more accurate one. You would set this to false if you have a heavily customized build process and builds in Visual Studio are not occurring when they should."
+    },
+    "DocumentationFile": {
+        "description": "The XML documentation file to generate from doc-comments."
+    },
+    "EnableASPDebugging": {
+        "description": "Enable classic ASP debugging (boolean)."
+    },
+    "EnableASPXDebugging": {
+        "description": "Enable ASP.NET Razor debugging (boolean)."
+    },
+    "EnableSigningChecks": {
+        "description": "Flag indicating whether to enable signing checks during app package generation."
+    },
+    "EnableUnmanagedDebugging": {
+        "description": "Enable unmanaged debugging (boolean)."
+    },
+    "FileVersion": {
+        "description": "Numeric value of the version for the assembly manifest in the format major.minor.build.revision (e.g. 2.4.0.1)"
+    },
+    "FinalAppxManifestName": {
+        "description": "Path to the final app manifest."
+    },
+    "FinalAppxPackageRecipe": {
+        "description": "Full path to the final app package recipe."
+    },
+    "FrameworkPathOverride": {
+        "description": "Sets the /sdkpath switch for a VB project to the specified value"
+    },
+    "GenerateAppxPackageOnBuild": {
+        "description": "Flag indicating whether to generate app package during the build."
+    },
+    "GeneratePackageOnBuild": {
+        "description": "Value indicating whether a NuGet package will be generated when the project is built"
+    },
+    "IncludeBuiltProjectOutputGroup": {
+        "description": "Flag indicating whether to include primary build outputs into the app package payload."
+    },
+    "IncludeComFilesOutputGroup": {
+        "description": "Flag indicating whether to include COM files into the app package payload."
+    },
+    "IncludeContentFilesProjectOutputGroup": {
+        "description": "Flag indicating whether to include content files into the app package payload."
+    },
+    "IncludeCopyLocalFilesOutputGroup": {
+        "description": "Flag indicating whether to include files marked as 'Copy local' into the app package payload."
+    },
+    "IncludeCopyWinmdArtifactsOutputGroup": {
+        "description": "Flag indicating whether to include WinMD artifacts into the app package payload."
+    },
+    "IncludeCustomOutputGroupForPackaging": {
+        "description": "Flag indicating whether to include custom output group into the app package payload."
+    },
+    "IncludeDebugSymbolsProjectOutputGroup": {
+        "description": "Flag indicating whether to include debug symbols into the app package payload."
+    },
+    "IncludeDocumentationProjectOutputGroup": {
+        "description": "Flag indicating whether to include documentation into the app package payload."
+    },
+    "IncludeGetResolvedSDKReferences": {
+        "description": "Flag indicating whether to include resolved SDK references into the app package payload."
+    },
+    "IncludePriFilesOutputGroup": {
+        "description": "Flag indicating whether to include resource index (PRI) files into the app package payload."
+    },
+    "IncludeSatelliteDllsProjectOutputGroup": {
+        "description": "Flag indicating whether to include satellite DLLs into the app package payload."
+    },
+    "IncludeSDKRedistOutputGroup": {
+        "description": "Flag indicating whether to include SDK redist into the app package payload."
+    },
+    "IncludeSGenFilesOutputGroup": {
+        "description": "Flag indicating whether to include SGen files into the app package payload."
+    },
+    "IncludeSourceFilesProjectOutputGroup": {
+        "description": "Flag indicating whether to include source files into the app package payload."
+    },
+    "InformationalVersion": {
+        "description": "Product version of the assembly for UI display (e.g. 1.0 Beta)"
+    },
+    "InsertReverseMap": {
+        "description": "Flag indicating whether to insert reverse resource map during resource index generation."
+    },
+    "InstallFrom": {
+        "description": "Web}, Unc}, or Disk"
+    },
+    "LayoutDir": {
+        "description": "Full path to a folder with package layout."
+    },
+    "MakeAppxExeFullPath": {
+        "description": "Full path to makeappx.exe utility."
+    },
+    "MakePriExeFullPath": {
+        "description": "Full path to makepri.exe utility."
+    },
+    "ManagedWinmdInprocImplementation": {
+        "description": "Name of the binary containing managed WinMD in-proc implementation."
+    },
+    "MapFileExtensions": {
+        "description": "boolean"
+    },
+    "MinimumRequiredVersion": {
+        "description": "Matches the expression \"\\d\\.\\d\\.\\d\\.\\d\""
+    },
+    "MSBuildTreatWarningsAsErrors": {
+        "description": "Indicates whether to treat all warnings as errors when building a project."
+    },
+    "MSBuildWarningsAsErrors": {
+        "description": "Indicates a semicolon delimited list of warnings to treat as errors when building a project."
+    },
+    "MSBuildWarningsAsMessages": {
+        "description": "Indicates a semicolon delimited list of warnings to treat as low importance messages when building a project."
+    },
+    "NeutralLanguage": {
+        "description": "The locale ID for the NuGet package"
+    },
+    "NoStdLib": {
+        "description": "Whether standard libraries (such as mscorlib) should be referenced automatically (boolean)"
+    },
+    "NoWarn": {
+        "description": "Comma separated list of disabled warnings"
+    },
+    "OpenBrowserOnPublish": {
+        "description": "boolean"
+    },
+    "Optimize": {
+        "description": "Should compiler optimize output (boolean)"
+    },
+    "OptionCompare": {
+        "description": "Option Compare setting (Text or Binary)"
+    },
+    "OptionExplicit": {
+        "description": "Should Option Explicit be set (On or Off)"
+    },
+    "OptionInfer": {
+        "description": "Should Option Infer be set (On or Off)"
+    },
+    "OptionStrict": {
+        "description": "Should Option Strict be set (On or Off)"
+    },
+    "OutDir": {
+        "description": "Path to output folder}, with trailing slash (legacy property; prefer use of \"OutputPath\" instead)"
+    },
+    "OutputPath": {
+        "description": "Path to output folder}, with trailing slash"
+    },
+    "OutputType": {
+        "description": "Type of output to generate (WinExe}, Exe}, or Library)"
+    },
+    "PackageCertificateKeyFile": {
+        "description": "App package certificate key file."
+    },
+    "PackageIconUrl": {
+        "description": "The URL for a 64x64 image with transparent background to use as the icon for the NuGet package in UI display"
+    },
+    "PackageId": {
+        "description": "The case-insensitive NuGet package identifier}, which must be unique across nuget.org or whatever gallery the NuGet package will reside in. IDs may not contain spaces or characters that are not valid for a URL}, and generally follow .NET namespace rules."
+    },
+    "PackageLicenseUrl": {
+        "description": "The URL for the NuGet package's license}, often shown in UI displays as well as nuget.org"
+    },
+    "PackageProjectUrl": {
+        "description": "The URL for the NuGet package's home page}, often shown in UI displays as well as nuget.org"
+    },
+    "PackageReleaseNotes": {
+        "description": "A description of the changes made in this release of the NuGet package}, often used in UI like the Updates tab of the Visual Studio Package Manager in place of the package description"
+    },
+    "PackageRequireLicenseAcceptance": {
+        "description": "Value indicating whether the client must prompt the consumer to accept the NuGet package license before installing the package"
+    },
+    "PackageTags": {
+        "description": "A space-delimited list of tags and keywords that describe the NuGet package and aid discoverability of NuGet packages through search and filtering mechanisms"
+    },
+    "PackageTargetFallback": {
+        "description": "Allows packages using alternative monikers to be referenced in this project}, which include older (e.g. dnxcore50}, dotnet5.x) and Portable Class Library names."
+    },
+    "PackageVersion": {
+        "description": "Numeric value of the NuGet package version in the format major.minor.patch pattern (e.g. 1.0.1). Version numbers may include a pre-release suffix (e.g. 1.0.1-beta)"
+    },
+    "PackagingDirectoryWritesLogPath": {
+        "description": "Full path to a text file containing packaging directory writes log."
+    },
+    "PackagingFileWritesLogPath": {
+        "description": "Full path to a text file containing packaging file writes log."
+    },
+    "PdbCopyExeFullPath": {
+        "description": "Full path to pdbcopy.exe utility."
+    },
+    "PlatformSpecificBundleArtifactsListDir": {
+        "description": "Full path to a folder where platform-specific bundle artifact list files are stored."
+    },
+    "PlatformSpecificBundleArtifactsListDirName": {
+        "description": "Name of the folder where platform-specific bundle artifact lists are stored."
+    },
+    "PostBuildEvent": {
+        "description": "Command line to be run at the end of build"
+    },
+    "PreBuildEvent": {
+        "description": "Command line to be run at the start of build"
+    },
+    "PreserveCompilationContext": {
+        "description": "Value indicating whether reference assemblies can be used in dynamic compilation"
+    },
+    "Product": {
+        "description": "Product name information for the assembly manifest"
+    },
+    "ProjectPriFileName": {
+        "description": "File name to use for project-specific resource index file (PRI)."
+    },
+    "ProjectPriFullPath": {
+        "description": "Full path to project-specific resource index file (PRI)."
+    },
+    "ProjectPriIndexName": {
+        "description": "Name of the resource index used in the generated .pri file."
+    },
+    "ReferencePath": {
+        "description": "Semicolon separated list of folders to search during reference resolution"
+    },
+    "RegisterForComInterop": {
+        "description": "Register the assembly's types for COM Interop (boolean)."
+    },
+    "RepositoryType": {
+        "description": "The type of the repository where the project is stored (e.g. git)"
+    },
+    "RepositoryUrl": {
+        "description": "The URL for the repository where the project is stored"
+    },
+    "ResgenToolPath": {
+        "description": "Full path to a folder containing resgen tool."
+    },
+    "RootNamespace": {
+        "description": "The default namespace for new code files added to the project."
+    },
+    "RunCodeAnalysis": {
+        "description": "Indicates whether to run Code Analysis during the build."
+    },
+    "RuntimeIdentifier": {
+        "description": "Runtime identifier supported by the project (e.g. win10-x64)"
+    },
+    "RuntimeIdentifiers": {
+        "description": "Semicolon separated list of runtime identifiers supported by the project (e.g. win10-x64;osx.10.11-x64;ubuntu.16.04-x64)"
+    },
+    "SignAppxPackageExeFullPath": {
+        "description": "Full path to signtool.exe utility."
+    },
+    "SignAssembly": {
+        "description": "Sign the output assembly}, giving it a strong name (boolean)."
+    },
+    "SolutionDir": {
+        "description": "The solution directory."
+    },
+    "SolutionExt": {
+        "description": "The solution file extension."
+    },
+    "SolutionFileName": {
+        "description": "The solution file name."
+    },
+    "SolutionName": {
+        "description": "The solution file name}, without extension."
+    },
+    "SolutionPath": {
+        "description": "The full path to the solution file."
+    },
+    "StartupObject": {
+        "description": "Type that contains the main entry point"
+    },
+    "StoreManifestName": {
+        "description": "Name of the store manifest file."
+    },
+    "TargetFramework": {
+        "description": "Framework that this project targets. Must be a Target Framework Moniker (e.g. netcoreapp1.0)"
+    },
+    "TargetFrameworks": {
+        "description": "Semicolon separated list of frameworks that this project targets. Must be a Target Framework Moniker (e.g. netcoreapp1.0;net461)"
+    },
+    "TargetPlatformSdkRootOverride": {
+        "description": "Full path to platform SDK root."
+    },
+    "Title": {
+        "description": "A human-friendly title of the package}, typically used in UI displays as on nuget.org and the Package Manager in Visual Studio. If not specified}, the package ID is used instead."
+    },
+    "TreatWarningsAsErrors": {
+        "description": "Treat compile warnings as errors (boolean)."
+    },
+    "UpdateIntervalUnits": {
+        "description": "Hours}, Days}, or Weeks"
+    },
+    "UpdateMode": {
+        "description": "Foreground or Background"
+    },
+    "UpdatePeriodically": {
+        "description": "boolean"
+    },
+    "UpdateRequired": {
+        "description": "boolean"
+    },
+    "UseIncrementalAppxRegistration": {
+        "description": "Flag indicating whether to enable incremental registration of the app layout."
+    },
+    "Version": {
+        "description": "Numeric value of the version in the format major.minor.patch (e.g. 2.4.0)"
+    },
+    "VersionPrefix": {
+        "description": "When Version is not specified}, VersionPrefix represents the first fragment of the version string (e.g. 1.0.0). The syntax is VersionPrefix-VersionSuffix]."
+    },
+    "VersionSuffix": {
+        "description": "When Version is not specified}, VersionSuffix represents the second fragment of the version string (e.g. beta). The syntax is VersionPrefix-VersionSuffix]."
+    },
+    "WarningLevel": {
+        "description": "integer between 0 and 4 inclusive"
+    },
+    "WarningsAsErrors": {
+        "description": "Comma separated list of warning numbers to treat as errors"
+    }
+}

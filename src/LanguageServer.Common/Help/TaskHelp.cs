@@ -12,14 +12,14 @@ namespace MSBuildProjectTools.LanguageServer.Help
         /// <summary>
         ///     A description of the task.
         /// </summary>
-        [JsonProperty("summary")]
+        [JsonProperty("description")]
         public string Description { get; set; }
 
         /// <summary>
         ///     The task's parameters.
         /// </summary>
         [JsonProperty("parameters", ObjectCreationHandling = ObjectCreationHandling.Reuse)]
-        public SortedDictionary<string, TaskParameterHelp> Parameters { get; set; }
+        public SortedDictionary<string, TaskParameterHelp> Parameters { get; } = new SortedDictionary<string, TaskParameterHelp>();
 
         /// <summary>
         ///     Load task help from JSON.
@@ -47,7 +47,7 @@ namespace MSBuildProjectTools.LanguageServer.Help
         /// <summary>
         ///     A description of the task parameter.
         /// </summary>
-        [JsonProperty("summary")]
+        [JsonProperty("description")]
         public string Description { get; set; }
 
         /// <summary>

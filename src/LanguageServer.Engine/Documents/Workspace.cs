@@ -12,6 +12,7 @@ using System.Xml;
 
 namespace MSBuildProjectTools.LanguageServer.Documents
 {
+    using Diagnostics;
     using Help;
     using SemanticModel;
     using Utilities;
@@ -36,22 +37,29 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <param name="configuration">
         ///     The language server configuration.
         /// </param>
+        /// <param name="diagnosticsPublisher">
+        ///     The diagnostic publishing facility.
+        /// </param>
         /// <param name="logger">
         ///     The application logger.
         /// </param>
-        public Workspace(Lsp.ILanguageServer server, Configuration configuration, ILogger logger)
+        public Workspace(Lsp.ILanguageServer server, Configuration configuration, IPublishDiagnostics diagnosticsPublisher, ILogger logger)
         {
             if (server == null)
                 throw new ArgumentNullException(nameof(server));
 
             if (configuration == null)
                 throw new ArgumentNullException(nameof(configuration));
+
+            if (diagnosticsPublisher == null)
+                throw new ArgumentNullException(nameof(diagnosticsPublisher));
             
             if (logger == null)
                 throw new ArgumentNullException(nameof(logger));
             
             Server = server;
             Configuration = configuration;
+            DiagnosticsPublisher = diagnosticsPublisher;
             Log = logger.ForContext<Workspace>();
 
             string extensionDirectory = Environment.GetEnvironmentVariable("MSBUILD_PROJECT_TOOLS_DIR");
@@ -147,6 +155,11 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         ///     The language server.
         /// </summary>
         Lsp.ILanguageServer Server { get; }
+
+        /// <summary>
+        ///     The diagnostic publishing facility.
+        /// </summary>
+        IPublishDiagnostics DiagnosticsPublisher { get; }
 
         /// <summary>
         ///     The workspace logger.
@@ -256,11 +269,10 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             if (projectDocument == null)
                 throw new ArgumentNullException(nameof(projectDocument));
 
-            Server.PublishDiagnostics(new PublishDiagnosticsParams
-            {
-                Uri = projectDocument.DocumentUri,
-                Diagnostics = projectDocument.Diagnostics.ToArray()
-            });   
+            DiagnosticsPublisher.Publish(
+                documentUri: projectDocument.DocumentUri,
+                diagnostics: projectDocument.Diagnostics.ToArray()
+            );
         }
 
         /// <summary>
@@ -277,11 +289,10 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             if (!projectDocument.HasDiagnostics)
                 return;
 
-            Server.PublishDiagnostics(new PublishDiagnosticsParams
-            {
-                Uri = projectDocument.DocumentUri,
-                Diagnostics = new Lsp.Models.Diagnostic[0] // Overwrites existing diagnostics for this document with an empty list
-            });   
+            DiagnosticsPublisher.Publish(
+                documentUri: projectDocument.DocumentUri,
+                diagnostics: null // Overwrites existing diagnostics for this document with an empty list
+            );
         }
 
         /// <summary>

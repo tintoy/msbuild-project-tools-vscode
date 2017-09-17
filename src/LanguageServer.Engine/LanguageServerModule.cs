@@ -6,6 +6,7 @@ using System.Collections.Generic;
 namespace MSBuildProjectTools.LanguageServer
 {
     using CompletionProviders;
+    using Diagnostics;
     using Handlers;
 
     /// <summary>
@@ -55,6 +56,10 @@ namespace MSBuildProjectTools.LanguageServer
                     foreach (Handler handler in handlers)
                         languageServer.AddHandler(handler);
                 });
+
+            builder.RegisterType<LspDiagnosticsPublisher>()
+                .As<IPublishDiagnostics>()
+                .InstancePerDependency();
 
             builder.RegisterType<ConfigurationHandler>()
                 .AsSelf()

@@ -140,6 +140,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                     packageIds.Select(packageId => new CompletionItem
                     {
                         Label = packageId,
+                        Detail = "Package Id",
                         Kind = CompletionItemKind.Module,
                         TextEdit = new TextEdit
                         {
@@ -169,6 +170,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                     packageVersions.Select((packageVersion, index) => new CompletionItem
                     {
                         Label = packageVersion.ToNormalizedString(),
+                        Detail = "Package Version",
                         SortText = projectDocument.Workspace.Configuration.NuGet.ShowNewestVersionsFirst ? $"NuGet{index:00}" : null, // Override default sort order if configured to do so.
                         Kind = CompletionItemKind.Field,
                         TextEdit = new TextEdit
@@ -216,7 +218,8 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 new CompletionItem
                 {
                     Label = "<PackageReference />",
-                    Detail = "A NuGet package",
+                    Detail = "Element",
+                    Documentation = "A NuGet package",
                     SortText = "1000<PackageReference />",
                     Kind = CompletionItemKind.File,
                     TextEdit = new TextEdit
@@ -229,7 +232,8 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 new CompletionItem
                 {
                     Label = "<DotNetCliToolReference />",
-                    Detail = "A command extension package for the dotnet CLI",
+                    Detail = "Element",
+                    Documentation = "A command extension package for the dotnet CLI",
                     Kind = CompletionItemKind.File,
                     SortText = "1000<DotNetCliToolReference />",
                     TextEdit = new TextEdit

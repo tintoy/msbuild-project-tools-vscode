@@ -277,6 +277,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             {
                 Label = $"%({itemType})",
                 Kind = CompletionItemKind.Class,
+                Detail = "Item Group",
                 Documentation = description,
                 FilterText = $"%({itemType}.)", // Trailing "." ensures the user can type "." to switch to qualified item metadata expression without breaking completion.
                 SortText = $"{priority ?? Priority:0000}%({itemType})",
@@ -322,6 +323,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             return new CompletionItem
             {
                 Label = $"%({metadataName})",
+                Detail = "Item Metadata",
                 Kind = CompletionItemKind.Field,
                 Documentation = description,
                 FilterText = $"%({metadataName})",
@@ -360,6 +362,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             return new CompletionItem
             {
                 Label = $"%({itemType}.{metadataName})",
+                Detail = "Item Metadata",
                 Documentation = description,
                 Kind = CompletionItemKind.Property,
                 SortText = $"{priority ?? Priority:0000}%({itemType}.{metadataName})",

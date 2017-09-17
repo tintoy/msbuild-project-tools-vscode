@@ -113,6 +113,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             yield return new CompletionItem
             {
                 Label = "<PropertyGroup>",
+                Detail = "Element",
                 Documentation = MSBuildSchemaHelp.ForElement("PropertyGroup"),
                 SortText = Priority + "<PropertyGroup>",
                 TextEdit = new TextEdit
@@ -129,6 +130,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             yield return new CompletionItem
             {
                 Label = "<ItemGroup>",
+                Detail = "Element",
                 Documentation = MSBuildSchemaHelp.ForElement("ItemGroup"),
                 SortText = Priority + "<ItemGroup>",
                 TextEdit = new TextEdit
@@ -145,6 +147,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             yield return new CompletionItem
             {
                 Label = "<Target>",
+                Detail = "Element",
                 Documentation = MSBuildSchemaHelp.ForElement("Target"),
                 SortText = Priority + "<Target>",
                 TextEdit = new TextEdit

@@ -183,6 +183,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             return new CompletionItem
             {
                 Label = $"$({propertyName})",
+                Detail = "Property",
                 Documentation = description,
                 SortText = $"{priority ?? Priority:0000}$({propertyName})",
                 TextEdit = new TextEdit

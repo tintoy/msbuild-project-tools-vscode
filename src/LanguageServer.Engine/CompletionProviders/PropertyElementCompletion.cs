@@ -118,6 +118,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             yield return new CompletionItem
             {
                 Label = "<OutputType>",
+                Detail = "Property",
                 Documentation = MSBuildSchemaHelp.ForProperty("OutputType"),
                 SortText = Priority + "<OutputType>",
                 TextEdit = new TextEdit
@@ -133,6 +134,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             yield return new CompletionItem
             {
                 Label = "<TargetFramework>",
+                Detail = "Property",
                 Documentation = MSBuildSchemaHelp.ForProperty("TargetFramework"),
                 SortText = Priority + "<TargetFramework>",
                 TextEdit = new TextEdit
@@ -203,6 +205,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             return new CompletionItem
             {
                 Label = $"<{propertyName}>",
+                Detail = "Property",
                 Documentation = description,
                 SortText = $"{priority ?? Priority:0000}<{propertyName}>",
                 TextEdit = new TextEdit

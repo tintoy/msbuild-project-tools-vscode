@@ -205,6 +205,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             return new CompletionItem
             {
                 Label = parameterMetadata.Name,
+                Detail = "Task Parameter",
                 Documentation = $"Parameter '{parameterMetadata.Name}' of task '{taskName}'.",
                 SortText = $"{Priority:0000}parameterMetadata.Name",
                 TextEdit = new TextEdit

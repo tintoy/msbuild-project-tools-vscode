@@ -172,6 +172,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             return new CompletionItem
             {
                 Label = $"<{taskName}>",
+                Detail = "Task",
                 Documentation = $"Invoke task '{taskName}'.",
                 SortText = $"{Priority:0000}<{taskName}>",
                 TextEdit = new TextEdit

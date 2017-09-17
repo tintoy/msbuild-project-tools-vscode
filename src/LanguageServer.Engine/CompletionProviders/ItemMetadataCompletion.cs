@@ -164,6 +164,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 yield return new CompletionItem
                 {
                     Label = metadataName,
+                    Detail = "Item Metadata",
                     Documentation = MSBuildSchemaHelp.ForItemMetadata(itemType, metadataName),
                     SortText = Priority + metadataName,
                     TextEdit = new TextEdit
@@ -268,6 +269,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 yield return new CompletionItem
                 {
                     Label = completionLabel,
+                    Detail = "Item Metadata",
                     Documentation = MSBuildSchemaHelp.ForItemMetadata(itemType, metadataName),
                     SortText = Priority + completionLabel,
                     TextEdit = new TextEdit

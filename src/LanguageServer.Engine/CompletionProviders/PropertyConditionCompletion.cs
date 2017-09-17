@@ -74,7 +74,8 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 completions.Add(new CompletionItem
                 {
                     Label = "If not already defined",
-                    Detail = "Only use this property if the property does not already have a value.",
+                    Detail = "Condition",
+                    Documentation = "Only use this property if the property does not already have a value.",
                     TextEdit = new TextEdit
                     {
                         NewText = $"'$({conditionAttribute.Element.Name})' == ''",

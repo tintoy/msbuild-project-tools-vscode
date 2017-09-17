@@ -206,6 +206,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             return new CompletionItem
             {
                 Label = targetName,
+                Detail = "Target",
                 Documentation = description,
                 SortText = $"{priority ?? Priority:0000}{targetName}",
                 TextEdit = new TextEdit

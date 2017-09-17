@@ -94,6 +94,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                     .Select(attributeName => new CompletionItem
                     {
                         Label = attributeName,
+                        Detail = "Attribute",
                         Kind = CompletionItemKind.Field,
                         TextEdit = new TextEdit
                         {

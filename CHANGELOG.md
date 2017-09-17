@@ -4,6 +4,7 @@
 
 * _Experimental:_ Add completions for task elements based on task types declared in the project.
 * _Experimental:_ Add completions for task attributes based on task types declared in the project.
+* More testing on MacOS and Linux.
 
 ## v0.2.7
 

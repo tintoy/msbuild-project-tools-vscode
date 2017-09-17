@@ -55,9 +55,9 @@ See [BUILDING.md](docs/BUILDING.md).
 
 ## Limitations
 
-* The new language service hasn't been tested extensively on Linux / MacOS (although I've verified that it works for common use-cases).
-
-**Note**: if you open more than one project at a time (or navigate to imported projects), subsequent projects will be loaded into the same MSBuild project collection as the first project. Once you have closed the last project file, the next project file you open will become the master project. The master project will become selectable in a later release.
+* Support for task completions is experimental; if you find a problem with it, please [create an issue](https://github.com/tintoy/msbuild-project-tools-vscode/issues/new).
+* Support for MSBuild expressions is experimental; if you find a problem with it, please [create an issue](https://github.com/tintoy/msbuild-project-tools-vscode/issues/new).
+* If you open more than one project at a time (or navigate to imported projects), subsequent projects will be loaded into the same MSBuild project collection as the first project. Once you have closed the last project file, the next project file you open will become the master project. The master project will become selectable in a later release.
 
 ## Questions / bug reports
 

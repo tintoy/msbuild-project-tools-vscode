@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using MSBuildProjectTools.LanguageServer.Help;
+using Newtonsoft.Json;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
@@ -33,8 +35,45 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 Path.Combine(HelpDirectory.FullName, "tasks.json")
             );
 
-            // TODO: Load and parse help.
+            using (StreamReader input = PropertyHelpFile.OpenText())
+            using (JsonTextReader json = new JsonTextReader(input))
+            {
+                PropertyHelp = Help.PropertyHelp.FromJson(json);
+            }
+
+            using (StreamReader input = ItemHelpFile.OpenText())
+            using (JsonTextReader json = new JsonTextReader(input))
+            {
+                ItemHelp = Help.ItemHelp.FromJson(json);
+                GlobalItemMetadataHelp = ItemHelp.ContainsKey("*") ? ItemHelp["*"].Metadata : new SortedDictionary<string, string>();
+            }
+
+            using (StreamReader input = TaskHelpFile.OpenText())
+            using (JsonTextReader json = new JsonTextReader(input))
+            {
+                TaskHelp = Help.TaskHelp.FromJson(json);
+            }
         }
+
+        /// <summary>
+        ///     Help for MSBuild properties.
+        /// </summary>
+        static SortedDictionary<string, PropertyHelp> PropertyHelp { get; }
+
+        /// <summary>
+        ///     Help for MSBuild properties.
+        /// </summary>
+        static SortedDictionary<string, ItemHelp> ItemHelp { get; }
+
+        /// <summary>
+        ///     Help for MSBuild properties.
+        /// </summary>
+        static SortedDictionary<string, string> GlobalItemMetadataHelp { get; }
+
+        /// <summary>
+        ///     Help for MSBuild tasks.
+        /// </summary>
+        static SortedDictionary<string, Help.TaskHelp> TaskHelp { get; }
 
         /// <summary>
         ///     The directory where extension help files are stored.
@@ -59,23 +98,45 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <summary>
         ///     The names of well-known MSBuild properties.
         /// </summary>
-        public static IEnumerable<string> WellKnownPropertyNames => Properties.Keys;
+        public static IEnumerable<string> WellKnownPropertyNames => PropertyHelp.Keys;
 
         /// <summary>
         ///     The names of well-known MSBuild item types.
         /// </summary>
-        public static IEnumerable<string> WellKnownItemTypes => Items.Keys.Where(
-            itemType => itemType[0] != '*'
-            &&
-            itemType.IndexOf('.') == -1
-        );
+        public static IEnumerable<string> WellKnownItemTypes => ItemHelp.Keys;
 
         /// <summary>
-        ///     The qualified names of well-known MSBuild item metadata.
+        ///     The nnames of well-known metadata for the specified item type.
         /// </summary>
-        public static IEnumerable<string> WellKnownItemMetadata => Items.Keys.Where(
-            itemType => itemType.IndexOf('.') != -1
-        );
+        /// <param name="itemType">
+        ///     The item type.
+        /// </param>
+        /// <param name="includeGlobals">
+        ///     Include global (built-in) metadata names?
+        /// </param>
+        /// <returns>
+        ///     A sequence of metadata names.
+        /// </returns>
+        public static IEnumerable<string> WellKnownItemMetadataNames(string itemType, bool includeGlobals = true)
+        {
+            if (String.IsNullOrWhiteSpace(itemType))
+                throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'itemType'.", nameof(itemType));
+            
+            Help.ItemHelp itemHelp;
+            if (!ItemHelp.TryGetValue(itemType, out itemHelp))
+                yield break;
+
+            // Well-known metadata.
+            if (includeGlobals)
+            {
+                foreach (string metadataName in Utilities.MSBuildHelper.WellknownMetadataNames)
+                    yield return metadataName;
+            }
+
+            // Item-type-specific metadata.
+            foreach (string metadataName in itemHelp.Metadata.Keys)
+                yield return metadataName;
+        }
 
         /// <summary>
         ///     Get help content for the specified element.
@@ -137,8 +198,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'propertyName'.", nameof(propertyName));
 
             string helpKey = propertyName;
-            if (Properties.TryGetValue(helpKey, out string help))
-                return help;
+            if (PropertyHelp.TryGetValue(helpKey, out Help.PropertyHelp help))
+                return help.Description;
 
             return null;
         }
@@ -157,9 +218,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (String.IsNullOrWhiteSpace(itemType))
                 throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'itemName'.", nameof(itemType));
 
-            string helpKey = itemType;
-            if (Items.TryGetValue(helpKey, out string help))
-                return help;
+            if (ItemHelp.TryGetValue(itemType, out Help.ItemHelp help))
+                return help.Description;
 
             return null;
         }
@@ -181,15 +241,55 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (String.IsNullOrWhiteSpace(metadataName))
                 throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'metadataName'.", nameof(metadataName));
 
-            string help;
-
             string helpKey = String.Format("{0}.{1}", itemType, metadataName);
-            if (Items.TryGetValue(helpKey, out help))
-                return help;
+            if (ItemHelp.TryGetValue(itemType, out Help.ItemHelp itemHelp) && itemHelp.Metadata.TryGetValue(metadataName, out string metadataHelp))
+                return metadataHelp;
 
-            helpKey = String.Format("*.{0}", metadataName);
-            if (Items.TryGetValue(helpKey, out help))
-                return help;
+            if (GlobalItemMetadataHelp.TryGetValue(helpKey, out string globalMetadataHelp))
+                return globalMetadataHelp;
+
+            return null;
+        }
+
+        /// <summary>
+        ///     Get help content for a well-known MSBuild task.
+        /// </summary>
+        /// <param name="taskName">
+        ///     The task name.
+        /// </param>
+        /// <returns>
+        ///     The task help content, or <c>null</c> if no content is available for it.
+        /// </returns>
+        public static string ForTask(string taskName)
+        {
+            if (String.IsNullOrWhiteSpace(taskName))
+                throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'itemName'.", nameof(taskName));
+
+            if (TaskHelp.TryGetValue(taskName, out Help.TaskHelp taskHelp))
+                return taskHelp.Description;
+
+            return null;
+        }
+
+        /// <summary>
+        ///     Get help content for a well-known MSBuild task's praemeter.
+        /// </summary>
+        /// <param name="taskName">
+        ///     The task name.
+        /// </param>
+        /// <param name="parameterName">
+        ///     The parameter name.
+        /// </param>
+        /// <returns>
+        ///     The parameter help content, or <c>null</c> if no content is available for it.
+        /// </returns>
+        public static string ForTaskParameter(string taskName, string parameterName)
+        {
+            if (String.IsNullOrWhiteSpace(parameterName))
+                throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'metadataName'.", nameof(parameterName));
+
+            if (TaskHelp.TryGetValue(taskName, out Help.TaskHelp taskHelp) && taskHelp.Parameters.TryGetValue(parameterName, out Help.TaskParameterHelp parameterHelp))
+                return parameterHelp.Description;
 
             return null;
         }
@@ -198,7 +298,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     Help content for root elements and attributes, keyed by "Element" or "Element.Attribute".
         /// </summary>
         /// <remarks>
-        ///     Extracted from MSBuild.*.xsd
+        ///     Extracted from MSBuild.*.xsd - TODO: Move this to JSON-based help, same as property, item, and task help.
         /// </remarks>
         static readonly Dictionary<string, string> Root = new Dictionary<string, string>
         {
@@ -277,369 +377,6 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             ["UsingTaskBody.Evaluate"] = "Whether the body should have properties expanded before use. Defaults to false.",
             ["When"] = "Groups PropertyGroup and/or ItemGroup elements",
             ["When.Condition"] = "Optional expression evaluated to determine whether the child PropertyGroups and/or ItemGroups should be used",
-        };
-
-        /// <summary>
-        ///     Help content for property elements, keyed by property name.
-        /// </summary>
-        /// <remarks>
-        ///     Extracted from MSBuild.*.xsd
-        /// </remarks>
-        static readonly Dictionary<string, string> Properties = new Dictionary<string, string>
-        {
-            ["AllowLocalNetworkLoopback"] = "Flag indicating whether to allow local network loopback.",
-            ["AllowUnsafeBlocks"] = "Allow unsafe code blocks.",
-            ["AppDesignerFolder"] = "Name of folder for Application Designer",
-            ["ApplicationRevision"] = "integer",
-            ["ApplicationVersion"] = "Matches the expression \"\\d\\.\\d\\.\\d\\.(\\d|\\*)\"",
-            ["AppxAutoIncrementPackageRevision"] = "Flag indicating whether to auto-increment package revision.",
-            ["AppxBundle"] = "Flag indicating whether packaging targets will produce an app bundle.",
-            ["AppxBundleAutoResourcePackageQualifiers"] = "'|'-delimited list of resource qualifiers which will be used for automatic resource pack splitting.",
-            ["AppxBundleDir"] = "Full path to a folder where app bundle will be produced.",
-            ["AppxBundleFolderSuffix"] = "Suffix to append to app bundle folder.",
-            ["AppxBundleMainPackageFileMapGeneratedFilesListPath"] = "Full path to a log file containing a list of generated files during generation of main package file map.",
-            ["AppxBundleMainPackageFileMapIntermediatePath"] = "Full path to an intermediate main package file map.",
-            ["AppxBundleMainPackageFileMapIntermediatePrefix"] = "Prefix used for intermediate main package resources .pri and .map.txt files.",
-            ["AppxBundleMainPackageFileMapIntermediatePriPath"] = "Full path to an intermediate main package .pri file.",
-            ["AppxBundleMainPackageFileMapPath"] = "Full path to a main package file map.",
-            ["AppxBundleMainPackageFileMapPrefix"] = "Prefix used for main package resources .pri and .map.txt files.",
-            ["AppxBundleMainPackageFileMapSuffix"] = "Suffix used before extension of resource map files.",
-            ["AppxBundlePlatforms"] = "'|'-delimited list of platforms which will be included in an app bundle.",
-            ["AppxBundlePriConfigXmlForMainPackageFileMapFileName"] = "Full path to the priconfig.xml file used for generating main package file map.",
-            ["AppxBundlePriConfigXmlForSplittingFileName"] = "Full path to the priconfig.xml file used for splitting resource packs.",
-            ["AppxBundleProducingPlatform"] = "A platform which will be used to produce an app bundle.",
-            ["AppxBundleResourcePacksProducingPlatform"] = "A platform which will be used to produce resource packs for an app bundle.",
-            ["AppxBundleSplitResourcesGeneratedFilesListPath"] = "Full path to a log file containing a list of generated files during resource splitting.",
-            ["AppxBundleSplitResourcesPriPath"] = "Full path to split resources .pri file.",
-            ["AppxBundleSplitResourcesPriPrefix"] = "Prefix used for split resources .pri and .map.txt files.",
-            ["AppxBundleSplitResourcesQualifiersPath"] = "Full path to a log file containing a detected qualifiers during resource splitting.",
-            ["AppxCopyLocalFilesOutputGroupIncludeXmlFiles"] = "Flag indicating whether CopyLocal files group should include XML files.",
-            ["AppxCreatePriFilesForPortableLibrariesAdditionalMakepriExeParameters"] = "Additional parameters to pass to makepri.exe when generating PRI file for a portable library.",
-            ["AppxDefaultHashAlgorithmId"] = "Default hash algorithm ID, used for signing an app package.",
-            ["AppxDefaultResourceQualifiers"] = "'|'-delimited list of key=value pairs representing default resource qualifiers.",
-            ["AppxExpandPriContentAdditionalMakepriExeParameters"] = "Additional parameters to pass to makepri.exe when extracting payload file names.",
-            ["AppxFilterOutUnusedLanguagesResourceFileMaps"] = "Flag indicating whether to filter out unused language resource file maps.",
-            ["AppxGeneratePriEnabled"] = "Flag indicating whether to generate resource index files (PRI files) during packaging.",
-            ["AppxGenerateProjectPriFileAdditionalMakepriExeParameters"] = "Additional parameters to pass to makepri.exe when generating project PRI file.",
-            ["AppxHarvestWinmdRegistration"] = "Flag indicating whether to enable harvesting of WinMD registration information.",
-            ["AppxLayoutDir"] = "Full path to the folder where package layout will be prepared when producing an app bundle.",
-            ["AppxLayoutFolderName"] = "Name of the folder where package layout will be prepared when producing an app bundle.",
-            ["AppxMSBuildTaskAssembly"] = "Full path to packaging build tasks assembly.",
-            ["AppxMSBuildToolsPath"] = "Full path to a folder containing packaging build targets and tasks assembly.",
-            ["AppxOSMaxVersionTested"] = "Targeted maximum OS version tested.",
-            ["AppxOSMaxVersionTestedReplaceManifestVersion"] = "Flag indicating whether maximum OS version tested in app manifest should be replaced.",
-            ["AppxOSMinVersion"] = "Targeted minimum OS version.",
-            ["AppxOSMinVersionReplaceManifestVersion"] = "Flag indicating whether minimum OS version in app manifest should be replaced.",
-            ["AppxPackage"] = "Flag marking current project as capable of being packaged as an app package.",
-            ["AppxPackageAllowDebugFrameworkReferencesInManifest"] = "Flag indicating whether to allow inclusion of debug framework references in an app manifest.",
-            ["AppxPackageArtifactsDir"] = "Additional qualifier to append to AppxPackageDir.",
-            ["AppxPackageDir"] = "Full path to a folder where app packages will be saved.",
-            ["AppxPackageDirName"] = "Name of the folder where app packages are produced.",
-            ["AppxPackageFileMap"] = "Full path to app package file map.",
-            ["AppxPackageIncludePrivateSymbols"] = "Flag indicating whether to include private symbols in symbol packages.",
-            ["AppxPackageName"] = "Name of the app package to generate.",
-            ["AppxPackageOutput"] = "Full path to the app package file.",
-            ["AppxPackageRecipe"] = "Full path to the app package recipe.",
-            ["AppxPackageSigningEnabled"] = "Flag indicating whether to enable signing of app packages.",
-            ["AppxPackageTestDir"] = "Name of the folder where test app packages will be copied",
-            ["AppxPackageValidationEnabled"] = "Flag indicating whether to enable validation of app packages.",
-            ["AppxPackagingInfoFile"] = "Full path to the packaging info file which will contain paths to produced packages.",
-            ["AppxPrependPriInitialPath"] = "Flag indicating whether to enable prepending initial path when indexing RESW and RESJSON files in class libraries.",
-            ["AppxPriConfigXmlDefaultSnippetPath"] = "Path to an XML file containing default element for priconfi.xml file.",
-            ["AppxPriConfigXmlPackagingSnippetPath"] = "Path to an XML file containing packaging element for priconfi.xml file.",
-            ["AppxPriInitialPath"] = "Initial path when indexing RESW and RESJSON files in class libraries.",
-            ["AppxSkipUnchangedFiles"] = "Flag indicating whether to skip unchanged files when copying files during creation of app packages.",
-            ["AppxStoreContainer"] = "Name of the app store container to generate.",
-            ["AppxStrictManifestValidationEnabled"] = "Flag indicating whether to enable strict manifest validation.",
-            ["AppxSymbolPackageEnabled"] = "Flag indicating whether to generate a symbol package when an app package is created.",
-            ["AppxSymbolPackageOutput"] = "Full path to the app symbol package file.",
-            ["AppxSymbolStrippedDir"] = "Full path to a directory where stripped PDBs will be stored.",
-            ["AppxTestLayoutEnabled"] = "Flag indicating whether to create test layout when an app package is created.",
-            ["AppxUseHardlinksIfPossible"] = "Flag indicating whether to use hard links if possible when copying files during creation of app packages.",
-            ["AppxValidateAppxManifest"] = "Flag indicating whether to validate app manifest.",
-            ["AppxValidateStoreManifest"] = "Flag indicating whether to validate store manifest.",
-            ["AssemblyKeyContainerName"] = "The name of the CAPI container that holds the strong-naming key used to sign the output assembly.",
-            ["AssemblyKeyProviderName"] = "The name of the CAPI provider that provides the strong-naming key used to sign the output assembly.",
-            ["AssemblyName"] = "Name of output assembly",
-            ["AssemblyOriginatorKeyFile"] = "The path of the strong-naming key (.snk) file used to sign the output assembly.",
-            ["AssemblyTitle"] = "Description for the assembly manifest",
-            ["AssemblyVersion"] = "Numeric value of the version for the assembly manifest in the format major.minor.patch (e.g. 2.4.0)",
-            ["Authors"] = "A comma-separated list of NuGet packages authors",
-            ["AutoGenerateBindingRedirects"] = "Indicates whether BindingRedirect elements should be automatically generated for referenced assemblies.",
-            ["AutoIncrementPackageRevision"] = "Flag indicating whether to enable auto increment of an app package revision.",
-            ["AutorunEnabled"] = "boolean",
-            ["BootstrapperComponentsLocation"] = "HomeSite, Relative, or Absolute",
-            ["BootstrapperEnabled"] = "boolean",
-            ["CodeAnalysisAdditionalOptions"] = "Additional options to pass to the Code Analysis command line tool.",
-            ["CodeAnalysisApplyLogFileXsl"] = "Indicates whether to apply the XSL style sheet specified in $(CodeAnalysisLogFileXsl) to the Code Analysis report. This report is specified in $(CodeAnalysisLogFile). The default is false.",
-            ["CodeAnalysisConsoleXsl"] = "Path to the XSL style sheet that will be applied to the Code Analysis console output. The default is an empty string (''), which causes Code Analysis to use its default console output.",
-            ["CodeAnalysisCulture"] = "Culture to use for Code Analysis spelling rules, for example, 'en-US' or 'en-AU'. The default is the current user interface language for Windows.",
-            ["CodeAnalysisFailOnMissingRules"] = "Indicates whether Code Analysis should fail if a rule or rule set is missing. The default is false.",
-            ["CodeAnalysisForceOutput"] = "Indicates whether Code Analysis generates a report file, even when there are no active warnings or errors. The default is true.",
-            ["CodeAnalysisGenerateSuccessFile"] = "Indicates whether Code Analysis generates a '$(CodeAnalysisInputAssembly).lastcodeanalysissucceeded' file in the output folder when no build-breaking errors occur. The default is true.",
-            ["CodeAnalysisIgnoreBuiltInRules"] = "Indicates whether Code Analysis will ignore the default rule directories when searching for rules. The default is false.",
-            ["CodeAnalysisIgnoreBuiltInRuleSets"] = "Indicates whether Code Analysis will ignore the default rule set directories when searching for rule sets. The default is false.",
-            ["CodeAnalysisIgnoreGeneratedCode"] = "Indicates whether Code Analysis should fail silently when it analyzes invalid assemblies, such as those without managed code. The default is true.",
-            ["CodeAnalysisIgnoreInvalidTargets"] = "Indicates whether Code Analysis should silently fail when analyzing invalid assemblies, such as those without managed code. The default is true.",
-            ["CodeAnalysisInputAssembly"] = "Path to the assembly to be analyzed by Code Analysis. The default is '$(OutDir)$(TargetName)$(TargetExt)'.",
-            ["CodeAnalysisLogFile"] = "Path to the output file for the Code Analysis report. The default is '$(CodeAnalysisInputAssembly).CodeAnalysisLog.xml'.",
-            ["CodeAnalysisLogFileXsl"] = "Path to the XSL style sheet to reference in the Code Analysis output report. This report is specified in $(CodeAnalysisLogFile). The default is an empty string ('').",
-            ["CodeAnalysisModuleSuppressionsFile"] = "Name of the file, without the path, where Code Analysis project-level suppressions are stored. The default is 'GlobalSuppressions$(DefaultLanguageSourceExtension)'.",
-            ["CodeAnalysisOutputToConsole"] = "Indicates whether to output Code Analysis warnings and errors to the console. The default is false.",
-            ["CodeAnalysisOverrideRuleVisibilities"] = "Indicates whether to run all overridable Code Analysis rules against all targets. This will cause specific rules, such as those within the Design and Naming categories, to run against both public and internal APIs, instead of only public APIs. The default is false.",
-            ["CodeAnalysisPath"] = "Path to the Code Analysis installation folder. The default is '$(VSINSTALLDIR)\\Team Tools\\Static Analysis Tools\\FxCop'.",
-            ["CodeAnalysisPlatformPath"] = "Path to the .NET Framework folder that contains platform assemblies, such as mscorlib.dll and System.dll. The default is an empty string ('').",
-            ["CodeAnalysisProject"] = "Path to the Code Analysis project (*.fxcop) to load. The default is an empty string ('').",
-            ["CodeAnalysisQuiet"] = "Indicates whether to suppress all Code Analysis console output other than errors and warnings. This applies when $(CodeAnalysisOutputToConsole) is true. The default is false.",
-            ["CodeAnalysisRuleAssemblies"] = "Semicolon-separated list of paths either to Code Analysis rule assemblies or to folders that contain Code Analysis rule assemblies. The paths are in the form '[+|-][!][file|folder]', where '+' enables all rules in rule assembly, '-' disables all rules in rule assembly, and '!' causes all rules in rule assembly to be treated as errors. For example '+D:\\Projects\\Rules\\NamingRules.dll;+!D:\\Projects\\Rules\\SecurityRules.dll'. The default is '$(CodeAnalysisPath)\\Rules'.",
-            ["CodeAnalysisRuleDirectories"] = "Semicolon-separated list of directories in which to search for rules when resolving a rule set. The default is '$(CodeAnalysisPath)\\Rules' unless the CodeAnalysisIgnoreBuiltInRules property is set to true.",
-            ["CodeAnalysisRules"] = "Semicolon-separated list of Code Analysis rules. The rules are in the form '[+|-][!]Category#CheckId', where '+' enables the rule, '-' disables the rule, and '!' causes the rule to be treated as an error. For example, '-Microsoft.Naming#CA1700;+!Microsoft.Naming#CA1701'. The default is an empty string ('') which enables all rules.",
-            ["CodeAnalysisRuleSet"] = "A .ruleset file which contains a list of rules to run during analysis. The string can be a full path, a path relative to the project file, or a file name. If a file name is specified, the CodeAnalysisRuleSetDirectories property will be searched to find the file. The default is an empty string ('').",
-            ["CodeAnalysisRuleSetDirectories"] = "Semicolon-separated list of directories in which to search for rule sets. The default is '$(VSINSTALLDIR)\\Team Tools\\Static Analysis Tools\\Rule Sets' unless the CodeAnalysisIgnoreBuiltInRuleSets property is set to true.",
-            ["CodeAnalysisSaveMessagesToReport"] = "Comma-separated list of the type ('Active', 'Excluded', or 'Absent') of warnings and errors to save to the output report file. The default is 'Active'.",
-            ["CodeAnalysisSearchGlobalAssemblyCache"] = "Indicates whether Code Analysis should search the Global Assembly Cache (GAC) for missing references that are encountered during analysis. The default is true.",
-            ["CodeAnalysisSummary"] = "Indicates whether to output a Code Analysis summary to the console after analysis. The default is false.",
-            ["CodeAnalysisTimeout"] = "The time, in seconds, that Code Analysis should wait for analysis of a single item to complete before it aborts analysis. Specify 0 to cause Code Analysis to wait indefinitely. The default is 120.",
-            ["CodeAnalysisTreatWarningsAsErrors"] = "Indicates whether to treat all Code Analysis warnings as errors. The default is false.",
-            ["CodeAnalysisUpdateProject"] = "Indicates whether to update the Code Analysis project (*.fxcop) specified in $(CodeAnalysisProject). This applies when there are changes during analysis. The default is false.",
-            ["CodeAnalysisUseTypeNameInSuppression"] = "Indicates whether to include the name of the rule when Code Analysis emits a suppression. The default is true.",
-            ["CodeAnalysisVerbose"] = "Indicates whether to output verbose Code Analysis diagnostic info to the console. The default is false.",
-            ["Company"] = "Company name for the assembly manifest",
-            ["Configuration"] = "The project build configuration (e.g. Debug, Release).",
-            ["Copyright"] = "Copyright details for the NuGet package",
-            ["CreateWebPageOnPublish"] = "boolean",
-            ["DebugSymbols"] = "Whether to emit symbols (boolean)",
-            ["DebugType"] = "none, pdbonly, or full",
-            ["DefaultLanguage"] = "Default resource language.",
-            ["DefineConstants"] = "Compile-time constants to be defined (e.g. DEBUG, TRACE).",
-            ["DefineDebug"] = "Whether DEBUG is defined (boolean)",
-            ["DefineTrace"] = "Whether TRACE is defined (boolean)",
-            ["DelaySign"] = "Delay-sign the output assembly (boolean).",
-            ["Description"] = "A long description of the NuGet package for UI display",
-            ["DisableFastUpToDateCheck"] = "Whether Visual Studio should do its own faster up-to-date check before Building, rather than invoke MSBuild to do a possibly more accurate one. You would set this to false if you have a heavily customized build process and builds in Visual Studio are not occurring when they should.",
-            ["DocumentationFile"] = "The XML documentation file to generate from doc-comments.",
-            ["EnableASPDebugging"] = "Enable classic ASP debugging (boolean).",
-            ["EnableASPXDebugging"] = "Enable ASP.NET Razor debugging (boolean).",
-            ["EnableSigningChecks"] = "Flag indicating whether to enable signing checks during app package generation.",
-            ["EnableUnmanagedDebugging"] = "Enable unmanaged debugging (boolean).",
-            ["FileVersion"] = "Numeric value of the version for the assembly manifest in the format major.minor.build.revision (e.g. 2.4.0.1)",
-            ["FinalAppxManifestName"] = "Path to the final app manifest.",
-            ["FinalAppxPackageRecipe"] = "Full path to the final app package recipe.",
-            ["FrameworkPathOverride"] = "Sets the /sdkpath switch for a VB project to the specified value",
-            ["GenerateAppxPackageOnBuild"] = "Flag indicating whether to generate app package during the build.",
-            ["GeneratePackageOnBuild"] = "Value indicating whether a NuGet package will be generated when the project is built",
-            ["IncludeBuiltProjectOutputGroup"] = "Flag indicating whether to include primary build outputs into the app package payload.",
-            ["IncludeComFilesOutputGroup"] = "Flag indicating whether to include COM files into the app package payload.",
-            ["IncludeContentFilesProjectOutputGroup"] = "Flag indicating whether to include content files into the app package payload.",
-            ["IncludeCopyLocalFilesOutputGroup"] = "Flag indicating whether to include files marked as 'Copy local' into the app package payload.",
-            ["IncludeCopyWinmdArtifactsOutputGroup"] = "Flag indicating whether to include WinMD artifacts into the app package payload.",
-            ["IncludeCustomOutputGroupForPackaging"] = "Flag indicating whether to include custom output group into the app package payload.",
-            ["IncludeDebugSymbolsProjectOutputGroup"] = "Flag indicating whether to include debug symbols into the app package payload.",
-            ["IncludeDocumentationProjectOutputGroup"] = "Flag indicating whether to include documentation into the app package payload.",
-            ["IncludeGetResolvedSDKReferences"] = "Flag indicating whether to include resolved SDK references into the app package payload.",
-            ["IncludePriFilesOutputGroup"] = "Flag indicating whether to include resource index (PRI) files into the app package payload.",
-            ["IncludeSatelliteDllsProjectOutputGroup"] = "Flag indicating whether to include satellite DLLs into the app package payload.",
-            ["IncludeSDKRedistOutputGroup"] = "Flag indicating whether to include SDK redist into the app package payload.",
-            ["IncludeSGenFilesOutputGroup"] = "Flag indicating whether to include SGen files into the app package payload.",
-            ["IncludeSourceFilesProjectOutputGroup"] = "Flag indicating whether to include source files into the app package payload.",
-            ["InformationalVersion"] = "Product version of the assembly for UI display (e.g. 1.0 Beta)",
-            ["InsertReverseMap"] = "Flag indicating whether to insert reverse resource map during resource index generation.",
-            ["InstallFrom"] = "Web, Unc, or Disk",
-            ["LayoutDir"] = "Full path to a folder with package layout.",
-            ["MakeAppxExeFullPath"] = "Full path to makeappx.exe utility.",
-            ["MakePriExeFullPath"] = "Full path to makepri.exe utility.",
-            ["ManagedWinmdInprocImplementation"] = "Name of the binary containing managed WinMD in-proc implementation.",
-            ["MapFileExtensions"] = "boolean",
-            ["MinimumRequiredVersion"] = "Matches the expression \"\\d\\.\\d\\.\\d\\.\\d\"",
-            ["MSBuildTreatWarningsAsErrors"] = "Indicates whether to treat all warnings as errors when building a project.",
-            ["MSBuildWarningsAsErrors"] = "Indicates a semicolon delimited list of warnings to treat as errors when building a project.",
-            ["MSBuildWarningsAsMessages"] = "Indicates a semicolon delimited list of warnings to treat as low importance messages when building a project.",
-            ["NeutralLanguage"] = "The locale ID for the NuGet package",
-            ["NoStdLib"] = "Whether standard libraries (such as mscorlib) should be referenced automatically (boolean)",
-            ["NoWarn"] = "Comma separated list of disabled warnings",
-            ["OpenBrowserOnPublish"] = "boolean",
-            ["Optimize"] = "Should compiler optimize output (boolean)",
-            ["OptionCompare"] = "Option Compare setting (Text or Binary)",
-            ["OptionExplicit"] = "Should Option Explicit be set (On or Off)",
-            ["OptionInfer"] = "Should Option Infer be set (On or Off)",
-            ["OptionStrict"] = "Should Option Strict be set (On or Off)",
-            ["OutDir"] = "Path to output folder, with trailing slash (legacy property; prefer use of \"OutputPath\" instead)",
-            ["OutputPath"] = "Path to output folder, with trailing slash",
-            ["OutputType"] = "Type of output to generate (WinExe, Exe, or Library)",
-            ["PackageCertificateKeyFile"] = "App package certificate key file.",
-            ["PackageIconUrl"] = "The URL for a 64x64 image with transparent background to use as the icon for the NuGet package in UI display",
-            ["PackageId"] = "The case-insensitive NuGet package identifier, which must be unique across nuget.org or whatever gallery the NuGet package will reside in. IDs may not contain spaces or characters that are not valid for a URL, and generally follow .NET namespace rules.",
-            ["PackageLicenseUrl"] = "The URL for the NuGet package's license, often shown in UI displays as well as nuget.org",
-            ["PackageProjectUrl"] = "The URL for the NuGet package's home page, often shown in UI displays as well as nuget.org",
-            ["PackageReleaseNotes"] = "A description of the changes made in this release of the NuGet package, often used in UI like the Updates tab of the Visual Studio Package Manager in place of the package description",
-            ["PackageRequireLicenseAcceptance"] = "Value indicating whether the client must prompt the consumer to accept the NuGet package license before installing the package",
-            ["PackageTags"] = "A space-delimited list of tags and keywords that describe the NuGet package and aid discoverability of NuGet packages through search and filtering mechanisms",
-            ["PackageTargetFallback"] = "Allows packages using alternative monikers to be referenced in this project, which include older (e.g. dnxcore50, dotnet5.x) and Portable Class Library names.",
-            ["PackageVersion"] = "Numeric value of the NuGet package version in the format major.minor.patch pattern (e.g. 1.0.1). Version numbers may include a pre-release suffix (e.g. 1.0.1-beta)",
-            ["PackagingDirectoryWritesLogPath"] = "Full path to a text file containing packaging directory writes log.",
-            ["PackagingFileWritesLogPath"] = "Full path to a text file containing packaging file writes log.",
-            ["PdbCopyExeFullPath"] = "Full path to pdbcopy.exe utility.",
-            ["PlatformSpecificBundleArtifactsListDir"] = "Full path to a folder where platform-specific bundle artifact list files are stored.",
-            ["PlatformSpecificBundleArtifactsListDirName"] = "Name of the folder where platform-specific bundle artifact lists are stored.",
-            ["PostBuildEvent"] = "Command line to be run at the end of build",
-            ["PreBuildEvent"] = "Command line to be run at the start of build",
-            ["PreserveCompilationContext"] = "Value indicating whether reference assemblies can be used in dynamic compilation",
-            ["Product"] = "Product name information for the assembly manifest",
-            ["ProjectPriFileName"] = "File name to use for project-specific resource index file (PRI).",
-            ["ProjectPriFullPath"] = "Full path to project-specific resource index file (PRI).",
-            ["ProjectPriIndexName"] = "Name of the resource index used in the generated .pri file.",
-            ["ReferencePath"] = "Semicolon separated list of folders to search during reference resolution",
-            ["RegisterForComInterop"] = "Register the assembly's types for COM Interop (boolean).",
-            ["RepositoryType"] = "The type of the repository where the project is stored (e.g. git)",
-            ["RepositoryUrl"] = "The URL for the repository where the project is stored",
-            ["ResgenToolPath"] = "Full path to a folder containing resgen tool.",
-            ["RootNamespace"] = "The default namespace for new code files added to the project.",
-            ["RunCodeAnalysis"] = "Indicates whether to run Code Analysis during the build.",
-            ["RuntimeIdentifier"] = "Runtime identifier supported by the project (e.g. win10-x64)",
-            ["RuntimeIdentifiers"] = "Semicolon separated list of runtime identifiers supported by the project (e.g. win10-x64;osx.10.11-x64;ubuntu.16.04-x64)",
-            ["SignAppxPackageExeFullPath"] = "Full path to signtool.exe utility.",
-            ["SignAssembly"] = "Sign the output assembly, giving it a strong name (boolean).",
-            ["SolutionDir"] = "The solution directory.",
-            ["SolutionExt"] = "The solution file extension.",
-            ["SolutionFileName"] = "The solution file name.",
-            ["SolutionName"] = "The solution file name, without extension.",
-            ["SolutionPath"] = "The full path to the solution file.",
-            ["StartupObject"] = "Type that contains the main entry point",
-            ["StoreManifestName"] = "Name of the store manifest file.",
-            ["TargetFramework"] = "Framework that this project targets. Must be a Target Framework Moniker (e.g. netcoreapp1.0)",
-            ["TargetFrameworks"] = "Semicolon separated list of frameworks that this project targets. Must be a Target Framework Moniker (e.g. netcoreapp1.0;net461)",
-            ["TargetPlatformSdkRootOverride"] = "Full path to platform SDK root.",
-            ["Title"] = "A human-friendly title of the package, typically used in UI displays as on nuget.org and the Package Manager in Visual Studio. If not specified, the package ID is used instead.",
-            ["TreatWarningsAsErrors"] = "Treat compile warnings as errors (boolean).",
-            ["UpdateIntervalUnits"] = "Hours, Days, or Weeks",
-            ["UpdateMode"] = "Foreground or Background",
-            ["UpdatePeriodically"] = "boolean",
-            ["UpdateRequired"] = "boolean",
-            ["UseIncrementalAppxRegistration"] = "Flag indicating whether to enable incremental registration of the app layout.",
-            ["Version"] = "Numeric value of the version in the format major.minor.patch (e.g. 2.4.0)",
-            ["VersionPrefix"] = "When Version is not specified, VersionPrefix represents the first fragment of the version string (e.g. 1.0.0). The syntax is VersionPrefix[-VersionSuffix].",
-            ["VersionSuffix"] = "When Version is not specified, VersionSuffix represents the second fragment of the version string (e.g. beta). The syntax is VersionPrefix[-VersionSuffix].",
-            ["WarningLevel"] = "integer between 0 and 4 inclusive",
-            ["WarningsAsErrors"] = "Comma separated list of warning numbers to treat as errors"
-        };
-
-        /// <summary>
-        ///     Help content for item types / item metadata , keyed by "ItemType" or "ItemType.MetadataName".
-        /// </summary>
-        /// <remarks>
-        ///     Extracted from MSBuild.*.xsd
-        /// </remarks>
-        static readonly Dictionary<string, string> Items = new Dictionary<string, string>
-        {
-            ["*.Identity"] ="The item specified in the Include attribute.",
-            ["*.RootDir"] ="Contains the root directory of the item.",
-            ["*.Filename"] ="Contains the file name of the item, without the extension.",
-            ["*.Extension"] ="Contains the file name extension of the item.",
-            ["*.RelativeDir"] ="Contains the path specified in the Include attribute, up to the final slash or backslash.",
-            ["*.Directory"] ="Contains the directory of the item, without the root directory.",
-            ["*.RecursiveDir"] ="If the Include attribute contains the wildcard **, this metadata specifies the part of the path that replaces the wildcard.",
-            ["*.ModifiedTime"] ="Contains the timestamp from the last time the item was modified.",
-            ["*.FullPath"] = "Contains the full path of the item.",
-            ["*.CreatedTime"] ="Contains the timestamp from the last time the item was created.",
-            ["*.AccessedTime"] ="Contains the timestamp from the last time the item was last accessed.",
-            ["*.CopyToOutputDirectory"] = "Copy the item to the output directory (boolean, default false).",
-            ["*.CustomToolNamespace"] = "The namespace for code generated by the custom tool associated with the item.",
-            ["*.DependentUpon"] = "Indicates that the item is dependent upon another item.",
-            ["*.SubType"] = "The item sub-type.",
-            ["*.Generator"] = "Name of any file generator that is run on this item.",
-            ["*.Visible"] = "Display in the item in the user interface? (optional, boolean)",
-            ["Analyzer"] = "An assembly containing diagnostic analyzers",
-            ["ApplicationDefinition"] = "XAML file that contains the application definition, only one can be defined",
-            ["AppxHashUri"] = "Hash algorithm URI.",
-            ["AppxHashUri.Id"] = "Hash algorithm ID corresponding to given hash URI.",
-            ["AppxManifest"] = "app manifest template",
-            ["AppxManifestFileNameQuery"] = "XPath queries used to extract file names from the app manifest.",
-            ["AppxManifestImageFileNameQuery"] = "XPath queries used to define image files in the app manifest and restrictions on them.",
-            ["AppxManifestImageFileNameQuery.DescriptionID"] = "ID of description string resource describing this type of the image.",
-            ["AppxManifestImageFileNameQuery.ExpectedScaleDimensions"] = "Semicolon-delimited list of expected scale dimensions in format '{scale}:{width}x{height}'.",
-            ["AppxManifestImageFileNameQuery.ExpectedTargetSizes"] = "Semicolon-delimited list of expected target sizes.",
-            ["AppxManifestImageFileNameQuery.MaximumFileSize"] = "Maximum file size in bytes.",
-            ["AppxManifestMetadata"] = "App manifest metadata item. Can be a literal, or it can be a path to a binary to extract version from.",
-            ["AppxManifestMetadata.Name"] = "Name of app manifest metadata to insert into manifest.",
-            ["AppxManifestMetadata.Value"] = "Literal value of app manifest metadata to insert into manifest.",
-            ["AppxManifestMetadata.Version"] = "Version to be inserted as a value of app manifest metadata to insert into manifest.",
-            ["AppxManifestSchema"] = "App manifest schema file.",
-            ["AppxReservedFileName"] = "Reserved file name which cannot appear in the app package.",
-            ["AppxSystemBinary"] = "Name of any file which is present on the machine and should not be part of the app payload.",
-            ["BaseApplicationManifest"] = "The base application manifest for the build. Contains ClickOnce security information.",
-            ["CodeAnalysisDependentAssemblyPaths"] = "Additional reference assembly paths to pass to the Code Analysis command line tool.",
-            ["CodeAnalysisDictionary"] = "Code Analysis custom dictionaries.",
-            ["CodeAnalysisImport"] = "Code Analysis projects (*.fxcop) or reports to import.",
-            ["COMFileReference"] = "Type libraries that feed into the ResolvedComreference target.",
-            ["COMFileReference.WrapperTool"] = " The name of the wrapper tool that is used on the component, for example, \"tlbimp.\"",
-            ["Compile"] = "Source files for compiler",
-            ["Compile.AutoGen"] = "Whether file was generated from another file (boolean)",
-            ["COMReference"] = "Reference to a COM component",
-            ["COMReference.EmbedInteropTypes"] = "Whether the types in this reference need to embedded into the target assembly - interop assemblies only (optional, boolean)",
-            ["COMReference.Guid"] = "GUID in the form {00000000-0000-0000-0000-000000000000}",
-            ["COMReference.Isolated"] = "Is it isolated (boolean)",
-            ["COMReference.Lcid"] = "Locale ID",
-            ["COMReference.Name"] = "Friendly display name (optional)",
-            ["COMReference.VersionMajor"] = "Major part of the version number",
-            ["COMReference.VersionMinor"] = "Minor part of the version number",
-            ["COMReference.WrapperTool"] = "Wrapper tool, such as tlbimp",
-            ["Content"] = "Files that are not compiled, but may be embedded or published",
-            ["Content.CopyToPublishDirectory"] = "Copy file to publish directory (optional, boolean, default false)",
-            ["Content.PublishState"] = "Default, Included, Excluded, DataFile, or Prerequisite",
-            ["DotNetCliToolReference"] = "The CLI tool that the user wants restored in the context of the project",
-            ["DotNetCliToolReference.Version"] = "The tool version",
-            ["DotNetCliToolReference.ExcludeAssets"] = "Assets to exclude from this reference",
-            ["DotNetCliToolReference.IncludeAssets"] = "Assets to include from this reference",
-            ["DotNetCliToolReference.PrivateAssets"] = "Assets that are private in this reference",
-            ["EmbeddedResource"] = "Resources to be embedded in the generated assembly",
-            ["EmbeddedResource.LastGenOutput"] = "File that was created by any file generator that was run on this item",
-            ["Folder"] = "Folder on disk",
-            ["Import"] = "Assemblies whose namespaces should be imported by the Visual Basic compiler",
-            ["NativeReference"] = "Reference to a native manifest file, or to a file that contains a native manifest",
-            ["NativeReference.HintPath"] = "Relative path to manifest file",
-            ["NativeReference.Name"] = "Base name of manifest file",
-            ["None"] = "Files that should have no role in the build process",
-            ["None.LastGenOutput"] = null,
-            ["PackageReference"] = "Reference to a package",
-            ["PackageReference.Version"] = "The package version",
-            ["PackageReference.ExcludeAssets"] = "Assets to exclude from this reference",
-            ["PackageReference.IncludeAssets"] = "Assets to include from this reference",
-            ["PackageReference.PrivateAssets"] = "Assets that are private in this reference",
-            ["Page"] = "XAML files that are converted to binary and compiled into the assembly",
-            ["PlatformVersionDescription"] = "Platform version description. Used to map between internal OS version and marketing OS version.",
-            ["PlatformVersionDescription.OSVersion"] = "Internal OS version.",
-            ["PlatformVersionDescription.TargetPlatformIdentifier"] = "Target platform identifier.",
-            ["PlatformVersionDescription.TargetPlatformVersion"] = "Target platform version.",
-            ["PRIResource"] = "String resources to be indexed in app package's resource index.",
-            ["ProjectCapability"] = "Project Capability that may activate design-time components in an IDE.",
-            ["ProjectReference"] = "Reference to another project",
-            ["ProjectReference.EmbedInteropTypes"] = "Whether the types in this reference need to embedded into the target assembly - interop assemblies only (optional, boolean)",
-            ["ProjectReference.ExcludeAssets"] = "Assets to exclude from this reference",
-            ["ProjectReference.IncludeAssets"] = "Assets to include from this reference",
-            ["ProjectReference.Name"] = "Friendly display name (optional)",
-            ["ProjectReference.OutputItemType"] = "Item type to emit target outputs into. Default is blank. If the Reference metadata is set to \"true\" (default) then target outputs will become references for the compiler.",
-            ["ProjectReference.PrivateAssets"] = "Assets that are private in this reference",
-            ["ProjectReference.Project"] = "Project GUID, in the form {00000000-0000-0000-0000-000000000000}",
-            ["ProjectReference.ReferenceOutputAssembly"] = "Boolean specifying whether the outputs of the project referenced should be passed to the compiler. Default is true.",
-            ["ProjectReference.SpecificVersion"] = "Whether the exact version of the assembly should be used.",
-            ["ProjectReference.Targets"] = "Semicolon separated list of targets in the referenced projects that should be built. Default is the value of $(ProjectReferenceBuildTargets) whose default is blank, indicating the default targets.",
-            ["Reference"] = "Reference to an assembly",
-            ["Reference.Aliases"] = "Aliases for the reference (optional)",
-            ["Reference.EmbedInteropTypes"] = "Whether the types in this reference need to embedded into the target assembly - interop assemblies only (optional, boolean)",
-            ["Reference.FusionName"] = "Fusion name of the assembly (optional)",
-            ["Reference.HintPath"] = "Relative or absolute path to the assembly (optional)",
-            ["Reference.Name"] = "Friendly display name (optional)",
-            ["Reference.Private"] = "Whether the reference should be copied to the output folder (optional, boolean)",
-            ["Reference.RequiredTargetFramework"] = "The minimum required target framework version in order to use this assembly as a reference",
-            ["Reference.SpecificVersion"] = "Whether only the version in the fusion name should be referenced (optional, boolean)",
-            ["Resource"] = "File that is compiled into the assembly",
-            ["SDKReference"] = "Reference to an extension SDK",
-            ["SDKReference.Name"] = "Friendly display name (optional)",
-            ["StoreAssociationFile"] = "A file containing app store association data.",
-            ["StoreManifestSchema"] = "Store manifest schema file.",
-            ["TargetPlatform"] = "Target platform in the form of \"[Identifier], Version=[Version]\", for example, \"Windows, Version=8.0\"",
-            ["WebReferences"] = "Name of Web References folder to display in user interface",
-            ["WebReferenceUrl"] = "Represents a reference to a web service"
         };
     }
 }

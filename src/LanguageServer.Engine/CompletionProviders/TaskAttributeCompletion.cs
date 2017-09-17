@@ -170,9 +170,6 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 
             Lsp.Models.Range replaceRangeLsp = replaceRange.ToLsp();
 
-            Help.TaskHelp taskDocs;
-            projectDocument.Workspace.TaskHelp.TryGetValue(taskMetadata.Name, out taskDocs);
-
             foreach (MSBuildTaskParameterMetadata taskParameter in taskMetadata.Parameters.OrderBy(parameter => parameter.Name))
             {
                 if (existingAttributeNames.Contains(taskParameter.Name))
@@ -181,8 +178,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 if (taskParameter.IsOutput)
                     continue;
 
-                Help.TaskParameterHelp parameterDocumentation = null;
-                taskDocs?.Parameters?.TryGetValue(taskParameter.Name, out parameterDocumentation);
+                string parameterDocumentation = MSBuildSchemaHelp.ForTaskParameter(taskMetadata.Name, taskParameter.Name);
 
                 yield return TaskAttributeCompletionItem(taskMetadata.Name, taskParameter, parameterDocumentation, replaceRangeLsp, needsPadding);
             }
@@ -209,13 +205,13 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         /// <returns>
         ///     The <see cref="CompletionItem"/>.
         /// </returns>
-        CompletionItem TaskAttributeCompletionItem(string taskName, MSBuildTaskParameterMetadata parameterMetadata, Help.TaskParameterHelp parameterDocumentation, Lsp.Models.Range replaceRange, PaddingType needsPadding)
+        CompletionItem TaskAttributeCompletionItem(string taskName, MSBuildTaskParameterMetadata parameterMetadata, string parameterDocumentation, Lsp.Models.Range replaceRange, PaddingType needsPadding)
         {
             return new CompletionItem
             {
                 Label = parameterMetadata.Name,
                 Detail = "Task Parameter",
-                Documentation = parameterDocumentation?.Description,
+                Documentation = parameterDocumentation,
                 SortText = $"{Priority:0000}parameterMetadata.Name",
                 TextEdit = new TextEdit
                 {

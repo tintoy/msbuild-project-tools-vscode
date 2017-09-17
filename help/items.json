@@ -80,82 +80,48 @@
     "COMFileReference": {
         "description": "Type libraries that feed into the ResolvedComreference target.",
         "metadata": {
-            "WrapperTool": {
-                "description": " The name of the wrapper tool that is used on the component, for example, \"tlbimp.\""
-            }
+            "WrapperTool": "The name of the wrapper tool that is used on the component, for example, \"tlbimp.\""
         }
     },
     "Compile": {
         "description": "Source files for compiler",
         "metadata": {
-            "AutoGen": {
-                "description": "Whether file was generated from another file (boolean)"
-            }
+            "AutoGen": "Whether file was generated from another file (boolean)"
         }
     },
     "COMReference": {
         "description": "Reference to a COM component",
         "metadata": {
-            "EmbedInteropTypes": {
-                "description": "Whether the types in this reference need to embedded into the target assembly - interop assemblies only (optional, boolean)"
-            },
-            "Guid": {
-                "description": "GUID in the form {00000000-0000-0000-0000-000000000000}"
-            },
-            "Isolated": {
-                "description": "Is it isolated (boolean)"
-            },
-            "Lcid": {
-                "description": "Locale ID"
-            },
-            "Name": {
-                "description": "Friendly display name (optional)"
-            },
-            "VersionMajor": {
-                "description": "Major part of the version number"
-            },
-            "VersionMinor": {
-                "description": "Minor part of the version number"
-            },
-            "WrapperTool": {
-                "description": "Wrapper tool, such as tlbimp"
-            }
+            "EmbedInteropTypes": "Whether the types in this reference need to embedded into the target assembly - interop assemblies only (optional, boolean)",
+            "Guid": "GUID in the form {00000000-0000-0000-0000-000000000000}",
+            "Isolated": "Is it isolated (boolean)",
+            "Lcid": "Locale ID",
+            "Name": "Friendly display name (optional)",
+            "VersionMajor": "Major part of the version number",
+            "VersionMinor": "Minor part of the version number",
+            "WrapperTool": "Wrapper tool, such as tlbimp"
         }
     },
     "Content": {
         "description": "Files that are not compiled, but may be embedded or published",
         "metadata": {
-            "CopyToPublishDirectory": {
-                "description": "Copy file to publish directory (optional, boolean, default false)"
-            },
-            "PublishState": {
-                "description": "Default, Included, Excluded, DataFile, or Prerequisite"
-            }
+            "CopyToPublishDirectory": "Copy file to publish directory (optional, boolean, default false)",
+            "PublishState": "Default, Included, Excluded, DataFile, or Prerequisite"
         }
     },
     "DotNetCliToolReference": {
         "description": "The CLI tool that the user wants restored in the context of the project",
         "metadata": {
-            "Version": {
-                "description": "The tool version"
-            },
-            "ExcludeAssets": {
-                "description": "Assets to exclude from this reference"
-            },
-            "IncludeAssets": {
-                "description": "Assets to include from this reference"
-            },
-            "PrivateAssets": {
-                "description": "Assets that are private in this reference"
-            }
+            "Version": "The tool version",
+            "ExcludeAssets": "Assets to exclude from this reference",
+            "IncludeAssets": "Assets to include from this reference",
+            "PrivateAssets": "Assets that are private in this reference"
         }
     },
     "EmbeddedResource": {
         "description": "Resources to be embedded in the generated assembly",
         "metadata": {
-            "LastGenOutput": {
-                "description": "File that was created by any file generator that was run on this item"
-            }
+            "LastGenOutput": "File that was created by any file generator that was run on this item"
         }
     },
     "Folder": {
@@ -167,12 +133,8 @@
     "NativeReference": {
         "description": "Reference to a native manifest file, or to a file that contains a native manifest",
         "metadata": {
-            "HintPath": {
-                "description": "Relative path to manifest file"
-            },
-            "Name": {
-                "description": "Base name of manifest file"
-            }
+            "HintPath": "Relative path to manifest file",
+            "Name": "Base name of manifest file"
         }
     },
     "None": {
@@ -182,18 +144,10 @@
     "PackageReference": {
         "description": "Reference to a package",
         "metadata": {
-            "Version": {
-                "description": "The package version"
-            },
-            "ExcludeAssets": {
-                "description": "Assets to exclude from this reference"
-            },
-            "IncludeAssets": {
-                "description": "Assets to include from this reference"
-            },
-            "PrivateAssets": {
-                "description": "Assets that are private in this reference"
-            }
+            "Version": "The package version",
+            "ExcludeAssets": "Assets to exclude from this reference",
+            "IncludeAssets": "Assets to include from this reference",
+            "PrivateAssets": "Assets that are private in this reference"
         }
     },
     "Page": {
@@ -202,15 +156,9 @@
     "PlatformVersionDescription": {
         "description": "Platform version description. Used to map between internal OS version and marketing OS version.",
         "metadata": {
-            "OSVersion": {
-                "description": "Internal OS version."
-            },
-            "TargetPlatformIdentifier": {
-                "description": "Target platform identifier."
-            },
-            "TargetPlatformVersion": {
-                "description": "Target platform version."
-            }
+            "OSVersion": "Internal OS version.",
+            "TargetPlatformIdentifier": "Target platform identifier.",
+            "TargetPlatformVersion": "Target platform version."
         }
     },
     "PRIResource": {
@@ -222,65 +170,29 @@
     "ProjectReference": {
         "description": "Reference to another project",
         "metadata": {
-            "EmbedInteropTypes": {
-                "description": "Whether the types in this reference need to embedded into the target assembly - interop assemblies only (optional, boolean)"
-            },
-            "ExcludeAssets": {
-                "description": "Assets to exclude from this reference"
-            },
-            "IncludeAssets": {
-                "description": "Assets to include from this reference"
-            },
-            "Name": {
-                "description": "Friendly display name (optional)"
-            },
-            "OutputItemType": {
-                "description": "Item type to emit target outputs into. Default is blank. If the Reference metadata is set to \"true\" (default) then target outputs will become references for the compiler."
-            },
-            "PrivateAssets": {
-                "description": "Assets that are private in this reference"
-            },
-            "Project": {
-                "description": "Project GUID, in the form {00000000-0000-0000-0000-000000000000}"
-            },
-            "ReferenceOutputAssembly": {
-                "description": "Boolean specifying whether the outputs of the project referenced should be passed to the compiler. Default is true."
-            },
-            "SpecificVersion": {
-                "description": "Whether the exact version of the assembly should be used."
-            },
-            "Targets": {
-                "description": "Semicolon separated list of targets in the referenced projects that should be built. Default is the value of $(ProjectReferenceBuildTargets) whose default is blank, indicating the default targets."
-            }
+            "EmbedInteropTypes": "Whether the types in this reference need to embedded into the target assembly - interop assemblies only (optional, boolean)",
+            "ExcludeAssets": "Assets to exclude from this reference",
+            "IncludeAssets": "Assets to include from this reference",
+            "Name": "Friendly display name (optional)",
+            "OutputItemType": "Item type to emit target outputs into. Default is blank. If the Reference metadata is set to \"true\" (default) then target outputs will become references for the compiler.",
+            "PrivateAssets": "Assets that are private in this reference",
+            "Project": "Project GUID, in the form {00000000-0000-0000-0000-000000000000}",
+            "ReferenceOutputAssembly": "Boolean specifying whether the outputs of the project referenced should be passed to the compiler. Default is true.",
+            "SpecificVersion": "Whether the exact version of the assembly should be used.",
+            "Targets": "Semicolon separated list of targets in the referenced projects that should be built. Default is the value of $(ProjectReferenceBuildTargets) whose default is blank, indicating the default targets."
         }
     },
     "Reference": {
         "description": "Reference to an assembly",
         "metadata": {
-            "Aliases": {
-                "description": "Aliases for the reference (optional)"
-            },
-            "EmbedInteropTypes": {
-                "description": "Whether the types in this reference need to embedded into the target assembly - interop assemblies only (optional, boolean)"
-            },
-            "FusionName": {
-                "description": "Fusion name of the assembly (optional)"
-            },
-            "HintPath": {
-                "description": "Relative or absolute path to the assembly (optional)"
-            },
-            "Name": {
-                "description": "Friendly display name (optional)"
-            },
-            "Private": {
-                "description": "Whether the reference should be copied to the output folder (optional, boolean)"
-            },
-            "RequiredTargetFramework": {
-                "description": "The minimum required target framework version in order to use this assembly as a reference"
-            },
-            "SpecificVersion": {
-                "description": "Whether only the version in the fusion name should be referenced (optional, boolean)"
-            }
+            "Aliases": "Aliases for the reference (optional)",
+            "EmbedInteropTypes": "Whether the types in this reference need to embedded into the target assembly - interop assemblies only (optional, boolean)",
+            "FusionName": "Fusion name of the assembly (optional)",
+            "HintPath": "Relative or absolute path to the assembly (optional)",
+            "Name": "Friendly display name (optional)",
+            "Private": "Whether the reference should be copied to the output folder (optional, boolean)",
+            "RequiredTargetFramework": "The minimum required target framework version in order to use this assembly as a reference",
+            "SpecificVersion": "Whether only the version in the fusion name should be referenced (optional, boolean)"
         }
     },
     "Resource": {
@@ -289,9 +201,7 @@
     "SDKReference": {
         "description": "Reference to an extension SDK",
         "metadata": {
-            "Name": {
-                "description": "Friendly display name (optional)"
-            }
+            "Name": "Friendly display name (optional)"
         }
     },
     "StoreAssociationFile": {

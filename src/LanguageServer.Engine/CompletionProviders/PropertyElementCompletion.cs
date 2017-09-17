@@ -70,6 +70,12 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 
                     return null;
                 }
+                if (replaceElement == null)
+                {
+                    Log.Verbose("Not offering any element completions for {XmlLocation:l} (no element to replace at this position).", location);
+
+                    return null;
+                }
 
                 Log.Verbose("Offering completions to replace element {ElementName} @ {ReplaceRange:l}",
                     replaceElement.Name,

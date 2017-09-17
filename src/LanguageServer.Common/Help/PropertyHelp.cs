@@ -5,31 +5,31 @@ using System.Collections.Generic;
 namespace MSBuildProjectTools.LanguageServer.Help
 {
     /// <summary>
-    ///     Basic information common to all help items.
+    ///     Help information for an MSBuild property.
     /// </summary>
-    public class HelpItem
+    public class PropertyHelp
     {
         /// <summary>
-        ///     The item description.
+        ///     The property description.
         /// </summary>
         [JsonProperty("description")]
         public string Description { get; set; }
 
         /// <summary>
-        ///     Load help items from JSON.
+        ///     Load help property help from JSON.
         /// </summary>
         /// <param name="json">
-        ///     A <see cref="JsonReader"/> representing the JSON ("ItemName": { "description": "ItemDescription" }).
+        ///     A <see cref="JsonReader"/> representing the JSON ("PropertyName": { "description": "PropertyDescription" }).
         /// </param>
         /// <returns>
-        ///     A sorted dictionary of help items, keyed by item name.
+        ///     A sorted dictionary of help items, keyed by property name.
         /// </returns>
-        public static SortedDictionary<string, HelpItem> FromJson(JsonReader json)
+        public static SortedDictionary<string, PropertyHelp> FromJson(JsonReader json)
         {
             if (json == null)
                 throw new ArgumentNullException(nameof(json));
             
-            return new JsonSerializer().Deserialize<SortedDictionary<string, HelpItem>>(json);
+            return new JsonSerializer().Deserialize<SortedDictionary<string, PropertyHelp>>(json);
         }
     }
 }

@@ -87,7 +87,12 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         }
 
         /// <summary>
-        ///     The server's hover capabilities.
+        ///     Has the client supplied hover capabilities?
+        /// </summary>
+        bool HaveHoverCapabilities => HoverCapabilities != null;
+
+        /// <summary>
+        ///     The client's hover capabilities.
         /// </summary>
         HoverCapability HoverCapabilities { get; set; }
 
@@ -299,9 +304,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </param>
         void ICapability<HoverCapability>.SetCapability(HoverCapability capabilities)
         {
-            if (capabilities == null)
-                throw new ArgumentNullException(nameof(capabilities));
-
             HoverCapabilities = capabilities;
         }
     }

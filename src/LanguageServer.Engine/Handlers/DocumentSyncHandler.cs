@@ -94,7 +94,12 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         Workspace Workspace { get; }
 
         /// <summary>
-        ///     The server's synchronisation capabilities.
+        ///     Has the client supplied synchronisation capabilities?
+        /// </summary>
+        bool HaveSynchronizationCapabilities => SynchronizationCapabilities != null;
+
+        /// <summary>
+        ///     The client's synchronisation capabilities.
         /// </summary>
         SynchronizationCapability SynchronizationCapabilities { get; set; }
 
@@ -493,9 +498,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </param>
         void ICapability<SynchronizationCapability>.SetCapability(SynchronizationCapability capabilities)
         {
-            if (capabilities == null)
-                throw new ArgumentNullException(nameof(capabilities));
-
             SynchronizationCapabilities = capabilities;
         }
 

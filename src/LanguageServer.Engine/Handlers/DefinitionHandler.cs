@@ -94,7 +94,12 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         }
 
         /// <summary>
-        ///     The server's symbol definition capabilities.
+        ///     Has the client supplied symbol definition capabilities?
+        /// </summary>
+        bool HaveDefinitionCapabilities => DefinitionCapabilities != null;
+
+        /// <summary>
+        ///     The client's symbol definition capabilities.
         /// </summary>
         DefinitionCapability DefinitionCapabilities { get; set; }
 
@@ -204,9 +209,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </param>
         void ICapability<DefinitionCapability>.SetCapability(DefinitionCapability capabilities)
         {
-            if (capabilities == null)
-                throw new ArgumentNullException(nameof(capabilities));
-
             DefinitionCapabilities = capabilities;
         }
     }

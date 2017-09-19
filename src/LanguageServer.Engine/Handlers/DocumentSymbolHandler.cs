@@ -89,7 +89,12 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         }
 
         /// <summary>
-        ///     The server's document symbol capabilities.
+        ///     Has the client supplied document symbol capabilities?
+        /// </summary>
+        bool HaveDocumentSymbolCapabilities => DocumentSymbolCapabilities != null;
+
+        /// <summary>
+        ///     The client's document symbol capabilities.
         /// </summary>
         DocumentSymbolCapability DocumentSymbolCapabilities { get; set; }
 
@@ -239,9 +244,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </param>
         void ICapability<DocumentSymbolCapability>.SetCapability(DocumentSymbolCapability capabilities)
         {
-            if (capabilities == null)
-                throw new ArgumentNullException(nameof(capabilities));
-
             DocumentSymbolCapabilities = capabilities;
         }
     }

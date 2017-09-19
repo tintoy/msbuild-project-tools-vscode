@@ -53,7 +53,12 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         public Configuration Configuration { get; }
 
         /// <summary>
-        ///     The server's configuration capabilities.
+        ///     Has the client supplied configuration capabilities?
+        /// </summary>
+        bool HaveConfigurationCapabilities => ConfigurationCapabilities != null;
+
+        /// <summary>
+        ///     The client's configuration capabilities.
         /// </summary>
         DidChangeConfigurationCapability ConfigurationCapabilities { get; set; }
 
@@ -84,9 +89,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </param>
         void ICapability<DidChangeConfigurationCapability>.SetCapability(DidChangeConfigurationCapability capabilities)
         {
-            if (capabilities == null)
-                throw new ArgumentNullException(nameof(capabilities));
-
             ConfigurationCapabilities = capabilities;
         }
 

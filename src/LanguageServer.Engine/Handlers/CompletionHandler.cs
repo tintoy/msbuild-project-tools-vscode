@@ -113,7 +113,12 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         }
 
         /// <summary>
-        ///     The server's completion capabilities.
+        ///     Has the client supplied completion capabilities?
+        /// </summary>
+        bool HaveCompletionCapabilities => CompletionCapabilities != null;
+
+        /// <summary>
+        ///     The client's completion capabilities.
         /// </summary>
         CompletionCapability CompletionCapabilities { get; set; }
 
@@ -250,9 +255,6 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </param>
         void ICapability<CompletionCapability>.SetCapability(CompletionCapability capabilities)
         {
-            if (capabilities == null)
-                throw new ArgumentNullException(nameof(capabilities));
-
             CompletionCapabilities = capabilities;
         }
     }

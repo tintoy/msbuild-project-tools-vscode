@@ -1,16 +1,15 @@
 # Change Log
 
-## v0.2.9
-
-* Add feature flag to enable returning empty completion lists rather than null.  
-  We can't do this by default because our extension depends on VSCode's behaviour when null is returned vs an empty completion list (when null is returned, no completion list is displayed; when an empty completion list is returned, purely-textual completions are displayed based on current file contents).  
-  It is mainly to support clients other than VSCode.
-
 ## v0.2.8
 
 * _Experimental:_ Add completions for task elements based on task types declared in the project.
 * _Experimental:_ Add completions for task attributes based on task types declared in the project.
 * More testing on MacOS and Linux.
+* _Experimental:_ Parsing of MSBuild item transform expressions.
+* _Experimental:_ Add experimental feature flag (`empty-completion-lists`) to enable returning empty completion lists rather than null  
+  Fixes tintoy/msbuild-project-tools-vscode#17.  
+  We can't do this by default because our extension depends on VSCode's behaviour when null is returned vs an empty completion list (when null is returned, no completion list is displayed; when an empty completion list is returned, purely-textual completions are displayed based on current file contents).  
+  This behaviour is mainly to support clients other than VSCode (e.g. aCute).
 
 ## v0.2.7
 

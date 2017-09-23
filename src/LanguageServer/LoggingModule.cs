@@ -53,6 +53,13 @@ namespace MSBuildProjectTools.LanguageServer
             Configuration configuration = componentContext.Resolve<Configuration>();
             ConfigureSeq(configuration.Seq);
 
+            // Override default log level.
+            if (Environment.GetEnvironmentVariable("MSBUILD_PROJECT_TOOLS_VERBOSE_LOGGING") == "1")
+            {
+                configuration.LogLevelSwitch.MinimumLevel = LogEventLevel.Verbose;
+                configuration.Seq.LogLevelSwitch.MinimumLevel = LogEventLevel.Verbose;
+            }
+
             Lsp.ILanguageServer languageServer = componentContext.Resolve<Lsp.ILanguageServer>();
 
             var loggerConfiguration = new LoggerConfiguration()

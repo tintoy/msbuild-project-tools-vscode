@@ -86,6 +86,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         public static Parser<char> ItemGroupClose = RParen.Named("token: item group close");
 
         /// <summary>
+        ///     Parse the operator in an item group transform, "->".
+        /// </summary>
+        public static Parser<IEnumerable<char>> ItemGroupTransformOperator = Parse.String("->").Named("token: item group transform operator");
+
+        /// <summary>
         ///     Parse the opening of an item metadata expression, "%(".
         /// </summary>
         public static Parser<IEnumerable<char>> ItemMetadataOpen = Parse.String("%(").Named("token: item metadata open");

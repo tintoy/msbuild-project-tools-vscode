@@ -44,6 +44,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests.ExpressionTests
         /// <param name="expectedContent">
         ///     The expected string content.
         /// </param>
+        [InlineData("''",      ""     )]
         [InlineData("'ABC'",   "ABC"  )]
         [InlineData("'ABC '", "ABC "  )]
         [InlineData("' ABC'", " ABC"  )]

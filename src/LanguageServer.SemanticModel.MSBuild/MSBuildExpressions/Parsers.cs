@@ -151,6 +151,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
                 QuotedString.As<ExpressionNode>()
                     .Or(Symbol)
                     .Or(Evaluation)
+                    l.Or(ItemGroupTransform)
                     .Or(ItemGroup)
                     .Or(ItemMetadata)
                     .Named("function argument");
@@ -264,6 +265,52 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ).Named("item group");
 
         /// <summary>
+        ///     Parse the transform expression body in an item group transform expression.
+        /// </summary>
+        public static Parser<IEnumerable<ExpressionNode>> ItemGroupTransformBody = (
+            from transformOperator in Tokens.ItemGroupTransformOperator.Token().Named("item group transform operator")
+            from transformBody in QuotedString.Token().Optional().Named("item group transform body")
+
+            select transformBody.ToSequenceIfDefined()
+        ).Named("item group transform body");
+
+        /// <summary>
+        ///     Parse the separator declaration in an item group transform expression.
+        /// </summary>
+        public static Parser<QuotedStringLiteral> ItemGroupTransformSeparatorDeclaration = Parse.Positioned(
+            from leadingComma in Tokens.Comma.Token().Named("item group transform separator comma")
+            from separator in QuotedStringLiteral.Token().Named("item group transform separator")
+
+            select separator
+        ).Named("item group transform separator");
+
+        /// <summary>
+        ///     Parse an MSBuild item group expression.
+        /// </summary>
+        /// <remarks>
+        ///     The symbol between the parentheses is optional so we can still provide completions for "@()".
+        /// </remarks>
+        public static Parser<ItemGroupTransform> ItemGroupTransform = Parse.Positioned(
+            from itemGroupOpen in Tokens.ItemGroupOpen.Named("open item group")
+            from name in Symbol.Or(EmptySymbol).Token().Once().Named("item group name")
+            from transformOperator in Tokens.ItemGroupTransformOperator.Token().Named("item group transform operator")
+            from transformBody in QuotedString.Token().Optional().Named("item group transform body")
+            from transformSeparator in ItemGroupTransformSeparatorDeclaration.Token().Optional().Named("item group transform separator")
+            from itemGroupClose in Tokens.ItemGroupClose.Named("close item group")
+            select new ItemGroupTransform
+            {
+                Children = ImmutableList.CreateRange(
+                    name.Concat<ExpressionNode>(
+                        transformBody.ToSequenceIfDefined()
+                    )
+                    .Concat(
+                        transformSeparator.ToSequenceIfDefined()
+                    )
+                )
+            }
+        ).Named("item group transform");
+
+        /// <summary>
         ///     Parse an MSBuild item metadata expression, "%(ItemType.MetadataName") or "%(MetadataName)".
         /// </summary>
         /// <remarks>
@@ -292,7 +339,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ///     Parse a run of contiguous characters in a single-quoted string (excluding <see cref="Tokens.Dollar"/> or the closing <see cref="Tokens.SingleQuote"/>).
         /// </summary>
         public static readonly Parser<StringContent> SingleQuotedStringContent =
-            from content in Tokens.SingleQuotedStringChar.AtLeastOnce().Text().Named("string content")
+            from content in Tokens.SingleQuotedStringChar.Many().Text().Named("string content")
             select new StringContent
             {
                 Content = content
@@ -320,6 +367,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
             from contents in
                 SingleQuotedStringContent.As<ExpressionNode>()
                     .Or(Evaluation)
+                    .Or(ItemGroupTransform)
                     .Or(ItemGroup)
                     .Or(ItemMetadata)
                     .Many()
@@ -449,6 +497,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
             GroupedExpression
                 .Or(Comparison)
                 .Or(Evaluation)
+                .Or(ItemGroupTransform)
                 .Or(ItemGroup)
                 .Or(ItemMetadata)
                 .Or(QuotedString)
@@ -495,6 +544,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
                 .Or(Comparison)
                 .Or(QuotedString)
                 .Or(Evaluation)
+                .Or(ItemGroupTransform)
                 .Or(ItemGroup)
                 .Or(ItemMetadata)
                 .Or(Symbol);

@@ -51,6 +51,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         ItemGroup,
 
         /// <summary>
+        ///     An item group transform expression, "@(xxx->'yyy')".
+        /// </summary>
+        ItemGroupTransform,
+
+        /// <summary>
         ///     An item metadata expression, "%(xxx.yyy)" or "%(yyy)".
         /// </summary>
         ItemMetadata,

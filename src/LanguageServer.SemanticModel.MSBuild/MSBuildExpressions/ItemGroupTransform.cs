@@ -6,13 +6,13 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
     /// <summary>
     ///     Represents an MSBuild item group expression.
     /// </summary>
-    public class ItemGroup
-        : ExpressionContainerNode, IPositionAware<ItemGroup>
+    public class ItemGroupTransform
+        : ExpressionContainerNode, IPositionAware<ItemGroupTransform>
     {
         /// <summary>
-        ///     Create a new <see cref="ItemGroup"/>.
+        ///     Create a new <see cref="ItemGroupTransform"/>.
         /// </summary>
-        public ItemGroup()
+        public ItemGroupTransform()
         {
         }
 
@@ -27,9 +27,29 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         public string Name => Children.Count > 0 ? GetChild<Symbol>(0).Name : null;
 
         /// <summary>
-        ///     Is the item group expression valid?
+        ///     Does the <see cref="ItemGroupTransform"/> expression have a body?
         /// </summary>
-        public override bool IsValid => HasName && base.IsValid;
+        public bool HasBody => Children.Count > 1;
+
+        /// <summary>
+        ///     The item group transform's expression body (if any).
+        /// </summary>
+        public QuotedString Body => HasBody ? GetChild<QuotedString>(1) : null;
+
+        /// <summary>
+        ///     Does the <see cref="ItemGroupTransform"/> expression declare a custom separator?
+        /// </summary>
+        public bool HasSeparator => Children.Count > 2;
+
+        /// <summary>
+        ///     The item group transform's custom separator (if any).
+        /// </summary>
+        public QuotedStringLiteral Separator => HasSeparator ? GetChild<QuotedStringLiteral>(2) : null;
+
+        /// <summary>
+        ///     Is the item group transform expression valid?
+        /// </summary>
+        public override bool IsValid => HasName && HasBody && base.IsValid;
 
         /// <summary>
         ///     The node kind.
@@ -48,7 +68,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
         /// <returns>
         ///     The <see cref="ExpressionNode"/>.
         /// </returns>
-        ItemGroup IPositionAware<ItemGroup>.SetPos(Sprache.Position startPosition, int length)
+        ItemGroupTransform IPositionAware<ItemGroupTransform>.SetPos(Sprache.Position startPosition, int length)
         {
             SetPosition(startPosition, length);
 

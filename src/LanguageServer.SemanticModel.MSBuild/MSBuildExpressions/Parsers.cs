@@ -151,7 +151,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel.MSBuildExpressions
                 QuotedString.As<ExpressionNode>()
                     .Or(Symbol)
                     .Or(Evaluation)
-                    l.Or(ItemGroupTransform)
+                    .Or(ItemGroupTransform)
                     .Or(ItemGroup)
                     .Or(ItemMetadata)
                     .Named("function argument");

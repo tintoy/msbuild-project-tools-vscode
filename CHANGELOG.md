@@ -1,5 +1,11 @@
 # Change Log
 
+## v0.2.9
+
+* Add feature flag to enable returning empty completion lists rather than null.  
+  We can't do this by default because our extension depends on VSCode's behaviour when null is returned vs an empty completion list (when null is returned, no completion list is displayed; when an empty completion list is returned, purely-textual completions are displayed based on current file contents).  
+  It is mainly to support clients other than VSCode.
+
 ## v0.2.8
 
 * _Experimental:_ Add completions for task elements based on task types declared in the project.

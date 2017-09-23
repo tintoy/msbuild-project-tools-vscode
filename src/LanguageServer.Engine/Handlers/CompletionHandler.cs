@@ -123,6 +123,16 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         CompletionCapability CompletionCapabilities { get; set; }
 
         /// <summary>
+        ///     Should the handler return empty <see cref="CompletionList"/>s instead of <c>null</c>?
+        /// </summary>
+        bool ReturnEmptyCompletionLists => Workspace.Configuration.EnableExperimentalFeatures.Contains("empty-completion-lists");
+
+        /// <summary>
+        ///     A <see cref="CompletionList"/> (or <c>null</c>) representing no completions.
+        /// </summary>
+        CompletionList NoCompletions => ReturnEmptyCompletionLists ? new CompletionList(Enumerable.Empty<CompletionItem>(), isIncomplete: false) : null;
+
+        /// <summary>
         ///     Called when completions are requested.
         /// </summary>
         /// <param name="parameters">
@@ -145,7 +155,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             using (await projectDocument.Lock.ReaderLockAsync(cancellationToken))
             {
                 if (!projectDocument.HasXml)
-                    return null;
+                    return NoCompletions;
 
                 Position position = parameters.Position.ToNative();
                 Log.Verbose("Completion requested for {Position:l}", position);
@@ -155,7 +165,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 {
                     Log.Verbose("Completion short-circuited; nothing interesting at {Position:l}", position);
 
-                    return null;
+                    return NoCompletions;
                 }
 
                 Log.Verbose("Completion will target {XmlLocation:l}", location);
@@ -186,13 +196,13 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                         foreach (Exception suggestionError in aggregateSuggestionError.Flatten().InnerExceptions)
                             Log.Error(suggestionError, "Failed to provide completions.");
 
-                        return null;
+                        return NoCompletions;
                     }
                     catch (Exception suggestionError)
                     {
                         Log.Error(suggestionError, "Failed to provide completions.");
 
-                        return null;
+                        return NoCompletions;
                     }
                 }
             }
@@ -200,7 +210,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             Log.Verbose("Offering a total of {CompletionCount} completions for {Location:l} (Exhaustive: {Exhaustive}).", completionItems.Count, location, !isIncomplete);
 
             if (completionItems.Count == 0 && !isIncomplete)
-                return null;
+                return NoCompletions;
 
             CompletionList completionList = new CompletionList(completionItems, isIncomplete);
 

@@ -1,4 +1,4 @@
-using Lsp.Models;
+using OmniSharp.Extensions.LanguageServer.Models;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -6,6 +6,8 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
+using LspModels = OmniSharp.Extensions.LanguageServer.Models;
 
 namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 {
@@ -69,7 +71,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 if (conditionAttribute.Element.ParentElement?.Name != "PropertyGroup")
                     return null;
 
-                Lsp.Models.Range replaceRange = conditionAttribute.ValueRange.ToLsp();
+                LspModels.Range replaceRange = conditionAttribute.ValueRange.ToLsp();
                 
                 completions.Add(new CompletionItem
                 {

@@ -1,4 +1,4 @@
-using Lsp.Models;
+using OmniSharp.Extensions.LanguageServer.Models;
 using Microsoft.Build.Construction;
 using Serilog;
 using System;

@@ -1,10 +1,12 @@
-using Lsp.Models;
+using OmniSharp.Extensions.LanguageServer.Models;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
+using LspModels = OmniSharp.Extensions.LanguageServer.Models;
 
 namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 {
@@ -121,7 +123,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             if (replaceRange == null)
                 throw new ArgumentNullException(nameof(replaceRange));
 
-            Lsp.Models.Range replaceRangeLsp = replaceRange.ToLsp();
+            LspModels.Range replaceRangeLsp = replaceRange.ToLsp();
 
             HashSet<string> offeredItemGroupNames = new HashSet<string>();
 
@@ -178,7 +180,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         /// <returns>
         ///     The <see cref="CompletionItem"/>.
         /// </returns>
-        CompletionItem ItemGroupCompletionItem(string itemType, Lsp.Models.Range replaceRange, int? priority = null, string description = null)
+        CompletionItem ItemGroupCompletionItem(string itemType, LspModels.Range replaceRange, int? priority = null, string description = null)
         {
             return new CompletionItem
             {

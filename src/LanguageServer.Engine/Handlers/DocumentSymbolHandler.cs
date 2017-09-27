@@ -1,8 +1,9 @@
-using JsonRpc;
-using Lsp;
-using Lsp.Capabilities.Client;
-using Lsp.Models;
-using Lsp.Protocol;
+using OmniSharp.Extensions.JsonRpc;
+using OmniSharp.Extensions.LanguageServer;
+using OmniSharp.Extensions.LanguageServer.Abstractions;
+using OmniSharp.Extensions.LanguageServer.Capabilities.Client;
+using OmniSharp.Extensions.LanguageServer.Models;
+using OmniSharp.Extensions.LanguageServer.Protocol;
 using Microsoft.Language.Xml;
 using NuGet.Versioning;
 using Serilog;

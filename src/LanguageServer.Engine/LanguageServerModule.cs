@@ -1,4 +1,5 @@
 using Autofac;
+using OmniSharp.Extensions.LanguageServer;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -8,6 +9,8 @@ namespace MSBuildProjectTools.LanguageServer
     using CompletionProviders;
     using Diagnostics;
     using Handlers;
+
+    using LanguageServer = OmniSharp.Extensions.LanguageServer.LanguageServer;
 
     /// <summary>
     ///     Registration logic for language server components.
@@ -36,16 +39,16 @@ namespace MSBuildProjectTools.LanguageServer
             builder.RegisterInstance(Configuration).AsSelf();
             
             builder
-                .Register(_ => new Lsp.LanguageServer(
+                .Register(_ => new LanguageServer(
                     input: Console.OpenStandardInput(),
                     output: Console.OpenStandardOutput()
                 ))
                 .AsSelf()
-                .As<Lsp.ILanguageServer>()
+                .As<ILanguageServer>()
                 .SingleInstance()
                 .OnActivated(activated =>
                 {
-                    Lsp.LanguageServer languageServer = activated.Instance;
+                    LanguageServer languageServer = activated.Instance;
                     
                     // Register configuration handler (which is not a Handler).
                     var configurationHandler = activated.Context.Resolve<ConfigurationHandler>();

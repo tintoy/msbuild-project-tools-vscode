@@ -1,11 +1,13 @@
 ﻿using Autofac;
-using Lsp;
+using OmniSharp.Extensions.LanguageServer;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+
+using LSP = OmniSharp.Extensions.LanguageServer;
 
 namespace MSBuildProjectTools.LanguageServer
 {
@@ -58,7 +60,7 @@ namespace MSBuildProjectTools.LanguageServer
             using (ActivityCorrelationManager.BeginActivityScope())
             using (IContainer container = BuildContainer())
             {
-                var server = container.Resolve<Lsp.LanguageServer>();
+                var server = container.Resolve<LSP.LanguageServer>();
 
                 await server.Initialize();
                 await server.WasShutDown;

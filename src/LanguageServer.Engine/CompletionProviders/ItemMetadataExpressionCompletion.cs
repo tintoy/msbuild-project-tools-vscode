@@ -1,4 +1,4 @@
-using Lsp.Models;
+using OmniSharp.Extensions.LanguageServer.Models;
 using Microsoft.Build.Evaluation;
 using Serilog;
 using System;
@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
+using LspModels = OmniSharp.Extensions.LanguageServer.Models;
 
 namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 {
@@ -168,7 +170,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             if (replaceRange == null)
                 throw new ArgumentNullException(nameof(replaceRange));
 
-            Lsp.Models.Range replaceRangeLsp = replaceRange.ToLsp();
+            LspModels.Range replaceRangeLsp = replaceRange.ToLsp();
 
             int priority = Priority;
 
@@ -271,7 +273,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         /// <returns>
         ///     The <see cref="CompletionItem"/>.
         /// </returns>
-        CompletionItem ItemTypeCompletionItem(string itemType, Lsp.Models.Range replaceRange, int? priority = null, string description = null)
+        CompletionItem ItemTypeCompletionItem(string itemType, LspModels.Range replaceRange, int? priority = null, string description = null)
         {
             return new CompletionItem
             {
@@ -318,7 +320,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         /// <returns>
         ///     The <see cref="CompletionItem"/>.
         /// </returns>
-        CompletionItem UnqualifiedMetadataCompletionItem(string metadataName, Lsp.Models.Range replaceRange, int? priority = null, string description = null)
+        CompletionItem UnqualifiedMetadataCompletionItem(string metadataName, LspModels.Range replaceRange, int? priority = null, string description = null)
         {
             return new CompletionItem
             {
@@ -357,7 +359,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         /// <returns>
         ///     The <see cref="CompletionItem"/>.
         /// </returns>
-        CompletionItem QualifiedMetadataCompletionItem(string itemType, string metadataName, Lsp.Models.Range replaceRange, int? priority = null, string description = null)
+        CompletionItem QualifiedMetadataCompletionItem(string itemType, string metadataName, LspModels.Range replaceRange, int? priority = null, string description = null)
         {
             return new CompletionItem
             {

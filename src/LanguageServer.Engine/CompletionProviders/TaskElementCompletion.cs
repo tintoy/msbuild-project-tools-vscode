@@ -1,4 +1,4 @@
-using Lsp.Models;
+using OmniSharp.Extensions.LanguageServer.Models;
 using Microsoft.Build.Construction;
 using Serilog;
 using System;
@@ -9,6 +9,8 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+
+using LspModels = OmniSharp.Extensions.LanguageServer.Models;
 
 namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 {
@@ -140,7 +142,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             if (replaceRange == null)
                 throw new ArgumentNullException(nameof(replaceRange));
 
-            Lsp.Models.Range replaceRangeLsp = replaceRange.ToLsp();
+            LspModels.Range replaceRangeLsp = replaceRange.ToLsp();
 
             foreach (string taskName in projectTasks.Keys.OrderBy(name => name))
                 yield return TaskElementCompletionItem(taskName, projectTasks[taskName], replaceRangeLsp);
@@ -163,7 +165,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         /// <returns>
         ///     The <see cref="CompletionItem"/>.
         /// </returns>
-        CompletionItem TaskElementCompletionItem(string taskName, MSBuildTaskMetadata taskMetadata, Lsp.Models.Range replaceRange)
+        CompletionItem TaskElementCompletionItem(string taskName, MSBuildTaskMetadata taskMetadata, LspModels.Range replaceRange)
         {
             MSBuildTaskParameterMetadata[] requiredParameters = taskMetadata.Parameters.Where(parameter => parameter.IsRequired).ToArray();
             string requiredAttributes = String.Join(" ", requiredParameters.Select(

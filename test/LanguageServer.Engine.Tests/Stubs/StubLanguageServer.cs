@@ -1,6 +1,6 @@
-using JsonRpc;
-using Lsp;
-using Lsp.Models;
+using OmniSharp.Extensions.JsonRpc;
+using OmniSharp.Extensions.LanguageServer;
+using OmniSharp.Extensions.LanguageServer.Models;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;

@@ -1,3 +1,4 @@
+using OmniSharp.Extensions.LanguageServer;
 using Serilog;
 using Serilog.Configuration;
 using Serilog.Core;
@@ -27,7 +28,7 @@ namespace MSBuildProjectTools.LanguageServer.Logging
         /// <returns>
         ///     The logger configuration.
         /// </returns>
-        public static LoggerConfiguration LanguageServer(this LoggerSinkConfiguration loggerSinkConfiguration, Lsp.ILanguageServer languageServer, LoggingLevelSwitch levelSwitch)
+        public static LoggerConfiguration LanguageServer(this LoggerSinkConfiguration loggerSinkConfiguration, ILanguageServer languageServer, LoggingLevelSwitch levelSwitch)
         {
             if (loggerSinkConfiguration == null)
                 throw new ArgumentNullException(nameof(loggerSinkConfiguration));

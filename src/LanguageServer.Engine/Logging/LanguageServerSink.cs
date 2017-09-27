@@ -1,13 +1,16 @@
-using Lsp.Protocol;
+using OmniSharp.Extensions.LanguageServer;
+using OmniSharp.Extensions.LanguageServer.Protocol;
 using Serilog;
 using Serilog.Core;
 using System;
 using Serilog.Events;
-using Lsp.Models;
+using OmniSharp.Extensions.LanguageServer.Models;
 
 namespace MSBuildProjectTools.LanguageServer.Logging
 {
     using Handlers;
+
+    using LanguageServer = OmniSharp.Extensions.LanguageServer.LanguageServer;
 
     /// <summary>
     ///     A Serilog logging sink that sends log events to the language server logging facility.
@@ -18,7 +21,7 @@ namespace MSBuildProjectTools.LanguageServer.Logging
         /// <summary>
         ///     The language server to which events will be logged.
         /// </summary>
-        readonly Lsp.ILanguageServer _languageServer;
+        readonly ILanguageServer _languageServer;
 
         /// <summary>
         ///     The <see cref="LoggingLevelSwitch"/> that controls logging.
@@ -39,7 +42,7 @@ namespace MSBuildProjectTools.LanguageServer.Logging
         /// <param name="levelSwitch">
         ///     The <see cref="LoggingLevelSwitch"/> that controls logging.
         /// </param>
-        public LanguageServerLoggingSink(Lsp.ILanguageServer languageServer, LoggingLevelSwitch levelSwitch)
+        public LanguageServerLoggingSink(ILanguageServer languageServer, LoggingLevelSwitch levelSwitch)
         {
             if (languageServer == null)
                 throw new ArgumentNullException(nameof(languageServer));
@@ -50,7 +53,7 @@ namespace MSBuildProjectTools.LanguageServer.Logging
             _languageServer = languageServer;
             _levelSwitch = levelSwitch;
 
-            if (_languageServer is Lsp.LanguageServer realLanguageServer)
+            if (_languageServer is LanguageServer realLanguageServer)
             {
                 realLanguageServer.Shutdown += shutDownRequested =>
                 {

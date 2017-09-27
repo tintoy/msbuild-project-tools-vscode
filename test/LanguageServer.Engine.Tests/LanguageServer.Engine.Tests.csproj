@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>netcoreapp2.0</TargetFramework>
+        <TargetFrameworks>netcoreapp2.0;net461</TargetFrameworks>
         <IsPackable>false</IsPackable>
         <RootNamespace>MSBuildProjectTools.LanguageServer.Tests</RootNamespace>
         <AssemblyName>MSBuildProjectTools.LanguageServer.Engine.Tests</AssemblyName>
@@ -12,8 +12,8 @@
     
     <ItemGroup>
         <PackageReference Include="Autofac" Version="4.6.1" />
-        <PackageReference Include="JsonRpc" Version="1.0.0" />
-        <PackageReference Include="LSP" Version="1.0.0" />
+        <PackageReference Include="OmniSharp.Extensions.JsonRpc" Version="0.1.3" />
+        <PackageReference Include="OmniSharp.Extensions.LanguageServerProtocol" Version="0.1.3" />
         <PackageReference Include="Microsoft.Build" Version="15.3.409" />
         <PackageReference Include="Microsoft.Language.Xml" Version="1.1.14" />
         <PackageReference Include="Nito.AsyncEx.Tasks" Version="1.0.1" />

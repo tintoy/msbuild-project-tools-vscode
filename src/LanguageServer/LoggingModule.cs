@@ -1,4 +1,5 @@
 using Autofac;
+using OmniSharp.Extensions.LanguageServer;
 using Serilog;
 using Serilog.Events;
 using System;
@@ -60,7 +61,7 @@ namespace MSBuildProjectTools.LanguageServer
                 configuration.Seq.LogLevelSwitch.MinimumLevel = LogEventLevel.Verbose;
             }
 
-            Lsp.ILanguageServer languageServer = componentContext.Resolve<Lsp.ILanguageServer>();
+            ILanguageServer languageServer = componentContext.Resolve<ILanguageServer>();
 
             var loggerConfiguration = new LoggerConfiguration()
                 .MinimumLevel.Verbose()

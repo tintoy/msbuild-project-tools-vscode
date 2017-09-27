@@ -15,6 +15,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 
+using LspModels = OmniSharp.Extensions.LanguageServer.Models;
+
 namespace MSBuildProjectTools.LanguageServer.Documents
 {
     using SemanticModel;
@@ -30,7 +32,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <summary>
         ///     Diagnostics (if any) for the project.
         /// </summary>
-        readonly List<Lsp.Models.Diagnostic> _diagnostics = new List<Lsp.Models.Diagnostic>();
+        readonly List<LspModels.Diagnostic> _diagnostics = new List<LspModels.Diagnostic>();
 
         /// <summary>
         ///     The project's configured package sources.
@@ -163,7 +165,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <summary>
         ///     Diagnostics (if any) for the project.
         /// </summary>
-        public IReadOnlyList<Lsp.Models.Diagnostic> Diagnostics => _diagnostics;
+        public IReadOnlyList<LspModels.Diagnostic> Diagnostics => _diagnostics;
 
         /// <summary>
         ///     The parsed project XML.
@@ -624,15 +626,15 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <param name="diagnosticCode">
         ///     A code to identify the diagnostic type.
         /// </param>
-        protected void AddDiagnostic(Lsp.Models.DiagnosticSeverity severity, string message, Range range, string diagnosticCode)
+        protected void AddDiagnostic(LspModels.DiagnosticSeverity severity, string message, Range range, string diagnosticCode)
         {
             if (String.IsNullOrWhiteSpace(message))
                 throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'message'.", nameof(message));
             
-            _diagnostics.Add(new Lsp.Models.Diagnostic
+            _diagnostics.Add(new LspModels.Diagnostic
             {
                 Severity = severity,
-                Code = new Lsp.Models.DiagnosticCode(diagnosticCode),
+                Code = new LspModels.DiagnosticCode(diagnosticCode),
                 Message = message,
                 Range = range.ToLsp(),
                 Source = ProjectFile.FullName
@@ -651,7 +653,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <param name="diagnosticCode">
         ///     A code to identify the diagnostic type.
         /// </param>
-        protected void AddErrorDiagnostic(string message, Range range, string diagnosticCode) => AddDiagnostic(Lsp.Models.DiagnosticSeverity.Error, message, range, diagnosticCode);
+        protected void AddErrorDiagnostic(string message, Range range, string diagnosticCode) => AddDiagnostic(LspModels.DiagnosticSeverity.Error, message, range, diagnosticCode);
 
         /// <summary>
         ///     Add a warning diagnostic to be published for the project file.
@@ -665,7 +667,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <param name="diagnosticCode">
         ///     A code to identify the diagnostic type.
         /// </param>
-        protected void AddWarningDiagnostic(string message, Range range, string diagnosticCode) => AddDiagnostic(Lsp.Models.DiagnosticSeverity.Warning, message, range, diagnosticCode);
+        protected void AddWarningDiagnostic(string message, Range range, string diagnosticCode) => AddDiagnostic(LspModels.DiagnosticSeverity.Warning, message, range, diagnosticCode);
 
         /// <summary>
         ///     Add an informational diagnostic to be published for the project file.
@@ -679,7 +681,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <param name="diagnosticCode">
         ///     A code to identify the diagnostic type.
         /// </param>
-        protected void AddInformationDiagnostic(string message, Range range, string diagnosticCode) => AddDiagnostic(Lsp.Models.DiagnosticSeverity.Information, message, range, diagnosticCode);
+        protected void AddInformationDiagnostic(string message, Range range, string diagnosticCode) => AddDiagnostic(LspModels.DiagnosticSeverity.Information, message, range, diagnosticCode);
 
         /// <summary>
         ///     Add a hint diagnostic to be published for the project file.
@@ -693,7 +695,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <param name="diagnosticCode">
         ///     A code to identify the diagnostic type.
         /// </param>
-        protected void AddHintDiagnostic(string message, Range range, string diagnosticCode) => AddDiagnostic(Lsp.Models.DiagnosticSeverity.Hint, message, range, diagnosticCode);
+        protected void AddHintDiagnostic(string message, Range range, string diagnosticCode) => AddDiagnostic(LspModels.DiagnosticSeverity.Hint, message, range, diagnosticCode);
 
         /// <summary>
         ///     Create a <see cref="Serilog.Context.LogContext"/> representing an operation.

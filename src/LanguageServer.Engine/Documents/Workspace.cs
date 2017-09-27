@@ -1,5 +1,6 @@
-using Lsp.Models;
-using Lsp.Protocol;
+using OmniSharp.Extensions.LanguageServer;
+using OmniSharp.Extensions.LanguageServer.Models;
+using OmniSharp.Extensions.LanguageServer.Protocol;
 using Newtonsoft.Json;
 using Serilog;
 using System;
@@ -43,7 +44,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <param name="logger">
         ///     The application logger.
         /// </param>
-        public Workspace(Lsp.ILanguageServer server, Configuration configuration, IPublishDiagnostics diagnosticsPublisher, ILogger logger)
+        public Workspace(ILanguageServer server, Configuration configuration, IPublishDiagnostics diagnosticsPublisher, ILogger logger)
         {
             if (server == null)
                 throw new ArgumentNullException(nameof(server));
@@ -154,7 +155,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <summary>
         ///     The language server.
         /// </summary>
-        Lsp.ILanguageServer Server { get; }
+        ILanguageServer Server { get; }
 
         /// <summary>
         ///     The diagnostic publishing facility.

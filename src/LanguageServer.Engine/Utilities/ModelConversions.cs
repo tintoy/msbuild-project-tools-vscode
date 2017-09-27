@@ -1,5 +1,7 @@
 using System;
 
+using LspModels = OmniSharp.Extensions.LanguageServer.Models;
+
 namespace MSBuildProjectTools.LanguageServer.Utilities
 {
     using SemanticModel;
@@ -16,31 +18,31 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         ///     The <see cref="Position"/> to convert.
         /// </param>
         /// <returns>
-        ///     The equivalent <see cref="Lsp.Models.Position"/>.
+        ///     The equivalent <see cref="LspModels.Position"/>.
         /// </returns>
-        public static Lsp.Models.Position ToLsp(this Position position)
+        public static LspModels.Position ToLsp(this Position position)
         {
             if (position == null)
                 return null;
 
             position = position.ToZeroBased(); // LSP is zero-based.
 
-            return new Lsp.Models.Position(
+            return new LspModels.Position(
                 position.LineNumber,
                 position.ColumnNumber
             );
         }
 
         /// <summary>
-        ///     Convert the Language Server Protocol <see cref="Lsp.Models.Position"/> to its native equivalent.
+        ///     Convert the Language Server Protocol <see cref="LspModels.Position"/> to its native equivalent.
         /// </summary>
         /// <param name="position">
-        ///     The <see cref="Lsp.Models.Position"/> to convert.
+        ///     The <see cref="LspModels.Position"/> to convert.
         /// </param>
         /// <returns>
         ///     The equivalent <see cref="Position"/>.
         /// </returns>
-        public static Position ToNative(this Lsp.Models.Position position)
+        public static Position ToNative(this LspModels.Position position)
         {
             if (position == null)
                 return Position.Zero;
@@ -59,29 +61,29 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         ///     The <see cref="Range"/> to convert.
         /// </param>
         /// <returns>
-        ///     The equivalent <see cref="Lsp.Models.Range"/>.
+        ///     The equivalent <see cref="LspModels.Range"/>.
         /// </returns>
-        public static Lsp.Models.Range ToLsp(this Range range)
+        public static LspModels.Range ToLsp(this Range range)
         {
             if (range == null)
                 return null;
 
-            return new Lsp.Models.Range(
+            return new LspModels.Range(
                 range.Start.ToLsp(),
                 range.End.ToLsp()
             );
         }
 
         /// <summary>
-        ///     Convert the Language Server Protocol <see cref="Lsp.Models.Range"/> to its native equivalent.
+        ///     Convert the Language Server Protocol <see cref="LspModels.Range"/> to its native equivalent.
         /// </summary>
         /// <param name="range">
-        ///     The <see cref="Lsp.Models.Range"/> to convert.
+        ///     The <see cref="LspModels.Range"/> to convert.
         /// </param>
         /// <returns>
         ///     The equivalent <see cref="Range"/>.
         /// </returns>
-        public static Range ToNative(this Lsp.Models.Range range)
+        public static Range ToNative(this LspModels.Range range)
         {
             if (range == null)
                 throw new ArgumentNullException(nameof(range));

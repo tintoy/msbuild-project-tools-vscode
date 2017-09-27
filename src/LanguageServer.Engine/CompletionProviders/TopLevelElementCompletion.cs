@@ -1,10 +1,12 @@
-using Lsp.Models;
+using OmniSharp.Extensions.LanguageServer.Models;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
+using LspModels = OmniSharp.Extensions.LanguageServer.Models;
 
 namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 {
@@ -111,7 +113,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             if (replaceRange == null)
                 throw new ArgumentNullException(nameof(replaceRange));
 
-            Lsp.Models.Range completionRange = replaceRange.ToLsp();
+            LspModels.Range completionRange = replaceRange.ToLsp();
             
             // <PropertyGroup>
             //     $0

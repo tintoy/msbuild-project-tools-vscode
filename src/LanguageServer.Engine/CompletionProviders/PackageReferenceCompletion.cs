@@ -1,4 +1,4 @@
-using Lsp.Models;
+using OmniSharp.Extensions.LanguageServer.Models;
 using NuGet.Versioning;
 using Serilog;
 using System;
@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
+using LspModels = OmniSharp.Extensions.LanguageServer.Models;
 
 namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 {
@@ -164,7 +166,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 if (projectDocument.Workspace.Configuration.NuGet.ShowNewestVersionsFirst)
                     packageVersions = packageVersions.Reverse();
 
-                Lsp.Models.Range replacementRange = attribute.ValueRange.ToLsp();
+                LspModels.Range replacementRange = attribute.ValueRange.ToLsp();
 
                 var completionItems = new List<CompletionItem>(
                     packageVersions.Select((packageVersion, index) => new CompletionItem

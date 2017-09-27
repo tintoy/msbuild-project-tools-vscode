@@ -1,4 +1,4 @@
-using Lsp.Models;
+using OmniSharp.Extensions.LanguageServer.Models;
 using Microsoft.Build.Evaluation;
 using Microsoft.Language.Xml;
 using System;

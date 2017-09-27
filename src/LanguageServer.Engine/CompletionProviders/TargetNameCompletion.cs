@@ -1,4 +1,4 @@
-using Lsp.Models;
+using OmniSharp.Extensions.LanguageServer.Models;
 using Microsoft.Build.Execution;
 using Serilog;
 using System;
@@ -8,6 +8,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
+using LspModels = OmniSharp.Extensions.LanguageServer.Models;
 
 namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 {
@@ -138,7 +140,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 throw new ArgumentNullException(nameof(replaceRange));
 
             HashSet<string> offeredTargetNames = new HashSet<string>(excludeTargetNames);
-            Lsp.Models.Range replaceRangeLsp = replaceRange.ToLsp();
+            LspModels.Range replaceRangeLsp = replaceRange.ToLsp();
 
             // Well-known targets.
             foreach (string targetName in WellKnownTargets.Keys)
@@ -201,7 +203,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         /// <returns>
         ///     The <see cref="CompletionItem"/>.
         /// </returns>
-        CompletionItem TargetNameCompletionItem(string targetName, Lsp.Models.Range replaceRange, int? priority = null, string description = null)
+        CompletionItem TargetNameCompletionItem(string targetName, LspModels.Range replaceRange, int? priority = null, string description = null)
         {
             return new CompletionItem
             {

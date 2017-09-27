@@ -1,9 +1,9 @@
-using JsonRpc;
-using Lsp;
-using Lsp.Capabilities.Client;
-using Lsp.Capabilities.Server;
-using Lsp.Models;
-using Lsp.Protocol;
+using OmniSharp.Extensions.JsonRpc;
+using OmniSharp.Extensions.LanguageServer;
+using OmniSharp.Extensions.LanguageServer.Capabilities.Client;
+using OmniSharp.Extensions.LanguageServer.Capabilities.Server;
+using OmniSharp.Extensions.LanguageServer.Models;
+using OmniSharp.Extensions.LanguageServer.Protocol;
 using Serilog;
 using System;
 using System.Threading.Tasks;
@@ -20,7 +20,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
     ///     The base class for language server event handlers.
     /// </summary>
     public abstract class Handler
-        : JsonRpc.IJsonRpcHandler
+        : IJsonRpcHandler
     {
         /// <summary>
         ///     Create a new <see cref="Handler"/>.

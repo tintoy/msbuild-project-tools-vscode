@@ -1,5 +1,5 @@
-using Lsp.Models;
-using Lsp.Protocol;
+using OmniSharp.Extensions.LanguageServer.Models;
+using OmniSharp.Extensions.LanguageServer.Protocol;
 using System;
 using System.Collections.Generic;
 

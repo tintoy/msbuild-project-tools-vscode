@@ -1,4 +1,4 @@
-using Lsp;
+using OmniSharp.Extensions.LanguageServer;
 using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

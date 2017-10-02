@@ -53,6 +53,10 @@ You can install this extension from the [VS marketplace](https://marketplace.vis
 
 See [BUILDING.md](docs/BUILDING.md).
 
+## Design
+
+See [architectural overview](docs/architecture/overview.md) for details (this is a work-in-progress; if you have questions, feel free to create an issue).
+
 ## Limitations
 
 * Support for task completions is experimental; if you find a problem with it, please [create an issue](https://github.com/tintoy/msbuild-project-tools-vscode/issues/new).

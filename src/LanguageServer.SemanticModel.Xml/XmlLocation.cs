@@ -111,14 +111,10 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         public override string ToString()
         {
             string nodeDescription = Node.Kind.ToString();
-            if (Node is XSElement element)
-                nodeDescription += $" '{element.Name}'";
-            else if (Node is XSAttribute attribute)
-                nodeDescription += $" '{attribute.Name}'";
-
+            
             return String.Format("XmlPosition({0}) -> {1} @ {2}",
                 Position,
-                nodeDescription,
+                Node.Path,
                 Node.Range
             );
         }

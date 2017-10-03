@@ -32,6 +32,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         public Range Range { get; }
 
         /// <summary>
+        ///     The node's path within the XML.
+        /// </summary>
+        public abstract XSPath Path { get; }
+
+        /// <summary>
         ///     The node's starting position.
         /// </summary>
         public Position Start => Range.Start;

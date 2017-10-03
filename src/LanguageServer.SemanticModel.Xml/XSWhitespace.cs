@@ -10,6 +10,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         : XSNode
     {
         /// <summary>
+        ///     The whitespace's path within the XML.
+        /// </summary>
+        readonly XSPath _path;
+
+        /// <summary>
         ///     Create new <see cref="XSWhitespace"/>.
         /// </summary>
         /// <param name="range">
@@ -25,6 +30,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 throw new ArgumentNullException(nameof(parent));
             
             ParentElement = parent;
+
+            XSPath parentPath = parent?.Path ?? XSPath.Root;
+            _path = parentPath + Name;
         }
 
         /// <summary>
@@ -35,7 +43,12 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <summary>
         ///     The node name.
         /// </summary>
-        public override string Name => "#Whitespace";
+        public override string Name => "#whitespace";
+
+        /// <summary>
+        ///     The whitespace's path within the XML.
+        /// </summary>
+        public override XSPath Path => _path;
 
         /// <summary>
         ///     The <see cref="XSElement"/> that contains the whitespace.

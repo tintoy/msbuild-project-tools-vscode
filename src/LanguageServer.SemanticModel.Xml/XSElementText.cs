@@ -10,6 +10,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         : XSNode<XmlTextSyntax>
     {
         /// <summary>
+        ///     The text's path within the XML.
+        /// </summary>
+        readonly XSPath _path;
+
+        /// <summary>
         ///     Create new <see cref="XSElementText"/>.
         /// </summary>
         /// <param name="textNode">
@@ -28,7 +33,13 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 throw new ArgumentNullException(nameof(element));
             
             Element = element;
+            _path = Element.Path + Name;
         }
+
+        /// <summary>
+        ///     The text's path within the XML.
+        /// </summary>
+        public override XSPath Path => _path;
 
         /// <summary>
         ///     The <see cref="XmlTextSyntax"/> represented by the <see cref="XSElementText"/>.
@@ -53,7 +64,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <summary>
         ///     The node name.
         /// </summary>
-        public override string Name => "#Text";
+        public override string Name => "#text";
 
         /// <summary>
         ///     Does the <see cref="XSNode"/> represent valid XML?

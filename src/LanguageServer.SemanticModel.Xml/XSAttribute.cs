@@ -10,6 +10,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         : XSNode<XmlAttributeSyntax>
     {
         /// <summary>
+        ///     The attribute's path within the XML.
+        /// </summary>
+        readonly XSPath _path;
+
+        /// <summary>
         ///     Create a new <see cref="XSAttribute"/>.
         /// </summary>
         /// <param name="attribute">
@@ -42,6 +47,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             NameRange = nameRange;
             ValueRange = valueRange;
             Element = element;
+            _path = Element.Path + $"@{Name}";
         }
 
         /// <summary>
@@ -93,6 +99,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The <see cref="Range"/>, within the source text, spanned by the attribute's value.
         /// </summary>
         public Range ValueRange { get; }
+
+        /// <summary>
+        ///     The attribute's path within the XML.
+        /// </summary>
+        public override XSPath Path => _path;
 
         /// <summary>
         ///     The kind of XML node represented by the <see cref="XSNode"/>.

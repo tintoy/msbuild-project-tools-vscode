@@ -13,6 +13,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         : XSNode<XmlElementSyntaxBase>
     {
         /// <summary>
+        ///     The element's path within the XML.
+        /// </summary>
+        readonly XSPath _path;
+
+        /// <summary>
         ///     Create a new <see cref="XSElement"/>.
         /// </summary>
         /// <param name="element">
@@ -42,6 +47,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             NameRange = nameRange;
             AttributesRange = attributesRange;
             ParentElement = parent;
+
+            XSPath parentPath = parent?.Path ?? XSPath.Root;
+            _path = parentPath + Name;
         }
 
         /// <summary>
@@ -68,6 +76,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The range, within the source text, spanned by the element's attributes.
         /// </summary>
         public Range AttributesRange { get; }
+
+        /// <summary>
+        ///     The element's path within the XML.
+        /// </summary>
+        public override XSPath Path => _path;
 
         /// <summary>
         ///     The <see cref="XSElement"/>'s parent element (if any).

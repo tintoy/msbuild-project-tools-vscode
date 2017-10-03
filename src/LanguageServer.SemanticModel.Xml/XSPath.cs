@@ -106,6 +106,23 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         public bool IsRelative => !IsAbsolute;
 
         /// <summary>
+        ///     An <see cref="XSPath"/> representing the path's parent (i.e. without the leaf node).
+        /// </summary>
+        public XSPath Parent
+        {
+            get
+            {
+                if (_ancestorSegments.Count == 0)
+                    return null;
+
+                return new XSPath(
+                    ancestorSegments: _ancestorSegments.RemoveAt(_ancestorSegments.Count - 1),
+                    segments: _ancestorSegments
+                );
+            }
+        }
+
+        /// <summary>
         ///     Append an <see cref="XSPath"/> to the <see cref="XSPath"/>.
         /// </summary>
         /// <param name="path">
@@ -170,6 +187,25 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
 
             return Append(
                 XSPathSegment.Create(pathOrSegment)
+            );
+        }
+
+        /// <summary>
+        ///     Create an <see cref="XSPath"/> containing a single path segment.
+        /// </summary>
+        /// <param name="pathSegment">
+        ///     The path segment.
+        /// </param>
+        /// <returns>
+        ///     The new <see cref="XSPath"/>.
+        /// </returns>
+        public static XSPath FromSegment(string pathSegment)
+        {
+            if (pathSegment == null)
+                throw new ArgumentNullException(nameof(pathSegment));
+
+            return FromSegment(
+                XSPathSegment.Create(pathSegment)
             );
         }
 

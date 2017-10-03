@@ -136,26 +136,17 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (basePath == null)
                 throw new ArgumentNullException(nameof(basePath));
 
-            for (int index = 0; index < basePath._segments.Count; index++)
-            {
-                if (index >= _segments.Count)
-                    return false;
-
-                if (basePath._segments[index] != _segments[index])
-                    return false;
-            }
-
-            return true;
+            return _segments.StartsWith(basePath._segments);
         }
 
         /// <summary>
-        ///     Determine whether the <see cref="XSPath"/> has the specified path as its direct ancestor.
+        ///     Determine whether the <see cref="XSPath"/> has ends with the the specified path.
         /// </summary>
         /// <param name="ancestorPath">
         ///     The other <see cref="XSPath"/>.
         /// </param>
         /// <returns>
-        ///     <c>true</c>, if the <see cref="XSPath"/>'s ancestor segments are the same as the other <see cref="XSPath"/>'s segments.
+        ///     <c>true</c>, if the other <see cref="XSPath"/>'s trailing segments are the same as the <see cref="XSPath"/>'s segments.
         /// </returns>
         public bool EndsWith(XSPath ancestorPath)
         {
@@ -171,18 +162,31 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (_ancestorSegments.Count == 0 && Leaf == ancestorPath.Leaf)
                 return true;
 
-            if (ancestorPath._segments.Count < _ancestorSegments.Count)
-                return false; // Cannot share a common ancestor.
+            return _segments.EndsWith(ancestorPath._segments);
+        }
 
-            int index = _segments.Count - 1;
-            int ancestorIndex = ancestorPath._segments.Count - 1;
-            for ( ; index >= 0 && ancestorIndex >= 0; index--, ancestorIndex--)
-            {
-                if (_segments[index] != ancestorPath._segments[ancestorIndex])
-                    return false;
-            }
+        /// <summary>
+        ///     Determine whether the <see cref="XSPath"/> has the specified path as its direct ancestor.
+        /// </summary>
+        /// <param name="parentPath">
+        ///     The other <see cref="XSPath"/>.
+        /// </param>
+        /// <returns>
+        ///     <c>true</c>, if the other <see cref="XSPath"/>'s trailing segments are the same as the <see cref="XSPath"/>'s ancestor segments.
+        /// </returns>
+        public bool IsChildOf(XSPath parentPath)
+        {
+            if (parentPath == null)
+                throw new ArgumentNullException(nameof(parentPath));
 
-            return true;
+            if (IsAbsolute && !parentPath.IsAbsolute)
+                return false; // Logical short-circuit: absolute path cannot be a child of another path.
+
+            // Special case: any relative path is considered a child of the root.
+            if (IsRelative && parentPath == XSPath.Root)
+                return true;
+
+            return _ancestorSegments.EndsWith(parentPath._segments);
         }
 
         /// <summary>
@@ -313,7 +317,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         {
             if (_segments.Count == 1 && _segments[0] == XSPathSegment.Root)
                 return RootPath;
-            
+
             return String.Join(PathSeparatorString,
                 _segments.Select(segment => segment.Name)
             );
@@ -397,208 +401,6 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 throw new ArgumentNullException(nameof(segment));
 
             return path.Append(segment);
-        }
-    }
-
-    /// <summary>
-    ///     A single segment of an <see cref="XSPath"/>.
-    /// </summary>
-    public sealed class XSPathSegment
-        : IEquatable<XSPathSegment>
-    {
-        /// <summary>
-        ///     The root path segment.
-        /// </summary>
-        public static readonly XSPathSegment Root = new XSPathSegment(String.Empty);
-
-        /// <summary>
-        ///     Create a new <see cref="XSPathSegment"/>.
-        /// </summary>
-        /// <param name="name">
-        ///     The path segment's name.
-        /// </param>
-        XSPathSegment(string name)
-        {
-            if (string.IsNullOrWhiteSpace(name) && name != String.Empty)
-                throw new ArgumentException($"Argument cannot be null or entirely composed of whitespace: {nameof(name)}.", nameof(name));
-
-            if (name.IndexOf(XSPath.PathSeparatorCharacter) != -1)
-                throw new FormatException($"Path segments cannot contain the path separator character ('{XSPath.PathSeparatorCharacter}').");
-
-            Name = name;
-        }
-
-        /// <summary>
-        ///     The path segment's name.
-        /// </summary>
-        public string Name { get; }
-
-        /// <summary>
-        ///     Determine whether the <see cref="XSPathSegment"/> is equal to another <see cref="XSPathSegment"/>.
-        /// </summary>
-        /// <param name="other">
-        ///     The other <see cref="XSPathSegment"/>.
-        /// </param>
-        /// <returns>
-        ///     <c>true</c>, if the <see cref="XSPathSegment"/> is equal to the other <see cref="XSPathSegment"/>; otherwise, <c>false</c>.
-        /// </returns>
-        public bool Equals(XSPathSegment other)
-        {
-            if (ReferenceEquals(other, null))
-                return false;
-
-            return other.Name == Name;
-        }
-
-        /// <summary>
-        ///     Determine whether the <see cref="XSPathSegment"/> is equal to another <see cref="Object"/>.
-        /// </summary>
-        /// <param name="other">
-        ///     The other <see cref="Object"/>.
-        /// </param>
-        /// <returns>
-        ///     <c>true</c>, if the <see cref="XSPathSegment"/> is equal to the other <see cref="Object"/>; otherwise, <c>false</c>.
-        /// </returns>
-        public override bool Equals(object other)
-        {
-            if (other is XSPathSegment otherPathSegment)
-                return Equals(otherPathSegment);
-
-            return base.Equals(other);
-        }
-
-        /// <summary>
-        ///     Get a hash code representing the <see cref="XSPathSegment"/>.
-        /// </summary>
-        /// <returns>
-        ///     The hash code.
-        /// </returns>
-        public override int GetHashCode() => Name.GetHashCode();
-
-        /// <summary>
-        ///     Get a string representation of the path segment.
-        /// </summary>
-        /// <returns>
-        ///     The path segment's name.
-        /// </returns>
-        public override string ToString() => Name;
-
-        /// <summary>
-        ///     Create a new <see cref="XSPathSegment"/>.
-        /// </summary>
-        /// <param name="name">
-        ///     The path segment's name.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="XSPathSegment"/>.
-        /// </returns>
-        public static XSPathSegment Create(string name)
-        {
-            if (name == null)
-                throw new ArgumentNullException(nameof(name));
-
-            if (name == String.Empty)
-                return Root;
-
-            return new XSPathSegment(name);
-        }
-
-        /// <summary>
-        ///     Determine whether 2 <see cref="XSPathSegment"/>s are equal.
-        /// </summary>
-        /// <param name="left">
-        ///     The left-hand <see cref="XSPathSegment"/>.
-        /// </param>
-        /// <param name="right">
-        ///     The right-hand <see cref="XSPathSegment"/>.
-        /// </param>
-        /// <returns>
-        ///     <c>true</c>, if the <see cref="XSPathSegment"/>s are equal; otherwise, <c>false</c>.
-        /// </returns>
-        public static bool operator ==(XSPathSegment left, XSPathSegment right)
-        {
-            bool isLeftNull = ReferenceEquals(left, null);
-            bool isRightNull = ReferenceEquals(right, null);
-
-            if (isLeftNull && isRightNull)
-                return true;
-
-            if (isLeftNull || isRightNull)
-                return false;
-
-            return left.Equals(right);
-        }
-
-        /// <summary>
-        ///     Determine whether 2 <see cref="XSPathSegment"/>s are not equal.
-        /// </summary>
-        /// <param name="left">
-        ///     The left-hand <see cref="XSPathSegment"/>.
-        /// </param>
-        /// <param name="right">
-        ///     The right-hand <see cref="XSPathSegment"/>.
-        /// </param>
-        /// <returns>
-        ///     <c>true</c>, if the <see cref="XSPathSegment"/>s are not equal; otherwise, <c>false</c>.
-        /// </returns>
-        public static bool operator !=(XSPathSegment left, XSPathSegment right)
-        {
-            bool isLeftNull = ReferenceEquals(left, null);
-            bool isRightNull = ReferenceEquals(right, null);
-
-            if (isLeftNull && isRightNull)
-                return false;
-
-            if (isLeftNull || isRightNull)
-                return true;
-
-            return !left.Equals(right);
-        }
-
-        /// <summary>
-        ///     Concatenate 2 <see cref="XSPathSegment"/>s to create an <see cref="XSPath"/>.
-        /// </summary>
-        /// <param name="left">
-        ///     The left-hand <see cref="XSPathSegment"/>.
-        /// </param>
-        /// <param name="right">
-        ///     The right-hand <see cref="XSPathSegment"/>.
-        /// </param>
-        /// <returns>
-        ///     The new <see cref="XSPath"/>.
-        /// </returns>
-        public static XSPath operator +(XSPathSegment left, XSPathSegment right)
-        {
-            if (left == null)
-                throw new ArgumentNullException(nameof(left));
-
-            if (right == null)
-                throw new ArgumentNullException(nameof(right));
-
-            return XSPath.FromSegment(left) + right;
-        }
-
-        /// <summary>
-        ///     Concatenate an <see cref="XSPathSegment"/> and a string to create an <see cref="XSPath"/>.
-        /// </summary>
-        /// <param name="left">
-        ///     The left-hand <see cref="XSPathSegment"/>.
-        /// </param>
-        /// <param name="right">
-        ///     The right-hand path segment.
-        /// </param>
-        /// <returns>
-        ///     The new <see cref="XSPath"/>.
-        /// </returns>
-        public static XSPath operator +(XSPathSegment left, string right)
-        {
-            if (left == null)
-                throw new ArgumentNullException(nameof(left));
-
-            if (right == null)
-                throw new ArgumentNullException(nameof(right));
-
-            return XSPath.FromSegment(left) + right;
         }
     }
 }

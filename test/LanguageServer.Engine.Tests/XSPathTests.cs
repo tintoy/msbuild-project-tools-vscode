@@ -148,7 +148,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// <param name="basePath">
         ///     The base path.
         /// </param>
-        [InlineData("A",   "A/B"  )]
+        [InlineData("B",   "A/B"  )]
         [InlineData("B/C", "A/B/C")]
         [InlineData("C",   "A/B/C")]
         [Theory(DisplayName = "XSPath.EndsWith succeeds with relative base path ")]
@@ -158,6 +158,90 @@ namespace MSBuildProjectTools.LanguageServer.Tests
             XSPath actualAncestor = XSPath.Parse(ancestorPath);
 
             Assert.True(actual.EndsWith(actualAncestor), "EndsWith");
+        }
+
+        /// <summary>
+        ///     Verify that <see cref="XSPath.IsChildOf(XSPath)"/> succeeds when passed an absolute <see cref="XSPath"/>.
+        /// </summary>
+        /// <param name="path">
+        ///     The original path.
+        /// </param>
+        /// <param name="basePath">
+        ///     The base path.
+        /// </param>
+        [InlineData("A",   "/"     )]
+        [InlineData("/A",  "/"     )]
+        [InlineData("A/B", "/A"    )]
+        [InlineData("C/D", "/A/B/C")]
+        [Theory(DisplayName = "XSPath.IsChildOf succeeds with absolute base path ")]
+        public void Path_IsChildOf_Absolute_Success(string path, string ancestorPath)
+        {
+            XSPath actual = XSPath.Parse(path);
+            XSPath actualAncestor = XSPath.Parse(ancestorPath);
+
+            Assert.True(actual.IsChildOf(actualAncestor), "IsChildOf");
+        }
+
+        /// <summary>
+        ///     Verify that <see cref="XSPath.IsChildOf(XSPath)"/> does not succeed when passed an absolute <see cref="XSPath"/>.
+        /// </summary>
+        /// <param name="path">
+        ///     The original path.
+        /// </param>
+        /// <param name="basePath">
+        ///     The base path.
+        /// </param>
+        [InlineData("A", "/"   )]
+        [InlineData("A", "/A"  )]
+        [InlineData("B", "/A/B")]
+        [Theory(DisplayName = "XSPath.IsChildOf fails with absolute base path ")]
+        public void Path_IsChildOf_Absolute_Failure(string path, string ancestorPath)
+        {
+            XSPath actual = XSPath.Parse(path);
+            XSPath actualAncestor = XSPath.Parse(ancestorPath);
+
+            Assert.False(actual.IsChildOf(actualAncestor), "IsChildOf");
+        }
+
+        /// <summary>
+        ///     Verify that <see cref="XSPath.IsChildOf(XSPath)"/> succeeds when passed a relative <see cref="XSPath"/>.
+        /// </summary>
+        /// <param name="path">
+        ///     The original path.
+        /// </param>
+        /// <param name="basePath">
+        ///     The base path.
+        /// </param>
+        [InlineData("B/C", "A/B"  )]
+        [InlineData("C/D", "A/B/C")]
+        [Theory(DisplayName = "XSPath.IsChildOf succeeds with relative base path ")]
+        public void Path_IsChildOf_Relative_Success(string path, string ancestorPath)
+        {
+            XSPath actual = XSPath.Parse(path);
+            XSPath actualAncestor = XSPath.Parse(ancestorPath);
+
+            Assert.True(actual.IsChildOf(actualAncestor), "IsChildOf");
+        }
+
+        /// <summary>
+        ///     Verify that <see cref="XSPath.IsChildOf(XSPath)"/> does not succeed when passed a relative <see cref="XSPath"/>.
+        /// </summary>
+        /// <param name="path">
+        ///     The original path.
+        /// </param>
+        /// <param name="basePath">
+        ///     The base path.
+        /// </param>
+        [InlineData("B",    "A/B"   )]
+        [InlineData("C",    "A/B"   )]
+        [InlineData("C/D", "A/B/C/D")]
+        [Theory(DisplayName = "XSPath.IsChildOf fails with relative base path ")]
+        public void Path_IsChildOf_Relative_Failure(string path, string ancestorPath)
+        {
+            XSPath actual = XSPath.Parse(path);
+            XSPath actualAncestor = XSPath.Parse(ancestorPath);
+
+            Assert.False(actual.IsChildOf(actualAncestor), "IsChildOf");
         }
     }
 }

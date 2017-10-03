@@ -116,5 +116,48 @@ namespace MSBuildProjectTools.LanguageServer.Tests
 
             Assert.Equal(expectedPath, actual.Path);
         }
+
+        /// <summary>
+        ///     Verify that <see cref="XSPath.StartsWith(XSPath)"/> succeeds when passed an absolute <see cref="XSPath"/>.
+        /// </summary>
+        /// <param name="path">
+        ///     The original path.
+        /// </param>
+        /// <param name="basePath">
+        ///     The base path.
+        /// </param>
+        [InlineData("/", "/")]
+        [InlineData("/A", "/")]
+        [InlineData("/A", "/A")]
+        [InlineData("/A/B", "/A")]
+        [Theory(DisplayName = "XSPath.StartsWith succeeds with absolute base path ")]
+        public void Path_StartsWith_Absolute_Success(string path, string basePath)
+        {
+            XSPath actual = XSPath.Parse(path);
+            XSPath actualBase = XSPath.Parse(basePath);
+
+            Assert.True(actual.StartsWith(actualBase), "StartsWith");
+        }
+
+        /// <summary>
+        ///     Verify that <see cref="XSPath.EndsWith(XSPath)"/> succeeds when passed a relative <see cref="XSPath"/>.
+        /// </summary>
+        /// <param name="path">
+        ///     The original path.
+        /// </param>
+        /// <param name="basePath">
+        ///     The base path.
+        /// </param>
+        [InlineData("A",   "A/B"  )]
+        [InlineData("B/C", "A/B/C")]
+        [InlineData("C",   "A/B/C")]
+        [Theory(DisplayName = "XSPath.EndsWith succeeds with relative base path ")]
+        public void Path_EndsWith_Relative_Success(string path, string ancestorPath)
+        {
+            XSPath actual = XSPath.Parse(path);
+            XSPath actualAncestor = XSPath.Parse(ancestorPath);
+
+            Assert.True(actual.EndsWith(actualAncestor), "EndsWith");
+        }
     }
 }

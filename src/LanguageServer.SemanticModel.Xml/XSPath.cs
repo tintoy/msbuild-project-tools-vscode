@@ -123,6 +123,69 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         }
 
         /// <summary>
+        ///     Determine whether the <see cref="XSPath"/> starts the specified base path.
+        /// </summary>
+        /// <param name="basePath">
+        ///     The other <see cref="XSPath"/>.
+        /// </param>
+        /// <returns>
+        ///     <c>true</c>, if the <see cref="XSPath"/> starts with the same segments as the other <see cref="XSPath"/>.
+        /// </returns>
+        public bool StartsWith(XSPath basePath)
+        {
+            if (basePath == null)
+                throw new ArgumentNullException(nameof(basePath));
+
+            for (int index = 0; index < basePath._segments.Count; index++)
+            {
+                if (index >= _segments.Count)
+                    return false;
+
+                if (basePath._segments[index] != _segments[index])
+                    return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        ///     Determine whether the <see cref="XSPath"/> has the specified path as its direct ancestor.
+        /// </summary>
+        /// <param name="ancestorPath">
+        ///     The other <see cref="XSPath"/>.
+        /// </param>
+        /// <returns>
+        ///     <c>true</c>, if the <see cref="XSPath"/>'s ancestor segments are the same as the other <see cref="XSPath"/>'s segments.
+        /// </returns>
+        public bool EndsWith(XSPath ancestorPath)
+        {
+            if (ancestorPath == null)
+                throw new ArgumentNullException(nameof(ancestorPath));
+
+            if (ancestorPath.IsAbsolute)
+                return StartsWith(ancestorPath);
+
+            if (IsAbsolute)
+                return false;
+
+            if (_ancestorSegments.Count == 0 && Leaf == ancestorPath.Leaf)
+                return true;
+
+            if (ancestorPath._segments.Count < _ancestorSegments.Count)
+                return false; // Cannot share a common ancestor.
+
+            int index = _segments.Count - 1;
+            int ancestorIndex = ancestorPath._segments.Count - 1;
+            for ( ; index >= 0 && ancestorIndex >= 0; index--, ancestorIndex--)
+            {
+                if (_segments[index] != ancestorPath._segments[ancestorIndex])
+                    return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         ///     Append an <see cref="XSPath"/> to the <see cref="XSPath"/>.
         /// </summary>
         /// <param name="path">

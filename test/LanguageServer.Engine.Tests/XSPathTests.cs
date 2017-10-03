@@ -171,6 +171,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// </param>
         [InlineData("A",   "/"     )]
         [InlineData("/A",  "/"     )]
+        [InlineData("A/B", "/"     )]
         [InlineData("A/B", "/A"    )]
         [InlineData("C/D", "/A/B/C")]
         [Theory(DisplayName = "XSPath.IsChildOf succeeds with absolute base path ")]
@@ -191,9 +192,8 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// <param name="basePath">
         ///     The base path.
         /// </param>
-        [InlineData("A", "/"   )]
-        [InlineData("A", "/A"  )]
-        [InlineData("B", "/A/B")]
+        [InlineData("B",    "/A/B")]
+        [InlineData("/A/B", "/"   )]
         [Theory(DisplayName = "XSPath.IsChildOf fails with absolute base path ")]
         public void Path_IsChildOf_Absolute_Failure(string path, string ancestorPath)
         {

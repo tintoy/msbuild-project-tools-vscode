@@ -190,6 +190,23 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         }
 
         /// <summary>
+        ///     Determine whether the <see cref="XSPath"/> has the specified path as its direct child.
+        /// </summary>
+        /// <param name="childPath">
+        ///     The other <see cref="XSPath"/>.
+        /// </param>
+        /// <returns>
+        ///     <c>true</c>, if the other <see cref="XSPath"/>'s ancestor segments are the same as the <see cref="XSPath"/>'s trailing segments.
+        /// </returns>
+        public bool IsParentOf(XSPath childPath)
+        {
+            if (childPath == null)
+                throw new ArgumentNullException(nameof(childPath));
+
+            return childPath.IsChildOf(this);
+        }
+
+        /// <summary>
         ///     Append an <see cref="XSPath"/> to the <see cref="XSPath"/>.
         /// </summary>
         /// <param name="path">

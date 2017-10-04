@@ -559,7 +559,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (element.IsValid)
             {
                 // The common case; we can simply replace this element.
-                if (element.ParentElement.IsValid)
+                if (element.ParentElement == null || (element.ParentElement.IsValid && element.HasParentPath(parentPath)))
                 {
                     replaceElement = element;
 

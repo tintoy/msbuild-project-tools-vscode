@@ -8,7 +8,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
     /// <summary>
     ///     Represents a path through XML.
     /// </summary>
-    public sealed class XSPath
+    public sealed class XSPath // TODO: IEquatable<XSPath> (plus equality / inequality operators)
     {
         /// <summary>
         ///     The <see cref="XSPath"/> separator.
@@ -213,10 +213,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
 
             if (ancestorPath.IsAbsolute)
                 return StartsWith(ancestorPath);
-
-            if (IsAbsolute)
-                return false;
-
+            
             if (_ancestorSegments.Count == 0 && Leaf == ancestorPath.Leaf)
                 return true;
 
@@ -241,7 +238,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 return false; // Logical short-circuit: absolute path cannot be a child of another path.
 
             // Special case: any relative path is considered a child of the root.
-            if (IsRelative && parentPath == XSPath.Root)
+            if (IsRelative && parentPath == Root)
                 return true;
 
             return _ancestorSegments.EndsWith(parentPath._segments);

@@ -262,6 +262,48 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         }
 
         /// <summary>
+        ///     Verify that the target line and column are on an element that can be replaced by completion.
+        /// </summary>
+        /// <param name="testFileName">
+        ///     The name of the test file, without the extension.
+        /// </param>
+        /// <param name="line">
+        ///     The target line.
+        /// </param>
+        /// <param name="column">
+        ///     The target column.
+        /// </param>
+        [InlineData("Invalid1.DoubleOpeningTag", 4, 10, "Element2")]
+        [InlineData("Invalid1.EmptyOpeningTag", 5, 10, "Element2")]
+        [InlineData("Invalid2.DoubleOpeningTag", 13, 10, "ItemGroup")]
+        [InlineData("Invalid2.EmptyOpeningTag", 13, 65, "ItemGroup")]
+        [InlineData("Invalid2.NoClosingTag", 10, 5, "Project")]
+        [InlineData("Invalid2.EmptyOpeningTag.ChildOfRoot", 2, 6, "Project")]
+        [Theory(DisplayName = "On completable element if parent relative path matches ")]
+        public void CanCompleteElementInParentWithRelativePath(string testFileName, int line, int column, string expectedParent)
+        {
+            Position testPosition = new Position(line, column);
+
+            string testXml = LoadTestFile("TestFiles", testFileName + ".xml");
+            TextPositions positions = new TextPositions(testXml);
+            XmlDocumentSyntax document = Parser.ParseText(testXml);
+
+            XmlLocator locator = new XmlLocator(document, positions);
+            XmlLocation location = locator.Inspect(testPosition);
+            Assert.NotNull(location);
+
+            XSPath expectedParentPath = XSPath.Parse(expectedParent);
+
+            XSElement replaceElement;
+            Assert.True(
+                location.CanCompleteElement(out replaceElement, parentPath: expectedParentPath),
+                "CanCompleteElement"
+            );
+            Assert.NotNull(replaceElement);
+            Assert.Equal(expectedParent, replaceElement.ParentElement?.Name);
+        }
+
+        /// <summary>
         ///     Verify that the target line and column are on an element where an attribute can be created by completion.
         /// </summary>
         /// <param name="testFileName">

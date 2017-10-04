@@ -69,9 +69,6 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (segments.Count == 0)
                 return false; // Logical short-circuit: can't have a prefix.
 
-            if (otherSegments.Count < segments.Count)
-                return false; // Logical short-circuit: can't be a prefix.
-
             int index = segments.Count - 1;
             int ancestorIndex = otherSegments.Count - 1;
             for ( ; index >= 0 && ancestorIndex >= 0; index--, ancestorIndex--)

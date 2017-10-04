@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Text;
 
 namespace MSBuildProjectTools.LanguageServer.SemanticModel
 {
@@ -37,12 +36,20 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <summary>
         ///     The path's ancestor segments.
         /// </summary>
+        /// <remarks>
+        ///     We store these separately because not every <see cref="XSPath"/> is created with a parent <see cref="XSPath"/>.
+        /// </remarks>
         readonly ImmutableList<XSPathSegment> _ancestorSegments;
 
         /// <summary>
         ///     The path's segments, including the leaf.
         /// </summary>
         readonly ImmutableList<XSPathSegment> _segments;
+
+        /// <summary>
+        ///     The parent path (if any).
+        /// </summary>
+        readonly XSPath _parent;
 
         /// <summary>
         ///     The path as a string (lazily-computed).
@@ -68,6 +75,50 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
 
             _ancestorSegments = ancestorSegments;
             _segments = segments;
+        }
+
+        /// <summary>
+        ///     Create a new <see cref="XSPath"/> by appending a child path to a parent path.
+        /// </summary>
+        /// <param name="parent">
+        ///     The parent <see cref="XSPath"/>.
+        /// </param>
+        /// <param name="child">
+        ///     The child <see cref="XSPath"/>.
+        /// </param>
+        XSPath(XSPath parent, XSPath child)
+        {
+            if (parent == null)
+                throw new ArgumentNullException(nameof(parent));
+
+            if (child == null)
+                throw new ArgumentNullException(nameof(child));
+
+            _parent = parent;
+            _ancestorSegments = parent._segments.AddRange(child._ancestorSegments);
+            _segments = _ancestorSegments.Add(child.Leaf);
+        }
+
+        /// <summary>
+        ///     Create a new <see cref="XSPath"/> by adding a leaf <see cref="XSPathSegment"/> onto the parent <see cref="XSPath"/>'s list of segments.
+        /// </summary>
+        /// <param name="parent">
+        ///     The parent <see cref="XSPath"/>.
+        /// </param>
+        /// <param name="leaf">
+        ///     The leaf <see cref="XSPathSegment"/> to append.
+        /// </param>
+        XSPath(XSPath parent, XSPathSegment leaf)
+        {
+            if (parent == null)
+                throw new ArgumentNullException(nameof(parent));
+
+            if (leaf == null)
+                throw new ArgumentNullException(nameof(leaf));
+
+            _parent = parent;
+            _ancestorSegments = _parent._segments; ;
+            _segments = _ancestorSegments.Add(leaf);
         }
 
         /// <summary>
@@ -112,8 +163,15 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         {
             get
             {
+                // If we were constructed with a parent, just use that.
+                if (_parent != null)
+                    return _parent;
+
+                // Logical short-circuit; no ancestors means no parent.
                 if (_ancestorSegments.Count == 0)
                     return null;
+
+                // We weren't constructed with a parent, so we'll need to create one (this is less efficient but unavoidable in some cases).
 
                 return new XSPath(
                     ancestorSegments: _ancestorSegments.RemoveAt(_ancestorSegments.Count - 1),
@@ -223,10 +281,45 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (path.IsAbsolute)
                 return path;
 
-            ImmutableList<XSPathSegment> ancestorSegments = _segments.AddRange(path._ancestorSegments);
-            ImmutableList<XSPathSegment> segments = ancestorSegments.Add(path.Leaf);
+            return new XSPath(
+                parent: this,
+                child: path
+            );
+        }
 
-            return new XSPath(ancestorSegments, segments);
+        /// <summary>
+        ///     Append <see cref="XSPathSegment"/>s to the <see cref="XSPath"/>.
+        /// </summary>
+        /// <param name="pathSegments">
+        ///     The <see cref="XSPathSegment"/>s to append.
+        /// </param>
+        /// <returns>
+        ///     The new <see cref="XSPath"/>.
+        /// </returns>
+        public XSPath Append(IEnumerable<XSPathSegment> pathSegments)
+        {
+            if (pathSegments == null)
+                throw new ArgumentNullException(nameof(pathSegments));
+
+            XSPathSegment[] actualPathSegments = pathSegments.ToArray();
+            if (actualPathSegments.Length == 0)
+                return this;
+
+            ImmutableList<XSPathSegment> ancestorSegments = ImmutableList.CreateRange(
+                actualPathSegments.Take(actualPathSegments.Length - 1)
+            );
+            ImmutableList<XSPathSegment> segments = ancestorSegments.Add(
+                actualPathSegments[actualPathSegments.Length - 1]
+            );
+
+            XSPath appendPath = new XSPath(ancestorSegments, segments);
+            if (appendPath.IsAbsolute)
+                return appendPath;
+            
+            return new XSPath(
+                parent: this,
+                child: appendPath
+            );
         }
 
         /// <summary>
@@ -243,8 +336,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (pathSegment == null)
                 throw new ArgumentNullException(nameof(pathSegment));
 
-            return new XSPath(_segments,
-                _segments.Add(pathSegment)
+            return new XSPath(
+                parent: this,
+                leaf: pathSegment
             );
         }
 
@@ -360,18 +454,41 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (path[path.Length - 1] == PathSeparatorCharacter)
                 path = path.Substring(0, path.Length - 1);
 
-            string[] pathSegments = path.Split(new char[] { PathSeparatorCharacter });
+            XSPathSegment[] pathSegments = ParseSegments(path).ToArray();
 
             ImmutableList<XSPathSegment> ancestorSegments = ImmutableList.CreateRange(
-                pathSegments.Take(pathSegments.Length - 1).Select(XSPathSegment.Create)
+                pathSegments.Take(pathSegments.Length - 1)
             );
             ImmutableList<XSPathSegment> segments = ancestorSegments.Add(
-                XSPathSegment.Create(
-                    pathSegments[pathSegments.Length - 1]
-                )
+                pathSegments[pathSegments.Length - 1]
             );
 
             return new XSPath(ancestorSegments, segments);
+        }
+
+        /// <summary>
+        ///     Parse a string into an <see cref="XSPathSegment"/>s.
+        /// </summary>
+        /// <param name="path">
+        ///     The string to parse.
+        /// </param>
+        /// <returns>
+        ///     The <see cref="XSPath"/>.
+        /// </returns>
+        public static IEnumerable<XSPathSegment> ParseSegments(string path)
+        {
+            if (path == null)
+                throw new ArgumentNullException(nameof(path));
+
+            if (path == PathSeparatorString)
+                yield return XSPathSegment.Root;
+
+            if (path[path.Length - 1] == PathSeparatorCharacter)
+                path = path.Substring(0, path.Length - 1);
+
+            string[] pathSegments = path.Split(new char[] { PathSeparatorCharacter });
+            foreach (string pathSegment in pathSegments)
+                yield return XSPathSegment.Create(pathSegment);
         }
 
         /// <summary>
@@ -403,21 +520,21 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="path">
         ///     The <see cref="XSPath"/>.
         /// </param>
-        /// <param name="segment">
-        ///     The string (path segment) to append.
+        /// <param name="pathOrSegment">
+        ///     The string (path or path-segment) to append.
         /// </param>
         /// <returns>
         ///     The new <see cref="XSPath"/>.
         /// </returns>
-        public static XSPath operator +(XSPath path, string segment)
+        public static XSPath operator +(XSPath path, string pathOrSegment)
         {
             if (path == null)
                 throw new ArgumentNullException(nameof(path));
 
-            if (segment == null)
-                throw new ArgumentNullException(nameof(segment));
+            if (pathOrSegment == null)
+                throw new ArgumentNullException(nameof(pathOrSegment));
 
-            return path.Append(segment);
+            return path.Append(pathOrSegment);
         }
     }
 }

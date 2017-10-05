@@ -120,16 +120,36 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             {
                 // This won't work if we can't inspect the MSBuild project state and match it up to the target position.
                 if (!projectDocument.HasMSBuildProject || projectDocument.IsMSBuildProjectCached)
+                {
+                    Log.Debug("Not providing hover information for project {ProjectFile} (the underlying MSBuild project is not currently valid; see the list of diagnostics applicable to this file for more information).",
+                        projectDocument.ProjectFile.FullName
+                    );
+
                     return null;
+                }
 
                 Position position = parameters.Position.ToNative();
 
                 XmlLocation location = projectDocument.XmlLocator.Inspect(position);
                 if (location == null)
+                {
+                    Log.Debug("Not providing hover information for {Position} in {ProjectFile} (nothing interesting at this position).",
+                        position,
+                        projectDocument.ProjectFile.FullName
+                    );
+
                     return null;
+                }
 
                 if (!location.IsElementOrAttribute())
+                {
+                    Log.Debug("Not providing hover information for {Position} in {ProjectFile} (position does not represent an element or attribute).",
+                        position,
+                        projectDocument.ProjectFile.FullName
+                    );
+
                     return null;
+                }
 
                 // Match up the MSBuild item / property with its corresponding XML element / attribute.
                 MSBuildObject msbuildObject;
@@ -250,7 +270,14 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 }
 
                 if (hoverContent == null)
+                {
+                    Log.Debug("No hover content available for {Position} in {ProjectFile}.",
+                        position,
+                        projectDocument.ProjectFile.FullName
+                    );
+
                     return null;
+                }
 
                 return new Hover
                 {

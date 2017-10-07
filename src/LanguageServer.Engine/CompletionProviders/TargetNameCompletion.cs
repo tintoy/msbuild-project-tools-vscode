@@ -158,7 +158,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             if (!projectDocument.HasMSBuildProject)
                 yield break; // Without a valid MSBuild project (even a cached one will do), we can't inspect existing MSBuild targets.
 
-            if (!projectDocument.Workspace.Configuration.CompletionsFromProject.Contains(CompletionSource.Target))
+            if (!projectDocument.Workspace.Configuration.Language.CompletionsFromProject.Contains(CompletionSource.Target))
                 yield break;
 
             int otherTargetPriority = Priority + 10;

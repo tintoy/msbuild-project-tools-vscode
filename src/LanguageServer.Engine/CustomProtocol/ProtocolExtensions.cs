@@ -72,13 +72,13 @@ namespace MSBuildProjectTools.LanguageServer.CustomProtocol
             if (parameters == null)
                 throw new ArgumentNullException(nameof(parameters));
 
-            JObject settings = parameters.Settings?.SelectToken("msbuildProjectTools.language") as JObject;
+            JObject settings = parameters.Settings?.SelectToken("msbuildProjectTools") as JObject;
             if (settings == null)
                 return;
 
             // Temporary workaround - JsonSerializer.Populate reuses existing HashSet.
-            configuration.CompletionsFromProject.Clear();
-            configuration.EnableExperimentalFeatures.Clear();
+            configuration.Language.CompletionsFromProject.Clear();
+            configuration.Language.EnableExperimentalFeatures.Clear();
 
             using (JsonReader reader = settings.CreateReader())
             {

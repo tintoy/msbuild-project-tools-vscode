@@ -74,7 +74,14 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </returns>
         Task OnDidChangeConfiguration(DidChangeConfigurationObjectParams parameters)
         {
+            Log.Debug("Updating extension configuration {@Configuration} from {Json:l}",
+                Configuration,
+                parameters.Settings?.ToString(Formatting.None)
+            );
+
             Configuration.UpdateFrom(parameters);
+
+            Log.Debug("Updated extension configuration: {@Configuration}", Configuration);
 
             if (ConfigurationChanged != null)
                 ConfigurationChanged(this, EventArgs.Empty);

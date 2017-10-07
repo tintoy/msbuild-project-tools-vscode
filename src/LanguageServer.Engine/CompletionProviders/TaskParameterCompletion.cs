@@ -61,7 +61,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             if (projectDocument == null)
                 throw new ArgumentNullException(nameof(projectDocument));
 
-            if (!projectDocument.Workspace.Configuration.CompletionsFromProject.Contains(CompletionSource.Task))
+            if (!projectDocument.Workspace.Configuration.Language.CompletionsFromProject.Contains(CompletionSource.Task))
             {
                 Log.Verbose("Not offering task attribute completions for {XmlLocation:l} (task completions not enabled in extension settings).", location);
 

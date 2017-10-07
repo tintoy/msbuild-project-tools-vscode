@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.9
+
+* Add command (`NuGet: toggle pre-release`) to toggle NuGet pre-release packages and package versions on / off (tintoy/msbuild-project-tools-vscode#18).
+
 ## v0.2.8
 
 * _Experimental:_ Add completions for task elements based on task types declared in the project.

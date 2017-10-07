@@ -133,10 +133,12 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         /// </returns>
         async Task<List<CompletionItem>> HandlePackageReferenceAttributeCompletion(ProjectDocument projectDocument, XSAttribute attribute, CancellationToken cancellationToken)
         {
+            bool includePreRelease = projectDocument.Workspace.Configuration.NuGet.IncludePreRelease;
+
             if (attribute.Name == "Include")
             {
                 string packageIdPrefix = attribute.Value;
-                SortedSet<string> packageIds = await projectDocument.SuggestPackageIds(packageIdPrefix, cancellationToken);
+                SortedSet<string> packageIds = await projectDocument.SuggestPackageIds(packageIdPrefix, includePreRelease, cancellationToken);
 
                 var completionItems = new List<CompletionItem>(
                     packageIds.Select(packageId => new CompletionItem
@@ -162,7 +164,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                     return null;
 
                 string packageId = includeAttribute.Value;
-                IEnumerable<NuGetVersion> packageVersions = await projectDocument.SuggestPackageVersions(packageId, cancellationToken);
+                IEnumerable<NuGetVersion> packageVersions = await projectDocument.SuggestPackageVersions(packageId, includePreRelease, cancellationToken);
                 if (projectDocument.Workspace.Configuration.NuGet.ShowNewestVersionsFirst)
                     packageVersions = packageVersions.Reverse();
 

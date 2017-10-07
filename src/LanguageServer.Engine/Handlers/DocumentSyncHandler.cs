@@ -156,7 +156,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             Workspace.PublishDiagnostics(projectDocument);
 
             // Only enable expression-related language service facilities if they're using our custom "MSBuild" language type (rather than "XML").
-            projectDocument.EnableExpressions = parameters.TextDocument.LanguageId == "msbuild" && Workspace.Configuration.EnableExperimentalFeatures.Contains("expressions"); 
+            projectDocument.EnableExpressions = parameters.TextDocument.LanguageId == "msbuild" && Workspace.Configuration.Language.EnableExperimentalFeatures.Contains("expressions"); 
 
             Server.ClearBusy("Project loaded.");
 
@@ -198,7 +198,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             Log.Verbose("===========================");
             if (projectDocument.HasMSBuildProject)
             {
-                if (Workspace.Configuration.CompletionsFromProject.Contains(CompletionSource.Task))
+                if (Workspace.Configuration.Language.CompletionsFromProject.Contains(CompletionSource.Task))
                 {
                     Log.Verbose("Scanning task definitions for project {ProjectName}...", projectDocument.ProjectFile.Name);
                     List<MSBuildTaskAssemblyMetadata> taskAssemblies = await projectDocument.GetMSBuildProjectTaskAssemblies();

@@ -358,19 +358,22 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <param name="packageIdPrefix">
         ///     The package Id prefix.
         /// </param>
+        /// <param name="includePrerelease">
+        ///     Include packages for which only pre-release versions are available?
+        /// </param>
         /// <param name="cancellationToken">
         ///     An optional <see cref="CancellationToken"/> that can be used to cancel the operation.
         /// </param>
         /// <returns>
         ///     A task that resolves to a sorted set of suggested package Ids.
         /// </returns>
-        public virtual async Task<SortedSet<string>> SuggestPackageIds(string packageIdPrefix, CancellationToken cancellationToken = default(CancellationToken))
+        public virtual async Task<SortedSet<string>> SuggestPackageIds(string packageIdPrefix, bool includePrerelease, CancellationToken cancellationToken = default(CancellationToken))
         {
-            // We don't actually need a working MSBuild project for this.
+            // We don't actually need a working MSBuild project for this, but we do want parseable XML.
             if (!HasXml)
                 throw new InvalidOperationException($"XML for project '{ProjectFile.FullName}' is not loaded.");
 
-            SortedSet<string> packageIds = await _autoCompleteResources.SuggestPackageIds(packageIdPrefix, includePrerelease: true, cancellationToken: cancellationToken);
+            SortedSet<string> packageIds = await _autoCompleteResources.SuggestPackageIds(packageIdPrefix, includePrerelease, cancellationToken: cancellationToken);
             
             return packageIds;
         }
@@ -381,19 +384,22 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// <param name="packageId">
         ///     The package Id.
         /// </param>
+        /// <param name="includePrerelease">
+        ///     Include pre-release package versions?
+        /// </param>
         /// <param name="cancellationToken">
         ///     An optional <see cref="CancellationToken"/> that can be used to cancel the operation.
         /// </param>
         /// <returns>
         ///     A task that resolves to a sorted set of suggested package versions.
         /// </returns>
-        public virtual async Task<SortedSet<NuGetVersion>> SuggestPackageVersions(string packageId, CancellationToken cancellationToken = default(CancellationToken))
+        public virtual async Task<SortedSet<NuGetVersion>> SuggestPackageVersions(string packageId, bool includePrerelease, CancellationToken cancellationToken = default(CancellationToken))
         {
-            // We don't actually need a working MSBuild project for this.
+            // We don't actually need a working MSBuild project for this, but we do want parseable XML.
             if (!HasXml)
                 throw new InvalidOperationException($"XML for project '{ProjectFile.FullName}' is not loaded.");
 
-            SortedSet<NuGetVersion> packageVersions = await _autoCompleteResources.SuggestPackageVersions(packageId, includePrerelease: true, cancellationToken: cancellationToken);
+            SortedSet<NuGetVersion> packageVersions = await _autoCompleteResources.SuggestPackageVersions(packageId, includePrerelease, cancellationToken: cancellationToken);
 
             return packageVersions;
         }

@@ -2,7 +2,7 @@
     "name": "msbuild-project-tools",
     "displayName": "MSBuild project tools",
     "description": "Tools for working with MSBuild project files (such as auto-complete for package Ids / versions).",
-    "version": "0.2.8",
+    "version": "0.2.9",
     "publisher": "tintoy",
     "license": "MIT",
     "repository": {
@@ -34,6 +34,13 @@
     ],
     "main": "./out/src/extension/extension",
     "contributes": {
+        "commands": [
+            {
+                "command": "msbuildProjectTools.toggleNuGetPreRelease",
+                "title": "Toggle pre-prelease",
+                "category": "NuGet"
+            }
+        ],
         "configuration": {
             "title": "MSBuild project tools",
             "type": "object",
@@ -41,28 +48,12 @@
                 "msbuildProjectTools": {
                     "type": "object",
                     "description": "Configuration for MSBuild project tools.",
-                    "default": {
-                        "language": {
-                            "enable": true,
-                            "disableHover": false,
-                            "logLevel": "Information",
-                            "trace": false
-                        },
-                        "nuget": {
-                            "newestVersionsFirst": true,
-                            "disablePrefetch": false
-                        }
-                    },
+                    "default": { },
                     "properties": {
                         "language": {
                             "description": "Configuration for the MSBuild language service.",
                             "type": "object",
-                            "default": {
-                                "enable": true,
-                                "disableHover": false,
-                                "logLevel": "Information",
-                                "trace": false
-                            },
+                            "default": { },
                             "properties": {
                                 "enable": {
                                     "title": "Enable language service?",
@@ -89,6 +80,7 @@
                                         "Error",
                                         "Warning",
                                         "Information",
+                                        "Debug",
                                         "Verbose"
                                     ],
                                     "default": "Information",
@@ -96,7 +88,7 @@
                                 },
                                 "seqLogging": {
                                     "type": "object",
-                                    "default": {},
+                                    "default": { },
                                     "description": "Configure the MSBuild language service to log to Seq (https://getseq.net/). This is only useful if you're hacking on the language service itself.",
                                     "properties": {
                                         "url": {
@@ -115,8 +107,8 @@
                                                 "Error",
                                                 "Warning",
                                                 "Information",
-                                                "Verbose",
-                                                "Debug"
+                                                "Debug",
+                                                "Verbose"
                                             ],
                                             "default": "Verbose",
                                             "description": "The minimum log level for Seq."
@@ -161,15 +153,17 @@
                         "nuget": {
                             "description": "Configuration for the MSBuild language service.",
                             "type": "object",
-                            "default": {
-                                "newestVersionsFirst": true,
-                                "disablePreFetch": false
-                            },
+                            "default": { },
                             "properties": {
                                 "newestVersionsFirst": {
                                     "type": "boolean",
                                     "default": true,
                                     "description": "Sort package versions in descending order (i.e. newest versions first)? Set this to false to revert to the old behaviour (VSCode decides how to sort the completion list)."
+                                },
+                                "includePreRelease": {
+                                    "type": "boolean",
+                                    "default": false,
+                                    "description": "Include suggestions for pre-release packages and package versions."
                                 },
                                 "disablePreFetch": {
                                     "type": "boolean",

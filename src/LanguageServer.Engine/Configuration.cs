@@ -8,13 +8,38 @@ namespace MSBuildProjectTools.LanguageServer
 {
     /// <summary>
     ///     The configuration for the MSBuild language service.
-    /// /// </summary>
+    /// </summary>
     public sealed class Configuration
     {
         /// <summary>
         ///     Create a new <see cref="Configuration"/>.
         /// </summary>
         public Configuration()
+        {
+        }
+
+        /// <summary>
+        ///     The MSBuild language service's main configuration.
+        /// </summary>
+        [JsonProperty("language", ObjectCreationHandling = ObjectCreationHandling.Reuse)]
+        public LanguageConfiguration Language { get; } = new LanguageConfiguration();
+        
+        /// <summary>
+        ///     The MSBuild language service's NuGet configuration.
+        /// </summary>
+        [JsonProperty("nuget", ObjectCreationHandling = ObjectCreationHandling.Reuse)]
+        public NuGetConfiguration NuGet { get; } = new NuGetConfiguration();
+    }
+
+    /// <summary>
+    ///     The main settings for the MSBuild language service.
+    /// </summary>
+    public class LanguageConfiguration
+    {
+        /// <summary>
+        ///     Create a new <see cref="LanguageConfiguration"/>.
+        /// </summary>
+        public LanguageConfiguration()
         {
         }
 
@@ -41,12 +66,6 @@ namespace MSBuildProjectTools.LanguageServer
         /// </summary>
         [JsonIgnore]
         public LoggingLevelSwitch LogLevelSwitch { get; } = new LoggingLevelSwitch(LogEventLevel.Information);
-        
-        /// <summary>
-        ///     The MSBuild language service's NuGet configuration.
-        /// </summary>
-        [JsonProperty("nuget", ObjectCreationHandling = ObjectCreationHandling.Reuse)]
-        public NuGetConfiguration NuGet { get; } = new NuGetConfiguration();
 
         /// <summary>
         ///     The MSBuild language service's Seq logging configuration.
@@ -77,6 +96,12 @@ namespace MSBuildProjectTools.LanguageServer
         /// </summary>
         [JsonProperty("disablePreFetch")]
         public bool DisablePreFetch { get; set; } = false;
+
+        /// <summary>
+        ///     Exclude suggestions for pre-release packages and package versions?
+        /// </summary>
+        [JsonProperty("includePreRelease", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        public bool IncludePreRelease { get; set; } = false;
 
         /// <summary>
         ///     Sort package versions in descending order (i.e. newest versions first)?

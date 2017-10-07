@@ -226,7 +226,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// </summary>
         void WarmUpNuGetClient()
         {
-            SuggestPackageIds("Newtonsoft.Json").ContinueWith(task =>
+            SuggestPackageIds("Newtonsoft.Json", includePrerelease: false).ContinueWith(task =>
             {
                 Log.Error(task.Exception.Flatten().InnerExceptions[0],
                      "Error initialising NuGet client."

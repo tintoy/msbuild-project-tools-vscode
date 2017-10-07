@@ -11,7 +11,9 @@ import * as dotnet from './utils/dotnet';
 import * as executables from './utils/executables';
 import { PackageReferenceCompletionProvider, getNuGetV3AutoCompleteEndPoints } from './providers/package-reference-completion';
 import { handleBusyNotifications } from './notifications';
+import { registerCommands } from './commands';
 import { registerInternalCommands } from './internal-commands';
+import { Settings } from './settings';
 
 let configuration: Settings;
 let legacySettingsPresent = false;
@@ -49,6 +51,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             context.subscriptions.push(
                 handleExpressionAutoClose()
             );
+
+            registerCommands(context, statusBarItem);
+            registerInternalCommands(context);
         } else {
             await createClassicCompletionProvider(context, couldEnableLanguageService);
     
@@ -71,8 +76,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             await loadConfiguration();
         })
     );
-
-    registerInternalCommands(context);
 }
 
 /**
@@ -106,86 +109,6 @@ async function loadConfiguration(): Promise<void> {
         configuration.language.disableHover = legacyConfiguration.languageService.disableHover || false;
         await workspaceConfiguration.update('msbuildProjectTools', configuration, true);
     }
-}
-
-/**
- * Settings for the MSBuild Project Tools extension.
- */
-interface Settings {
-    /**
-     * Language service settings.
-     */
-    language: LanguageSettings;
-
-    /**
-     * NuGet settings.
-     */
-    nuget: NuGetSettings;
-}
-
-/**
- * Language service settings.
- */
-interface LanguageSettings {
-    /**
-     * Enable the language service?
-     */
-    enable: boolean;
-
-    /**
-     * The log file (if any) that the language service should log to.
-     */
-    logFile?: string;
-
-    /**
-     * Enable verbose tracing of messages between the language client and language service?
-     */
-    trace: boolean;
-
-    /**
-     * Disable tooltips when hovering over XML in MSBuild project files.
-     */
-    disableHover: boolean;
-
-    /**
-     * Seq logging settings.
-     */
-    seqLogging?: SeqLoggingSettings;
-
-    /**
-     * Experimental feature flags.
-     */
-    experimentalFeatures?: string[];
-}
-
-/**
- * Seq logging settings.
- */
-interface SeqLoggingSettings {
-    /**
-     * The Seq server URL (null or empty to disable Seq logging).
-     */
-    url: string | null;
-
-    /**
-     * The Seq API key (if any).
-     */
-    apiKey?: string;
-}
-
-/**
- * NuGet settings.
- */
-interface NuGetSettings {
-    /**
-     * Sort package versions in descending order (i.e. newest versions first)?
-     */
-    newestVersionsFirst: boolean;
-
-    /**
-     * Disable automatic warm-up of the NuGet client when opening a project?
-     */
-    disablePreFetch: boolean;
 }
 
 /**

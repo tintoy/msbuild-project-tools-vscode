@@ -93,7 +93,7 @@ async function loadConfiguration(): Promise<void> {
 
     configuration = workspaceConfiguration.get<Settings>('msbuildProjectTools');
     featureFlags.clear();
-    if (configuration.language.experimentalFeatures)
+    if (configuration.language && configuration.language.experimentalFeatures)
     {
         configuration.language.experimentalFeatures.forEach(
             featureFlag => featureFlags.add(featureFlag)

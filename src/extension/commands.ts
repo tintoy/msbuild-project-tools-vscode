@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Settings } from './settings';
+import { Settings, NuGetSettings } from './settings';
 
 let extensionContext: vscode.ExtensionContext;
 let extensionStatusBarItem: vscode.StatusBarItem;
@@ -25,6 +25,8 @@ export function registerCommands(context: vscode.ExtensionContext, statusBarItem
 async function toggleNuGetPreRelease(): Promise<void> {
     const configuration = vscode.workspace.getConfiguration();
     const settings = configuration.get<Settings>('msbuildProjectTools');
+    settings.nuget = settings.nuget || <NuGetSettings>{};
+    
     settings.nuget.includePreRelease = !settings.nuget.includePreRelease;
 
     await configuration.update('msbuildProjectTools', settings);

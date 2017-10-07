@@ -2,7 +2,7 @@
     "name": "msbuild-project-tools",
     "displayName": "MSBuild project tools",
     "description": "Tools for working with MSBuild project files (such as auto-complete for package Ids / versions).",
-    "version": "0.2.9",
+    "version": "0.2.10",
     "publisher": "tintoy",
     "license": "MIT",
     "repository": {
@@ -48,12 +48,24 @@
                 "msbuildProjectTools": {
                     "type": "object",
                     "description": "Configuration for MSBuild project tools.",
-                    "default": { },
+                    "default": {
+                        "language": {
+                            "enable": true,
+                            "disableHover": false,
+                            "logLevel": "Information",
+                            "trace": false
+                        },
+                        "nuget": {
+                            "newestVersionsFirst": true,
+                            "includePreRelease": true,
+                            "disablePrefetch": false
+                        }
+                    },
                     "properties": {
                         "language": {
                             "description": "Configuration for the MSBuild language service.",
                             "type": "object",
-                            "default": { },
+                            "default": {},
                             "properties": {
                                 "enable": {
                                     "title": "Enable language service?",
@@ -88,7 +100,7 @@
                                 },
                                 "seqLogging": {
                                     "type": "object",
-                                    "default": { },
+                                    "default": {},
                                     "description": "Configure the MSBuild language service to log to Seq (https://getseq.net/). This is only useful if you're hacking on the language service itself.",
                                     "properties": {
                                         "url": {
@@ -153,7 +165,7 @@
                         "nuget": {
                             "description": "Configuration for the MSBuild language service.",
                             "type": "object",
-                            "default": { },
+                            "default": {},
                             "properties": {
                                 "newestVersionsFirst": {
                                     "type": "boolean",
@@ -176,7 +188,8 @@
                 }
             }
         },
-        "snippets": [{
+        "snippets": [
+            {
                 "language": "msbuild",
                 "path": "./snippets/msbuild-project.json"
             },
@@ -185,7 +198,8 @@
                 "path": "./snippets/msbuild-project.json"
             }
         ],
-        "grammars": [{
+        "grammars": [
+            {
                 "scopeName": "text.xml.msbuild.expression",
                 "injectTo": [
                     "text.xml.msbuild"
@@ -198,18 +212,20 @@
                 "path": "./syntaxes/msbuild.json"
             }
         ],
-        "languages": [{
-            "id": "msbuild",
-            "aliases": [
-                "MSBuild"
-            ],
-            "extensions": [
-                "csproj",
-                "props",
-                "targets"
-            ],
-            "configuration": "./language-configuration.json"
-        }]
+        "languages": [
+            {
+                "id": "msbuild",
+                "aliases": [
+                    "MSBuild"
+                ],
+                "extensions": [
+                    "csproj",
+                    "props",
+                    "targets"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ]
     },
     "scripts": {
         "vscode:prepublish": "tsc -p ./",

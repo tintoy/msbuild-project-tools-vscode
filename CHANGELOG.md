@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.10
+
+* Bug-fix: Extension won't load, after changes for tintoy/msbuild-project-tools-vscode#18, if no configuration was specified (restore configuration defaults).
+
 ## v0.2.9
 
 * Add command (`NuGet: toggle pre-release`) to toggle NuGet pre-release packages and package versions on / off (tintoy/msbuild-project-tools-vscode#18).

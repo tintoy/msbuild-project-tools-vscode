@@ -30,3 +30,10 @@ The server is implemented in several layers.
     * If any provider indicates that their completion list is incomplete, then the composite completion list will be marked as incomplete.
 
 ![server layers](images/server-layers.png)
+
+# Syntax and semantic models
+
+* At the lowest level, we have `Microsoft.Language.Xml` and `Microsoft.Build.Construction`.
+* Above that we have `MSBuildProjectTools.SemanticModel.Xml`, `MSBuildProjectTools.SemanticModel.MSBuild`, and `Microsoft.Build.Evaluation`.
+
+The semantic models build on the syntax models to create a more high-level API for evaluating project contents.

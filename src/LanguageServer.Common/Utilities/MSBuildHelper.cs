@@ -216,35 +216,6 @@ namespace MSBuildProjectTools.LanguageServer.Utilities
         }
 
         /// <summary>
-        ///     Get the <see cref="Range"/> represented by the <see cref="InvalidProjectFileException"/>.
-        /// </summary>
-        /// <param name="invalidProjectFileException">
-        ///     The <see cref="InvalidProjectFileException"/>.
-        /// </param>
-        /// <returns>
-        ///     The <see cref="Range"/>.
-        /// </returns>
-        public static Range GetRange(this InvalidProjectFileException invalidProjectFileException)
-        {
-            if (invalidProjectFileException == null)
-                throw new ArgumentNullException(nameof(invalidProjectFileException));
-
-            Position startPosition = new Position(
-                invalidProjectFileException.LineNumber,
-                invalidProjectFileException.ColumnNumber
-            );
-
-            Position endPosition = new Position(
-                invalidProjectFileException.EndLineNumber,
-                invalidProjectFileException.EndColumnNumber
-            );
-            if (endPosition == Position.Zero)
-                endPosition = startPosition;
-
-            return new Range(startPosition, endPosition);
-        }
-
-        /// <summary>
         ///     The names of well-known MSBuild properties.
         /// </summary>
         public static class WellKnownPropertyNames

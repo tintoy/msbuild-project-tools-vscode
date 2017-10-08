@@ -108,7 +108,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             catch (InvalidProjectFileException invalidProjectFile)
             {
                 AddErrorDiagnostic(invalidProjectFile.BaseMessage,
-                    range: invalidProjectFile.GetRange(),
+                    range: invalidProjectFile.GetRange(XmlLocator),
                     diagnosticCode: invalidProjectFile.ErrorCode
                 );
             }
@@ -116,7 +116,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             {
                 // TODO: Match SourceUri (need overloads of AddXXXDiagnostic for reporting diagnostics for other files).
                 AddErrorDiagnostic(invalidProjectXml.Message,
-                    range: invalidProjectXml.GetRange(),
+                    range: invalidProjectXml.GetRange(XmlLocator),
                     diagnosticCode: "MSBuild.InvalidXML"
                 );
             }

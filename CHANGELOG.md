@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.11
+
+* Diagnostics indicating invalid project contents or XML now have a range covering the whole element or attribute (where possible).
+
 ## v0.2.10
 
 * Bug-fix: Extension won't load, after changes for tintoy/msbuild-project-tools-vscode#18, if no configuration was specified (restore configuration defaults).

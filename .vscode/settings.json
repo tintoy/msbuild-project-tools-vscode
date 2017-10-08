@@ -5,5 +5,18 @@
     },
     "search.exclude": {
         "out": true // set this to false to include "out" folder in search results
+    },
+    "msbuildProjectTools": {
+        "language": {
+            "enable": true,
+            "disableHover": false,
+            "logLevel": "Information",
+            "trace": false
+        },
+        "nuget": {
+            "newestVersionsFirst": true,
+            "includePreRelease": true,
+            "disablePrefetch": false
+        }
     }
 }

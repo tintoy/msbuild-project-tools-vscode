@@ -218,7 +218,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (String.IsNullOrWhiteSpace(itemType))
                 throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'itemName'.", nameof(itemType));
 
-            if (ItemHelp.TryGetValue(itemType, out Help.ItemHelp help))
+            if (ItemHelp.TryGetValue(itemType, out ItemHelp help))
                 return help.Description;
 
             return null;

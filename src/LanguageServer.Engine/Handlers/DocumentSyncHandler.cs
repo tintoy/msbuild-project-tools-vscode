@@ -6,6 +6,7 @@ using OmniSharp.Extensions.LanguageServer.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using NuGet.Configuration;
 using Serilog;
+using Serilog.Events;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -186,42 +187,50 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 }
             }
             
-            Log.Verbose("===========================");
-            foreach (PackageSource packageSource in projectDocument.ConfiguredPackageSources)
+            if (Log.IsEnabled(LogEventLevel.Verbose))
             {
-                Log.Verbose(" - Project uses package source {PackageSourceName} ({PackageSourceUrl})",
-                    packageSource.Name,
-                    packageSource.Source
-                );
-            }
-
-            Log.Verbose("===========================");
-            if (projectDocument.HasMSBuildProject)
-            {
-                if (Workspace.Configuration.Language.CompletionsFromProject.Contains(CompletionSource.Task))
+                Log.Verbose("===========================");
+                foreach (PackageSource packageSource in projectDocument.ConfiguredPackageSources)
                 {
-                    Log.Verbose("Scanning task definitions for project {ProjectName}...", projectDocument.ProjectFile.Name);
-                    List<MSBuildTaskAssemblyMetadata> taskAssemblies = await projectDocument.GetMSBuildProjectTaskAssemblies();
-                    Log.Verbose("Scan complete for task definitions of project {ProjectName} ({AssemblyCount} assemblies scanned).", projectDocument.ProjectFile.Name, taskAssemblies.Count);
-
-                    Log.Verbose("===========================");
-                }
-
-                MSBuildObject[] msbuildObjects = projectDocument.MSBuildObjects.ToArray();
-                Log.Verbose("MSBuild project loaded ({MSBuildObjectCount} MSBuild objects).", msbuildObjects.Length);
-
-                foreach (MSBuildObject msbuildObject in msbuildObjects)
-                {
-                    Log.Verbose("{Type:l}: {Kind} {Name} spanning {XmlRange}",
-                        msbuildObject.GetType().Name,
-                        msbuildObject.Kind,
-                        msbuildObject.Name,
-                        msbuildObject.XmlRange
+                    Log.Verbose(" - Project uses package source {PackageSourceName} ({PackageSourceUrl})",
+                        packageSource.Name,
+                        packageSource.Source
                     );
                 }
+
+                Log.Verbose("===========================");
+                if (projectDocument.HasMSBuildProject)
+                {
+                    if (Workspace.Configuration.Language.CompletionsFromProject.Contains(CompletionSource.Task))
+                    {
+                        Log.Verbose("Scanning task definitions for project {ProjectName}...", projectDocument.ProjectFile.Name);
+                        List<MSBuildTaskAssemblyMetadata> taskAssemblies = await projectDocument.GetMSBuildProjectTaskAssemblies();
+                        Log.Verbose("Scan complete for task definitions of project {ProjectName} ({AssemblyCount} assemblies scanned).", projectDocument.ProjectFile.Name, taskAssemblies.Count);
+
+                        Log.Verbose("===========================");
+                    }
+
+                    if (!projectDocument.IsMSBuildProjectCached)
+                    {
+                        MSBuildObject[] msbuildObjects = projectDocument.MSBuildObjects.ToArray();
+                        Log.Verbose("MSBuild project loaded ({MSBuildObjectCount} MSBuild objects).", msbuildObjects.Length);
+
+                        foreach (MSBuildObject msbuildObject in msbuildObjects)
+                        {
+                            Log.Verbose("{Type:l}: {Kind} {Name} spanning {XmlRange}",
+                                msbuildObject.GetType().Name,
+                                msbuildObject.Kind,
+                                msbuildObject.Name,
+                                msbuildObject.XmlRange
+                            );
+                        }
+                    }
+                    else
+                        Log.Verbose("MSBuild project not loaded; will used cached project state (as long as positional lookups are not required).");
+                }
+                else
+                    Log.Verbose("MSBuild project not loaded.");
             }
-            else
-                Log.Verbose("MSBuild project not loaded.");
         }
 
         /// <summary>
@@ -247,28 +256,32 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             ProjectDocument projectDocument = await Workspace.TryUpdateProjectDocument(parameters.TextDocument.Uri, updatedDocumentText);
             Workspace.PublishDiagnostics(projectDocument);
 
-            if (projectDocument.HasMSBuildProject)
+            if (Log.IsEnabled(LogEventLevel.Verbose))
             {
-                if (!projectDocument.IsMSBuildProjectCached)
+                Log.Verbose("===========================");
+                if (projectDocument.HasMSBuildProject)
                 {
-                    MSBuildObject[] msbuildObjects = projectDocument.MSBuildObjects.ToArray();
-                    Log.Verbose("MSBuild project reloaded ({MSBuildObjectCount} MSBuild objects).", msbuildObjects.Length);
-
-                    foreach (MSBuildObject msbuildObject in msbuildObjects)
+                    if (!projectDocument.IsMSBuildProjectCached)
                     {
-                        Log.Verbose("{Type:l}: {Kind} {Name} spanning {XmlRange}",
-                            msbuildObject.GetType().Name,
-                            msbuildObject.Kind,
-                            msbuildObject.Name,
-                            msbuildObject.XmlRange
-                        );
+                        MSBuildObject[] msbuildObjects = projectDocument.MSBuildObjects.ToArray();
+                        Log.Verbose("MSBuild project loaded ({MSBuildObjectCount} MSBuild objects).", msbuildObjects.Length);
+
+                        foreach (MSBuildObject msbuildObject in msbuildObjects)
+                        {
+                            Log.Verbose("{Type:l}: {Kind} {Name} spanning {XmlRange}",
+                                msbuildObject.GetType().Name,
+                                msbuildObject.Kind,
+                                msbuildObject.Name,
+                                msbuildObject.XmlRange
+                            );
+                        }
                     }
+                    else
+                        Log.Verbose("MSBuild project not loaded; will used cached project state (as long as positional lookups are not required).");
                 }
                 else
-                    Log.Verbose("MSBuild project not loaded; will used cached project state (as long as positional lookups are not required).");
+                    Log.Verbose("MSBuild project not loaded.");
             }
-            else
-                Log.Verbose("MSBuild project not loaded.");
         }
 
         /// <summary>

@@ -84,11 +84,17 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 if (expression is Symbol)
                     expression = expression.Parent; // The containing expression.
 
+                // These are handled by ItemGroupExpressionCompletion.
+                if (expression is ItemGroup)
+                {
+                    Log.Verbose("Not offering any completions for {XmlLocation:l} (location represents an item group expression, not an item metadata expression).", location);
+
+                    return null;
+                }
+
                 bool offerItemTypes = true; // By default, we offer item types.
                 string targetItemType = null;
-                if (expression is ExpressionTree)
-                    expressionRange = location.Position.ToEmptyRange(); // We're between expressions, so just insert.
-                else if (expression is ItemMetadata metadataExpression && metadataExpression.HasItemType)
+                if (expression is ItemMetadata metadataExpression && metadataExpression.HasItemType)
                 {
                     targetItemType = metadataExpression.ItemType;
                     offerItemTypes = false; // We don't offer item types if one is already specified in the metadata expression.

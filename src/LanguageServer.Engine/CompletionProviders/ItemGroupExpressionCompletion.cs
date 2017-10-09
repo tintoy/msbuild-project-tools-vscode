@@ -78,11 +78,9 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                     return null;
                 }
 
-                if (expression.Kind == ExpressionKind.Root)
-                    expressionRange = location.Position.ToEmptyRange(); // We're between expressions, so just insert.
-                else if (expression.Kind != ExpressionKind.ItemGroup)
+                if (expression.Kind != ExpressionKind.ItemGroup)
                 {
-                    Log.Verbose("Not offering any completions for {XmlLocation:l} (this provider only supports MSBuild ItemGroup expressions, not {ExpressionKind} expressions).", location, expression.Kind);
+                    Log.Verbose("Not offering any completions for {XmlLocation:l} (this provider only supports MSBuild ItemGroup expressions or ItemGroupMetadata expressions without metadata names, not {ExpressionKind} expressions).", location, expression.Kind);
 
                     return null;
                 }
@@ -125,7 +123,10 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 
             LspModels.Range replaceRangeLsp = replaceRange.ToLsp();
 
-            HashSet<string> offeredItemGroupNames = new HashSet<string>();
+            HashSet<string> offeredItemGroupNames = new HashSet<string>
+            {
+                "*" // Skip virtual item type representing well-known metadata.
+            };
 
             // Well-known item types.
             foreach (string itemType in MSBuildSchemaHelp.WellKnownItemTypes)
@@ -186,6 +187,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             {
                 Label = $"@({itemType})",
                 Detail = "Item Group",
+                Kind = CompletionItemKind.Class,
                 Documentation = description,
                 SortText = $"{priority ?? Priority:0000}@({itemType})",
                 TextEdit = new TextEdit

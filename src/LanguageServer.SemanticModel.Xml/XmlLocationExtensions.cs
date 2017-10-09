@@ -674,7 +674,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             needsPadding = PaddingType.None;
 
             XSAttribute attribute;
-            if (location.IsAttribute(out attribute))
+            if (location.IsAttribute(out attribute) && !location.IsValue())
             {
                 element = attribute.Element;
                 if (location.Position == attribute.Start)

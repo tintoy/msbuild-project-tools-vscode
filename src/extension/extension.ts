@@ -23,6 +23,14 @@ let outputChannel: vscode.OutputChannel;
 const featureFlags = new Set<string>();
 const languageServerEnvironment = Object.assign({}, process.env);
 
+const projectDocumentSelector: vscode.DocumentSelector = [
+    { language: 'xml', pattern: '**/*.*proj' },
+    { language: 'xml', pattern: '**/*.props' },
+    { language: 'xml', pattern: '**/*.targets' },
+    { language: 'xml', pattern: '**/*.tasks' },
+    { language: 'msbuild', pattern: '**/*.*' }
+];
+
 /**
  * Called when the extension is activated.
  * 
@@ -117,11 +125,7 @@ async function createClassicCompletionProvider(context: vscode.ExtensionContext,
 
     const nugetEndPointURLs = await getNuGetV3AutoCompleteEndPoints();
     context.subscriptions.push(
-        vscode.languages.registerCompletionItemProvider(
-            [
-                { language: 'xml', pattern: '**/*.*proj' },
-                { language: 'msbuild', pattern: '**/*.*' }
-            ],
+        vscode.languages.registerCompletionItemProvider(projectDocumentSelector,
             new PackageReferenceCompletionProvider(
                 nugetEndPointURLs[0], // For now, just default to using the primary.
                 configuration.nuget.newestVersionsFirst
@@ -145,10 +149,6 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
     statusBarItem.hide();
 
     const clientOptions: LanguageClientOptions = {
-        documentSelector: [{
-            language: 'xml',
-            pattern: '*.csproj'
-        }],
         synchronize: {
             configurationSection: 'msbuildProjectTools'
         },
@@ -207,7 +207,7 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
  */
 function handleExpressionAutoClose(): vscode.Disposable {
     return vscode.workspace.onDidChangeTextDocument(async args => {
-        if (args.document.languageId !== 'msbuild')
+        if (!vscode.languages.match(projectDocumentSelector, args.document))
             return;
 
         if (!featureFlags.has('expressions'))

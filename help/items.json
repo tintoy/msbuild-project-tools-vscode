@@ -140,7 +140,6 @@
     "None": {
         "description": "Files that should have no role in the build process"
     },
-    "None.LastGenOutput": null,
     "PackageReference": {
         "description": "Reference to a package",
         "metadata": {

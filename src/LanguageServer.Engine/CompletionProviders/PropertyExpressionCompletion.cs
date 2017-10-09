@@ -78,9 +78,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                     return null;
                 }
 
-                if (expression.Kind == ExpressionKind.Root)
-                    expressionRange = location.Position.ToEmptyRange(); // We're between expressions, so just insert.
-                else if (expression.Kind != ExpressionKind.Evaluate)
+                if (expression.Kind != ExpressionKind.Evaluate)
                 {
                     Log.Verbose("Not offering any completions for {XmlLocation:l} (this provider only supports MSBuild Evaluation expressions, not {ExpressionKind} expressions).", location, expression.Kind);
 

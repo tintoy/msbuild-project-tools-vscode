@@ -4,6 +4,8 @@
 
 * Simplify extension / language-service configuration schema.  
   The extension will automatically upgrade settings in the legacy format (i.e. ones without `'schemaVersion': 1`), but now ignores the old `msbuildProjectFileTools` configuration section.
+* Bug-fix: completions for item metadata expressions being offered when only completions for item group expressions should be offered.
+* Bug-fix: `NullReferenceException` when listing completions for item group expressions.
 
 ## v0.2.11
 

@@ -16,7 +16,6 @@ import { registerInternalCommands } from './internal-commands';
 import { Settings, upgradeConfigurationSchema } from './settings';
 
 let configuration: Settings;
-let settingsUpgraded = false;
 let languageClient: LanguageClient;
 let statusBarItem: vscode.StatusBarItem;
 let outputChannel: vscode.OutputChannel;
@@ -60,12 +59,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             await createClassicCompletionProvider(context, couldEnableLanguageService);
 
             outputChannel.appendLine('Classic completion provider is now enabled.');
-        }
-
-        if (settingsUpgraded) {
-            outputChannel.appendLine(
-                `Settings upgraded to schema v${configuration.schemaVersion}.`
-            );
         }
     });
 

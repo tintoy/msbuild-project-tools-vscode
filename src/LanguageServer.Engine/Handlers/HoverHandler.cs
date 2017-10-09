@@ -141,6 +141,8 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                     return null;
                 }
 
+                Log.Debug("Examining location {Location:l}...", location);
+
                 if (!location.IsElementOrAttribute())
                 {
                     Log.Debug("Not providing hover information for {Position} in {ProjectFile} (position does not represent an element or attribute).",
@@ -226,7 +228,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
                 }
                 else if (location.IsAttribute(out XSAttribute attribute))
                 {
-                    msbuildObject = projectDocument.GetMSBuildObjectAtPosition(attribute.Element.Start);
+                    msbuildObject = projectDocument.GetMSBuildObjectAtPosition(attribute.Start);
                     switch (msbuildObject)
                     {
                         case MSBuildItemGroup itemGroup:

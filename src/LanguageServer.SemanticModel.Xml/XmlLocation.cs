@@ -112,8 +112,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         {
             string nodeDescription = Node.Kind.ToString();
             
-            return String.Format("XmlPosition({0}) -> {1} @ {2}",
+            return String.Format("{0} -> {1}:{2} ({3})",
                 Position,
+                Node.Kind,
                 Node.Path,
                 Node.Range
             );

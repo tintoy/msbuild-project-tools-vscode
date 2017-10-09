@@ -2,7 +2,7 @@
 
 ## v0.2.13
 
-* Bug-fix: attribute completions are erroneously offered when creating a new element under an `ItemGroup` element.
+* Bug-fix: attribute completions are erroneously offered when creating a new element under an `ItemGroup` element (tintoy/msbuild-project-tools-vscode#21).
 
 ## v0.2.12
 

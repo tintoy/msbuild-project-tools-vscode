@@ -1,5 +1,10 @@
 # Change Log
 
+## v0.2.12
+
+* Simplify extension / language-service configuration schema.  
+  The extension will automatically upgrade settings in the legacy format (i.e. ones without `'schemaVersion': 1`), but now ignores the old `msbuildProjectFileTools` configuration section.
+
 ## v0.2.11
 
 * Diagnostics indicating invalid project contents or XML now have a range covering the whole element or attribute (where possible).

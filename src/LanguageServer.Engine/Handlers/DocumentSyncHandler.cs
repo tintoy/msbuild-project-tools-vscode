@@ -156,7 +156,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
             Workspace.PublishDiagnostics(projectDocument);
 
             // Only enable expression-related language service facilities if they're using our custom "MSBuild" language type (rather than "XML").
-            projectDocument.EnableExpressions = parameters.TextDocument.LanguageId == "msbuild" && Workspace.Configuration.Language.EnableExperimentalFeatures.Contains("expressions"); 
+            projectDocument.EnableExpressions = parameters.TextDocument.LanguageId == "msbuild" && Workspace.Configuration.EnableExperimentalFeatures.Contains("expressions"); 
 
             Server.ClearBusy("Project loaded.");
 

@@ -111,7 +111,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// </returns>
         async Task<Hover> OnHover(TextDocumentPositionParams parameters, CancellationToken cancellationToken)
         {
-            if (Workspace.Configuration.Language.DisableHover)
+            if (Workspace.Configuration.Language.DisableFeature.Hover)
                 return null;
 
             ProjectDocument projectDocument = await Workspace.GetProjectDocument(parameters.TextDocument.Uri);

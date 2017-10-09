@@ -13,10 +13,10 @@ import { PackageReferenceCompletionProvider, getNuGetV3AutoCompleteEndPoints } f
 import { handleBusyNotifications } from './notifications';
 import { registerCommands } from './commands';
 import { registerInternalCommands } from './internal-commands';
-import { Settings } from './settings';
+import { Settings, upgradeConfigurationSchema } from './settings';
 
 let configuration: Settings;
-let legacySettingsPresent = false;
+let settingsUpgraded = false;
 let languageClient: LanguageClient;
 let statusBarItem: vscode.StatusBarItem;
 let outputChannel: vscode.OutputChannel;
@@ -39,13 +39,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         });
 
         await loadConfiguration();
+
+        const enableLanguageService = !configuration.language.useClassicProvider;
         let couldEnableLanguageService = false;
-        if (configuration.language.enable) {
+        if (enableLanguageService) {
             const dotnetVersion = await dotnet.getVersion();
             couldEnableLanguageService = dotnetVersion && semver.gte(dotnetVersion, '2.0.0');
         }
-    
-        if (configuration.language.enable && couldEnableLanguageService) {
+
+        if (enableLanguageService && couldEnableLanguageService) {
             await createLanguageClient(context);
 
             context.subscriptions.push(
@@ -56,24 +58,27 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             registerInternalCommands(context);
         } else {
             await createClassicCompletionProvider(context, couldEnableLanguageService);
-    
+
             outputChannel.appendLine('Classic completion provider is now enabled.');
         }
 
-        if (legacySettingsPresent) {
+        if (settingsUpgraded) {
             outputChannel.appendLine(
-                'Warning: legacy settings detected.'
-            );
-            outputChannel.appendLine(
-                `The "msbuildProjectFileTools" section in settings is now called "msbuildProjectTools"; these legacy settings will override the extension's current settings until you remove them.`
+                `Settings upgraded to schema v${configuration.schemaVersion}.`
             );
         }
     });
 
     context.subscriptions.push(
-        vscode.workspace.onDidChangeConfiguration(async args =>
-        {
+        vscode.workspace.onDidChangeConfiguration(async args => {
             await loadConfiguration();
+
+            if (languageClient) {
+                if (configuration.logging.trace)
+                    languageClient.trace = Trace.Verbose;
+                else
+                    languageClient.trace = Trace.Messages;
+            }
         })
     );
 }
@@ -92,22 +97,14 @@ async function loadConfiguration(): Promise<void> {
     const workspaceConfiguration = vscode.workspace.getConfiguration();
 
     configuration = workspaceConfiguration.get<Settings>('msbuildProjectTools');
+    
+    await upgradeConfigurationSchema(configuration);
+
     featureFlags.clear();
-    if (configuration.language && configuration.language.experimentalFeatures)
-    {
-        configuration.language.experimentalFeatures.forEach(
+    if (configuration.experimentalFeatures) {
+        configuration.experimentalFeatures.forEach(
             featureFlag => featureFlags.add(featureFlag)
         );
-    }
-    
-    // Use settings in old format, if present.
-    const legacyConfiguration = workspaceConfiguration.msbuildProjectFileTools;
-    if (legacyConfiguration) {
-        legacySettingsPresent = true;
-
-        configuration.language.enable = legacyConfiguration.languageService.enable || true;
-        configuration.language.disableHover = legacyConfiguration.languageService.disableHover || false;
-        await workspaceConfiguration.update('msbuildProjectTools', configuration, true);
     }
 }
 
@@ -119,8 +116,8 @@ async function loadConfiguration(): Promise<void> {
  */
 async function createClassicCompletionProvider(context: vscode.ExtensionContext, canEnableLanguageService: boolean): Promise<void> {
     outputChannel = vscode.window.createOutputChannel('MSBuild Project Tools');
-    
-    if (configuration.language.enable && !canEnableLanguageService)
+
+    if (!configuration.language.useClassicProvider && !canEnableLanguageService)
         outputChannel.appendLine('Cannot enable the MSBuild language service because .NET Core >= 2.0.0 was not found on the system path.');
 
     outputChannel.appendLine('MSBuild language service disabled; using the classic completion provider.');
@@ -131,7 +128,7 @@ async function createClassicCompletionProvider(context: vscode.ExtensionContext,
             [
                 { language: 'xml', pattern: '**/*.*proj' },
                 { language: 'msbuild', pattern: '**/*.*' }
-            ], 
+            ],
             new PackageReferenceCompletionProvider(
                 nugetEndPointURLs[0], // For now, just default to using the primary.
                 configuration.nuget.newestVersionsFirst
@@ -164,8 +161,7 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
         },
         diagnosticCollectionName: 'MSBuild Project',
         errorHandler: {
-            error: (error, message, count) =>
-            {
+            error: (error, message, count) => {
                 console.log(message);
                 console.log(error);
 
@@ -178,28 +174,28 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
 
     languageServerEnvironment['MSBUILD_PROJECT_TOOLS_DIR'] = context.extensionPath;
 
-    const seqLoggingSettings = configuration.language.seqLogging;
+    const seqLoggingSettings = configuration.logging.seq;
     if (seqLoggingSettings && seqLoggingSettings.url) {
-        languageServerEnvironment['MSBUILD_PROJECT_TOOLS_SEQ_URL'] = configuration.language.seqLogging.url;
-        languageServerEnvironment['MSBUILD_PROJECT_TOOLS_SEQ_API_KEY'] = configuration.language.seqLogging.apiKey;
+        languageServerEnvironment['MSBUILD_PROJECT_TOOLS_SEQ_URL'] = seqLoggingSettings.url;
+        languageServerEnvironment['MSBUILD_PROJECT_TOOLS_SEQ_API_KEY'] = seqLoggingSettings.apiKey;
     }
 
-    if (configuration.language.logFile) {
-        languageServerEnvironment['MSBUILD_PROJECT_TOOLS_LOG_FILE'] = configuration.language.logFile;
+    if (configuration.logging.file) {
+        languageServerEnvironment['MSBUILD_PROJECT_TOOLS_LOG_FILE'] = configuration.logging.file;
     }
 
     const dotNetExecutable = await executables.find('dotnet');
     const serverAssembly = context.asAbsolutePath('out/language-server/MSBuildProjectTools.LanguageServer.Host.dll');
     const serverOptions: ServerOptions = {
         command: dotNetExecutable,
-        args: [ serverAssembly ],
+        args: [serverAssembly],
         options: {
             env: languageServerEnvironment
         }
     };
 
     languageClient = new LanguageClient('MSBuild Project Tools', serverOptions, clientOptions);
-    if (configuration.language.trace)
+    if (configuration.logging.trace)
         languageClient.trace = Trace.Verbose;
 
     handleBusyNotifications(languageClient, statusBarItem);
@@ -216,10 +212,8 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
 /**
  * Handle document-change events to automatically insert a closing parenthesis for common MSBuild expressions.
  */
-function handleExpressionAutoClose(): vscode.Disposable
-{
-    return vscode.workspace.onDidChangeTextDocument(async args =>
-    {
+function handleExpressionAutoClose(): vscode.Disposable {
+    return vscode.workspace.onDidChangeTextDocument(async args => {
         if (args.document.languageId !== 'msbuild')
             return;
 
@@ -233,8 +227,7 @@ function handleExpressionAutoClose(): vscode.Disposable
         if (isOriginPosition(contentChange.range.start))
             return; // We're at the start of the document; no previous character to check.
 
-        if (contentChange.text === '(')
-        {
+        if (contentChange.text === '(') {
             // Select the previous character and the one they just typed.
             const range = contentChange.range.with(
                 contentChange.range.start.translate(0, -1),
@@ -242,18 +235,17 @@ function handleExpressionAutoClose(): vscode.Disposable
             );
 
             const openExpression = args.document.getText(range);
-            switch (openExpression)
-            {
+            switch (openExpression) {
                 case '$(': // Eval open
                 case '@(': // Item group open
                 case '%(': // Item metadata open
-                {
-                    break;
-                }
+                    {
+                        break;
+                    }
                 default:
-                {
-                    return;
-                }
+                    {
+                        return;
+                    }
             }
 
             // Replace open expression with a closed one.

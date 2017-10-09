@@ -2,7 +2,8 @@
     "name": "msbuild-project-tools",
     "displayName": "MSBuild project tools",
     "description": "Tools for working with MSBuild project files (such as auto-complete for package Ids / versions).",
-    "version": "0.2.11",
+    "version": "0.2.12",
+    "settingsSchemaVersion": 1,
     "publisher": "tintoy",
     "license": "MIT",
     "repository": {
@@ -49,11 +50,13 @@
                     "type": "object",
                     "description": "Configuration for MSBuild project tools.",
                     "default": {
+                        "logging": {
+                            "level": "Information",
+                            "seq": {}
+                        },
                         "language": {
                             "enable": true,
-                            "disableHover": false,
-                            "logLevel": "Information",
-                            "trace": false
+                            "disableFeature": {}
                         },
                         "nuget": {
                             "newestVersionsFirst": true,
@@ -62,30 +65,21 @@
                         }
                     },
                     "properties": {
-                        "language": {
-                            "description": "Configuration for the MSBuild language service.",
+                        "schemaVersion": {
+                            "title": "Configuration schema version",
+                            "type": "number",
+                            "default": 0,
+                            "description": "The current version of the configuration schema (please do not manually modify this setting)."
+                        },
+                        "logging": {
                             "type": "object",
-                            "default": {},
+                            "description": "Settings to control logging for MSBuild project tools.",
+                            "default": {
+                                "level": "Information",
+                                "trace": false
+                            },
                             "properties": {
-                                "enable": {
-                                    "title": "Enable language service?",
-                                    "type": "boolean",
-                                    "default": true,
-                                    "description": "Enable the language service?"
-                                },
-                                "disableHover": {
-                                    "title": "Disable hover?",
-                                    "type": "boolean",
-                                    "default": false,
-                                    "description": "Disable tooltips when hovering on XML in MSBuild project files?"
-                                },
-                                "logFile": {
-                                    "title": "Language service log file.",
-                                    "type": "string",
-                                    "default": null,
-                                    "description": "If specified, the language service will log to this file."
-                                },
-                                "logLevel": {
+                                "level": {
                                     "title": "Language service logging level.",
                                     "type": "string",
                                     "enum": [
@@ -98,22 +92,18 @@
                                     "default": "Information",
                                     "description": "The logging level for the MSBuild language service."
                                 },
-                                "seqLogging": {
+                                "file": {
+                                    "title": "Language service log file.",
+                                    "type": "string",
+                                    "default": "",
+                                    "description": "If specified, the language service will log to this file."
+                                },
+                                "seq": {
                                     "type": "object",
                                     "default": {},
                                     "description": "Configure the MSBuild language service to log to Seq (https://getseq.net/). This is only useful if you're hacking on the language service itself.",
                                     "properties": {
-                                        "url": {
-                                            "type": "string",
-                                            "default": null,
-                                            "description": "The URL of the Seq server (Seq logging will be enabled if this is specified)."
-                                        },
-                                        "apiKey": {
-                                            "type": "string",
-                                            "default": null,
-                                            "description": "The API key (if any) to use when authenticating to Seq."
-                                        },
-                                        "logLevel": {
+                                        "level": {
                                             "type": "string",
                                             "enum": [
                                                 "Error",
@@ -124,6 +114,16 @@
                                             ],
                                             "default": "Verbose",
                                             "description": "The minimum log level for Seq."
+                                        },
+                                        "url": {
+                                            "type": "string",
+                                            "default": null,
+                                            "description": "The URL of the Seq server (Seq logging will be enabled if this is specified)."
+                                        },
+                                        "apiKey": {
+                                            "type": "string",
+                                            "default": null,
+                                            "description": "The API key (if any) to use when authenticating to Seq."
                                         }
                                     }
                                 },
@@ -131,6 +131,33 @@
                                     "type": "boolean",
                                     "default": false,
                                     "description": "Trace all communication between VSCode and the MSBuild language service?"
+                                }
+                            }
+                        },
+                        "language": {
+                            "description": "Configuration for the MSBuild language service.",
+                            "type": "object",
+                            "default": {},
+                            "properties": {
+                                "useClassicProvider": {
+                                    "title": "Use classic completion provider",
+                                    "type": "boolean",
+                                    "default": false,
+                                    "description": "Use the classic completion provider for PackageReferences, instead of the full language service?"
+                                },
+                                "disable": {
+                                    "title": "Disabled features",
+                                    "type": "object",
+                                    "default": {},
+                                    "description": "Language service features (if any) to disable.",
+                                    "properties": {
+                                        "hover": {
+                                            "title": "Disable hover?",
+                                            "type": "boolean",
+                                            "default": false,
+                                            "description": "Disable tooltips when hovering on XML in MSBuild project files?"
+                                        }
+                                    }
                                 },
                                 "completionsFromProject": {
                                     "title": "Include completions the current project.",
@@ -151,19 +178,11 @@
                                         "Property"
                                     ],
                                     "description": "Types of objects defined in the current project to include when offering completions."
-                                },
-                                "experimentalFeatures": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "string"
-                                    },
-                                    "default": [],
-                                    "description": "The names of experimental features (if any) to enable. If you're not sure what this is, you probably don't need it."
                                 }
                             }
                         },
                         "nuget": {
-                            "description": "Configuration for the MSBuild language service.",
+                            "description": "NuGet configuration for the MSBuild language service.",
                             "type": "object",
                             "default": {},
                             "properties": {
@@ -183,6 +202,18 @@
                                     "description": "Don't automatically initialise the NuGet API client when opening a project (this is done to make the first PackageReference completion faster)?"
                                 }
                             }
+                        },
+                        "experimentalFeatures": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "expressions",
+                                    "empty-completion-lists"
+                                ]
+                            },
+                            "default": [],
+                            "description": "The names of experimental features (if any) to enable. If you're not sure what this is, you probably don't need it."
                         }
                     }
                 }

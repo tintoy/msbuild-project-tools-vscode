@@ -126,7 +126,7 @@ namespace MSBuildProjectTools.LanguageServer.Handlers
         /// <summary>
         ///     Should the handler return empty <see cref="CompletionList"/>s instead of <c>null</c>?
         /// </summary>
-        bool ReturnEmptyCompletionLists => Workspace.Configuration.Language.EnableExperimentalFeatures.Contains("empty-completion-lists");
+        bool ReturnEmptyCompletionLists => Workspace.Configuration.EnableExperimentalFeatures.Contains("empty-completion-lists");
 
         /// <summary>
         ///     A <see cref="CompletionList"/> (or <c>null</c>) representing no completions.

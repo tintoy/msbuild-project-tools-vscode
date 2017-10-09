@@ -91,7 +91,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
             // Ensure that the scanner can find the task reflector.
             MSBuildTaskScanner.TaskReflectorAssemblyFile = new FileInfo(
                 Path.Combine(
-                    Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
+                    Path.GetDirectoryName(typeof(TaskScannerTests).Assembly.Location),
                     "..", "..", "..", "..", "..", "src", "LanguageServer.TaskReflection", "bin", "debug", "netcoreapp2.0",
                     "MSBuildProjectTools.LanguageServer.TaskReflection.dll"
                 )

@@ -47,7 +47,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             NameRange = nameRange;
             ValueRange = valueRange;
             Element = element;
-            _path = Element.Path + $"@{Name}";
+            _path = Element.Path + Name;
         }
 
         /// <summary>

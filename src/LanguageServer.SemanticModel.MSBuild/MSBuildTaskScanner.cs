@@ -20,7 +20,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         internal static FileInfo TaskReflectorAssemblyFile = new FileInfo(
             Path.GetFullPath(
                 Path.Combine(
-                    Assembly.GetEntryAssembly().Location, "..", "..", "task-reflection",
+                    Path.GetDirectoryName(typeof(MSBuildTaskScanner).Assembly.Location),
+                    "..", "..", "task-reflection",
                     "MSBuildProjectTools.LanguageServer.TaskReflection.dll"
                 )
             )
@@ -47,7 +48,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 Arguments = $"\"{TaskReflectorAssemblyFile.FullName}\" \"{taskAssemblyPath}\"",
                 CreateNoWindow = true,
                 UseShellExecute = false,
-                RedirectStandardOutput = true
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
             };
             using (Process scannerProcess = Process.Start(scannerStartInfo))
             {
@@ -63,6 +65,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 }
 
                 string output = await readOutput;
+                if (String.IsNullOrWhiteSpace(output))
+                    output = await scannerProcess.StandardError.ReadToEndAsync();
 
                 using (StringReader scannerOutput = new StringReader(output))
                 using (JsonTextReader scannerJson = new JsonTextReader(scannerOutput))
@@ -70,8 +74,19 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                     if (exited && scannerProcess.ExitCode == 0)
                         return new JsonSerializer().Deserialize<MSBuildTaskAssemblyMetadata>(scannerJson);
 
-                    JObject errorJson = JObject.Parse(output);
-                    string message = errorJson.Value<string>("Message");
+                    string message;
+                    try
+                    {
+                        JObject errorJson = JObject.Parse(output);
+                        message = errorJson.Value<string>("Message");
+                    }
+                    catch (JsonReaderException invalidJson)
+                    {
+                        throw new Exception($"An unexpected error occurred while scanning assembly '{taskAssemblyPath}' for tasks.\n{output}",
+                            innerException: invalidJson
+                        );
+                    }
+
                     if (String.IsNullOrWhiteSpace(message))
                         message = $"An unexpected error occurred while scanning assembly '{taskAssemblyPath}' for tasks.";
                     else

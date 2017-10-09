@@ -80,9 +80,8 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 if (!location.CanCompleteAttribute(out element, out replaceAttribute, out needsPadding))
                     return null;
 
-                // Must be an item element.
-                // TODO: Make an XmlLocation.IsItemElement extension method for this.
-                if (element.ParentElement?.Name != "ItemGroup")
+                // Must be a valid item element.
+                if (String.IsNullOrWhiteSpace(element.Name) || element.ParentElement?.Name != "ItemGroup")
                     return null;
 
                 Range replaceRange = replaceAttribute?.Range ?? location.Position.ToEmptyRange();

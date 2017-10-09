@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.13
+
+* Bug-fix: attribute completions are erroneously offered when creating a new element under an `ItemGroup` element.
+
 ## v0.2.12
 
 * Simplify extension / language-service configuration schema.  

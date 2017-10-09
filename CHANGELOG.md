@@ -7,6 +7,7 @@
 * Bug-fix: completions for item metadata expressions being offered when only completions for item group expressions should be offered.
 * Bug-fix: `NullReferenceException` when listing completions for item group expressions.
 * Bug-fix: restore missing hover tooltip for SDK-style project import.
+* Bug-fix: metadata names in unused item groups are always named "Identity".
 
 ## v0.2.11
 

@@ -364,7 +364,7 @@ namespace MSBuildProjectTools.LanguageServer.ContentProviders
             if (metadataName == "Condition")
                 return Condition(itemGroup.Name, itemGroup.FirstItem.Xml.Condition);
 
-            if (metadataName != "Include")
+            if (metadataName == "Include")
                 metadataName = "Identity";
 
             List<MarkedString> content = new List<MarkedString>

@@ -12,6 +12,11 @@ namespace MSBuildProjectTools.LanguageServer
     public sealed class Configuration
     {
         /// <summary>
+        ///     The name of the configuration section as passed in messages such as <see cref="CustomProtocol.DidChangeConfigurationObjectParams"/>.
+        /// </summary>
+        public static readonly string SectionName = "msbuildProjectTools";
+
+        /// <summary>
         ///     Create a new <see cref="Configuration"/>.
         /// </summary>
         public Configuration()

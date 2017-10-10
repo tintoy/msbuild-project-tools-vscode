@@ -25,6 +25,6 @@ namespace MSBuildProjectTools.LanguageServer.CustomProtocol
         ///     The current settings.
         /// </summary>
         [JsonProperty("settings")]
-        public JObject Settings;
+        public JToken Settings;
     }
 }

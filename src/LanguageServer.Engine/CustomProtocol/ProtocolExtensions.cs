@@ -72,7 +72,7 @@ namespace MSBuildProjectTools.LanguageServer.CustomProtocol
             if (parameters == null)
                 throw new ArgumentNullException(nameof(parameters));
 
-            JObject settings = parameters.Settings?.SelectToken("msbuildProjectTools") as JObject;
+            JObject settings = parameters.Settings?.SelectToken(Configuration.SectionName) as JObject;
             if (settings == null)
                 return;
 

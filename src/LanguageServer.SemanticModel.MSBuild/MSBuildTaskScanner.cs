@@ -20,8 +20,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         internal static FileInfo TaskReflectorAssemblyFile = new FileInfo(
             Path.GetFullPath(
                 Path.Combine(
-                    Path.GetDirectoryName(typeof(MSBuildTaskScanner).Assembly.Location),
-                    "..", "..", "task-reflection",
+                    AppContext.BaseDirectory,
+                    "..", "task-reflection",
                     "MSBuildProjectTools.LanguageServer.TaskReflection.dll"
                 )
             )

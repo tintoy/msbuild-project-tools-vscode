@@ -92,7 +92,7 @@ namespace MSBuildProjectTools.LanguageServer
             if (String.IsNullOrWhiteSpace(extensionDir))
             {
                 extensionDir = Path.Combine(
-                    Path.GetDirectoryName(typeof(Program).Assembly.Location), "..", ".."
+                    AppContext.BaseDirectory, "..", ".."
                 );
             }
             extensionDir = Path.GetFullPath(extensionDir);

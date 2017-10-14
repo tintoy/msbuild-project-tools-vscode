@@ -357,6 +357,9 @@ namespace MSBuildProjectTools.LanguageServer.Documents
         /// </summary>
         public void PersistTaskMetadataCache()
         {
+            if (!TaskMetadataCache.IsDirty)
+                return; // Nothing new to persist.
+
             if (!TaskMetadataCacheFile.Directory.Exists)
                 ExtensionDataDirectory.Create();
 

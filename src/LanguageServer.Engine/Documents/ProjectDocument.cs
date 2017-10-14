@@ -6,6 +6,7 @@ using Nito.AsyncEx;
 using NuGet.Configuration;
 using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
+using Microsoft.Build.Construction;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -559,6 +560,7 @@ namespace MSBuildProjectTools.LanguageServer.Documents
             taskAssemblyFiles.AddRange(
                 MSBuildProject.GetAllUsingTasks()
                     .Where(usingTask => !String.IsNullOrWhiteSpace(usingTask.AssemblyFile))
+                    .Distinct(UsingTaskAssemblyEqualityComparer.Instance) // Ensure each assembly path is only evaluated once.
                     .Select(usingTask => Path.GetFullPath(
                         Path.Combine(
                             usingTask.ContainingProject.DirectoryPath,

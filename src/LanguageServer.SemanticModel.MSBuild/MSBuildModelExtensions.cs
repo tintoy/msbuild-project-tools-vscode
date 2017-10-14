@@ -45,13 +45,10 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 throw new ArgumentNullException(nameof(project));
 
             return
-                project.Xml.UsingTasks.Union(
+                project.Xml.UsingTasks.Concat(
                     project.Imports.SelectMany(
                         import => import.ImportedProject.UsingTasks
                     )
-                )
-                .OrderBy(
-                    usingTask => usingTask.TaskName
                 );
         }
 

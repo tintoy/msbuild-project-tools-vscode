@@ -35,6 +35,12 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         public AsyncLock StateLock { get; } = new AsyncLock();
 
         /// <summary>
+        ///     Has the cache been modified since it was last persisted?
+        /// </summary>
+        [JsonIgnore]
+        public bool IsDirty { get; set; }
+
+        /// <summary>
         ///     Metadata for assemblies, keyed by the assembly's full path.
         /// </summary>
         [JsonProperty("assemblies", ObjectCreationHandling = ObjectCreationHandling.Reuse)]
@@ -62,6 +68,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 {
                     metadata = await MSBuildTaskScanner.GetAssemblyTaskMetadata(assemblyPath);
                     Assemblies[metadata.AssemblyPath] = metadata;
+
+                    IsDirty = true;
                 }
             }
             
@@ -76,6 +84,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             using (StateLock.Lock())
             {
                 Assemblies.Clear();
+
+                IsDirty = true;
             }
         }
 
@@ -99,6 +109,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 {
                     JsonSerializer.Create(SerializerSettings).Populate(json, this);
                 }
+
+                IsDirty = false;
             }
         }
 
@@ -123,6 +135,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 {
                     JsonSerializer.Create(SerializerSettings).Serialize(json, this);
                 }
+
+                IsDirty = false;
             }
         }        
 

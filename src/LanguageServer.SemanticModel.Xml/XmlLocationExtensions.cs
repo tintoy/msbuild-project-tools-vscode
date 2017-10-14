@@ -555,24 +555,21 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (location.IsElementBetweenAttributes())
                 return false;
 
-            // Check if we need to perform a substition of the element to be replaced.
+            // Check if we need to perform a substition of the element to be replaced (the common case is simply replacing an existing element or partial element).
             if (element.IsValid)
             {
-                // The common case; we can simply replace this element.
-                if (element.ParentElement == null || (element.ParentElement.IsValid && element.HasParentPath(parentPath)))
+                // Do we have an invalid parent (e.g. "<<Foo />", which yields invalid element named "" with child element named "Foo")?
+                bool isParentValid = element.ParentElement?.IsValid ?? true;
+                if (!isParentValid)
                 {
-                    replaceElement = element;
+                    // We can't handle the case where the parent isn't on the same line as the child (since that's not the case outlined above).
+                    if (element.ParentElement.Start.LineNumber != location.Node.Start.LineNumber)
+                        return false;
 
-                    return true;
+                    // But we *can* handle this case by targeting the "parent" element (since that's the element we're actually after anyway).
+                    if (location.Node.Start.ColumnNumber - element.ParentElement.Start.ColumnNumber == 1)
+                        element = element.ParentElement;
                 }
-
-                // We have an invalid parent (e.g. "<<Foo />" yields invalid element "" with child element "Foo").
-
-                if (element.ParentElement.Start.LineNumber != location.Node.Start.LineNumber)
-                    return false;
-
-                if (location.Node.Start.ColumnNumber - element.ParentElement.Start.ColumnNumber == 1)
-                    element = element.ParentElement;
             }
 
             if (!element.HasParentPath(parentPath))
@@ -617,23 +614,21 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (location.IsElementBetweenAttributes())
                 return false;
 
+            // Check if we need to perform a substition of the element to be replaced (the common case is simply replacing an existing element or partial element).
             if (element.IsValid)
             {
-                // The common case; we can simply replace this element.
-                if (element.ParentElement.IsValid)
+                // Do we have an invalid parent (e.g. "<<Foo />", which yields invalid element named "" with child element named "Foo")?
+                bool isParentValid = element.ParentElement?.IsValid ?? true;
+                if (!isParentValid)
                 {
-                    replaceElement = element;
+                    // We can't handle the case where the parent isn't on the same line as the child (since that's not the case outlined above).
+                    if (element.ParentElement.Start.LineNumber != location.Node.Start.LineNumber)
+                        return false;
 
-                    return true;
+                    // But we *can* handle this case by targeting the "parent" element (since that's the element we're actually after anyway).
+                    if (location.Node.Start.ColumnNumber - element.ParentElement.Start.ColumnNumber == 1)
+                        element = element.ParentElement;
                 }
-
-                // We have an invalid parent (e.g. "<<Foo />" yields invalid element "" with child element "Foo").
-
-                if (element.ParentElement.Start.LineNumber != location.Node.Start.LineNumber)
-                    return false;
-
-                if (location.Node.Start.ColumnNumber - element.ParentElement.Start.ColumnNumber == 1)
-                    element = element.ParentElement;
             }
 
             if (asChildOfElementNamed != null && element.ParentElement?.Name != asChildOfElementNamed)

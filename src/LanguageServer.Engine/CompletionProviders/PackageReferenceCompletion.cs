@@ -22,6 +22,11 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         : CompletionProvider
     {
         /// <summary>
+        ///     A relative path representing an ItemGroup element.
+        /// </summary>
+        static readonly XSPath ItemGroupElementPath = XSPath.Parse("ItemGroup");
+
+        /// <summary>
         ///     Create a new <see cref="PackageReferenceCompletion"/>.
         /// </summary>
         /// <param name="logger">
@@ -82,8 +87,10 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                         completions.AddRange(packageCompletions);
                     }
                 }
-                else if (location.CanCompleteElement(out XSElement replaceElement, asChildOfElementNamed: "ItemGroup"))
+                else if (location.CanCompleteElement(out XSElement replaceElement, parentPath: ItemGroupElementPath))
                 {
+                    // AF: Why are these completions being offfered in the whitespace inside an ItemGroup element?
+
                     if (replaceElement != null)
                     {
                         Log.Verbose("Offering completions to replace child element @ {ReplaceRange} of {ElementName} @ {Position:l}",

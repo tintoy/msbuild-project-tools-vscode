@@ -21,6 +21,11 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         : CompletionProvider
     {
         /// <summary>
+        ///     A path representing the root ("Project") element.
+        /// </summary>
+        static readonly XSPath ProjectElementPath = XSPath.Parse("/Project");
+
+        /// <summary>
         ///     Create a new <see cref="TopLevelElementCompletion"/>.
         /// </summary>
         /// <param name="logger">
@@ -66,27 +71,36 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             using (await projectDocument.Lock.ReaderLockAsync())
             {
                 XSElement replaceElement;
-                if (!location.CanCompleteElement(out replaceElement, asChildOfElementNamed: "Project"))
+                if (!location.CanCompleteElement(out replaceElement, parentPath: ProjectElementPath))
                 {
                     Log.Verbose("Not offering any completions for {XmlLocation:l} (not a direct child of the 'Project' element).", location);
 
                     return null;
                 }
-                if (replaceElement == null)
+
+                if (replaceElement != null)
                 {
-                    Log.Verbose("Not offering any completions for {XmlLocation:l} (no element to replace at this position).", location);
+                    Log.Verbose("Offering completions to replace element {ElementName} @ {ReplaceRange:l}",
+                        replaceElement.Name,
+                        replaceElement.Range
+                    );
 
-                    return null;
+                    completions.AddRange(
+                        GetCompletionItems(replaceElement.Range)
+                    );
                 }
+                else
+                {
+                    Log.Verbose("Offering completions to insert element @ {InsertPosition:l}",
+                        location.Position
+                    );
 
-                Log.Verbose("Offering completions to replace element {ElementName} @ {ReplaceRange:l}",
-                    replaceElement.Name,
-                    replaceElement.Range
-                );
-
-                completions.AddRange(
-                    GetCompletionItems(replaceElement.Range)
-                );
+                    completions.AddRange(
+                        GetCompletionItems(
+                            replaceRange: location.Position.ToEmptyRange()
+                        )
+                    );
+                }
             }
 
             Log.Verbose("Offering {CompletionCount} completion(s) for {XmlLocation:l}", completions.Count, location);

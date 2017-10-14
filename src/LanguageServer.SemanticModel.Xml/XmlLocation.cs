@@ -112,9 +112,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         {
             string nodeDescription = Node.Kind.ToString();
             
-            return String.Format("{0} -> {1}:{2} ({3})",
+            return String.Format("{0} -> [{1}]:{2} ({3})",
                 Position,
-                Node.Kind,
+                Flags,
                 Node.Path,
                 Node.Range
             );

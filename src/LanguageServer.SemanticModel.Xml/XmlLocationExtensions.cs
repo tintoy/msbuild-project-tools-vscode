@@ -545,7 +545,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             replaceElement = null;
 
             // Simplest case - we're on whitespace so we can simply insert an element without replacing anything.
-            if (location.IsWhitespace(out XSWhitespace whitespace) && whitespace.Path.IsChildOf(parentPath))
+            if (location.IsWhitespace(out XSWhitespace whitespace) && whitespace.HasParentPath(parentPath))
                 return true;
 
             XSElement element;

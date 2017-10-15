@@ -89,8 +89,6 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 }
                 else if (location.CanCompleteElement(out XSElement replaceElement, parentPath: ItemGroupElementPath))
                 {
-                    // AF: Why are these completions being offfered in the whitespace inside an ItemGroup element?
-
                     if (replaceElement != null)
                     {
                         Log.Verbose("Offering completions to replace child element @ {ReplaceRange} of {ElementName} @ {Position:l}",

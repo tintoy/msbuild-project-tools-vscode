@@ -115,8 +115,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             }
 
             // Must be an item element.
-            // TODO: Make an XmlLocation.IsItemElement extension method for this.
-            if (itemElement.ParentElement?.Name != "ItemGroup")
+            if (!itemElement.HasParentPath(WellKnownElementPaths.ItemGroup))
             {
                 Log.Verbose("Not offering any attribute completions for {XmlLocation:l} (element is not a direct child of a 'PropertyGroup' element).", location);
 
@@ -153,18 +152,8 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 
             Range replaceRange = replaceAttribute?.Range ?? location.Position.ToEmptyRange();
 
-            const string universalMetadataPrefix = "*.";
-            string metadataPrefix = String.Format("{0}.", itemType);
-            foreach (string metadataKey in MSBuildHelper.WellknownMetadataNames) // TODO: Find a better way to capture well-known item types / metadata names
+            foreach (string metadataName in MSBuildSchemaHelp.WellKnownItemMetadataNames(itemType))
             {
-                string metadataName;
-                if (metadataKey.StartsWith(metadataPrefix))
-                    metadataName = metadataKey.Substring(metadataPrefix.Length);
-                else if (metadataKey.StartsWith(universalMetadataPrefix))
-                    metadataName = metadataKey.Substring(universalMetadataPrefix.Length);
-                else
-                    continue;
-
                 if (existingMetadata.Contains(metadataName))
                     continue;
 
@@ -174,9 +163,10 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 yield return new CompletionItem
                 {
                     Label = metadataName,
+                    Kind = CompletionItemKind.Field,
                     Detail = "Item Metadata",
                     Documentation = MSBuildSchemaHelp.ForItemMetadata(itemType, metadataName),
-                    SortText = Priority + metadataName,
+                    SortText = GetItemSortText(metadataName),
                     TextEdit = new TextEdit
                     {
                         NewText = $"{metadataName}=\"$0\"".WithPadding(needsPadding),
@@ -273,9 +263,10 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                 yield return new CompletionItem
                 {
                     Label = completionLabel,
+                    Kind = CompletionItemKind.Field,
                     Detail = $"Item Metadata ({itemType})",
                     Documentation = MSBuildSchemaHelp.ForItemMetadata(itemType, metadataName),
-                    SortText = Priority + completionLabel,
+                    SortText = GetItemSortText(completionLabel),
                     TextEdit = new TextEdit
                     {
                         NewText = $"<{metadataName}>$0</{metadataName}>",

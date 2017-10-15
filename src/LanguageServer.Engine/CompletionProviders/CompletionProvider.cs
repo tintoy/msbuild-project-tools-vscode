@@ -62,5 +62,19 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         ///     A <see cref="Task{TResult}"/> that resolves either a <see cref="CompletionList"/>, or <c>null</c> if no completions are provided.
         /// </returns>
         public abstract Task<CompletionList> ProvideCompletions(XmlLocation location, ProjectDocument projectDocument, CancellationToken cancellationToken = default(CancellationToken));
+
+        /// <summary>
+        ///     Get the textual representation used to sort the completion item with the specified label.
+        /// </summary>
+        /// <param name="completionLabel">
+        ///     The completion item label.
+        /// </param>
+        /// <param name="priority">
+        ///     An optional sort priority (defaults to <see cref="Priority"/>).
+        /// </param>
+        /// <returns>
+        ///     The sort text.
+        /// </returns>
+        protected virtual string GetItemSortText(string completionLabel, int? priority = null) => $"{priority ?? Priority:0000}{completionLabel}";
     }
 }

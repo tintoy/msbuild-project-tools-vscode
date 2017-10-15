@@ -48,6 +48,11 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         public override string Name => "Item Attributes";
 
         /// <summary>
+        ///     The sort priority for the provider's completions.
+        /// </summary>
+        public override int Priority => 500;
+
+        /// <summary>
         ///     Provide completions for the specified location.
         /// </summary>
         /// <param name="location">
@@ -94,7 +99,12 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                     {
                         Label = attributeName,
                         Detail = "Attribute",
+                        Documentation =
+                            MSBuildSchemaHelp.ForItemMetadata(itemType: element.Name, metadataName: attributeName)
+                            ??
+                            MSBuildSchemaHelp.ForAttribute(element.Name, attributeName),
                         Kind = CompletionItemKind.Field,
+                        SortText = GetItemSortText(attributeName),
                         TextEdit = new TextEdit
                         {
                             NewText = $"{attributeName}=\"$1\"$0".WithPadding(needsPadding),

@@ -176,8 +176,13 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (String.IsNullOrWhiteSpace(elementName))
                 throw new ArgumentException("Argument cannot be null, empty, or entirely composed of whitespace: 'elementName'.", nameof(elementName));
 
+            string help;
             string helpKey = String.Format("{0}.{1}", elementName, attributeName);
-            if (Root.TryGetValue(helpKey, out string help))
+            if (Root.TryGetValue(helpKey, out help))
+                return help;
+
+            helpKey = String.Format("*.{0}", attributeName);
+            if (Root.TryGetValue(helpKey, out help))
                 return help;
 
             return null;
@@ -301,6 +306,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// </remarks>
         static readonly Dictionary<string, string> Root = new Dictionary<string, string>
         {
+            ["*.Condition"] = "Optional expression evaluated to determine whether the target element should be evaluated",
+            ["*.Label"] = "Optional expression. Used to identify or order system and user elements",
             ["Choose"] = "Groups When and Otherwise elements",
             ["Choose.Label"] = "Optional expression. Used to identify or order system and user elements",
             ["GenericProperty.Condition"] = "Optional expression evaluated to determine whether the property should be evaluated",

@@ -1,5 +1,11 @@
 # Change Log
 
+## v0.2.14
+
+* Offer element completions, when appropriate, in whitespace or element text (tintoy/msbuild-project-tools-vscode#15).
+* Improve completion behaviour.
+* Improve performance of element and attribute completions for tasks in `Target` elements.
+
 ## v0.2.13
 
 * Bug-fix: attribute completions are erroneously offered when creating a new element under an `ItemGroup` element (tintoy/msbuild-project-tools-vscode#21).

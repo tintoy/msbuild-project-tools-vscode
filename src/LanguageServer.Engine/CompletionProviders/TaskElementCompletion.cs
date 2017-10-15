@@ -25,6 +25,11 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         : TaskCompletionProvider
     {
         /// <summary>
+        ///     An absolute path representing a Target element.
+        /// </summary>
+        static readonly XSPath TargetElementPath = XSPath.Parse("/Project/Target");
+
+        /// <summary>
         ///     Create a new <see cref="TaskElementCompletion"/>.
         /// </summary>
         /// <param name="logger">

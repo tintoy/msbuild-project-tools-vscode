@@ -21,6 +21,11 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         : CompletionProvider
     {
         /// <summary>
+        ///     A relative path representing a PropertyGroup element.
+        /// </summary>
+        static readonly XSPath PropertyGroupElementPath = XSPath.Parse("PropertyGroup");
+
+        /// <summary>
         ///     Create a new <see cref="PropertyElementCompletion"/>.
         /// </summary>
         /// <param name="logger">
@@ -66,26 +71,34 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             using (await projectDocument.Lock.ReaderLockAsync())
             {
                 XSElement replaceElement;
-                if (!location.CanCompleteElement(out replaceElement, asChildOfElementNamed: "PropertyGroup"))
+                if (!location.CanCompleteElement(out replaceElement, parentPath: PropertyGroupElementPath))
                 {
                     Log.Verbose("Not offering any completions for {XmlLocation:l} (not a direct child of a 'PropertyGroup' element).", location);
 
                     return null;
                 }
-                if (replaceElement == null)
-                {
-                    Log.Verbose("Not offering any element completions for {XmlLocation:l} (no element to replace at this position).", location);
 
-                    return null;
+                Range replaceRange;
+                if (replaceElement != null)
+                {
+                    replaceRange = replaceElement.Range;
+
+                    Log.Verbose("Offering completions to replace element {ElementName} @ {ReplaceRange:l}",
+                        replaceElement.Name,
+                        replaceRange
+                    );
+                }
+                else
+                {
+                    replaceRange = location.Position.ToEmptyRange();
+
+                    Log.Verbose("Offering completions to create element @ {ReplaceRange:l}",
+                        replaceRange
+                    );
                 }
 
-                Log.Verbose("Offering completions to replace element {ElementName} @ {ReplaceRange:l}",
-                    replaceElement.Name,
-                    replaceElement.Range
-                );
-
                 completions.AddRange(
-                    GetCompletionItems(projectDocument, replaceElement.Range)
+                    GetCompletionItems(projectDocument, replaceRange)
                 );
             }
 

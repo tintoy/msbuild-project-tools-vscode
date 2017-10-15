@@ -348,11 +348,13 @@ namespace MSBuildProjectTools.LanguageServer.Tests
             XmlLocation location = locator.Inspect(testPosition);
             Assert.NotNull(location);
 
+            XSPath elementPath = XSPath.Parse(expectedElementName);
+
             XSElement element;
             XSAttribute replaceAttribute;
             PaddingType needsPadding;
             Assert.True(
-                location.CanCompleteAttribute(out element, out replaceAttribute, out needsPadding, inElementNamed: expectedElementName),
+                location.CanCompleteAttribute(out element, out replaceAttribute, out needsPadding, onElementWithPath: elementPath),
                 "CanCompleteAttribute"
             );
             Assert.NotNull(element);

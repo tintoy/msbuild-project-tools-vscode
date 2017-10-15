@@ -592,13 +592,13 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="needsPadding">
         ///     An <see cref="PaddingType"/> value indicating what sort of padding (if any) is required before / after the attribute.
         /// </param>
-        /// <param name="inElementNamed">
-        ///     If specified, the location's element must have the specified name.
+        /// <param name="onElementWithPath">
+        ///     If specified, the location's element must have the specified path.
         /// </param>
         /// <returns>
         ///     <c>true</c>, if the location represents an element that can be replaced by completion; otherwise, <c>false</c>.
         /// </returns>
-        public static bool CanCompleteAttribute(this XmlLocation location, out XSElement element, out XSAttribute replaceAttribute, out PaddingType needsPadding, string inElementNamed = null)
+        public static bool CanCompleteAttribute(this XmlLocation location, out XSElement element, out XSAttribute replaceAttribute, out PaddingType needsPadding, XSPath onElementWithPath = null)
         {
             if (location == null)
                 throw new ArgumentNullException(nameof(location));
@@ -646,7 +646,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             else
                 return false;
 
-            if (inElementNamed != null && element.Name != inElementNamed)
+            if (onElementWithPath != null && !element.Path.Matches(onElementWithPath))
                 return false;
 
             replaceAttribute = attribute;

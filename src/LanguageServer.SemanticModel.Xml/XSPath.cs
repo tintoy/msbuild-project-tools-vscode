@@ -34,6 +34,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         );
 
         /// <summary>
+        ///     Wildcard path that matches any <see cref="XSNode"/>.
+        /// </summary>
+        public static readonly XSPath Any = XSPath.FromSegment(XSPathSegment.Wildcard);
+
+        /// <summary>
         ///     The path's ancestor segments.
         /// </summary>
         /// <remarks>
@@ -178,6 +183,27 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                     segments: _ancestorSegments
                 );
             }
+        }
+
+        /// <summary>
+        ///     Does the <see cref="XSPath"/> match the specified base path?
+        /// </summary>
+        /// <param name="basePath">
+        ///     The base <see cref="XSPath"/> to match.
+        /// </param>
+        /// <returns>
+        ///     <c>true</c>, if <paramref name="basePath"/> is absolute, and the path starts with <paramref name="basePath"/>.
+        ///     <c>true</c>, if <paramref name="basePath"/> is relative, and the path ends with <paramref name="basePath"/>.
+        ///     Otherwise, <c>false</c>.
+        /// </returns>
+        public bool Matches(XSPath basePath)
+        {
+            if (basePath == null)
+                throw new ArgumentNullException(nameof(basePath));
+            
+            return basePath.IsAbsolute
+                ? StartsWith(basePath)
+                : EndsWith(basePath);
         }
 
         /// <summary>

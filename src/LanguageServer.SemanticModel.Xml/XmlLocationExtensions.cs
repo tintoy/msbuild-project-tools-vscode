@@ -526,7 +526,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The element (if any) that will be replaced by the completion.
         /// </param>
         /// <param name="parentPath">
-        ///     The location's node's parent must have the specified <see cref="XSPath"/>.
+        ///     If specified, the location's node's parent must have the specified <see cref="XSPath"/>.
         /// </param>
         /// <returns>
         ///     <c>true</c>, if the location represents an element that can be replaced by completion; otherwise, <c>false</c>.
@@ -534,18 +534,15 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <remarks>
         ///     We can replace "&lt;&gt;" and "&lt;&lt;Element /&gt;".
         /// </remarks>
-        public static bool CanCompleteElement(this XmlLocation location, out XSElement replaceElement, XSPath parentPath)
+        public static bool CanCompleteElement(this XmlLocation location, out XSElement replaceElement, XSPath parentPath = null)
         {
             if (location == null)
                 throw new ArgumentNullException(nameof(location));
-
-            if (parentPath == null)
-                throw new ArgumentNullException(nameof(parentPath));
 
             replaceElement = null;
 
             // Simplest case - we're on whitespace so we can simply insert an element without replacing anything.
-            if (location.IsWhitespace(out XSWhitespace whitespace) && whitespace.HasParentPath(parentPath))
+            if (location.IsWhitespace(out XSWhitespace whitespace) && (parentPath == null || whitespace.HasParentPath(parentPath)))
                 return true;
 
             XSElement element;
@@ -572,66 +569,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 }
             }
 
-            if (!element.HasParentPath(parentPath))
-                return false;
-
-            replaceElement = element;
-
-            return true;
-        }
-
-        /// <summary>
-        ///     Does the location represent a place where an element can be created or replaced by a completion?
-        /// </summary>
-        /// <param name="location">
-        ///     The XML location.
-        /// </param>
-        /// <param name="replaceElement">
-        ///     The element (if any) that will be replaced by the completion.
-        /// </param>
-        /// <param name="asChildOfElementNamed">
-        ///     If specified, the location's parent element must have the specified name.
-        /// </param>
-        /// <returns>
-        ///     <c>true</c>, if the location represents an element that can be replaced by completion; otherwise, <c>false</c>.
-        /// </returns>
-        /// <remarks>
-        ///     We can replace "&lt;&gt;" and "&lt;&lt;Element /&gt;".
-        /// </remarks>
-        public static bool CanCompleteElement(this XmlLocation location, out XSElement replaceElement, string asChildOfElementNamed = null)
-        {
-            if (location == null)
-                throw new ArgumentNullException(nameof(location));
-
-            replaceElement = null;
-            if (location.IsWhitespace())
-                return true;
-
-            XSElement element;
-            if (!location.IsElement(out element))
-                return false;
-
-            if (location.IsElementBetweenAttributes())
-                return false;
-
-            // Check if we need to perform a substition of the element to be replaced (the common case is simply replacing an existing element or partial element).
-            if (element.IsValid)
-            {
-                // Do we have an invalid parent (e.g. "<<Foo />", which yields invalid element named "" with child element named "Foo")?
-                bool isParentValid = element.ParentElement?.IsValid ?? true;
-                if (!isParentValid)
-                {
-                    // We can't handle the case where the parent isn't on the same line as the child (since that's not the case outlined above).
-                    if (element.ParentElement.Start.LineNumber != location.Node.Start.LineNumber)
-                        return false;
-
-                    // But we *can* handle this case by targeting the "parent" element (since that's the element we're actually after anyway).
-                    if (location.Node.Start.ColumnNumber - element.ParentElement.Start.ColumnNumber == 1)
-                        element = element.ParentElement;
-                }
-            }
-
-            if (asChildOfElementNamed != null && element.ParentElement?.Name != asChildOfElementNamed)
+            if (parentPath != null && !element.HasParentPath(parentPath))
                 return false;
 
             replaceElement = element;

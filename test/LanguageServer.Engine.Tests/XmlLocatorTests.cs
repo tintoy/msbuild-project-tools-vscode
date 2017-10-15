@@ -258,9 +258,11 @@ namespace MSBuildProjectTools.LanguageServer.Tests
             XmlLocation location = locator.Inspect(testPosition);
             Assert.NotNull(location);
 
+            XSPath expectedParentPath = XSPath.Parse(expectedParent);
+
             XSElement replaceElement;
             Assert.True(
-                location.CanCompleteElement(out replaceElement, asChildOfElementNamed: expectedParent),
+                location.CanCompleteElement(out replaceElement, parentPath: expectedParentPath),
                 "CanCompleteElement"
             );
             Assert.NotNull(replaceElement);

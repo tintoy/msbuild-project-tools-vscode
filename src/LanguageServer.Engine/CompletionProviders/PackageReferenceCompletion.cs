@@ -22,11 +22,6 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         : CompletionProvider
     {
         /// <summary>
-        ///     A relative path representing an ItemGroup element.
-        /// </summary>
-        static readonly XSPath ItemGroupElementPath = XSPath.Parse("ItemGroup");
-
-        /// <summary>
         ///     Create a new <see cref="PackageReferenceCompletion"/>.
         /// </summary>
         /// <param name="logger">
@@ -87,7 +82,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                         completions.AddRange(packageCompletions);
                     }
                 }
-                else if (location.CanCompleteElement(out XSElement replaceElement, parentPath: ItemGroupElementPath))
+                else if (location.CanCompleteElement(out XSElement replaceElement, parentPath: WellKnownElementPaths.ItemGroup))
                 {
                     if (replaceElement != null)
                     {

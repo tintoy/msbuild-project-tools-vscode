@@ -21,11 +21,6 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         : CompletionProvider
     {
         /// <summary>
-        ///     A path representing the root ("Project") element.
-        /// </summary>
-        static readonly XSPath ProjectElementPath = XSPath.Parse("/Project");
-
-        /// <summary>
         ///     Create a new <see cref="TopLevelElementCompletion"/>.
         /// </summary>
         /// <param name="logger">
@@ -71,7 +66,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             using (await projectDocument.Lock.ReaderLockAsync())
             {
                 XSElement replaceElement;
-                if (!location.CanCompleteElement(out replaceElement, parentPath: ProjectElementPath))
+                if (!location.CanCompleteElement(out replaceElement, parentPath: WellKnownElementPaths.Project))
                 {
                     Log.Verbose("Not offering any completions for {XmlLocation:l} (not a direct child of the 'Project' element).", location);
 

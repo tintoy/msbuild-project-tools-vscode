@@ -34,6 +34,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// </param>
         [InlineData("Test1", 2, 5)]
         [InlineData("Test1", 3, 9)]
+        [Trait("Component", "XmlLocator")]
         [Theory(DisplayName = "Inside element ")]
         public void InsideElement1(string testFileName, int line, int column)
         {
@@ -80,6 +81,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         [InlineData("Test1", 3, 22, XSNodeKind.Whitespace)]
         [InlineData("Test2", 11, 8, XSNodeKind.Whitespace)]
         [InlineData("Test2", 5, 22, XSNodeKind.Text)]
+        [Trait("Component", "XmlLocator")]
         [Theory(DisplayName = "Within element content ")]
         public void InElementContent(string testFileName, int line, int column, XSNodeKind expectedNodeKind)
         {
@@ -116,6 +118,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         /// </param>
         [InlineData("Test2", 11, 10, "PackageReference")]
         [InlineData("Test2", 12, 18, "PackageReference")]
+        [Trait("Component", "XmlLocator")]
         [Theory(DisplayName = "Within empty element's name ")]
         public void InEmptyElementName(string testFileName, int line, int column, string expectedElementName)
         {
@@ -164,6 +167,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         [InlineData("Test2", 11, 62, "Version")]
         [InlineData("Test2", 11, 63, "Version")]
         [InlineData("Test2", 11, 68, "Version")]
+        [Trait("Component", "XmlLocator")]
         [Theory(DisplayName = "Within attribute's value ")]
         public void InAttributeValue(string testFileName, int line, int column, string expectedAttributeName)
         {
@@ -203,6 +207,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         [InlineData("Invalid2.DoubleOpeningTag", 13, 10)]
         [InlineData("Invalid2.EmptyOpeningTag", 13, 65)]
         [InlineData("Invalid2.NoClosingTag", 14, 10)]
+        [Trait("Component", "XmlLocator")]
         [Theory(DisplayName = "On element that can be replaced by completion ")]
         public void CanCompleteElement(string testFileName, int line, int column)
         {
@@ -239,6 +244,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         [InlineData("Invalid2.EmptyOpeningTag", 13, 65, "ItemGroup")]
         [InlineData("Invalid2.NoClosingTag", 10, 5, "Project")]
         [InlineData("Invalid2.EmptyOpeningTag.ChildOfRoot", 2, 6, "Project")]
+        [Trait("Component", "XmlLocator")]
         [Theory(DisplayName = "On completable element if parent name matches ")]
         public void CanCompleteElementInParentNamed(string testFileName, int line, int column, string expectedParent)
         {
@@ -279,6 +285,7 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         [InlineData("Invalid2.EmptyOpeningTag", 13, 65, "ItemGroup")]
         [InlineData("Invalid2.NoClosingTag", 10, 5, "Project")]
         [InlineData("Invalid2.EmptyOpeningTag.ChildOfRoot", 2, 6, "Project")]
+        [Trait("Component", "XmlLocator")]
         [Theory(DisplayName = "On completable element if parent relative path matches ")]
         public void CanCompleteElementInParentWithRelativePath(string testFileName, int line, int column, string expectedParent)
         {
@@ -319,11 +326,13 @@ namespace MSBuildProjectTools.LanguageServer.Tests
         ///     The the name of the element to whicht the attribute will be added.
         /// </param>
         [InlineData("Test1", 6, 14, "Element5", PaddingType.Leading)]
-        [InlineData("Test2", 17, 17, "Compile", PaddingType.Leading)]
+        [InlineData("Test2", 17, 18, "Compile", PaddingType.Trailing)]
         [InlineData("Test2", 17, 36, "Compile", PaddingType.Leading)]
         [InlineData("Test2", 17, 37, "Compile", PaddingType.Trailing)]
         [InlineData("Test2", 17, 53, "Compile", PaddingType.Leading)]
         [InlineData("Test2", 17, 54, "Compile", PaddingType.None)]
+        [InlineData("Test3", 2, 15, "Element2", PaddingType.None)]
+        [Trait("Component", "XmlLocator")]
         [Theory(DisplayName = "On completable attribute where element name matches ")]
         public void CanCompleteAttribute(string testFileName, int line, int column, string expectedElementName, PaddingType expectedPadding)
         {

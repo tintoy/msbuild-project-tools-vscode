@@ -211,11 +211,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                         flags |= XmlLocationFlags.Name;
 
                     TextSpan attributesSpan = new TextSpan();
-                    if (syntaxNode.AttributesNode != null)
-                        attributesSpan = syntaxNode.AttributesNode.FullSpan;
-                    else if (syntaxNode.SlashGreaterThanToken != null)
+                    if (syntaxNode.SlashGreaterThanToken != null) // This is the most accurate way to measure the span of text where the element's attributes can be located.
                         attributesSpan = new TextSpan(start: syntaxNode.NameNode.Span.End, length: syntaxNode.SlashGreaterThanToken.Span.Start - syntaxNode.NameNode.Span.End);
-
+                    else if (syntaxNode.AttributesNode != null)
+                        attributesSpan = syntaxNode.AttributesNode.FullSpan; // We don't rely on the span of the syntaxNode.AttributesNode unless we have to, because it's often less accurate than the measurement above.
+                    
                     if (attributesSpan.Contains(absolutePosition))
                         flags |= XmlLocationFlags.Attributes;
 
@@ -236,11 +236,11 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                         flags |= XmlLocationFlags.OpeningTag;
 
                     TextSpan attributesSpan = new TextSpan();
-                    if (syntaxNode.AttributesNode != null)
-                        attributesSpan = syntaxNode.AttributesNode.FullSpan;
-                    else if (syntaxNode.StartTag?.GreaterThanToken != null)
+                    if (syntaxNode.StartTag?.GreaterThanToken != null) // This is the most accurate way to measure the span of text where the element's attributes can be located.
                         attributesSpan = new TextSpan(start: syntaxNode.NameNode.Span.End, length: syntaxNode.StartTag.GreaterThanToken.Span.Start - syntaxNode.NameNode.Span.End);
-                        
+                    else if (syntaxNode.AttributesNode != null)
+                        attributesSpan = syntaxNode.AttributesNode.FullSpan; // We don't rely on the span of the syntaxNode.AttributesNode unless we have to, because it's often less accurate than the measurement above.
+
                     if (attributesSpan.Contains(absolutePosition) || absolutePosition == attributesSpan.End) // In this particular case, we need an inclusive comparison.
                         flags |= XmlLocationFlags.Attributes;
 

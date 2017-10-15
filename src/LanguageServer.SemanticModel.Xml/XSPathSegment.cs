@@ -14,6 +14,14 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         public static readonly XSPathSegment Root = new XSPathSegment(String.Empty);
 
         /// <summary>
+        ///     The wild-card ("*") path segment.
+        /// </summary>
+        /// <remarks>
+        ///     A wildcard path segment matches any single path segment.
+        /// </remarks>
+        public static readonly XSPathSegment Wildcard = new XSPathSegment("*");
+
+        /// <summary>
         ///     Create a new <see cref="XSPathSegment"/>.
         /// </summary>
         /// <param name="name">
@@ -34,6 +42,16 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The path segment's name.
         /// </summary>
         public string Name { get; }
+
+        /// <summary>
+        ///     Does the path segment represent the root of a path?
+        /// </summary>
+        public bool IsRoot => Name == String.Empty;
+
+        /// <summary>
+        ///     Does the path segment represent a wildcard?
+        /// </summary>
+        public bool IsWildcard => Name == "*";
 
         /// <summary>
         ///     Determine whether the <see cref="XSPathSegment"/> is equal to another <see cref="XSPathSegment"/>.
@@ -101,6 +119,9 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
 
             if (name == String.Empty)
                 return Root;
+
+            if (name == "*")
+                return Wildcard;
 
             return new XSPathSegment(name);
         }

@@ -19,5 +19,10 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         ///     The relative path that represents a "ItemGroup" element (static or dynamic).
         /// </summary>
         public static readonly XSPath ItemGroup = XSPath.Parse("ItemGroup");
+
+        /// <summary>
+        ///     The relative path that represents any direct child of an "ItemGroup" element (static or dynamic).
+        /// </summary>
+        public static readonly XSPath Item = XSPath.Parse("ItemGroup/*");
     }
 }

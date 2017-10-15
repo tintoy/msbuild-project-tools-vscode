@@ -39,7 +39,13 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
                 if (index >= segments.Count)
                     return false;
 
-                if (otherSegments[index] != segments[index])
+                XSPathSegment segment = segments[index];
+                XSPathSegment otherSegment = otherSegments[index];
+
+                if (segment.IsWildcard || otherSegment.IsWildcard)
+                    continue; // Wildcards always match.
+
+                if (otherSegment != segment)
                     return false;
             }
 
@@ -73,7 +79,13 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             int ancestorIndex = otherSegments.Count - 1;
             for ( ; index >= 0 && ancestorIndex >= 0; index--, ancestorIndex--)
             {
-                if (segments[index] != otherSegments[ancestorIndex])
+                XSPathSegment segment = segments[index];
+                XSPathSegment otherSegment = otherSegments[ancestorIndex];
+
+                if (segment.IsWildcard || otherSegment.IsWildcard)
+                    continue; // Wildcards always match.
+
+                if (otherSegment != segment)
                     return false;
             }
 

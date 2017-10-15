@@ -81,7 +81,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
                     return null;
 
                 // Must be a valid item element.
-                if (String.IsNullOrWhiteSpace(element.Name) || element.ParentElement?.Name != "ItemGroup")
+                if (!element.IsValid || !element.HasParentPath(WellKnownElementPaths.ItemGroup))
                     return null;
 
                 Range replaceRange = replaceAttribute?.Range ?? location.Position.ToEmptyRange();

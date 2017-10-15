@@ -23,6 +23,21 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <summary>
         ///     The relative path that represents any direct child of an "ItemGroup" element (static or dynamic).
         /// </summary>
-        public static readonly XSPath Item = XSPath.Parse("ItemGroup/*");
+        public static readonly XSPath Item = ItemGroup + "*";
+
+        /// <summary>
+        ///     The relative path that represents a "PackageReference" item element.
+        /// </summary>
+        public static readonly XSPath PackageReference = ItemGroup + "PackageReference";
+
+        /// <summary>
+        ///     The relative path that represents a "DotNetCliToolReference" item element.
+        /// </summary>
+        public static readonly XSPath DotNetCliToolReference = ItemGroup + "DotNetCliToolReference";
+
+        /// <summary>
+        ///     The absolute path that represents a "Target" element.
+        /// </summary>
+        public static readonly XSPath Target = Project + "Target";
     }
 }

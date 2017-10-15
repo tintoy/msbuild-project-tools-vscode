@@ -70,7 +70,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             using (await projectDocument.Lock.ReaderLockAsync())
             {
                 XSAttribute attribute;
-                if (!location.CanCompleteAttributeValue(out attribute, onElementNamed: "Target") || !SupportedAttributeNames.Contains(attribute.Name))
+                if (!location.CanCompleteAttributeValue(out attribute, onElementWithPath: WellKnownElementPaths.Target) || !SupportedAttributeNames.Contains(attribute.Name))
                 {
                     Log.Verbose("Not offering any completions for {XmlLocation:l} (not the value of a supported attribute on a 'Target' element).", location);
 

@@ -663,8 +663,8 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <param name="targetAttribute">
         ///     The attribute (if any) whose value will be replaced by the completion.
         /// </param>
-        /// <param name="onElementNamed">
-        ///     If specified, attribute's element must have the specified name.
+        /// <param name="onElementWithPath">
+        ///     If specified, attribute's element must have the specified path.
         /// </param>
         /// <param name="forAttributeNamed">
         ///     If specified, the attribute must have one of the specified names.
@@ -672,7 +672,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
         /// <returns>
         ///     <c>true</c>, if the location represents an attribute whose value can be replaced by a completion; otherwise, <c>false</c>.
         /// </returns>
-        public static bool CanCompleteAttributeValue(this XmlLocation location, out XSAttribute targetAttribute, string onElementNamed = null, params string[] forAttributeNamed)
+        public static bool CanCompleteAttributeValue(this XmlLocation location, out XSAttribute targetAttribute, XSPath onElementWithPath = null, params string[] forAttributeNamed)
         {
             if (location == null)
                 throw new ArgumentNullException(nameof(location));
@@ -683,7 +683,7 @@ namespace MSBuildProjectTools.LanguageServer.SemanticModel
             if (!location.IsAttributeValue(out attribute))
                 return false;
 
-            if (onElementNamed != null && attribute.Element.Name != onElementNamed)
+            if (onElementWithPath != null && !attribute.HasParentPath(onElementWithPath))
                 return false;
 
             if (forAttributeNamed.Length > 0 && Array.IndexOf(forAttributeNamed, attribute.Name) == -1)

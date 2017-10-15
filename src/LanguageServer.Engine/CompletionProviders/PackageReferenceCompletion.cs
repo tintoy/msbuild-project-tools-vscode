@@ -22,6 +22,15 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
         : CompletionProvider
     {
         /// <summary>
+        ///     The names of elements supported by the provider.
+        /// </summary>
+        static readonly HashSet<string> SupportedElementNames = new HashSet<string>
+        {
+            "PackageReference",
+            "DotNetCliToolReference"
+        };
+
+        /// <summary>
         ///     Create a new <see cref="PackageReferenceCompletion"/>.
         /// </summary>
         /// <param name="logger">
@@ -67,9 +76,9 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
 
             using (await projectDocument.Lock.ReaderLockAsync())
             {
-                if (location.CanCompleteAttributeValue(out XSAttribute attribute, "PackageReference", "Include", "Version"))
+                if (location.CanCompleteAttributeValue(out XSAttribute attribute, WellKnownElementPaths.Item, "Include", "Version") && SupportedElementNames.Contains(attribute.Element.Name))
                 {
-                    Log.Verbose("Offering completions for value of attribute {AttributeName} of element {ElementName} @ {Position:l}",
+                    Log.Verbose("Offering completions for value of attribute {AttributeName} of {ElementName} element @ {Position:l}",
                         attribute.Name,
                         attribute.Element.Name,
                         location.Position

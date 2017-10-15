@@ -89,7 +89,7 @@ namespace MSBuildProjectTools.LanguageServer.CompletionProviders
             using (await projectDocument.Lock.ReaderLockAsync())
             {
                 XSElement replaceElement;
-                if (!location.CanCompleteElement(out replaceElement, asChildOfElementNamed: "Target"))
+                if (!location.CanCompleteElement(out replaceElement, parentPath: WellKnownElementPaths.Target))
                 {
                     Log.Verbose("Not offering any completions for {XmlLocation:l} (does not represent the direct child of a 'Target' element).", location);
 

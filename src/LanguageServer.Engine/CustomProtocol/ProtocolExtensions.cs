@@ -1,4 +1,5 @@
 using OmniSharp.Extensions.LanguageServer;
+using OmniSharp.Extensions.LanguageServer.Models;
 using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -56,31 +57,79 @@ namespace MSBuildProjectTools.LanguageServer.CustomProtocol
         }
 
         /// <summary>
-        ///     Update the configuration from the specified notification parameters.
+        ///     Update the configuration from the specified configuration-change notification.
         /// </summary>
         /// <param name="configuration">
         ///     The <see cref="Configuration"/> to update.
         /// </param>
-        /// <param name="parameters">
-        ///     The DidChangeConfiguration notification parameters.
+        /// <param name="request">
+        ///     The configuration-change notification.
         /// </param>
-        public static void UpdateFrom(this Configuration configuration, DidChangeConfigurationObjectParams parameters)
+        public static void UpdateFrom(this Configuration configuration, DidChangeConfigurationObjectParams request)
         {
             if (configuration == null)
                 throw new ArgumentNullException(nameof(configuration));
             
-            if (parameters == null)
-                throw new ArgumentNullException(nameof(parameters));
-
-            JObject settings = parameters.Settings?.SelectToken(Configuration.SectionName) as JObject;
-            if (settings == null)
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+            
+            JObject json = request.Settings?.SelectToken(Configuration.SectionName) as JObject;
+            if (json == null)
                 return;
 
+            configuration.UpdateFrom(json);
+        }
+
+        /// <summary>
+        ///     Update the configuration from the specified initialisation request.
+        /// </summary>
+        /// <param name="configuration">
+        ///     The <see cref="Configuration"/> to update.
+        /// </param>
+        /// <param name="request">
+        ///     The initialisation request.
+        /// </param>
+        public static void UpdateFrom(this Configuration configuration, InitializeParams request)
+        {
+            if (configuration == null)
+                throw new ArgumentNullException(nameof(configuration));
+            
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            JToken initializationParameters = request.InitializationOptions as JToken;
+            if (initializationParameters == null)
+                return;
+            
+            JObject json = initializationParameters.SelectToken(Configuration.SectionName) as JObject;
+            if (json == null)
+                return;
+
+            configuration.UpdateFrom(json);
+        }
+
+        /// <summary>
+        ///     Update the configuration from the specified JSON.
+        /// </summary>
+        /// <param name="configuration">
+        ///     The <see cref="Configuration"/> to update.
+        /// </param>
+        /// <param name="json">
+        ///     A <see cref="JObject"/> representing the JSON.
+        /// </param>
+        public static void UpdateFrom(this Configuration configuration, JObject json)
+        {
+            if (configuration == null)
+                throw new ArgumentNullException(nameof(configuration));
+            
+            if (json == null)
+                throw new ArgumentNullException(nameof(json));
+            
             // Temporary workaround - JsonSerializer.Populate reuses existing HashSet.
             configuration.Language.CompletionsFromProject.Clear();
             configuration.EnableExperimentalFeatures.Clear();
 
-            using (JsonReader reader = settings.CreateReader())
+            using (JsonReader reader = json.CreateReader())
             {
                 new JsonSerializer().Populate(reader, configuration);
             }

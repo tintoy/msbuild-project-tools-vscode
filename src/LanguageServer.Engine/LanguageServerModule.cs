@@ -3,10 +3,12 @@ using OmniSharp.Extensions.LanguageServer;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace MSBuildProjectTools.LanguageServer
 {
     using CompletionProviders;
+    using CustomProtocol;
     using Diagnostics;
     using Handlers;
 
@@ -53,6 +55,13 @@ namespace MSBuildProjectTools.LanguageServer
                     // Register configuration handler (which is not a Handler).
                     var configurationHandler = activated.Context.Resolve<ConfigurationHandler>();
                     languageServer.AddHandler(configurationHandler);
+
+                    languageServer.OnInitialize(initializationParameters =>
+                    {
+                        configurationHandler.Configuration.UpdateFrom(initializationParameters);
+
+                        return Task.CompletedTask;
+                    });
 
                     // Register all other handlers.
                     var handlers = activated.Context.Resolve<IEnumerable<Handler>>();

@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.15
+
+* Add support for passing language service configuration in `InitializeParams.InitializationOptions` (tintoy/msbuild-project-tools-vscode#17).
+
 ## v0.2.14
 
 * Offer element completions, when appropriate, in whitespace or element text (tintoy/msbuild-project-tools-vscode#15).

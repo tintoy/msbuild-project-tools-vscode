@@ -5,13 +5,14 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using MSLogging = Microsoft.Extensions.Logging;
+
 namespace MSBuildProjectTools.LanguageServer
 {
     using CompletionProviders;
     using CustomProtocol;
     using Diagnostics;
     using Handlers;
-
     using LanguageServer = OmniSharp.Extensions.LanguageServer.LanguageServer;
 
     /// <summary>
@@ -41,9 +42,10 @@ namespace MSBuildProjectTools.LanguageServer
             builder.RegisterInstance(Configuration).AsSelf();
             
             builder
-                .Register(_ => new LanguageServer(
+                .Register(componentContext => new LanguageServer(
                     input: Console.OpenStandardInput(),
-                    output: Console.OpenStandardOutput()
+                    output: Console.OpenStandardOutput(),
+                    loggerFactory: componentContext.Resolve<MSLogging.ILoggerFactory>()
                 ))
                 .AsSelf()
                 .As<ILanguageServer>()

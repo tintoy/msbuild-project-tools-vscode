@@ -4,10 +4,14 @@ using Serilog;
 using Serilog.Events;
 using System;
 
+using MSLogging = Microsoft.Extensions.Logging;
+
 namespace MSBuildProjectTools.LanguageServer
 {
     using Logging;
     
+    using LanguageServer = OmniSharp.Extensions.LanguageServer.LanguageServer;
+
     /// <summary>
     ///     Registration logic for logging components.
     /// </summary>
@@ -35,6 +39,16 @@ namespace MSBuildProjectTools.LanguageServer
             builder.Register(CreateLogger)
                 .SingleInstance()
                 .As<ILogger>();
+
+            builder.RegisterType<MSLogging.LoggerFactory>()
+                .As<MSLogging.ILoggerFactory>()
+                .SingleInstance()
+                .OnActivated(activation =>
+                {
+                    activation.Instance.AddSerilog(
+                        logger: activation.Context.Resolve<ILogger>().ForContext<LanguageServer>()
+                    );
+                });
         }
 
         /// <summary>
@@ -44,7 +58,7 @@ namespace MSBuildProjectTools.LanguageServer
         ///     The current component context.
         /// </param>
         /// <returns>
-        ///     The logger.seealso
+        ///     The logger.
         /// </returns>
         static ILogger CreateLogger(IComponentContext componentContext)
         {

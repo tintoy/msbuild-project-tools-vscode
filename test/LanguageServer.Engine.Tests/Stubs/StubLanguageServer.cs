@@ -54,6 +54,40 @@ namespace MSBuildProjectTools.LanguageServer.Tests.Stubs
         }
 
         /// <summary>
+        ///     Add handlers to the server's collection of JSON RPC handlers.
+        /// </summary>
+        /// <param name="handlers">
+        ///     The handlers to add.
+        /// </param>
+        /// <returns>
+        ///     An <see cref="IDisposable"/> representing the handlers; when disposed, the handlers are removed from the handler collection.
+        /// </returns>
+        public virtual IDisposable AddHandlers(IEnumerable<IJsonRpcHandler> handlers)
+        {
+            if (handlers == null)
+                throw new ArgumentNullException(nameof(handlers));
+            
+            return Disposable.Empty;
+        }
+
+        /// <summary>
+        ///     Add handlers to the server's collection of JSON RPC handlers.
+        /// </summary>
+        /// <param name="handlers">
+        ///     The handlers to add.
+        /// </param>
+        /// <returns>
+        ///     An <see cref="IDisposable"/> representing the handlers; when disposed, the handlers are removed from the handler collection.
+        /// </returns>
+        public IDisposable AddHandlers(params IJsonRpcHandler[] handlers)
+        {
+            if (handlers == null)
+                throw new ArgumentNullException(nameof(handlers));
+            
+            return Disposable.Empty;
+        }
+
+        /// <summary>
         ///     Retrieve the completion source for the request with the specified Id.
         /// </summary>
         /// <param name="id">

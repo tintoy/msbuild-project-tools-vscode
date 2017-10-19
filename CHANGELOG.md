@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.16
+
+* Bug-fix: language server does not correctly report server capabilities when first initialised (tintoy/msbuild-project-tools-vscode#22).
+
 ## v0.2.15
 
 * Add support for passing language service configuration in `InitializeParams.InitializationOptions` (tintoy/msbuild-project-tools-vscode#17).

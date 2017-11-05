@@ -84,7 +84,7 @@
         "description": "Additional parameters to pass to makepri.exe when generating PRI file for a portable library."
     },
     "AppxDefaultHashAlgorithmId": {
-        "description": "Default hash algorithm ID}, used for signing an app package."
+        "description": "Default hash algorithm ID, used for signing an app package."
     },
     "AppxDefaultResourceQualifiers": {
         "description": "'|'-delimited list of key=value pairs representing default resource qualifiers."
@@ -243,7 +243,7 @@
         "description": "boolean"
     },
     "BootstrapperComponentsLocation": {
-        "description": "HomeSite}, Relative}, or Absolute"
+        "description": "HomeSite, Relative, or Absolute"
     },
     "BootstrapperEnabled": {
         "description": "boolean"
@@ -255,16 +255,16 @@
         "description": "Indicates whether to apply the XSL style sheet specified in $(CodeAnalysisLogFileXsl) to the Code Analysis report. This report is specified in $(CodeAnalysisLogFile). The default is false."
     },
     "CodeAnalysisConsoleXsl": {
-        "description": "Path to the XSL style sheet that will be applied to the Code Analysis console output. The default is an empty string ('')}, which causes Code Analysis to use its default console output."
+        "description": "Path to the XSL style sheet that will be applied to the Code Analysis console output. The default is an empty string (''), which causes Code Analysis to use its default console output."
     },
     "CodeAnalysisCulture": {
-        "description": "Culture to use for Code Analysis spelling rules}, for example}, 'en-US' or 'en-AU'. The default is the current user interface language for Windows."
+        "description": "Culture to use for Code Analysis spelling rules, for example, 'en-US' or 'en-AU'. The default is the current user interface language for Windows."
     },
     "CodeAnalysisFailOnMissingRules": {
         "description": "Indicates whether Code Analysis should fail if a rule or rule set is missing. The default is false."
     },
     "CodeAnalysisForceOutput": {
-        "description": "Indicates whether Code Analysis generates a report file}, even when there are no active warnings or errors. The default is true."
+        "description": "Indicates whether Code Analysis generates a report file, even when there are no active warnings or errors. The default is true."
     },
     "CodeAnalysisGenerateSuccessFile": {
         "description": "Indicates whether Code Analysis generates a '$(CodeAnalysisInputAssembly).lastcodeanalysissucceeded' file in the output folder when no build-breaking errors occur. The default is true."
@@ -276,10 +276,10 @@
         "description": "Indicates whether Code Analysis will ignore the default rule set directories when searching for rule sets. The default is false."
     },
     "CodeAnalysisIgnoreGeneratedCode": {
-        "description": "Indicates whether Code Analysis should fail silently when it analyzes invalid assemblies}, such as those without managed code. The default is true."
+        "description": "Indicates whether Code Analysis should fail silently when it analyzes invalid assemblies, such as those without managed code. The default is true."
     },
     "CodeAnalysisIgnoreInvalidTargets": {
-        "description": "Indicates whether Code Analysis should silently fail when analyzing invalid assemblies}, such as those without managed code. The default is true."
+        "description": "Indicates whether Code Analysis should silently fail when analyzing invalid assemblies, such as those without managed code. The default is true."
     },
     "CodeAnalysisInputAssembly": {
         "description": "Path to the assembly to be analyzed by Code Analysis. The default is '$(OutDir)$(TargetName)$(TargetExt)'."
@@ -291,19 +291,19 @@
         "description": "Path to the XSL style sheet to reference in the Code Analysis output report. This report is specified in $(CodeAnalysisLogFile). The default is an empty string ('')."
     },
     "CodeAnalysisModuleSuppressionsFile": {
-        "description": "Name of the file}, without the path}, where Code Analysis project-level suppressions are stored. The default is 'GlobalSuppressions$(DefaultLanguageSourceExtension)'."
+        "description": "Name of the file, without the path, where Code Analysis project-level suppressions are stored. The default is 'GlobalSuppressions$(DefaultLanguageSourceExtension)'."
     },
     "CodeAnalysisOutputToConsole": {
         "description": "Indicates whether to output Code Analysis warnings and errors to the console. The default is false."
     },
     "CodeAnalysisOverrideRuleVisibilities": {
-        "description": "Indicates whether to run all overridable Code Analysis rules against all targets. This will cause specific rules}, such as those within the Design and Naming categories}, to run against both public and internal APIs}, instead of only public APIs. The default is false."
+        "description": "Indicates whether to run all overridable Code Analysis rules against all targets. This will cause specific rules, such as those within the Design and Naming categories, to run against both public and internal APIs, instead of only public APIs. The default is false."
     },
     "CodeAnalysisPath": {
         "description": "Path to the Code Analysis installation folder. The default is '$(VSINSTALLDIR)\\Team Tools\\Static Analysis Tools\\FxCop'."
     },
     "CodeAnalysisPlatformPath": {
-        "description": "Path to the .NET Framework folder that contains platform assemblies}, such as mscorlib.dll and System.dll. The default is an empty string ('')."
+        "description": "Path to the .NET Framework folder that contains platform assemblies, such as mscorlib.dll and System.dll. The default is an empty string ('')."
     },
     "CodeAnalysisProject": {
         "description": "Path to the Code Analysis project (*.fxcop) to load. The default is an empty string ('')."
@@ -312,22 +312,22 @@
         "description": "Indicates whether to suppress all Code Analysis console output other than errors and warnings. This applies when $(CodeAnalysisOutputToConsole) is true. The default is false."
     },
     "CodeAnalysisRuleAssemblies": {
-        "description": "Semicolon-separated list of paths either to Code Analysis rule assemblies or to folders that contain Code Analysis rule assemblies. The paths are in the form '+|-]!]file|folder]'}, where '+' enables all rules in rule assembly}, '-' disables all rules in rule assembly}, and '!' causes all rules in rule assembly to be treated as errors. For example '+D:\\Projects\\Rules\\NamingRules.dll;+!D:\\Projects\\Rules\\SecurityRules.dll'. The default is '$(CodeAnalysisPath)\\Rules'."
+        "description": "Semicolon-separated list of paths either to Code Analysis rule assemblies or to folders that contain Code Analysis rule assemblies. The paths are in the form '+|-]!]file|folder]', where '+' enables all rules in rule assembly, '-' disables all rules in rule assembly, and '!' causes all rules in rule assembly to be treated as errors. For example '+D:\\Projects\\Rules\\NamingRules.dll;+!D:\\Projects\\Rules\\SecurityRules.dll'. The default is '$(CodeAnalysisPath)\\Rules'."
     },
     "CodeAnalysisRuleDirectories": {
         "description": "Semicolon-separated list of directories in which to search for rules when resolving a rule set. The default is '$(CodeAnalysisPath)\\Rules' unless the CodeAnalysisIgnoreBuiltInRules property is set to true."
     },
     "CodeAnalysisRules": {
-        "description": "Semicolon-separated list of Code Analysis rules. The rules are in the form '+|-]!]Category#CheckId'}, where '+' enables the rule}, '-' disables the rule}, and '!' causes the rule to be treated as an error. For example}, '-Microsoft.Naming#CA1700;+!Microsoft.Naming#CA1701'. The default is an empty string ('') which enables all rules."
+        "description": "Semicolon-separated list of Code Analysis rules. The rules are in the form '+|-]!]Category#CheckId', where '+' enables the rule, '-' disables the rule, and '!' causes the rule to be treated as an error. For example, '-Microsoft.Naming#CA1700;+!Microsoft.Naming#CA1701'. The default is an empty string ('') which enables all rules."
     },
     "CodeAnalysisRuleSet": {
-        "description": "A .ruleset file which contains a list of rules to run during analysis. The string can be a full path}, a path relative to the project file}, or a file name. If a file name is specified}, the CodeAnalysisRuleSetDirectories property will be searched to find the file. The default is an empty string ('')."
+        "description": "A .ruleset file which contains a list of rules to run during analysis. The string can be a full path, a path relative to the project file, or a file name. If a file name is specified, the CodeAnalysisRuleSetDirectories property will be searched to find the file. The default is an empty string ('')."
     },
     "CodeAnalysisRuleSetDirectories": {
         "description": "Semicolon-separated list of directories in which to search for rule sets. The default is '$(VSINSTALLDIR)\\Team Tools\\Static Analysis Tools\\Rule Sets' unless the CodeAnalysisIgnoreBuiltInRuleSets property is set to true."
     },
     "CodeAnalysisSaveMessagesToReport": {
-        "description": "Comma-separated list of the type ('Active'}, 'Excluded'}, or 'Absent') of warnings and errors to save to the output report file. The default is 'Active'."
+        "description": "Comma-separated list of the type ('Active', 'Excluded', or 'Absent') of warnings and errors to save to the output report file. The default is 'Active'."
     },
     "CodeAnalysisSearchGlobalAssemblyCache": {
         "description": "Indicates whether Code Analysis should search the Global Assembly Cache (GAC) for missing references that are encountered during analysis. The default is true."
@@ -336,7 +336,7 @@
         "description": "Indicates whether to output a Code Analysis summary to the console after analysis. The default is false."
     },
     "CodeAnalysisTimeout": {
-        "description": "The time}, in seconds}, that Code Analysis should wait for analysis of a single item to complete before it aborts analysis. Specify 0 to cause Code Analysis to wait indefinitely. The default is 120."
+        "description": "The time, in seconds, that Code Analysis should wait for analysis of a single item to complete before it aborts analysis. Specify 0 to cause Code Analysis to wait indefinitely. The default is 120."
     },
     "CodeAnalysisTreatWarningsAsErrors": {
         "description": "Indicates whether to treat all Code Analysis warnings as errors. The default is false."
@@ -354,7 +354,7 @@
         "description": "Company name for the assembly manifest"
     },
     "Configuration": {
-        "description": "The project build configuration (e.g. Debug}, Release)."
+        "description": "The project build configuration (e.g. Debug, Release)."
     },
     "Copyright": {
         "description": "Copyright details for the NuGet package"
@@ -366,13 +366,13 @@
         "description": "Whether to emit symbols (boolean)"
     },
     "DebugType": {
-        "description": "none}, pdbonly}, or full"
+        "description": "none, pdbonly, or full"
     },
     "DefaultLanguage": {
         "description": "Default resource language."
     },
     "DefineConstants": {
-        "description": "Compile-time constants to be defined (e.g. DEBUG}, TRACE)."
+        "description": "Compile-time constants to be defined (e.g. DEBUG, TRACE)."
     },
     "DefineDebug": {
         "description": "Whether DEBUG is defined (boolean)"
@@ -387,7 +387,7 @@
         "description": "A long description of the NuGet package for UI display"
     },
     "DisableFastUpToDateCheck": {
-        "description": "Whether Visual Studio should do its own faster up-to-date check before Building}, rather than invoke MSBuild to do a possibly more accurate one. You would set this to false if you have a heavily customized build process and builds in Visual Studio are not occurring when they should."
+        "description": "Whether Visual Studio should do its own faster up-to-date check before Building, rather than invoke MSBuild to do a possibly more accurate one. You would set this to false if you have a heavily customized build process and builds in Visual Studio are not occurring when they should."
     },
     "DocumentationFile": {
         "description": "The XML documentation file to generate from doc-comments."
@@ -471,7 +471,7 @@
         "description": "Flag indicating whether to insert reverse resource map during resource index generation."
     },
     "InstallFrom": {
-        "description": "Web}, Unc}, or Disk"
+        "description": "Web, Unc, or Disk"
     },
     "LayoutDir": {
         "description": "Full path to a folder with package layout."
@@ -528,13 +528,13 @@
         "description": "Should Option Strict be set (On or Off)"
     },
     "OutDir": {
-        "description": "Path to output folder}, with trailing slash (legacy property; prefer use of \"OutputPath\" instead)"
+        "description": "Path to output folder, with trailing slash (legacy property; prefer use of \"OutputPath\" instead)"
     },
     "OutputPath": {
-        "description": "Path to output folder}, with trailing slash"
+        "description": "Path to output folder, with trailing slash"
     },
     "OutputType": {
-        "description": "Type of output to generate (WinExe}, Exe}, or Library)"
+        "description": "Type of output to generate (WinExe, Exe, or Library)"
     },
     "PackageCertificateKeyFile": {
         "description": "App package certificate key file."
@@ -543,16 +543,16 @@
         "description": "The URL for a 64x64 image with transparent background to use as the icon for the NuGet package in UI display"
     },
     "PackageId": {
-        "description": "The case-insensitive NuGet package identifier}, which must be unique across nuget.org or whatever gallery the NuGet package will reside in. IDs may not contain spaces or characters that are not valid for a URL}, and generally follow .NET namespace rules."
+        "description": "The case-insensitive NuGet package identifier, which must be unique across nuget.org or whatever gallery the NuGet package will reside in. IDs may not contain spaces or characters that are not valid for a URL, and generally follow .NET namespace rules."
     },
     "PackageLicenseUrl": {
-        "description": "The URL for the NuGet package's license}, often shown in UI displays as well as nuget.org"
+        "description": "The URL for the NuGet package's license, often shown in UI displays as well as nuget.org"
     },
     "PackageProjectUrl": {
-        "description": "The URL for the NuGet package's home page}, often shown in UI displays as well as nuget.org"
+        "description": "The URL for the NuGet package's home page, often shown in UI displays as well as nuget.org"
     },
     "PackageReleaseNotes": {
-        "description": "A description of the changes made in this release of the NuGet package}, often used in UI like the Updates tab of the Visual Studio Package Manager in place of the package description"
+        "description": "A description of the changes made in this release of the NuGet package, often used in UI like the Updates tab of the Visual Studio Package Manager in place of the package description"
     },
     "PackageRequireLicenseAcceptance": {
         "description": "Value indicating whether the client must prompt the consumer to accept the NuGet package license before installing the package"
@@ -561,7 +561,7 @@
         "description": "A space-delimited list of tags and keywords that describe the NuGet package and aid discoverability of NuGet packages through search and filtering mechanisms"
     },
     "PackageTargetFallback": {
-        "description": "Allows packages using alternative monikers to be referenced in this project}, which include older (e.g. dnxcore50}, dotnet5.x) and Portable Class Library names."
+        "description": "Allows packages using alternative monikers to be referenced in this project, which include older (e.g. dnxcore50, dotnet5.x) and Portable Class Library names."
     },
     "PackageVersion": {
         "description": "Numeric value of the NuGet package version in the format major.minor.patch pattern (e.g. 1.0.1). Version numbers may include a pre-release suffix (e.g. 1.0.1-beta)"
@@ -633,7 +633,7 @@
         "description": "Full path to signtool.exe utility."
     },
     "SignAssembly": {
-        "description": "Sign the output assembly}, giving it a strong name (boolean)."
+        "description": "Sign the output assembly, giving it a strong name (boolean)."
     },
     "SolutionDir": {
         "description": "The solution directory."
@@ -645,7 +645,7 @@
         "description": "The solution file name."
     },
     "SolutionName": {
-        "description": "The solution file name}, without extension."
+        "description": "The solution file name, without extension."
     },
     "SolutionPath": {
         "description": "The full path to the solution file."
@@ -666,13 +666,13 @@
         "description": "Full path to platform SDK root."
     },
     "Title": {
-        "description": "A human-friendly title of the package}, typically used in UI displays as on nuget.org and the Package Manager in Visual Studio. If not specified}, the package ID is used instead."
+        "description": "A human-friendly title of the package, typically used in UI displays as on nuget.org and the Package Manager in Visual Studio. If not specified, the package ID is used instead."
     },
     "TreatWarningsAsErrors": {
         "description": "Treat compile warnings as errors (boolean)."
     },
     "UpdateIntervalUnits": {
-        "description": "Hours}, Days}, or Weeks"
+        "description": "Hours, Days, or Weeks"
     },
     "UpdateMode": {
         "description": "Foreground or Background"
@@ -690,10 +690,10 @@
         "description": "Numeric value of the version in the format major.minor.patch (e.g. 2.4.0)"
     },
     "VersionPrefix": {
-        "description": "When Version is not specified}, VersionPrefix represents the first fragment of the version string (e.g. 1.0.0). The syntax is VersionPrefix-VersionSuffix]."
+        "description": "When Version is not specified, VersionPrefix represents the first fragment of the version string (e.g. 1.0.0). The syntax is VersionPrefix-VersionSuffix]."
     },
     "VersionSuffix": {
-        "description": "When Version is not specified}, VersionSuffix represents the second fragment of the version string (e.g. beta). The syntax is VersionPrefix-VersionSuffix]."
+        "description": "When Version is not specified, VersionSuffix represents the second fragment of the version string (e.g. beta). The syntax is VersionPrefix-VersionSuffix]."
     },
     "WarningLevel": {
         "description": "integer between 0 and 4 inclusive"

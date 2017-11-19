@@ -1,0 +1,3 @@
+[submodule "lib/server"]
+	path = lib/server
+	url = https://github.com/tintoy/msbuild-project-tools-server.git

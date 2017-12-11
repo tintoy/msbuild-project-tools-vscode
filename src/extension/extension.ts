@@ -75,10 +75,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             await loadConfiguration();
 
             if (languageClient) {
-                if (configuration.logging.trace)
+                if (configuration.logging.trace) {
                     languageClient.trace = Trace.Verbose;
-                else
-                    languageClient.trace = Trace.Messages;
+                } else {
+                    languageClient.trace = Trace.Off;
+                }
             }
         })
     );
@@ -162,7 +163,7 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
             },
             closed: () => CloseAction.Restart
         },
-        revealOutputChannelOn: RevealOutputChannelOn.Error
+        revealOutputChannelOn: RevealOutputChannelOn.Never
     };
 
     languageServerEnvironment['MSBUILD_PROJECT_TOOLS_DIR'] = context.extensionPath;
@@ -188,8 +189,11 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
     };
 
     languageClient = new LanguageClient('MSBuild Project Tools', serverOptions, clientOptions);
-    if (configuration.logging.trace)
+    if (configuration.logging.trace) {
         languageClient.trace = Trace.Verbose;
+    } else {
+        languageClient.trace = Trace.Off;
+    }
 
     handleBusyNotifications(languageClient, statusBarItem);
 

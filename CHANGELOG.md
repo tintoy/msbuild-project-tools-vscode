@@ -4,6 +4,7 @@
 
 * Add completions for item elements.
 * Split out language server from VS Code extension.
+* Never auto-show output window on messages from language server (tintoy/msbuild-project-tools-vscode#25).
 
 ## v0.2.16
 

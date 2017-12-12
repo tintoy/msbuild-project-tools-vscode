@@ -11,8 +11,8 @@ To build:
 
 1. `npm install`
 2. `dotnet restore`
-3. `dotnet publish src/LanguageServer/LanguageServer.csproj -f netcoreapp2.0 -o $PWD/out/language-server`
-3. `dotnet publish src/LanguageServer.TaskReflection/LanguageServer.TaskReflection.csproj -f netcoreapp2.0 -o $PWD/out/task-reflection`
+3. `dotnet publish lib/server/src/LanguageServer/LanguageServer.csproj -f netcoreapp2.0 -o $PWD/out/language-server`
+3. `dotnet publish lib/server/src/LanguageServer.TaskReflection/LanguageServer.TaskReflection.csproj -f netcoreapp2.0 -o $PWD/out/task-reflection`
 
 To debug:
 

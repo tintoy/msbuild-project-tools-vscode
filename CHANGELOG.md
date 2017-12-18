@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.18
+
+* Use v15.5.x of MSBuild packages (tintoy/msbuild-project-tools-server#1).
+
 ## v0.2.17
 
 * Add completions for item elements.

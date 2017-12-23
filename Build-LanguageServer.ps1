@@ -1,6 +1,6 @@
 ﻿Param(
     [Parameter(Mandatory=$true)]
-    [string] $VersionPrefix = '0.2.0',
+    [string] $VersionPrefix,
 
     [Parameter()]
     [string] $VersionSuffix = ''

@@ -1,5 +1,10 @@
 # Change Log
 
+## v0.2.19
+
+* Bug-fix: Completions don't always work correctly in .props files (tintoy/msbuild-project-tools-vscode#27).
+* Use latest OmniSharp LSP packages.
+
 ## v0.2.18
 
 * Use v15.5.x of MSBuild packages (tintoy/msbuild-project-tools-server#1).

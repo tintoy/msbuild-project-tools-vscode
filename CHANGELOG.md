@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.20
+
+* Log errors encountered while warming up NuGet client as Verbose instead of Error (tintoy/msbuild-project-tools-server#2).
+
 ## v0.2.19
 
 * Bug-fix: Completions don't always work correctly in .props files (tintoy/msbuild-project-tools-vscode#27).

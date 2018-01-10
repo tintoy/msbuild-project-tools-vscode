@@ -12,7 +12,7 @@
     },
     "icon": "images/icon.png",
     "engines": {
-        "vscode": "^1.14.0"
+        "vscode": "^1.19.0"
     },
     "categories": [
         "Languages",
@@ -276,14 +276,14 @@
         "mocha": "^2.3.3",
         "tslint": "^5.5.0",
         "typescript": "^2.0.3",
-        "vscode": "^1.0.0"
+        "vscode": "^1.1.10"
     },
     "dependencies": {
         "axios": "^0.16.2",
         "mz": "^2.6.0",
         "rxjs": "^5.4.2",
         "semver": "^5.4.1",
-        "vscode-languageclient": "^3.3.0",
+        "vscode-languageclient": "^3.5.0",
         "which": "^1.3.0",
         "xmldom": "^0.1.27"
     }

@@ -20,7 +20,7 @@
 		"description": "Load DotNetCliToolReference for Microsoft.DotNet.Watcher.Tools"
 	},
 	"Set to IsTransformWebConfigDisabled": {
-		"prefix": "msbuild-dotnet-watcher-tools",
+		"prefix": "msbuild-iis-deployment",
 		"body": [
 			"<PropertyGroup>",
 			"    <IsTransformWebConfigDisabled>true</IsTransformWebConfigDisabled>",

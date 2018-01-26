@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.21
+
+* Add MSBuild snippets by @doggy8088 (tintoy/msbuild-project-tools-vscode#28).
+
 ## v0.2.20
 
 * Log errors encountered while warming up NuGet client as Verbose instead of Error (tintoy/msbuild-project-tools-server#2).

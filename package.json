@@ -2,7 +2,7 @@
     "name": "msbuild-project-tools",
     "displayName": "MSBuild project tools",
     "description": "Tools for working with MSBuild project files (such as auto-complete for package Ids / versions).",
-    "version": "0.2.20",
+    "version": "0.2.21",
     "settingsSchemaVersion": 1,
     "publisher": "tintoy",
     "license": "MIT",
@@ -222,10 +222,6 @@
         "snippets": [
             {
                 "language": "msbuild",
-                "path": "./snippets/msbuild-project.json"
-            },
-            {
-                "language": "xml",
                 "path": "./snippets/msbuild-project.json"
             }
         ],

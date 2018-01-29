@@ -1,6 +1,6 @@
 {
 	"ASP.NET Core Metapackage": {
-		"prefix": "aspnetcore-metapackage",
+		"prefix": "aspnetcore",
 		"body": [
 			"<ItemGroup>",
 			"    <PackageReference Include=\"Microsoft.AspNetCore.All\" Version=\"${1:2.0.5}\" />",
@@ -10,7 +10,7 @@
 		"description": "Load Metapackage for ASP.NET Core"
 	},
 	"ASP.NET Core Full Packages": {
-		"prefix": "aspnetcore-metapackage-full",
+		"prefix": "aspnetcore-full",
 		"body": [
 			"<ItemGroup Condition=\"'$(TargetFramework)' == 'netcoreapp2.0'\">",
 			"    <PackageReference Include=\"Microsoft.AspNetCore\" Version=\"2.0.1\" />",

@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.22
+
+* Improve MSBuild snippets by @doggy8088 (tintoy/msbuild-project-tools-vscode#30).
+
 ## v0.2.21
 
 * Add MSBuild snippets by @doggy8088 (tintoy/msbuild-project-tools-vscode#28).

@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.23
+
+* Use latest version of OmniSharp LSP libraries (improves stability and diagnostic capabilities).
+
 ## v0.2.22
 
 * Improve MSBuild snippets by @doggy8088 (tintoy/msbuild-project-tools-vscode#30).

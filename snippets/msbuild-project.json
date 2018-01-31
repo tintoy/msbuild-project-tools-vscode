@@ -195,7 +195,7 @@
 			"    <PackageRequireLicenseAcceptance>${13|false,true|}</PackageRequireLicenseAcceptance>",
             
 			"    <RepositoryUrl>${14:https://github.com/user/repo}</RepositoryUrl>",
-            "    <RepositoryType>${15}</RepositoryType>",
+            "    <RepositoryType>${15:git}</RepositoryType>",
 
             "    <IncludeSymbols>${16|true,false|}</IncludeSymbols>",
 			"    <IncludeSource>${17|true,false|}</IncludeSource>",

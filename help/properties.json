@@ -3,7 +3,11 @@
         "description": "Flag indicating whether to allow local network loopback."
     },
     "AllowUnsafeBlocks": {
-        "description": "Allow unsafe code blocks."
+        "description": "Allow unsafe code blocks.",
+        "defaultValues": [
+            "true",
+            "false"
+        ]
     },
     "AppDesignerFolder": {
         "description": "Name of folder for Application Designer"

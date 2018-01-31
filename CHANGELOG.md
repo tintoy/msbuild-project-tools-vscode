@@ -1,5 +1,10 @@
 # Change Log
 
+## v0.2.24
+
+* Make ASP.NET core snippets version-specific by @doggy8088 (tintoy/msbuild-project-tools-vscode#32).
+* Implement default value(s) for well-known property completions (tintoy/msbuild-project-tools-vscode#31).
+
 ## v0.2.23
 
 * Use latest version of OmniSharp LSP libraries (improves stability and diagnostic capabilities).

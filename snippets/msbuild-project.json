@@ -1,6 +1,6 @@
 {
-	"ASP.NET Core Metapackage": {
-		"prefix": "aspnetcore",
+	"ASP.NET Core 2.0 Metapackage": {
+		"prefix": "aspnetcore20",
 		"body": [
 			"<ItemGroup>",
 			"    <PackageReference Include=\"Microsoft.AspNetCore.All\" Version=\"${1:2.0.5}\" />",
@@ -9,8 +9,8 @@
 		],
 		"description": "Load Metapackage for ASP.NET Core"
 	},
-	"ASP.NET Core Full Packages": {
-		"prefix": "aspnetcore-full",
+	"ASP.NET Core 2.0 Full Packages": {
+		"prefix": "aspnetcore20-full",
 		"body": [
 			"<ItemGroup Condition=\"'$(TargetFramework)' == 'netcoreapp2.0'\">",
 			"    <PackageReference Include=\"Microsoft.AspNetCore\" Version=\"2.0.1\" />",
@@ -195,7 +195,7 @@
 			"    <PackageRequireLicenseAcceptance>${13|false,true|}</PackageRequireLicenseAcceptance>",
             
 			"    <RepositoryUrl>${14:https://github.com/user/repo}</RepositoryUrl>",
-            "    <RepositoryType>${15}</RepositoryType>",
+            "    <RepositoryType>${15:git}</RepositoryType>",
 
             "    <IncludeSymbols>${16|true,false|}</IncludeSymbols>",
 			"    <IncludeSource>${17|true,false|}</IncludeSource>",

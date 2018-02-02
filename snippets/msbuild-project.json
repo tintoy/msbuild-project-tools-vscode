@@ -229,7 +229,7 @@
 		"prefix": "sourcelink",
 		"body": [
 			"<ItemGroup>",
-			"    <PackageReference Include=\"SourceLink.Create.CommandLine\" Version=\"${1:2.7.6}\" PrivateAssets=\"All\" />",
+			"    <PackageReference Include=\"SourceLink.Create.CommandLine\" Version=\"${1:2.7.6}\" />",
 			"</ItemGroup>",
 			""
 		],

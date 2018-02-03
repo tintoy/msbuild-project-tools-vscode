@@ -224,5 +224,15 @@
 			""
 		],
 		"description": "Multi-Targeting ItemGroup in .NET Standard"
+    },
+    "SourceLink: Source Code On Demand": {
+		"prefix": "sourcelink",
+		"body": [
+			"<ItemGroup>",
+			"    <PackageReference Include=\"SourceLink.Create.CommandLine\" Version=\"${1:2.7.6}\" />",
+			"</ItemGroup>",
+			""
+		],
+		"description": "Source Link your Portable PDB files to allow source code to be downloaded on demand"
 	}
 }

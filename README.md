@@ -16,6 +16,7 @@ You need .NET Core 2.0.0 or newer installed to use the language service (but you
   * Completions for `Include` and `Version` attributes of these items (invoke the `NuGet: toggle pre-release` command to include / exclude pre-release packages / package versions).
   * _Language service feature:_ Completions to create these elements.
 * _Language service feature:_ Completions for common top-level elements (e.g. `PropertyGroup`, `ItemGroup`, `Target`).
+* _Language service feature:_ Completions for import elements.
 * _Language service feature:_ Completions for property elements.
 * _Language service feature:_ Completions for item elements.
 * _Language service feature:_ Completions for common item attributes.

@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.25
+
+* Implement completion for top-level `<Import>` element.
+
 ## v0.2.24
 
 * Make ASP.NET core snippets version-specific by @doggy8088 (tintoy/msbuild-project-tools-vscode#32).

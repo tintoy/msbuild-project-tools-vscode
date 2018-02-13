@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.26
+
+* Implement completion for XML comments.
+
 ## v0.2.25
 
 * Implement completion for top-level `<Import>` element.

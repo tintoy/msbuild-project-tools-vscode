@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.27
+
+* LSP library's logging now uses configured logging level.
+
 ## v0.2.26
 
 * Implement completion for XML comments.

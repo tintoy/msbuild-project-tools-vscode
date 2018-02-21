@@ -1,5 +1,10 @@
 # Change Log
 
+## v0.2.28
+
+* Add completion for `LangVersion` property.
+* Improve metadata completions for `Content` items.
+
 ## v0.2.27
 
 * LSP library's logging now uses configured logging level.

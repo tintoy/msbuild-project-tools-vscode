@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.29
+
+* Bug-fix: Language server process fails to terminate correctly on Linux (tintoy/msbuild-project-tools-vscode#36).
+
 ## v0.2.28
 
 * Add completion for `LangVersion` property.

@@ -477,6 +477,13 @@
     "InstallFrom": {
         "description": "Web, Unc, or Disk"
     },
+    "IsPackable": {
+        "description": "Enable or disable production of the project's NuGet package.",
+        "defaultValues": [
+            "true",
+            "false"
+        ]
+    },
     "LangVersion": {
         "description": "Which version of the target language (e.g. C# / VB) to use.",
         "defaultValue": "latest"

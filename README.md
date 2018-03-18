@@ -26,12 +26,12 @@ You need .NET Core 2.0.0 or newer installed to use the language service (but you
 * _Language service feature:_ Go-to-definition is implemented for both SDK-style and regular project imports.
 * Basic syntax highlighting of MSBuild expressions in attribute values.  
   To see this highlighting, change the editor language from `XML` to `MSBuild`.
-* _Language service feature:_ Completions for `$()` property, `@()` item, and `%()` item metadata expressions (_experimental_).  
-  To enable these completions, add the string `expressions` to the `msbuildProjectTools.language.experimentalFeatures` setting, then change the editor language from `XML` to `MSBuild`.
-* _Language service feature:_ Completions for task elements and attributes based on metadata for tasks declared in the project and its imported projects (_experimental_).  
+* _Language service feature:_ Completions for `$()` property, `@()` item, and `%()` item metadata expressions.  
+  To enable these completions, ensure that the editor language is `MSBuild` (not `XML`).
+* _Language service feature:_ Completions for task elements and attributes based on metadata for tasks declared in the project and its imported projects.  
   To enable these completions, add the string `Tasks` to the `msbuildProjectTools.language.completionsFromProject` setting.
 * Useful snippets for common elements of MSBuild project XML (added by @doggy8088).  
-  To use these snippets, change the editor language from `XML` to `MSBuild`.
+  To use these snippets, ensure that the editor language is `MSBuild` (not `XML`).
 
 ### File extensions
 
@@ -66,7 +66,6 @@ See [architectural overview](docs/architecture/overview.md) for details (this is
 ## Limitations
 
 * Support for task completions is experimental; if you find a problem with it, please [create an issue](https://github.com/tintoy/msbuild-project-tools-vscode/issues/new).
-* Support for MSBuild expressions is experimental; if you find a problem with it, please [create an issue](https://github.com/tintoy/msbuild-project-tools-vscode/issues/new).
 * If you open more than one project at a time (or navigate to imported projects), subsequent projects will be loaded into the same MSBuild project collection as the first project. Once you have closed the last project file, the next project file you open will become the master project. The master project will become selectable in a later release.
 
 ## Questions / bug reports

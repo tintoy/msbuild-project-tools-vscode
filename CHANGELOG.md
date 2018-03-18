@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.32
+
+* Expression support is no longer experimental!
+
 ## v0.2.31
 
 * Ensure package Ids and version appear before other completion types in `PackageReference` elements / attributes.

@@ -2,7 +2,7 @@
     "name": "msbuild-project-tools",
     "displayName": "MSBuild project tools",
     "description": "Tools for working with MSBuild project files (such as auto-complete for package Ids / versions).",
-    "version": "0.2.31",
+    "version": "0.2.32",
     "settingsSchemaVersion": 1,
     "publisher": "tintoy",
     "license": "MIT",
@@ -208,7 +208,6 @@
                             "items": {
                                 "type": "string",
                                 "enum": [
-                                    "expressions",
                                     "empty-completion-lists"
                                 ]
                             },

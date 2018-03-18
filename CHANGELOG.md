@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.33
+
+* Correctly handle parsing of MSBuild expressions where the root expression is an unquoted string (i.e. composite expression including one or more string-literal text sequences).
+
 ## v0.2.32
 
 * Expression support is no longer experimental!

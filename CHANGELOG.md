@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.34
+
+* Display help and documentation links for well-known MSBuild XML elements (tintoy/msbuild-project-tools-server#5).
+
 ## v0.2.33
 
 * Correctly handle parsing of MSBuild expressions where the root expression is an unquoted string (i.e. composite expression including one or more string-literal text sequences).

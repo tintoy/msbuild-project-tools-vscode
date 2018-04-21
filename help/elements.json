@@ -1,7 +1,34 @@
 {
-    "PropertyGroup": {
-        "description": "Contains a set of user-defined `Property` elements.",
-        "help": "https://docs.microsoft.com/en-us/visualstudio/msbuild/propertygroup-element-msbuild"
+    "*.Condition": {
+        "description": "Optional expression evaluated to determine whether the target element should be evaluated",
+        "help": "https://docs.microsoft.com/en-us/visualstudio/msbuild/msbuild-conditions"
+    },
+    "*.Label": {
+        "description": "Optional expression. Used to identify or order system and user elements"
+    },
+    "Choose": {
+        "description": "Evaluates child elements to select one set of `ItemGroup` elements and/or `PropertyGroup` elements to evaluate. ",
+        "help": "https://docs.microsoft.com/en-us/visualstudio/msbuild/choose-element-msbuild"
+    },
+    "Import": {
+        "description": "Imports the contents of one project file into another project file.",
+        "help": "https://docs.microsoft.com/en-us/visualstudio/msbuild/import-element-msbuild"
+    },
+    "Import.MinimumVersion": {
+        "description": "Optional expression used to specify the minimum SDK version required by the referring import"
+    },
+    "Import.Project": {
+        "description": "Project file to import"
+    },
+    "Import.Sdk": {
+        "description": "Name of the SDK which contains the project file to import"
+    },
+    "Import.Version": {
+        "description": "Optional expression used to specify the version of the SDK referenced by this import"
+    },
+    "ImportGroup": {
+        "description": "Contains a collection of `Import` elements that are grouped under an optional `Condition`.",
+        "help": "https://docs.microsoft.com/en-us/visualstudio/msbuild/importgroup-element"
     },
     "Item": {
         "description": "Contains a user-defined item and its metadata.",
@@ -15,13 +42,12 @@
         "description": "The `ItemDefinitionGroup` element lets you define a set of `Item` definitions, which are metadata values that are applied to all items in the project, by default.",
         "help": "https://docs.microsoft.com/en-us/visualstudio/msbuild/itemdefinitiongroup-element-msbuild"
     },
-    "Choose": {
-        "description": "Evaluates child elements to select one set of `ItemGroup` elements and/or `PropertyGroup` elements to evaluate. ",
-        "help": "https://docs.microsoft.com/en-us/visualstudio/msbuild/choose-element-msbuild"
+    "OnError": {
+        "description": "Specifies targets to execute in the event of a recoverable error",
+        "help": "https://docs.microsoft.com/en-us/visualstudio/msbuild/onerror-element-msbuild"
     },
-    "When": {
-        "description": "Evaluates child `ItemGroup` and/or `PropertyGroup` elements when its `Condition` is true.",
-        "help": "https://docs.microsoft.com/en-us/visualstudio/msbuild/choose-element-msbuild"
+    "OnError.ExecuteTargets": {
+        "description": "Semicolon separated list of targets to execute"
     },
     "Otherwise": {
         "description": "Evaluates child `ItemGroup` and/or `PropertyGroup` elements when none of its sibling `When` elements has a `Condition` that is true.",
@@ -31,20 +57,20 @@
         "description": "Stores task output values in items and properties.",
         "help": "https://docs.microsoft.com/en-us/visualstudio/msbuild/output-element-msbuild"
     },
-    "UsingTask": {
-        "description": "Maps the task that is referenced in a `Task` element to the assembly that contains the task implementation. ",
-        "help": "https://docs.microsoft.com/en-us/visualstudio/msbuild/usingtask-element-msbuild"
+    "PropertyGroup": {
+        "description": "Contains a set of user-defined `Property` elements.",
+        "help": "https://docs.microsoft.com/en-us/visualstudio/msbuild/propertygroup-element-msbuild"
     },
     "Target": {
         "description": "Contains a set of tasks for MSBuild to execute sequentially.",
         "help": "https://docs.microsoft.com/en-us/visualstudio/msbuild/target-element-msbuild"
     },
-    "Import": {
-        "description": "Imports the contents of one project file into another project file.",
-        "help": "https://docs.microsoft.com/en-us/visualstudio/msbuild/import-element-msbuild"
+    "UsingTask": {
+        "description": "Maps the task that is referenced in a `Task` element to the assembly that contains the task implementation. ",
+        "help": "https://docs.microsoft.com/en-us/visualstudio/msbuild/usingtask-element-msbuild"
     },
-    "ImportGroup": {
-        "description": "Contains a collection of `Import` elements that are grouped under an optional `Condition`.",
-        "help": "https://docs.microsoft.com/en-us/visualstudio/msbuild/importgroup-element"
+    "When": {
+        "description": "Evaluates child `ItemGroup` and/or `PropertyGroup` elements when its `Condition` is true.",
+        "help": "https://docs.microsoft.com/en-us/visualstudio/msbuild/choose-element-msbuild"
     }
 }

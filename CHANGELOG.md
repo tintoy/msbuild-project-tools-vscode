@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.35
+
+* Produce cleaner stack-traces using Demystifier.
+
 ## v0.2.34
 
 * Display help and documentation links for well-known MSBuild XML elements (tintoy/msbuild-project-tools-server#5).

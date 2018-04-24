@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.37
+
+* Support overriding of MSBuild SDKs path via environment variable (tintoy/msbuild-project-tools-server#5).
+
 ## v0.2.36
 
 * Bug-fix: ArgumentException (parameter name: itemType) when requesting completions on root `Project` element (tintoy/msbuild-project-tools-server#5).

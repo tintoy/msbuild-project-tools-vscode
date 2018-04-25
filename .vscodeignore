@@ -1,7 +1,10 @@
 .vscode/**
 .vscode-test/**
+.vs/**
 out/test/**
 data/**
+docs/**
+lib/**
 test/**
 src/**
 **/*.map

@@ -1,6 +1,7 @@
 .vscode/**
 .vscode-test/**
 .vs/**
+out/language-server/MSBuildProjectTools.*.xml
 out/test/**
 data/**
 docs/**
@@ -9,4 +10,9 @@ test/**
 src/**
 **/*.map
 .gitignore
+.editorconfig
+.gitmodules
 tsconfig.json
+tslint.json
+*.ps1
+*.sh

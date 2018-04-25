@@ -1,5 +1,10 @@
 # Change Log
 
+## v0.2.38
+
+* Reduce size of VSIX package (tintoy/msbuild-project-tools-server#37).
+* Improve log output (especially for project-load failures).
+
 ## v0.2.37
 
 * Support overriding of MSBuild SDKs path via environment variable (tintoy/msbuild-project-tools-server#5).

@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.41
+
+* Use latest stable version of `NuGet.Configuration` to add support for encrypted credentials in `NuGet.config` (tintoy/msbuild-project-tools-vscode#39).
+
 ## v0.2.39
 
 * Further improvements to log output (especially for project-load failures; exceptions from invalid project XML are only logged when configured log level is Debug or Verbose).

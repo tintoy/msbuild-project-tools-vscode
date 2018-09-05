@@ -13,7 +13,7 @@ import { PackageReferenceCompletionProvider, getNuGetV3AutoCompleteEndPoints } f
 import { handleBusyNotifications } from './notifications';
 import { registerCommands } from './commands';
 import { registerInternalCommands } from './internal-commands';
-import { Settings, upgradeConfigurationSchema } from './settings';
+import { Settings, upgradeConfigurationSchema, readVSCodeSettings } from './settings';
 
 let configuration: Settings;
 let languageClient: LanguageClient;
@@ -98,9 +98,11 @@ export function deactivate(): void {
 async function loadConfiguration(): Promise<void> {
     const workspaceConfiguration = vscode.workspace.getConfiguration();
 
-    configuration = workspaceConfiguration.get<Settings>('msbuildProjectTools');
+    configuration = workspaceConfiguration.get('msbuildProjectTools');
     
     await upgradeConfigurationSchema(configuration);
+
+    configuration = readVSCodeSettings(configuration);
 
     featureFlags.clear();
     if (configuration.experimentalFeatures) {

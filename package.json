@@ -46,175 +46,109 @@
             "title": "MSBuild project tools",
             "type": "object",
             "properties": {
-                "msbuildProjectTools": {
-                    "type": "object",
-                    "description": "Configuration for MSBuild project tools.",
-                    "default": {
-                        "logging": {
-                            "level": "Information",
-                            "seq": {}
-                        },
-                        "language": {
-                            "enable": true,
-                            "disableFeature": {}
-                        },
-                        "nuget": {
-                            "newestVersionsFirst": true,
-                            "includePreRelease": true,
-                            "disablePrefetch": false
-                        }
+                "msbuildProjectTools.logging.level": {
+                    "title": "Language service logging level.",
+                    "type": "string",
+                    "enum": [
+                        "Error",
+                        "Warning",
+                        "Information",
+                        "Debug",
+                        "Verbose"
+                    ],
+                    "default": "Information",
+                    "description": "The logging level for the MSBuild language service."
+                },
+                "msbuildProjectTools.logging.file": {
+                    "title": "Language service log file.",
+                    "type": "string",
+                    "default": null,
+                    "description": "If specified, the language service will log to this file."
+                },
+                "msbuildProjectTools.logging.seq.level": {
+                    "type": "string",
+                    "enum": [
+                        "Error",
+                        "Warning",
+                        "Information",
+                        "Debug",
+                        "Verbose"
+                    ],
+                    "default": "Verbose",
+                    "description": "The minimum log level for Seq."
+                },
+                "msbuildProjectTools.logging.seq.url": {
+                    "type": "string",
+                    "default": null,
+                    "description": "The URL of the Seq server (Seq logging will be enabled if this is specified)."
+                },
+                "msbuildProjectTools.logging.seq.apiKey": {
+                    "type": "string",
+                    "default": null,
+                    "description": "The API key (if any) to use when authenticating to Seq."
+                },
+                "msbuildProjectTools.logging.trace": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Trace all communication between VSCode and the MSBuild language service?"
+                },
+                "msbuildProjectTools.language.useClassicProvider": {
+                    "title": "Use classic completion provider",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Use the classic completion provider for PackageReferences, instead of the full language service?"
+                },
+                "msbuildProjectTools.language.disable.hover": {
+                    "title": "Disable tooltips on hover?",
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Disable tooltips when hovering on XML in MSBuild project files?"
+                },
+                "msbuildProjectTools.language.completionsFromProject": {
+                    "title": "Include completions the current project.",
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "ItemType",
+                            "ItemMetadata",
+                            "Property",
+                            "Target",
+                            "Task"
+                        ]
                     },
-                    "properties": {
-                        "schemaVersion": {
-                            "title": "Configuration schema version",
-                            "type": "number",
-                            "default": 0,
-                            "description": "The current version of the configuration schema (please do not manually modify this setting)."
-                        },
-                        "logging": {
-                            "type": "object",
-                            "description": "Settings to control logging for MSBuild project tools.",
-                            "default": {
-                                "level": "Information",
-                                "trace": false
-                            },
-                            "properties": {
-                                "level": {
-                                    "title": "Language service logging level.",
-                                    "type": "string",
-                                    "enum": [
-                                        "Error",
-                                        "Warning",
-                                        "Information",
-                                        "Debug",
-                                        "Verbose"
-                                    ],
-                                    "default": "Information",
-                                    "description": "The logging level for the MSBuild language service."
-                                },
-                                "file": {
-                                    "title": "Language service log file.",
-                                    "type": "string",
-                                    "default": "",
-                                    "description": "If specified, the language service will log to this file."
-                                },
-                                "seq": {
-                                    "type": "object",
-                                    "default": {},
-                                    "description": "Configure the MSBuild language service to log to Seq (https://getseq.net/). This is only useful if you're hacking on the language service itself.",
-                                    "properties": {
-                                        "level": {
-                                            "type": "string",
-                                            "enum": [
-                                                "Error",
-                                                "Warning",
-                                                "Information",
-                                                "Debug",
-                                                "Verbose"
-                                            ],
-                                            "default": "Verbose",
-                                            "description": "The minimum log level for Seq."
-                                        },
-                                        "url": {
-                                            "type": "string",
-                                            "default": null,
-                                            "description": "The URL of the Seq server (Seq logging will be enabled if this is specified)."
-                                        },
-                                        "apiKey": {
-                                            "type": "string",
-                                            "default": null,
-                                            "description": "The API key (if any) to use when authenticating to Seq."
-                                        }
-                                    }
-                                },
-                                "trace": {
-                                    "type": "boolean",
-                                    "default": false,
-                                    "description": "Trace all communication between VSCode and the MSBuild language service?"
-                                }
-                            }
-                        },
-                        "language": {
-                            "description": "Configuration for the MSBuild language service.",
-                            "type": "object",
-                            "default": {},
-                            "properties": {
-                                "useClassicProvider": {
-                                    "title": "Use classic completion provider",
-                                    "type": "boolean",
-                                    "default": false,
-                                    "description": "Use the classic completion provider for PackageReferences, instead of the full language service?"
-                                },
-                                "disable": {
-                                    "title": "Disabled features",
-                                    "type": "object",
-                                    "default": {},
-                                    "description": "Language service features (if any) to disable.",
-                                    "properties": {
-                                        "hover": {
-                                            "title": "Disable hover?",
-                                            "type": "boolean",
-                                            "default": false,
-                                            "description": "Disable tooltips when hovering on XML in MSBuild project files?"
-                                        }
-                                    }
-                                },
-                                "completionsFromProject": {
-                                    "title": "Include completions the current project.",
-                                    "type": "array",
-                                    "items": {
-                                        "type": "string",
-                                        "enum": [
-                                            "ItemType",
-                                            "ItemMetadata",
-                                            "Property",
-                                            "Target",
-                                            "Task"
-                                        ]
-                                    },
-                                    "default": [
-                                        "ItemType",
-                                        "ItemMetadata",
-                                        "Property"
-                                    ],
-                                    "description": "Types of objects defined in the current project to include when offering completions."
-                                }
-                            }
-                        },
-                        "nuget": {
-                            "description": "NuGet configuration for the MSBuild language service.",
-                            "type": "object",
-                            "default": {},
-                            "properties": {
-                                "newestVersionsFirst": {
-                                    "type": "boolean",
-                                    "default": true,
-                                    "description": "Sort package versions in descending order (i.e. newest versions first)? Set this to false to revert to the old behaviour (VSCode decides how to sort the completion list)."
-                                },
-                                "includePreRelease": {
-                                    "type": "boolean",
-                                    "default": false,
-                                    "description": "Include suggestions for pre-release packages and package versions."
-                                },
-                                "disablePreFetch": {
-                                    "type": "boolean",
-                                    "default": false,
-                                    "description": "Don't automatically initialise the NuGet API client when opening a project (this is done to make the first PackageReference completion faster)?"
-                                }
-                            }
-                        },
-                        "experimentalFeatures": {
-                            "type": "array",
-                            "items": {
-                                "type": "string",
-                                "enum": [
-                                    "empty-completion-lists"
-                                ]
-                            },
-                            "default": [],
-                            "description": "The names of experimental features (if any) to enable. If you're not sure what this is, you probably don't need it."
-                        }
-                    }
+                    "default": [
+                        "ItemType",
+                        "ItemMetadata",
+                        "Property"
+                    ],
+                    "description": "Types of objects defined in the current project to include when offering completions."
+                },
+                "msbuildProjectTools.language.experimentalFeatures": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "empty-completion-lists"
+                        ]
+                    },
+                    "default": [],
+                    "description": "The names of experimental features (if any) to enable. If you're not sure what this is, you probably don't need it."
+                },
+                "msbuildProjectTools.nuget.newestVersionsFirst": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Sort package versions in descending order (i.e. newest versions first)? Set this to false to revert to the old behaviour (VSCode decides how to sort the completion list)."
+                },
+                "msbuildProjectTools.nuget.includePreRelease": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Include suggestions for pre-release packages and package versions."
+                },
+                "msbuildProjectTools.nuget.disablePreFetch": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Don't automatically initialise the NuGet API client when opening a project (this is done to make the first PackageReference completion faster)?"
                 }
             }
         },
@@ -264,6 +198,7 @@
         "@types/mocha": "^2.2.32",
         "@types/mz": "0.0.31",
         "@types/node": "^6.0.40",
+        "@types/object-path": "^0.9.29",
         "@types/semver": "^5.3.34",
         "@types/which": "^1.0.28",
         "@types/xmldom": "^0.1.29",
@@ -276,6 +211,7 @@
     "dependencies": {
         "axios": "^0.16.2",
         "mz": "^2.6.0",
+        "object-path": "^0.11.4",
         "rxjs": "^5.4.2",
         "semver": "^5.4.1",
         "vscode-languageclient": "^3.5.0",

@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.42
+
+* Initial support for flattened (path-based) extension settings (tintoy/msbuild-project-tools-server#7).
+
 ## v0.2.41
 
 * Use latest stable version of `NuGet.Configuration` to add support for encrypted credentials in `NuGet.config` (tintoy/msbuild-project-tools-vscode#39).

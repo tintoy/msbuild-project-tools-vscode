@@ -1,19 +1,52 @@
+import * as objectpath from 'object-path';
 import * as vscode from 'vscode';
 
+// TODO: Use dotted setting names to populated nested structure copied from defaultSettings.
+
+export const defaultSettings: Readonly<Settings> = {
+    logging: {
+        seq: {},
+        level: 'Information'
+    },
+    language: {
+        disable: {}
+    },
+    nuget: {},
+    experimentalFeatures: []
+};
+
 /**
- * The current schema version.
+ * VS Code's settings (supplied as a dict, essentially).
  */
-export const currentSchemaVersion = 1;
+export interface VSCodeSettings {
+    [key: string]: any;
+}
+
+/**
+ * Read and parse a VSCode-style settings object.
+ * 
+ * @param vscodeSettings The settings object (keys are 'msbuildProjectTools.xxx').
+ * 
+ * @returns The parsed settings.
+ */
+export function readVSCodeSettings(vscodeSettings: VSCodeSettings): Settings {
+    const settings: Settings = Object.assign({}, defaultSettings);
+    const settingsHelper = objectpath(vscodeSettings);
+
+    for (const key of Object.getOwnPropertyNames(vscodeSettings)) {
+        const value = vscodeSettings[key];
+
+        const path = key.replace('msbuildProjectTools.', '');
+        settingsHelper.set(path, value);
+    }
+
+    return settings;
+}
 
 /**
  * Settings for the MSBuild Project Tools extension.
  */
 export interface Settings {
-    /**
-     * The configuration schema version.
-     */
-    schemaVersion: number;
-
     /**
      * Logging settings.
      */
@@ -131,49 +164,44 @@ export interface NuGetSettings {
  * @param configuration The current configuration.
  * @param workspaceConfiguration VS Code's global configuration.
  */
-export async function upgradeConfigurationSchema(configuration: Settings): Promise<void> {
-    if (configuration.schemaVersion === currentSchemaVersion)
+export async function upgradeConfigurationSchema(configuration: any): Promise<void> {
+    if (!configuration.schemaVersion)
         return;
 
-    const legacyConfiguration = <any>configuration;
-    const legacyLanguageConfiguration = legacyConfiguration.language;
+    const legacyLanguageConfiguration = configuration.language;
     if (legacyLanguageConfiguration) {
-        configuration.language.useClassicProvider = (legacyLanguageConfiguration.enable === false);
-        delete legacyLanguageConfiguration.enable;
+        configuration['msbuildProjectTools.language.useClassicProvider'] = configuration.language.useClassicProvider || false;
 
-        configuration.language.disable = configuration.language.disable || {};
-        configuration.language.disable.hover = (legacyLanguageConfiguration.disableHover === true);
-        delete legacyLanguageConfiguration.disableHover;
-
-        configuration.logging = configuration.logging || {};
-        configuration.logging.level = legacyLanguageConfiguration.logLevel || 'Information';
-        delete legacyLanguageConfiguration.logLevel;
-        configuration.logging.file = legacyLanguageConfiguration.logFile || '';
-        delete legacyLanguageConfiguration.logFile;
-        configuration.logging.trace = (legacyLanguageConfiguration.trace === true);
-        delete legacyLanguageConfiguration.trace;
-
-        const legacySeqLoggingConfiguration = legacyLanguageConfiguration.seqLogging;
-        if (legacySeqLoggingConfiguration) {
-            configuration.logging.seq = configuration.logging.seq || {};
-            configuration.logging.seq.level = legacySeqLoggingConfiguration.logLevel || 'Information';
-            configuration.logging.seq.url = legacySeqLoggingConfiguration.url || null;
-            configuration.logging.seq.apiKey = legacySeqLoggingConfiguration.apiKey || null;
-
-            delete legacyLanguageConfiguration.seqLogging;
+        if (configuration.language.disable) {
+            configuration['msbuildProjectTools.language.disable.hover'] = legacyLanguageConfiguration.disableHover || false;
         }
 
         const experimentalFeatures = legacyLanguageConfiguration.experimentalFeatures;
         if (experimentalFeatures) {
             configuration.experimentalFeatures = experimentalFeatures;
-
-            delete legacyLanguageConfiguration.experimentalFeatures;
         }
 
-        // Current schema version.
-        configuration.schemaVersion = currentSchemaVersion;
-
-        const workspaceConfiguration = vscode.workspace.getConfiguration();
-        await workspaceConfiguration.update('msbuildProjectTools', configuration, true);
+        delete configuration.language;
     }
+
+    const legacyLoggingConfiguration = configuration.logging;
+    if (legacyLanguageConfiguration) {
+        configuration['msbuildProjectTools.logging.level'] = legacyLoggingConfiguration.logLevel || 'Information';
+        configuration['msbuildProjectTools.logging.file'] = legacyLoggingConfiguration.logFile || '';
+        configuration['msbuildProjectTools.logging.trace'] = legacyLoggingConfiguration.trace || false;
+        
+        const legacySeqLoggingConfiguration = legacyLoggingConfiguration.seq;
+        if (legacySeqLoggingConfiguration) {
+            configuration['msbuildProjectTools.logging.seq.level'] = legacySeqLoggingConfiguration.level || 'Information';
+            configuration['msbuildProjectTools.logging.seq.url'] = legacySeqLoggingConfiguration.url || null;
+            configuration['msbuildProjectTools.logging.seq.apiKey'] = legacySeqLoggingConfiguration.apiKey || null;
+        }
+
+        delete configuration.logging;
+    }
+
+    delete configuration.schemaVersion;
+
+    const workspaceConfiguration = vscode.workspace.getConfiguration();
+    await workspaceConfiguration.update('msbuildProjectTools', configuration, true);
 }

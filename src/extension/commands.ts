@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Settings, NuGetSettings } from './settings';
+import { Settings, NuGetSettings, readVSCodeSettings, VSCodeSettings } from './settings';
 
 let extensionContext: vscode.ExtensionContext;
 let extensionStatusBarItem: vscode.StatusBarItem;
@@ -24,14 +24,14 @@ export function registerCommands(context: vscode.ExtensionContext, statusBarItem
  */
 async function toggleNuGetPreRelease(): Promise<void> {
     const configuration = vscode.workspace.getConfiguration();
-    const settings = configuration.get<Settings>('msbuildProjectTools');
-    settings.nuget = settings.nuget || {};
+    const settings = configuration.get<VSCodeSettings>('msbuildProjectTools');
     
-    settings.nuget.includePreRelease = !settings.nuget.includePreRelease;
-
+    const includePreRelease = !settings['msbuildProjectTools.nuget.includePreRelease'];
+    settings['msbuildProjectTools.nuget.includePreRelease'] = includePreRelease;
+    
     await configuration.update('msbuildProjectTools', settings);
 
-    if (settings.nuget.includePreRelease)
+    if (includePreRelease)
         extensionStatusBarItem.text = '$(check) NuGet: Pre-release enabled';
     else
         extensionStatusBarItem.text = '$(circle-slash) NuGet: Pre-release disabled';

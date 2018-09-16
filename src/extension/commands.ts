@@ -24,12 +24,11 @@ export function registerCommands(context: vscode.ExtensionContext, statusBarItem
  */
 async function toggleNuGetPreRelease(): Promise<void> {
     const configuration = vscode.workspace.getConfiguration();
-    const settings = configuration.get<VSCodeSettings>('msbuildProjectTools');
     
-    const includePreRelease = !settings['msbuildProjectTools.nuget.includePreRelease'];
-    settings['msbuildProjectTools.nuget.includePreRelease'] = includePreRelease;
-    
-    await configuration.update('msbuildProjectTools', settings);
+    // Toggle
+    const includePreRelease = !configuration.get<boolean>('msbuildProjectTools.nuget.includePreRelease');
+
+    await configuration.update('msbuildProjectTools.nuget.includePreRelease', includePreRelease);
 
     if (includePreRelease)
         extensionStatusBarItem.text = '$(check) NuGet: Pre-release enabled';

@@ -163,45 +163,142 @@ export interface NuGetSettings {
  * 
  * @param configuration The current configuration.
  * @param workspaceConfiguration VS Code's global configuration.
+ * @returns The updated configuration
  */
-export async function upgradeConfigurationSchema(configuration: any): Promise<void> {
+export async function upgradeConfigurationSchema(configuration: any): Promise<any> {
     if (!configuration.schemaVersion)
         return;
 
+    let modified = false;
+
+    const workspaceConfiguration = vscode.workspace.getConfiguration();
+
+    const legacyExperimentalFeatureConfiguration = configuration.experimentalFeatures;
+    if (legacyExperimentalFeatureConfiguration) {
+        await workspaceConfiguration.update('msbuildProjectTools.experimentalFeatures',
+            legacyExperimentalFeatureConfiguration || [],
+            true // global
+        );
+
+        modified = true;
+    }
+
     const legacyLanguageConfiguration = configuration.language;
     if (legacyLanguageConfiguration) {
-        configuration['msbuildProjectTools.language.useClassicProvider'] = configuration.language.useClassicProvider || false;
+        if (legacyLanguageConfiguration.useClassicProvider) {
+            await workspaceConfiguration.update('msbuildProjectTools.language.useClassicProvider',
+                legacyLanguageConfiguration.useClassicProvider,
+                true // global
+            );
 
-        if (configuration.language.disable) {
-            configuration['msbuildProjectTools.language.disable.hover'] = legacyLanguageConfiguration.disableHover || false;
+            modified = true;
         }
+        if (legacyLanguageConfiguration.disableHover) {
+            await workspaceConfiguration.update('msbuildProjectTools.language.disableHover',
+                legacyLanguageConfiguration.disableHover,
+                true // global
+            );
 
-        const experimentalFeatures = legacyLanguageConfiguration.experimentalFeatures;
-        if (experimentalFeatures) {
-            configuration.experimentalFeatures = experimentalFeatures;
+            modified = true;
         }
+    }
 
-        delete configuration.language;
+    const legacyNugetConfiguration = configuration.nuget as NuGetSettings;
+    if (legacyNugetConfiguration) {
+        if (legacyNugetConfiguration.disablePreFetch) {
+            await workspaceConfiguration.update('msbuildProjectTools.nuget.disablePreFetch',
+            legacyNugetConfiguration.disablePreFetch,
+            true // global
+        );
+
+            modified = true;
+        }
+        if (legacyNugetConfiguration.includePreRelease) {
+            await workspaceConfiguration.update('msbuildProjectTools.nuget.includePreRelease',
+                legacyNugetConfiguration.includePreRelease,
+                true // global
+            );
+
+            modified = true;
+        }
+        if (legacyNugetConfiguration.newestVersionsFirst) {
+            await workspaceConfiguration.update('msbuildProjectTools.nuget.newestVersionsFirst',
+                legacyNugetConfiguration.newestVersionsFirst,
+                true // global
+            );
+
+            modified = true;
+        }
     }
 
     const legacyLoggingConfiguration = configuration.logging;
-    if (legacyLanguageConfiguration) {
-        configuration['msbuildProjectTools.logging.level'] = legacyLoggingConfiguration.logLevel || 'Information';
-        configuration['msbuildProjectTools.logging.file'] = legacyLoggingConfiguration.logFile || '';
-        configuration['msbuildProjectTools.logging.trace'] = legacyLoggingConfiguration.trace || false;
-        
-        const legacySeqLoggingConfiguration = legacyLoggingConfiguration.seq;
-        if (legacySeqLoggingConfiguration) {
-            configuration['msbuildProjectTools.logging.seq.level'] = legacySeqLoggingConfiguration.level || 'Information';
-            configuration['msbuildProjectTools.logging.seq.url'] = legacySeqLoggingConfiguration.url || null;
-            configuration['msbuildProjectTools.logging.seq.apiKey'] = legacySeqLoggingConfiguration.apiKey || null;
+    if (legacyLoggingConfiguration) {
+        if (legacyLoggingConfiguration.logLevel) {
+            await workspaceConfiguration.update('msbuildProjectTools.nuget.newestVersionsFirst',
+                legacyLoggingConfiguration.logLevel,
+                true // global
+            );
+
+            modified = true;
+        }
+        if (legacyLoggingConfiguration.file) {
+            await workspaceConfiguration.update('msbuildProjectTools.nuget.newestVersionsFirst',
+                legacyLoggingConfiguration.file,
+                true // global
+            );
+
+            modified = true;
+        }
+        if (legacyLoggingConfiguration.trace) {
+            await workspaceConfiguration.update('msbuildProjectTools.nuget.newestVersionsFirst',
+                legacyLoggingConfiguration.trace,
+                true // global
+            );
+
+            modified = true;
         }
 
-        delete configuration.logging;
+        const legacySeqLoggingConfiguration = legacyLoggingConfiguration.seq;
+        if (legacySeqLoggingConfiguration) {
+            if (legacySeqLoggingConfiguration.level) {
+                await workspaceConfiguration.update('msbuildProjectTools.logging.seq.level',
+                    legacySeqLoggingConfiguration.level,
+                    true // global
+                );
+
+                modified = true;
+            }
+            if (legacySeqLoggingConfiguration.url) {
+                await workspaceConfiguration.update('msbuildProjectTools.logging.seq.url',
+                    legacySeqLoggingConfiguration.url,
+                    true // global
+                );
+
+                modified = true;
+            }
+            if (legacySeqLoggingConfiguration.apiKey) {
+                await workspaceConfiguration.update('msbuildProjectTools.logging.seq.apiKey',
+                    legacySeqLoggingConfiguration.apiKey,
+                    true // global
+                );
+
+                modified = true;
+            }
+        }
+
+        configuration.logging = null;
+
+        modified = true;
     }
 
-    delete configuration.schemaVersion;
+    if (configuration.schemaVersion) {
+        configuration.schemaVersion = null;
 
-    const workspaceConfiguration = vscode.workspace.getConfiguration();
-    await workspaceConfiguration.update('msbuildProjectTools', configuration, true);
+        modified = true;
+    }
+
+    if (modified) {
+        // TODO: Show notification indicating that old settings key should be deleted.
+        await vscode.window.showInformationMessage('MSBuild project tools settings have been upgraded to the latest version; please manually remove the old key ("msbuildProjectTools") from settings.json.');
+    }
 }

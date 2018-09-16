@@ -124,7 +124,7 @@
                     ],
                     "description": "Types of objects defined in the current project to include when offering completions."
                 },
-                "msbuildProjectTools.language.experimentalFeatures": {
+                "msbuildProjectTools.experimentalFeatures": {
                     "type": "array",
                     "items": {
                         "type": "string",

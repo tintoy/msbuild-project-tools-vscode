@@ -3,6 +3,7 @@
 ## v0.2.42
 
 * Initial support for flattened (path-based) extension settings (tintoy/msbuild-project-tools-server#7).
+* Start removing file-system hyperlinks from hover tooltips, since VS Code no longer renders them correctly.
 
 ## v0.2.41
 

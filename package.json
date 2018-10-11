@@ -2,7 +2,7 @@
     "name": "msbuild-project-tools",
     "displayName": "MSBuild project tools",
     "description": "Tools for working with MSBuild project files (such as auto-complete for package Ids / versions).",
-    "version": "0.2.42",
+    "version": "0.2.43",
     "settingsSchemaVersion": 1,
     "publisher": "tintoy",
     "license": "MIT",
@@ -15,7 +15,7 @@
         "vscode": "^1.19.0"
     },
     "categories": [
-        "Languages",
+        "Programming Languages",
         "Other"
     ],
     "keywords": [
@@ -144,6 +144,11 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Include suggestions for pre-release packages and package versions."
+                },
+                "msbuildProjectTools.nuget.includeLocalSources": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Include suggestions for packages from local (file-based) package sources. You'll need to close and reopen your project file for this setting to take effect."
                 },
                 "msbuildProjectTools.nuget.disablePreFetch": {
                     "type": "boolean",

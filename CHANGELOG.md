@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.43
+
+* Optionally provide suggestions for packages from local (file-based) package sources (tintoy/msbuild-project-tools-server#9).
+
 ## v0.2.42
 
 * Initial support for flattened (path-based) extension settings (tintoy/msbuild-project-tools-server#7).

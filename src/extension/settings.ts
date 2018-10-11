@@ -148,9 +148,14 @@ export interface NuGetSettings {
     newestVersionsFirst?: boolean;
 
     /**
-     * Exclude suggestions for pre-release packages and package versions?
+     * Include suggestions for pre-release packages and package versions?
      */
     includePreRelease?: boolean;
+
+    /**
+     * Include suggestions for packages from local (file-based) package sources?
+     */
+    includeLocalSources?: boolean;
 
     /**
      * Disable automatic warm-up of the NuGet client when opening a project?

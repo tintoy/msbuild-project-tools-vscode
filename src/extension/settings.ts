@@ -31,7 +31,7 @@ export interface VSCodeSettings {
  */
 export function readVSCodeSettings(vscodeSettings: VSCodeSettings): Settings {
     const settings: Settings = Object.assign({}, defaultSettings);
-    const settingsHelper = objectpath(vscodeSettings);
+    const settingsHelper = objectpath(settings);
 
     for (const key of Object.getOwnPropertyNames(vscodeSettings)) {
         const value = vscodeSettings[key];

@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.44
+
+* Fix bug in parsing of extension settings.
+
 ## v0.2.43
 
 * Optionally provide suggestions for packages from local (file-based) package sources (tintoy/msbuild-project-tools-server#9).

@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.45
+
+* Handle localised output from `dotnet --info` (tintoy/msbuild-project-tools-vscode#43).
+
 ## v0.2.44
 
 * Fix bug in parsing of extension settings.

@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.46
+
+* Log configured package sources when initialising a project document (tintoy/msbuild-project-tools-vscode#44).
+
 ## v0.2.45
 
 * Handle localised output from `dotnet --info` (tintoy/msbuild-project-tools-vscode#43).

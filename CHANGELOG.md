@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.47
+
+* Improvements to logging during startup (tintoy/msbuild-project-tools-vscode#42).
+
 ## v0.2.46
 
 * Log configured package sources when initialising a project document (tintoy/msbuild-project-tools-vscode#44).

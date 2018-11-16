@@ -180,6 +180,10 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
         languageServerEnvironment['MSBUILD_PROJECT_TOOLS_LOG_FILE'] = configuration.logging.file;
     }
 
+    if (configuration.logging.level === 'Verbose') {
+        languageServerEnvironment['MSBUILD_PROJECT_TOOLS_VERBOSE_LOGGING'] = '1';
+    }
+
     const dotNetExecutable = await executables.find('dotnet');
     const serverAssembly = context.asAbsolutePath('out/language-server/MSBuildProjectTools.LanguageServer.Host.dll');
     const serverOptions: ServerOptions = {

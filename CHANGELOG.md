@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.49
+
+*  Prevent "dotnet --info" hanging when its output is larger than the process STDOUT buffer (tintoy/msbuild-project-tools-vscode#42).
+
 ## v0.2.47
 
 * Improvements to logging during startup (tintoy/msbuild-project-tools-vscode#42).

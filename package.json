@@ -2,7 +2,7 @@
     "name": "msbuild-project-tools",
     "displayName": "MSBuild project tools",
     "description": "Tools for working with MSBuild project files (such as auto-complete for package Ids / versions).",
-    "version": "0.2.47",
+    "version": "0.2.49",
     "settingsSchemaVersion": 1,
     "publisher": "tintoy",
     "license": "MIT",

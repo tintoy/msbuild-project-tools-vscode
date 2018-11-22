@@ -22,7 +22,9 @@
         "msbuild",
         "dotnet",
         "nuget",
-        "packagereference"
+        "packagereference",
+        "C#",
+        "F#"
     ],
     "activationEvents": [
         "workspaceContains:NuGet.config",

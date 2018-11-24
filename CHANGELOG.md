@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.50
+
+* Enable per-workspace override of `MSBuildExtensionsPath` and `MSBuildExtensionsPath32` (tintoy/msbuild-project-tools-vscode#35).
+
 ## v0.2.49
 
 *  Prevent "dotnet --info" hanging when its output is larger than the process STDOUT buffer (tintoy/msbuild-project-tools-vscode#42).

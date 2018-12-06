@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.51
+
+* Use correct MSBuild SDK folder for .NET Core 3.0 and newer (tintoy/msbuild-project-tools-vscode#46).
+
 ## v0.2.50
 
 * Enable per-workspace override of `MSBuildExtensionsPath` and `MSBuildExtensionsPath32` (tintoy/msbuild-project-tools-vscode#35).

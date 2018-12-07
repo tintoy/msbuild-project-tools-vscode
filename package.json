@@ -23,8 +23,7 @@
         "dotnet",
         "nuget",
         "packagereference",
-        "C#",
-        "F#"
+        "C#"
     ],
     "activationEvents": [
         "workspaceContains:NuGet.config",

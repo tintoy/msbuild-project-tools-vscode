@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.52
+
+* Add UserSecretsId to well-known properties (tintoy/msbuild-project-tools-vscode#48).
+
 ## v0.2.51
 
 * Use correct MSBuild SDK folder for .NET Core 3.0 and newer (tintoy/msbuild-project-tools-vscode#46).

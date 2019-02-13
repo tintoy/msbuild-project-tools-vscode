@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.53
+
+* Upgrade MSBuild packages to v15.9.20 (tintoy/msbuild-project-tools-server#14).
+
 ## v0.2.52
 
 * Add UserSecretsId to well-known properties (tintoy/msbuild-project-tools-vscode#48).

@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.54
+
+* Use tab-character in completion text (tintoy/msbuild-project-tools-server#13).
+
 ## v0.2.53
 
 * Upgrade MSBuild packages to v15.9.20 (tintoy/msbuild-project-tools-server#14).

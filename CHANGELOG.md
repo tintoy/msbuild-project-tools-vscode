@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.2.55
+
+* Improve calculation logic for MSBuild ToolsVersion (tintoy/msbuild-project-tools-server#16).
+
 ## v0.2.54
 
 * Use tab-character in completion text (tintoy/msbuild-project-tools-server#13).

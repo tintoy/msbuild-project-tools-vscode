@@ -197,7 +197,8 @@
                 "extensions": [
                     "csproj",
                     "props",
-                    "targets"
+                    "targets",
+                    "msbuild"
                 ],
                 "configuration": "./language-configuration.json"
             }

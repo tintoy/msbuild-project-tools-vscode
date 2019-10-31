@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.3.1
+
+* Language service now targets .NET Core 3.0 (tintoy/msbuild-project-tools-server#17).
+
 ## v0.2.55
 
 * Improve calculation logic for MSBuild ToolsVersion (tintoy/msbuild-project-tools-server#16).

@@ -34,7 +34,7 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
 
     /**
      * Create a new {@link PackageReferenceCompletionProvider}.
-     * 
+     *
      * @param nugetAutoCompleteUrls The URL of the NuGet API end-point to use.
      * @param showNewestVersionsFirst Show newest package versions first?
      */
@@ -42,11 +42,11 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
 
     /**
      * Provide completion items for the specified document position.
-     * 
+     *
      * @param document The target document.
      * @param position The position within the target document.
      * @param token A vscode.CancellationToken that can be used to cancel completion.
-     * 
+     *
      * @returns A promise that resolves to the completion items.
      */
     public provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): vscode.ProviderResult<vscode.CompletionList> {
@@ -55,20 +55,21 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
 
     /**
      * Provide completion items for the specified document position.
-     * 
+     *
      * @param document The target document.
      * @param position The position within the target document.
      * @param token A vscode.CancellationToken that can be used to cancel completion.
-     * 
+     *
      * @returns {Promise<vscode.CompletionList>} A promise that resolves to the completion item list.
      */
     private async provideCompletionItemsCore(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<vscode.CompletionList> {
         const completionItems: vscode.CompletionItem[] = [];
-        
+
         // To keep things simple, we only parse one line at a time (if your PackageReference element spans more than one line, too bad).
         const line = document.lineAt(position);
         const xml = this.parser.parseFromString(line.text);
-        const elements = xml.getElementsByTagName('PackageReference');
+        const elements = Array.from(xml.getElementsByTagName('PackageReference'))
+            .concat(Array.from(xml.getElementsByTagName('GlobalPackageReference')));
 
         const pageSize = 10;
 
@@ -80,7 +81,7 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
         for (let i = 0; i < elements.length; i++) {
             const element = elements[i];
 
-            const includeAttribute = element.attributes.getNamedItem('Include');
+            const includeAttribute = element.attributes.getNamedItem('Include') || element.attributes.getNamedItem('Update');
             if (includeAttribute) {
                 packageId = includeAttribute.value;
                 wantPackageId = this.isPositionInAttributeValue(position, includeAttribute);
@@ -95,7 +96,7 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
             if (wantPackageId || wantPackageVersion)
                 break;
         }
-        
+
         if (wantPackageId) {
             // TODO: Use NuGetClient from 'nuget-client'.
 
@@ -114,11 +115,11 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
                 }
 
                 const completionItem = new vscode.CompletionItem(availablePackageId, vscode.CompletionItemKind.Module);
-                completionItems.push(completionItem);  
+                completionItems.push(completionItem);
             }
         } else if (packageId && wantPackageVersion) {
             // TODO: Use NuGetClient from 'nuget-client'.
-            
+
             // TODO: Don't hard-code the use of the primary base URL; use Promise.race to call both end-points.
             const response = await axios.get(
                 `${this.nugetAutoCompleteUrl}?id=${encodeURIComponent(packageId)}&take=${pageSize}&prerelease=true`
@@ -136,7 +137,7 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
                 for (const availablePackageVersion of availablePackageVersions) {
                     if (packageVersion && !availablePackageVersion.startsWith(packageVersion)) {
                         isLocallyFiltered = true;
-                        
+
                         continue;
                     }
 
@@ -155,13 +156,13 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
 
         // If the list is locally-filtered or incomplete, VSCode will call us again as the user continues to type.
         const moreResultsAvailable = isLocallyFiltered || completionItems.length >= pageSize;
-        
+
         return new vscode.CompletionList(completionItems, moreResultsAvailable);
     }
 
     /**
      * Get the text range representing the value of the specified attribute.
-     * 
+     *
      * @param attribute The attribute.
      * @param line The {@link vscode.TextLine} containing the attribute.
      */
@@ -177,7 +178,7 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
 
     /**
      * Add package Id suggestion results to the cache.
-     * 
+     *
      * @param partialPackageId The partial package Id.
      * @param packageIds The matching package Ids.
      */
@@ -187,7 +188,7 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
 
     /**
      * Add available package version results to the cache.
-     * 
+     *
      * @param partialPackageId The package Id.
      * @param packageIds The matching package versions.
      */
@@ -197,7 +198,7 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
 
     /**
      * Determine whether the position lies within the value of the specified attribute.
-     * 
+     *
      * @param position The position.
      * @param attribute The attribute.
      */
@@ -205,18 +206,18 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
         position = position.translate({
             characterDelta: 1
         });
-        
+
         const valueStart: number = (<any>attribute).columnNumber + 1;
         const valueEnd: number = valueStart + attribute.value.length;
 
         console.log(`${attribute.name}(${position.character}/${valueStart}-${valueEnd})`);
-        
+
         return (position.character >= valueStart && position.character <= valueEnd);
     }
 
     /**
      * Get the text range representing the value of the specified attribute.
-     * 
+     *
      * @param line The line containing the attribute.
      * @param attribute The attribute.
      * @returns {vscode.Range} A {@link vscode.Range} containing the attribute's value.
@@ -226,7 +227,7 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
         const valueEnd: number = valueStart + attribute.value.length;
 
         console.log(`${attribute.name}(/${valueStart}-${valueEnd})`);
-    
+
         return new vscode.Range(
             new vscode.Position(line.lineNumber, valueStart),
             new vscode.Position(line.lineNumber, valueStart)
@@ -239,7 +240,7 @@ export class PackageReferenceCompletionProvider implements vscode.CompletionItem
  */
 export async function getNuGetV3AutoCompleteEndPoints(): Promise<string[]> {
     const nugetIndexResponse = await axios.get('https://api.nuget.org/v3/index.json');
-    
+
     const index: NuGetIndex = nugetIndexResponse.data;
     const autoCompleteEndPoints = index.resources
         .filter(

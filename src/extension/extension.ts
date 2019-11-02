@@ -1,6 +1,7 @@
 'use strict';
 
 import { default as axios } from 'axios';
+import { exec, ChildProcess } from 'child_process';
 import * as path from 'path';
 import * as semver from 'semver';
 import * as vscode from 'vscode';
@@ -37,6 +38,8 @@ const projectDocumentSelector: vscode.DocumentSelector = [
  * @param context The extension context.
  */
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
+    outputChannel = vscode.window.createOutputChannel('MSBuild Project Tools');
+
     const progressOptions: vscode.ProgressOptions = {
         location: vscode.ProgressLocation.Window
     };
@@ -119,8 +122,6 @@ async function loadConfiguration(): Promise<void> {
  * @param canEnableLanguageService Could the language service be enabled if we wanted to?
  */
 async function createClassicCompletionProvider(context: vscode.ExtensionContext, canEnableLanguageService: boolean): Promise<void> {
-    outputChannel = vscode.window.createOutputChannel('MSBuild Project Tools');
-
     if (!configuration.language.useClassicProvider && !canEnableLanguageService)
         outputChannel.appendLine('Cannot enable the MSBuild language service because .NET Core >= 2.0.0 was not found on the system path.');
 
@@ -151,6 +152,8 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
     statusBarItem.tooltip = 'MSBuild Project Tools';
     statusBarItem.hide();
 
+    outputChannel.appendLine('Starting MSBuild language service...');
+
     const clientOptions: LanguageClientOptions = {
         synchronize: {
             configurationSection: 'msbuildProjectTools'
@@ -158,12 +161,28 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
         diagnosticCollectionName: 'MSBuild Project',
         errorHandler: {
             error: (error, message, count) => {
+                if (count > 2)  // Don't be annoying
+                    return ErrorAction.Shutdown;
+
                 console.log(message);
                 console.log(error);
 
+                if (message)
+                    outputChannel.appendLine(`The MSBuild language server encountered an unexpected error: ${message}\n\n${error}`);
+                else
+                    outputChannel.appendLine(`The MSBuild language server encountered an unexpected error.\n\n${error}`);
+
                 return ErrorAction.Continue;
             },
-            closed: () => CloseAction.Restart
+            closed: () => CloseAction.DoNotRestart
+        },
+        initializationFailedHandler(error: Error) : boolean {
+            console.log(error);
+            
+            outputChannel.appendLine(`Failed to initialise the MSBuild language server.\n\n${error}`);
+            vscode.window.showErrorMessage(`Failed to initialise MSBuild language server.\n\n${error}`);
+
+            return false; // Don't attempt to restart the language server.
         },
         revealOutputChannelOn: RevealOutputChannelOn.Never
     };
@@ -186,6 +205,15 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
 
     const dotNetExecutable = await executables.find('dotnet');
     const serverAssembly = context.asAbsolutePath('out/language-server/MSBuildProjectTools.LanguageServer.Host.dll');
+
+    // Probe language server (see if it can start at all).
+    const serverProbeSuccess: boolean = await probeLanguageServer(dotNetExecutable, serverAssembly);
+    if (!serverProbeSuccess) {
+        vscode.window.showErrorMessage('Unable to start MSBuild language server (see the output window for details).');
+
+        return;
+    }
+
     const serverOptions: ServerOptions = {
         command: dotNetExecutable,
         args: [serverAssembly],
@@ -203,13 +231,78 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
 
     handleBusyNotifications(languageClient, statusBarItem);
 
-    outputChannel = languageClient.outputChannel;
-    outputChannel.appendLine('Starting MSBuild language service...');
-    context.subscriptions.push(
-        languageClient.start()
-    );
-    await languageClient.onReady();
+    let languageClientDisposal : vscode.Disposable;
+    try {
+        languageClientDisposal = languageClient.start();
+        context.subscriptions.push(languageClientDisposal);
+    }
+    catch (startFailed) {
+        outputChannel.appendLine(`Failed to start MSBuild language service.\n\n${startFailed}`);
+        languageClientDisposal.dispose();
+
+        return;
+    }
+
+    try {
+        await languageClient.onReady();
+    } catch (onReadyFailed) {
+        outputChannel.appendLine(`Failed to start MSBuild language server.\n\n${onReadyFailed}`);
+        languageClientDisposal.dispose();
+
+        return;
+    }
+
     outputChannel.appendLine('MSBuild language service is running.');
+}
+
+/**
+ * Attempt to start the language server process in probe mode (to see if it can be started at all).
+ * 
+ * @param dotNetExecutable The full path to the .NET Core host executable ("dotnet" or "dotnet.exe").
+ * @param serverAssembly The full path to the language server host assembly.
+ */
+function probeLanguageServer(dotNetExecutable: string, serverAssembly: string): Promise<boolean> {
+    return new Promise(resolve => {
+        let serverError: Error;
+        let serverStdOut: string;
+        let serverStdErr: string;
+
+        const languageServerProcess = exec(`"${dotNetExecutable}" "${serverAssembly}" --probe`, (error, stdout, stderr) => {
+            serverError = error;
+            serverStdOut = stdout;
+            serverStdErr = stderr;
+        });
+
+        languageServerProcess.on('close', exitCode => {
+            if (!serverError && exitCode === 0) {
+                resolve(true);
+
+                return;
+            }
+
+            console.log("Failed to start language server.");
+            outputChannel.appendLine('Failed to start the MSBuild language server.');
+
+            if (serverError) {
+                console.log(serverError);
+                outputChannel.appendLine(
+                    serverError.toString()
+                );
+            }
+
+            if (serverStdOut) {
+                console.log(serverStdOut);
+                outputChannel.appendLine(serverStdOut);
+            }
+
+            if (serverStdErr) {
+                console.log(serverStdErr);
+                outputChannel.appendLine(serverStdErr);
+            }
+
+            resolve(false);
+        });
+    });
 }
 
 /**

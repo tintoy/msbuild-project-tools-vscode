@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.3.2
+
+* Improved error reporting when language service cannot be started (tintoy/msbuild-project-tools-server#17).
+
 ## v0.3.1
 
 * Language service now targets .NET Core 3.0 (tintoy/msbuild-project-tools-server#17).

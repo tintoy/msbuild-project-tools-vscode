@@ -426,6 +426,13 @@
     "GeneratePackageOnBuild": {
         "description": "Value indicating whether a NuGet package will be generated when the project is built"
     },
+    "GenerateDocumentationFile": {
+        "description": "Enable or disable XML comment file generation.",
+        "defaultValues": [
+            "true",
+            "false"
+        ]
+    },
     "IncludeBuiltProjectOutputGroup": {
         "description": "Flag indicating whether to include primary build outputs into the app package payload."
     },

@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.3.4
+
+* Add IntelliSense for `GenerateDocumentationFile` property (tintoy/msbuild-project-tools-vscode#60).
+
 ## v0.3.3
 
 * Use v16.4.0 of the MSBuild engine (tintoy/msbuild-project-tools-vscode#59).

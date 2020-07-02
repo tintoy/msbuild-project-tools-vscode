@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.3.8
+
+* Completions now correctly replace trigger characters, if any (tintoy/msbuild-project-tools-vscode#67).
+
 ## v0.3.7
 
 * Explicitly watch parent process for termination (tintoy/msbuild-project-tools-vscode#53).

@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.3.10
+
+* Always use the MSBuild engine from the newest version of the .NET Core SDK (tintoy/msbuild-project-tools-server#19).
+
 ## v0.3.8
 
 * Completions now correctly replace trigger characters, if any (tintoy/msbuild-project-tools-vscode#67).

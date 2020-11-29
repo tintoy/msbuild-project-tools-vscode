@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.3.11
+
+* Upgrade the language service to use the .NET Core 3.1 runtime (tintoy/msbuild-project-tools-server#20).
+
 ## 0.3.10
 
 * Always use the MSBuild engine from the newest version of the .NET Core SDK (tintoy/msbuild-project-tools-server#19).

@@ -8,7 +8,7 @@ The language service used by this extension can be found here: [tintoy/msbuild-p
 
 **Note**: there are features in the extension (marked "language service feature" below) that use an out-of-process language service; this is enabled by default but if all you want is `PackageReference` completion, you can disable the language service by setting `msbuildProjectTools.language.enable` to `false` in your VSCode preferences. You will need to reload VSCode after changing this setting.
 
-You need the .NET Core runtime v3.0.0 (or SDK v3.0.1xx) or newer installed to use the language service (but your projects can target any version you have installed).
+**Note**: You will need the .NET Core **runtime v3.1.3 (or SDK v3.1.1xx) or newer** installed to use the language service (but your projects can target any version you have installed).
 
 ## Usage
 

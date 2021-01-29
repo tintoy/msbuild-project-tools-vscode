@@ -1,6 +1,5 @@
 'use strict';
 
-import { default as axios } from 'axios';
 import { exec, ChildProcess } from 'child_process';
 import * as path from 'path';
 import * as semver from 'semver';
@@ -10,7 +9,6 @@ import { Trace } from 'vscode-jsonrpc/lib/main';
 
 import * as dotnet from './utils/dotnet';
 import * as executables from './utils/executables';
-import { PackageReferenceCompletionProvider, getNuGetV3AutoCompleteEndPoints } from './providers/package-reference-completion';
 import { handleBusyNotifications } from './notifications';
 import { registerCommands } from './commands';
 import { registerInternalCommands } from './internal-commands';
@@ -50,14 +48,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
         await loadConfiguration();
 
-        const enableLanguageService = !configuration.language.useClassicProvider;
-        let couldEnableLanguageService = false;
-        if (enableLanguageService) {
-            const dotnetVersion = await dotnet.getVersion();
-            couldEnableLanguageService = dotnetVersion && semver.gte(dotnetVersion, '2.0.0');
-        }
+        const dotnetVersion = await dotnet.getVersion();
+        const bool canEnableLanguageService = dotnetVersion && semver.gte(dotnetVersion, '3.1.0');
 
-        if (enableLanguageService && couldEnableLanguageService) {
+        if (canEnableLanguageService) {
             await createLanguageClient(context);
 
             context.subscriptions.push(
@@ -67,9 +61,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             registerCommands(context, statusBarItem);
             registerInternalCommands(context);
         } else {
-            await createClassicCompletionProvider(context, couldEnableLanguageService);
-
-            outputChannel.appendLine('Classic completion provider is now enabled.');
+            outputChannel.appendLine(`Cannot enable the MSBuild language service ('${dotNetVersion}' is not a supported version of the .NET Core runtime).`);
         }
     });
 
@@ -113,29 +105,6 @@ async function loadConfiguration(): Promise<void> {
             featureFlag => featureFlags.add(featureFlag)
         );
     }
-}
-
-/**
- * Create the classic completion provider for PackageReferences.
- * 
- * @param context The current extension context.
- * @param canEnableLanguageService Could the language service be enabled if we wanted to?
- */
-async function createClassicCompletionProvider(context: vscode.ExtensionContext, canEnableLanguageService: boolean): Promise<void> {
-    if (!configuration.language.useClassicProvider && !canEnableLanguageService)
-        outputChannel.appendLine('Cannot enable the MSBuild language service because .NET Core >= 2.0.0 was not found on the system path.');
-
-    outputChannel.appendLine('MSBuild language service disabled; using the classic completion provider.');
-
-    const nugetEndPointURLs = await getNuGetV3AutoCompleteEndPoints();
-    context.subscriptions.push(
-        vscode.languages.registerCompletionItemProvider(projectDocumentSelector,
-            new PackageReferenceCompletionProvider(
-                nugetEndPointURLs[0], // For now, just default to using the primary.
-                configuration.nuget.newestVersionsFirst
-            )
-        )
-    );
 }
 
 /**

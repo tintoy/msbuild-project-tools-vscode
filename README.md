@@ -6,29 +6,27 @@ An extension for VS Code that provides intellisense for MSBuild project files, i
 
 The language service used by this extension can be found here: [tintoy/msbuild-project-tools-server](https://github.com/tintoy/msbuild-project-tools-server/)
 
-**Note**: there are features in the extension (marked "language service feature" below) that use an out-of-process language service; this is enabled by default but if all you want is `PackageReference` completion, you can disable the language service by setting `msbuildProjectTools.language.enable` to `false` in your VSCode preferences. You will need to reload VSCode after changing this setting.
-
 **Note**: You will need the .NET Core **runtime v3.1.3 (or SDK v3.1.1xx) or newer** installed to use the language service (but your projects can target any version you have installed).
 
 ## Usage
 
 * Completions for `PackageReference` and `DotNetCliToolReference`.
   * Completions for `Include` and `Version` attributes of these items (invoke the `NuGet: toggle pre-release` command to include / exclude pre-release packages / package versions).
-  * _Language service feature:_ Completions to create these elements.
-* _Language service feature:_ Completions for common top-level elements (e.g. `PropertyGroup`, `ItemGroup`, `Target`).
-* _Language service feature:_ Completions for import elements.
-* _Language service feature:_ Completions for property elements.
-* _Language service feature:_ Completions for item elements.
-* _Language service feature:_ Completions for common item attributes.
-* _Language service feature:_ Completions for common property `Condition` attributes.
-* _Language service feature:_ Hover the mouse over imports, targets, items, properties, and conditions to see information about them.
-* _Language service feature:_ Document symbols are supported for imports, targets, items, and properties.
-* _Language service feature:_ Go-to-definition is implemented for both SDK-style and regular project imports.
+  * Completions to create these elements.
+* Completions for common top-level elements (e.g. `PropertyGroup`, `ItemGroup`, `Target`).
+* Completions for import elements.
+* Completions for property elements.
+* Completions for item elements.
+* Completions for common item attributes.
+* Completions for common property `Condition` attributes.
+* Hover the mouse over imports, targets, items, properties, and conditions to see information about them.
+* Document symbols are supported for imports, targets, items, and properties.
+* Go-to-definition is implemented for both SDK-style and regular project imports.
 * Basic syntax highlighting of MSBuild expressions in attribute values.  
   To see this highlighting, change the editor language from `XML` to `MSBuild`.
-* _Language service feature:_ Completions for `$()` property, `@()` item, and `%()` item metadata expressions.  
+* Completions for `$()` property, `@()` item, and `%()` item metadata expressions.  
   To enable these completions, ensure that the editor language is `MSBuild` (not `XML`).
-* _Language service feature:_ Completions for task elements and attributes based on metadata for tasks declared in the project and its imported projects.  
+* Completions for task elements and attributes based on metadata for tasks declared in the project and its imported projects.  
   To enable these completions, add the string `Tasks` to the `msbuildProjectTools.language.completionsFromProject` setting.
 * Useful snippets for common elements of MSBuild project XML (added by @doggy8088).  
   To use these snippets, ensure that the editor language is `MSBuild` (not `XML`).

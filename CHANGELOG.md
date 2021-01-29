@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.3.12
+
+* Remove legacy ("classic") completion provider.
+* Fix MSBuild-dependent tests that break in CI when the 5.0 SDK is also installed (tintoy/msbuild-project-tools-server#20).
+
 ## 0.3.11
 
 * Upgrade the language service to use the .NET Core 3.1 runtime (tintoy/msbuild-project-tools-server#20).

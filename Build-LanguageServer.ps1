@@ -12,5 +12,5 @@ $serverRoot = Join-Path $PSScriptRoot 'lib\server'
 $publishRoot = Join-Path $PSScriptRoot 'out'
 
 & $dotnet restore "$serverRoot\MSBuildProjectTools.sln" /p:VersionPrefix="$VersionPrefix" /p:VersionSuffix="$($VersionSuffix)"
-& $dotnet publish "$serverRoot\src\LanguageServer\LanguageServer.csproj" -f netcoreapp3.1 -o "$publishRoot\language-server" /p:VersionPrefix="$VersionPrefix" /p:VersionSuffix="$($VersionSuffix)"
-& $dotnet publish "$serverRoot\src\LanguageServer.TaskReflection\LanguageServer.TaskReflection.csproj" -f netcoreapp3.1 -o "$publishRoot\task-reflection" /p:VersionPrefix="$VersionPrefix" /p:VersionSuffix="$($VersionSuffix)"
+& $dotnet publish "$serverRoot\src\LanguageServer\LanguageServer.csproj" -f net5.0 -o "$publishRoot\language-server" /p:VersionPrefix="$VersionPrefix" /p:VersionSuffix="$($VersionSuffix)"
+& $dotnet publish "$serverRoot\src\LanguageServer.TaskReflection\LanguageServer.TaskReflection.csproj" -f net5.0 -o "$publishRoot\task-reflection" /p:VersionPrefix="$VersionPrefix" /p:VersionSuffix="$($VersionSuffix)"

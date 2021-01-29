@@ -48,8 +48,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
         await loadConfiguration();
 
-        const dotnetVersion = await dotnet.getVersion();
-        const bool canEnableLanguageService = dotnetVersion && semver.gte(dotnetVersion, '3.1.0');
+        const dotnetVersion: string = await dotnet.getVersion();
+        const canEnableLanguageService: Boolean = dotnetVersion && semver.gte(dotnetVersion, '5.0.0');
 
         if (canEnableLanguageService) {
             await createLanguageClient(context);
@@ -61,7 +61,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             registerCommands(context, statusBarItem);
             registerInternalCommands(context);
         } else {
-            outputChannel.appendLine(`Cannot enable the MSBuild language service ('${dotNetVersion}' is not a supported version of the .NET Core runtime).`);
+            outputChannel.appendLine(`Cannot enable the MSBuild language service ('${dotnetVersion}' is not a supported version of the .NET Core runtime).`);
         }
     });
 

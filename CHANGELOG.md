@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.3.13
+
+* Improve detection logic for .NET host version during extension startup (tintoy/msbuild-project-tools-vscode#73).
+
 ## 0.3.12
 
 * Remove legacy ("classic") completion provider.

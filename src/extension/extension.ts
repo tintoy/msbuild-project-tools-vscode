@@ -48,7 +48,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
         await loadConfiguration();
 
-        const dotnetVersion: string = await dotnet.getVersion();
+        const dotnetVersion: string = await dotnet.getHostVersion();
         const canEnableLanguageService: Boolean = dotnetVersion && semver.gte(dotnetVersion, '5.0.0');
 
         if (canEnableLanguageService) {

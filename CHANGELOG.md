@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.3.14
+
+* Correctly handle preview versions of the .NET SDK when discovering MSBuild instances (tintoy/msbuild-project-tools-vscode#74).
+
 ## 0.3.13
 
 * Improve detection logic for .NET host version during extension startup (tintoy/msbuild-project-tools-vscode#73).

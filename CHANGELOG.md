@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.3.15
+
+* Improve error handling when project assets file was not found while updating NuGet package references for a project (tintoy/msbuild-project-tools-server#24).
+
 ## 0.3.14
 
 * Correctly handle preview versions of the .NET SDK when discovering MSBuild instances (tintoy/msbuild-project-tools-vscode#74).

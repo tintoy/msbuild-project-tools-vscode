@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.3.16
+
+* Add support for additional wel-known metadata of ProjectReference items (tintoy/msbuild-project-tools-server#26).
+
 ## 0.3.15
 
 * Improve error handling when project assets file was not found while updating NuGet package references for a project (tintoy/msbuild-project-tools-server#24).

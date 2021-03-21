@@ -172,12 +172,17 @@
         "metadata": {
             "EmbedInteropTypes": "Whether the types in this reference need to embedded into the target assembly - interop assemblies only (optional, boolean)",
             "ExcludeAssets": "Assets to exclude from this reference",
+            "GlobalPropertiesToRemove": "Optional string[]. Names of properties to remove when building the referenced project, for example RuntimeIdentifier;PackOnBuild. Defaults to empty.",
             "IncludeAssets": "Assets to include from this reference",
             "Name": "Friendly display name (optional)",
             "OutputItemType": "Item type to emit target outputs into. Default is blank. If the Reference metadata is set to \"true\" (default) then target outputs will become references for the compiler.",
             "PrivateAssets": "Assets that are private in this reference",
             "Project": "Project GUID, in the form {00000000-0000-0000-0000-000000000000}",
             "ReferenceOutputAssembly": "Boolean specifying whether the outputs of the project referenced should be passed to the compiler. Default is true.",
+            "SetConfiguration": "Optional string. Sets the global property Configuration for the referenced project, for example Configuration=Release.",
+            "SetPlatform": "Optional string. Sets the global property Platform for the referenced project, for example Platform=AnyCPU.",
+            "SetTargetFramework": "Optional string. Sets the global property TargetFramework for the referenced project, for example TargetFramework=netstandard2.0.",
+            "SkipGetTargetFrameworkProperties": "Optional boolean. If true, builds the referenced project without negotiating the most compatible TargetFramework value. Defaults to false.",
             "SpecificVersion": "Whether the exact version of the assembly should be used.",
             "Targets": "Semicolon separated list of targets in the referenced projects that should be built. Default is the value of $(ProjectReferenceBuildTargets) whose default is blank, indicating the default targets."
         }

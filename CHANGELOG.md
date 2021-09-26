@@ -1,5 +1,10 @@
 # Change Log
 
+# 0.4.0
+
+* Support for manually ignoring configured package sources using the `msbuildProjectTools.nuget.ignorePackageSources` extension setting (tintoy/msbuild-project-tools-server#24).
+* Support for automatically ignoring configured package sources when the v3 service index indicates that they don't support the NuGet completion API (tintoy/msbuild-project-tools-server#24).
+
 ## 0.3.16
 
 * Add support for additional wel-known metadata of ProjectReference items (tintoy/msbuild-project-tools-server#26).

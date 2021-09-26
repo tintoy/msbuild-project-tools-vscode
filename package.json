@@ -2,7 +2,7 @@
     "name": "msbuild-project-tools",
     "displayName": "MSBuild project tools",
     "description": "Tools for working with MSBuild project files (such as auto-complete for package Ids / versions).",
-    "version": "0.3.15",
+    "version": "0.4.0-preview5",
     "settingsSchemaVersion": 1,
     "publisher": "tintoy",
     "license": "MIT",
@@ -160,6 +160,14 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Include suggestions for packages from local (file-based) package sources. You'll need to close and reopen your project file for this setting to take effect."
+                },
+                "msbuildProjectTools.nuget.ignorePackageSources": {
+                    "type":"array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": [],
+                    "description": "The names/URIs of configured NuGet package sources that should be ignored (i.e. not be used) by MSBuild Project Tools."
                 },
                 "msbuildProjectTools.nuget.disablePreFetch": {
                     "type": "boolean",

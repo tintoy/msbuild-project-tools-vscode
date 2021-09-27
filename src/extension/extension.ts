@@ -191,7 +191,7 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
         }
     };
 
-    languageClient = new LanguageClient('MSBuild Project Tools', serverOptions, clientOptions);
+    languageClient = new LanguageClient('MSBuild Language Service', serverOptions, clientOptions);
     if (configuration.logging.trace) {
         languageClient.trace = Trace.Verbose;
     } else {

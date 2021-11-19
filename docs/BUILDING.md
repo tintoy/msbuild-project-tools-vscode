@@ -11,8 +11,8 @@ To build:
 
 1. `npm install`
 2. `dotnet restore`
-3. `dotnet publish lib/server/src/LanguageServer/LanguageServer.csproj -f net5.0 -o $PWD/out/language-server`
-3. `dotnet publish lib/server/src/LanguageServer.TaskReflection/LanguageServer.TaskReflection.csproj -f net5.0 -o $PWD/out/task-reflection`
+3. `dotnet publish lib/server/src/LanguageServer/LanguageServer.csproj -f net6.0 -o $PWD/out/language-server`
+3. `dotnet publish lib/server/src/LanguageServer.TaskReflection/LanguageServer.TaskReflection.csproj -f net6.0 -o $PWD/out/task-reflection`
 
 To debug:
 

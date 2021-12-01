@@ -1,5 +1,9 @@
 # Change Log
 
+# 0.4.3
+
+* Fix ArgumentNullException from NuGet client library when requesting package version completions (tintoy/msbuild-project-tools-vscode#91).
+
 # 0.4.0
 
 * Support for manually ignoring configured package sources using the `msbuildProjectTools.nuget.ignorePackageSources` extension setting (tintoy/msbuild-project-tools-server#24).

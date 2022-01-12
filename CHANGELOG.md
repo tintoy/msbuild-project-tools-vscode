@@ -1,5 +1,9 @@
 # Change Log
 
+# v0.4.4
+
+* Always roll forward to the latest (stable) installed version of the runtime (tintoy/msbuild-project-tools-vscode#90).
+
 # 0.4.3
 
 * Fix ArgumentNullException from NuGet client library when requesting package version completions (tintoy/msbuild-project-tools-vscode#91).

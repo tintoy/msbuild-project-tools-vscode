@@ -3,6 +3,7 @@
 # v0.4.4
 
 * Always roll forward to the latest (stable) installed version of the runtime (tintoy/msbuild-project-tools-vscode#90).
+* Mark extension as a workspace extension to enable correct behaviour in remote scenarios (tintoy/msbuild-project-tools-vscode#99).
 
 # 0.4.3
 

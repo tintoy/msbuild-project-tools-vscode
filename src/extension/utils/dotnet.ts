@@ -22,6 +22,7 @@ export async function getHostVersion(): Promise<string> {
     // Assumes new versions of "dotnet --info" will continue to return the same set of sections in the same order (even if their names may be localised).
     let infoSectionName: string = null;
     let runtimeEnvironmentSectionName: string = null;
+    let globalJsonSectionName: string = null;
     let hostSectionName: string = null;
     let sdkListSectionName: string = null;
     let runtimeListSectionName: string = null;
@@ -55,6 +56,8 @@ export async function getHostVersion(): Promise<string> {
                 infoSectionName = sectionName;
             else if (!runtimeEnvironmentSectionName)
                 runtimeEnvironmentSectionName = sectionName;
+            else if (!globalJsonSectionName)
+                globalJsonSectionName = sectionName;
             else if (!hostSectionName)
                 hostSectionName = sectionName;
             else if (!sdkListSectionName)

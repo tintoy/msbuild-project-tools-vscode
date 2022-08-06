@@ -1,5 +1,9 @@
 # Change Log
 
+# v0.4.5
+
+* Improve parsing of output from `dotnet --info` (tintoy/msbuild-project-tools-vscode#98).
+
 # v0.4.4
 
 * Always roll forward to the latest (stable) installed version of the runtime (tintoy/msbuild-project-tools-vscode#90).

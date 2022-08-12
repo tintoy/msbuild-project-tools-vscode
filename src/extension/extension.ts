@@ -30,6 +30,8 @@ const projectDocumentSelector: vscode.DocumentSelector = [
     { language: 'msbuild', pattern: '**/*.*' }
 ];
 
+const supportedRuntimeVersion: semver.SemVer = semver.parse('6.0.0');
+
 /**
  * Called when the extension is activated.
  * 
@@ -48,8 +50,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
         await loadConfiguration();
 
-        const dotnetVersion: string = await dotnet.getHostVersion();
-        const canEnableLanguageService: Boolean = dotnetVersion && semver.gte(dotnetVersion, '5.0.0');
+        const dotnetVersion: semver.SemVer = await dotnet.getHostVersion();
+        const canEnableLanguageService: Boolean = dotnetVersion && (dotnetVersion.compare(supportedRuntimeVersion) >= 0);
 
         if (canEnableLanguageService) {
             await createLanguageClient(context);

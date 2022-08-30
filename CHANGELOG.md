@@ -1,5 +1,9 @@
 # Change Log
 
+# v0.4.7
+
+* Enable logging from .NET / MSBuild-engine discovery logic during language-server startup (tintoy/msbuild-project-tools-server#28).
+
 # v0.4.6
 
 * Simplify logic for detecting .NET host version (tintoy/msbuild-project-tools-vscode#99).

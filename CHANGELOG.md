@@ -1,5 +1,9 @@
 # Change Log
 
+# v0.4.8
+
+* Selectively enable COREHOST_TRACE when launching dotnet executable to probe .NET SDKs (tintoy/msbuild-project-tools-vscode#105, tintoy/msbuild-project-tools-server#28).
+
 # v0.4.7
 
 * Enable logging from .NET / MSBuild-engine discovery logic during language-server startup (tintoy/msbuild-project-tools-server#28).

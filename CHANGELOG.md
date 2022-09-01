@@ -1,5 +1,10 @@
 # Change Log
 
+# v0.4.9
+
+* Wait for redirected STDOUT/STDERR streams to complete when launching dotnet host process (tintoy/msbuild-project-tools-vscode#105, tintoy/msbuild-project-tools-server#28).  
+  Thanks, @tillig!
+
 # v0.4.8
 
 * Selectively enable COREHOST_TRACE when launching dotnet executable to probe .NET SDKs (tintoy/msbuild-project-tools-vscode#105, tintoy/msbuild-project-tools-server#28).

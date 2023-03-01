@@ -231,7 +231,7 @@
         "@types/which": "^1.0.28",
         "@types/xmldom": "^0.1.29",
         "chai": "^4.2.0",
-        "mocha": "^6.2.2",
+        "mocha": "^6.2.3",
         "tslint": "^5.20.0",
         "typescript": "^3.6.4"
     },

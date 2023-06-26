@@ -2,22 +2,25 @@
 
 You'll need:
 
-1. .NET Core 2.0.0 or newer
+1. .NET 6.0.0 or newer
 2. NodeJS
 3. VSCE  
    `npm install -g vsce`
+4. Powershell (already there by default on Windows)
+
+Don't forget to update LSP submodule after pulling the repo:
+
+1. `git submodule init`
+2. `git submodule update`
 
 To build:
 
 1. `npm install`
-2. `dotnet restore`
-3. `dotnet publish lib/server/src/LanguageServer/LanguageServer.csproj -f net6.0 -o $PWD/out/language-server`
-3. `dotnet publish lib/server/src/LanguageServer.TaskReflection/LanguageServer.TaskReflection.csproj -f net6.0 -o $PWD/out/task-reflection`
+2. `powershell Build-LSP-dev.ps1`
 
 To debug:
 
-1. Step 3 from "To build".
-2. Open VS Code, and hit F5.
+1. Open VS Code, and hit F5. Both LSP and extension client will be built automatically
 
 To create a VSIX package:
 

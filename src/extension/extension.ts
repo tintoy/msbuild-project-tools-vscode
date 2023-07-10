@@ -47,7 +47,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
         const dotnetExecutablePath = await dotnet.acquireRuntime(context.extension.id, progress);
 
-        if (dotnetExecutablePath === undefined) {
+        if (dotnetExecutablePath === null) {
             const baseErrorMessage = 'Cannot enable the MSBuild language service: unable to acquire .NET runtime';
             outputChannel.appendLine(baseErrorMessage + ". See '.NET Runtime' channel for more info");
             await vscode.window.showErrorMessage(baseErrorMessage);

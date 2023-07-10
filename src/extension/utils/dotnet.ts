@@ -6,7 +6,7 @@ interface DotnetAcquireResult {
     dotnetPath: string;
 }
 
-export async function acquireRuntime(extensionId: string, progress: vscode.Progress<{ message?: string; increment?: number }>) : Promise<string | undefined> {
+export async function acquireRuntime(extensionId: string, progress: vscode.Progress<{ message?: string; increment?: number }>) : Promise<string | null> {
     const dotnetAcquireArgs = { version: requiredDotnetRuntimeVersion, requestingExtensionId: extensionId };
     let status = await vscode.commands.executeCommand<DotnetAcquireResult>('dotnet.acquireStatus', dotnetAcquireArgs);
     if (status === undefined) {
@@ -17,7 +17,7 @@ export async function acquireRuntime(extensionId: string, progress: vscode.Progr
     }
 
     if (!status?.dotnetPath) {
-        return undefined;
+        return null;
     }
 
     return status.dotnetPath;

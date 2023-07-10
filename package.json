@@ -12,7 +12,7 @@
     },
     "icon": "images/icon.png",
     "engines": {
-        "vscode": "^1.39.0"
+        "vscode": "^1.72.0"
     },
     "categories": [
         "Programming Languages",
@@ -220,26 +220,27 @@
         "compile": "tsc -watch -p ./",
         "test": "node ./node_modules/vscode/bin/test"
     },
+    "extensionDependencies": [
+        "ms-dotnettools.vscode-dotnet-runtime"
+    ],
     "devDependencies": {
         "@types/chai": "^4.2.4",
         "@types/mocha": "^5.2.7",
         "@types/mz": "0.0.31",
         "@types/node": "^6.0.40",
         "@types/object-path": "^0.9.29",
-        "@types/semver": "^5.3.34",
-        "@types/vscode": "^1.39.0",
+        "@types/vscode": "^1.72.0",
         "@types/which": "^1.0.28",
         "@types/xmldom": "^0.1.29",
         "chai": "^4.2.0",
         "mocha": "^6.2.2",
         "tslint": "^5.20.0",
-        "typescript": "^3.6.4"
+        "typescript": "^4.1.6"
     },
     "dependencies": {
         "mz": "^2.6.0",
         "object-path": "^0.11.4",
         "rxjs": "^5.4.2",
-        "semver": "^5.7.1",
         "vscode-languageclient": "^5.2.1",
         "which": "^1.3.0",
         "xmldom": "^0.1.27"

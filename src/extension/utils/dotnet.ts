@@ -1,98 +1,29 @@
-import { child_process } from 'mz';
-import { EOL } from "os";
+import * as vscode from 'vscode';
 
-import * as executables from './executables';
+const requiredDotnetRuntimeVersion = '6.0';
 
-import * as semver from 'semver';
-
-/**
- * Get the current version of .NET Core.
- * 
- * @returns A promise that resolves to the current host version, or null if the version could not be determined.
- */
-export async function getHostVersion(): Promise<semver.SemVer | null> {
-    const hostOutput = await runDotNetHost('--version');
-    if (!hostOutput.stdOutLines) {
-        throw new Error(`Failed to determine .NET host version.${EOL}Host STDOUT: ${hostOutput.stdOutLines.join(EOL)}\nHost STDERR: ${hostOutput.stdErrorLines.join(EOL)}`);
-    }
-
-    const hostVersion = semver.parse(hostOutput.stdOutLines[0]);
-
-    return hostVersion;
+interface DotnetAcquireResult {
+    dotnetPath: string;
 }
 
-/**
- * Get the currently-supported runtimes and versions of .NET / .NET Core.
- * 
- * @returns A promise that resolves to a `Map<string, SemVer[]>` from runtime name to supported versions.
- */
-export async function getRuntimeVersions(): Promise<Map<string, semver.SemVer[]>> {
-    const hostOutput = await runDotNetHost('--list-runtimes');
-    if (!hostOutput.stdOutLines) {
-        throw new Error(`Failed to determine available .NET runtime versions.${EOL}Host STDOUT: ${hostOutput.stdOutLines.join(EOL)}\nHost STDERR: ${hostOutput.stdErrorLines.join(EOL)}`);
+export async function acquireRuntime(extensionId: string, progress: vscode.Progress<{ message?: string; increment?: number }>) : Promise<string | null> {
+    const dotnetAcquireArgs = { version: requiredDotnetRuntimeVersion, requestingExtensionId: extensionId };
+    let status = await vscode.commands.executeCommand<DotnetAcquireResult>('dotnet.acquireStatus', dotnetAcquireArgs);
+    if (status === undefined) {
+        await vscode.commands.executeCommand('dotnet.showAcquisitionLog');
+
+        progress.report({ message: 'Downloading .NET runtime...' });
+        status = await vscode.commands.executeCommand<DotnetAcquireResult>('dotnet.acquire', dotnetAcquireArgs);
     }
 
-    const runtimes: Map<string, semver.SemVer[]> = new Map<string, semver.SemVer[]>();
-
-    for (let outputIndex = 0; outputIndex < hostOutput.stdOutLines.length; outputIndex++) {
-        const runtimeInfoComponents: string[] = hostOutput.stdOutLines[outputIndex].split(' ', 3);
-        if (runtimeInfoComponents.length < 3)
-            continue;
-
-        const runtimeName: string = runtimeInfoComponents[0];
-        const runtimeVersion = semver.parse(runtimeInfoComponents[1]);
-        if (!runtimeVersion)
-            continue;
-
-        let versions: semver.SemVer[] = runtimes.get(runtimeName);
-        if (!versions) {
-            versions = [];
-            runtimes.set(runtimeName, versions);
-        }
-
-        versions.push(runtimeVersion);
+    if (!status?.dotnetPath) {
+        return null;
     }
 
-    return runtimes;
+    return status.dotnetPath;
 }
 
-/**
- * The output (STDOUT and STDERR) from an invocation of the "dotnet" command-line tool.
- */
-interface DotNetHostOutput {
-    stdOutLines: string[];
-    stdErrorLines: string[];
-}
-
-/**
- * Invoke the "dotnet" command-line host.
- * 
- * @param args The host arguments.
- * @returns The host output.
- */
-async function runDotNetHost(args: string | string[]): Promise<DotNetHostOutput> {
-    const dotnetExecutable = await executables.find('dotnet');
-    if (dotnetExecutable === null) {
-        return {
-            stdOutLines: [],
-            stdErrorLines: [
-                "Failed to locate 'dotnet' executable."
-            ],
-        };
-    }
-
-    if (!Array.isArray(args))
-        args = [args];
-
-    const [stdOut, stdError] = await child_process.execFile(dotnetExecutable, args);
-
-    console.log('runDotNetHost -> [stdOut, stdError]', [stdOut, stdError]);
-
-    const stdOutLines: string[] = stdOut.trim().split(EOL);
-    const stdErrorLines: string[] = stdError.trim().split(EOL);
-
-    return {
-        stdOutLines,
-        stdErrorLines
-    }
+export async function acquireDependencies(dotnetExecutablePath : string, dotnetAppPath: string) : Promise<void> {
+    const args = [dotnetAppPath];
+    await vscode.commands.executeCommand('dotnet.ensureDotnetDependencies', { command: dotnetExecutablePath, arguments: args });
 }

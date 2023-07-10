@@ -1,14 +1,11 @@
 'use strict';
 
-import { exec, ChildProcess } from 'child_process';
-import * as path from 'path';
-import * as semver from 'semver';
+import { exec } from 'child_process';
 import * as vscode from 'vscode';
 import { LanguageClient, ServerOptions, LanguageClientOptions, ErrorAction, CloseAction, RevealOutputChannelOn } from 'vscode-languageclient';
 import { Trace } from 'vscode-jsonrpc/lib/main';
 
 import * as dotnet from './utils/dotnet';
-import * as executables from './utils/executables';
 import { handleBusyNotifications } from './notifications';
 import { registerCommands } from './commands';
 import { registerInternalCommands } from './internal-commands';
@@ -30,8 +27,6 @@ const projectDocumentSelector: vscode.DocumentSelector = [
     { language: 'msbuild', pattern: '**/*.*' }
 ];
 
-const supportedRuntimeVersion: semver.SemVer = semver.parse('6.0.0');
-
 /**
  * Called when the extension is activated.
  * 
@@ -50,21 +45,23 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
         await loadConfiguration();
 
-        const dotnetVersion: semver.SemVer = await dotnet.getHostVersion();
-        const canEnableLanguageService: Boolean = dotnetVersion && (dotnetVersion.compare(supportedRuntimeVersion) >= 0);
+        const dotnetExecutablePath = await dotnet.acquireRuntime(context.extension.id, progress);
 
-        if (canEnableLanguageService) {
-            await createLanguageClient(context);
-
-            context.subscriptions.push(
-                handleExpressionAutoClose()
-            );
-
-            registerCommands(context, statusBarItem);
-            registerInternalCommands(context);
-        } else {
-            outputChannel.appendLine(`Cannot enable the MSBuild language service ('${dotnetVersion}' is not a supported version of the .NET Core runtime).`);
+        if (dotnetExecutablePath === undefined) {
+            const baseErrorMessage = 'Cannot enable the MSBuild language service: unable to acquire .NET runtime';
+            outputChannel.appendLine(baseErrorMessage + ". See '.NET Runtime' channel for more info");
+            await vscode.window.showErrorMessage(baseErrorMessage);
+            return;
         }
+
+        await createLanguageClient(context, dotnetExecutablePath);
+
+        context.subscriptions.push(
+            handleExpressionAutoClose()
+        );
+
+        registerCommands(context, statusBarItem);
+        registerInternalCommands(context);
     });
 
     context.subscriptions.push(
@@ -115,7 +112,7 @@ async function loadConfiguration(): Promise<void> {
  * @param context The current extension context.
  * @returns A promise that resolves to the language client.
  */
-async function createLanguageClient(context: vscode.ExtensionContext): Promise<void> {
+async function createLanguageClient(context: vscode.ExtensionContext, dotnetExecutablePath: string): Promise<void> {
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 50);
     context.subscriptions.push(statusBarItem);
 
@@ -174,11 +171,11 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
         languageServerEnvironment['MSBUILD_PROJECT_TOOLS_VERBOSE_LOGGING'] = '1';
     }
 
-    const dotNetExecutable = await executables.find('dotnet');
     const serverAssembly = context.asAbsolutePath('out/language-server/MSBuildProjectTools.LanguageServer.Host.dll');
+    await dotnet.acquireDependencies(dotnetExecutablePath, serverAssembly);
 
     // Probe language server (see if it can start at all).
-    const serverProbeSuccess: boolean = await probeLanguageServer(dotNetExecutable, serverAssembly);
+    const serverProbeSuccess: boolean = await probeLanguageServer(dotnetExecutablePath, serverAssembly);
     if (!serverProbeSuccess) {
         vscode.window.showErrorMessage('Unable to start MSBuild language server (see the output window for details).');
 
@@ -186,7 +183,7 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
     }
 
     const serverOptions: ServerOptions = {
-        command: dotNetExecutable,
+        command: dotnetExecutablePath,
         args: [serverAssembly],
         options: {
             env: languageServerEnvironment

@@ -224,11 +224,9 @@
         "ms-dotnettools.vscode-dotnet-runtime"
     ],
     "devDependencies": {
-        "@types/mocha": "^5.2.7",
         "@types/node": "^6.0.40",
         "@types/object-path": "^0.9.29",
         "@types/vscode": "^1.72.0",
-        "mocha": "^6.2.2",
         "tslint": "^5.20.0",
         "typescript": "^4.1.6"
     },

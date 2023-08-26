@@ -217,8 +217,7 @@
     },
     "scripts": {
         "vscode:prepublish": "tsc -p ./",
-        "compile": "tsc -watch -p ./",
-        "test": "node ./node_modules/vscode/bin/test"
+        "compile": "tsc -p ./"
     },
     "extensionDependencies": [
         "ms-dotnettools.vscode-dotnet-runtime"

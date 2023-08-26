@@ -6,8 +6,6 @@ An extension for VS Code that provides intellisense for MSBuild project files, i
 
 The language service used by this extension can be found here: [tintoy/msbuild-project-tools-server](https://github.com/tintoy/msbuild-project-tools-server/)
 
-**Note**: You will need the .NET Core **runtime v6.0.0 (or SDK v6.0.100) or newer** installed to use the language service (but your projects can target any version you have installed).
-
 ## Usage
 
 * Completions for `PackageReference` and `DotNetCliToolReference`.

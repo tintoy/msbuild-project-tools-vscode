@@ -224,13 +224,13 @@
     ],
     "devDependencies": {
         "@types/node": "^6.0.40",
-        "@types/object-path": "^0.9.29",
+        "@types/object-path": "^0.11.1",
         "@types/vscode": "^1.72.0",
         "tslint": "^5.20.0",
         "typescript": "^4.1.6"
     },
     "dependencies": {
-        "object-path": "^0.11.4",
+        "object-path": "^0.11.8",
         "vscode-languageclient": "^5.2.1"
     }
 }

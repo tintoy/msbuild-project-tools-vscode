@@ -207,6 +207,7 @@
                 ],
                 "extensions": [
                     "csproj",
+                    "fsproj",
                     "props",
                     "targets",
                     "msbuild"

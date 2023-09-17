@@ -155,8 +155,6 @@ async function createLanguageClient(context: vscode.ExtensionContext, dotnetExec
         revealOutputChannelOn: RevealOutputChannelOn.Never
     };
 
-    languageServerEnvironment['MSBUILD_PROJECT_TOOLS_DIR'] = context.extensionPath;
-
     const seqLoggingSettings = configuration.logging.seq;
     if (seqLoggingSettings && seqLoggingSettings.url) {
         languageServerEnvironment['MSBUILD_PROJECT_TOOLS_SEQ_URL'] = seqLoggingSettings.url;

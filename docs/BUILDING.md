@@ -16,7 +16,7 @@ Don't forget to update LSP submodule after pulling the repo:
 To build:
 
 1. `npm install`
-2. `powershell Build-LSP-dev.ps1`
+2. `powershell Publish-LanguageServer.ps1 --dev`
 
 To debug:
 

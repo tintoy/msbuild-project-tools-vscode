@@ -219,7 +219,7 @@
         ]
     },
     "scripts": {
-        "vscode:prepublish": "tsc -p ./",
+        "vscode:prepublish": "powershell ./Publish-LanguageServer.ps1 && tsc -p ./",
         "compile": "tsc -p ./"
     },
     "extensionDependencies": [

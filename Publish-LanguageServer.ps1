@@ -30,7 +30,8 @@ $latestTagShort = git describe --tags --abbrev=0
 if ($latestTagFull -ceq $latestTagShort) {
     $numberOfCommits = 1
 } else {
-    $numberOfCommits = $latestTagFull.Split('-')[1]
+    $diff = $latestTagFull -replace $latestTagShort, ""
+    $numberOfCommits = $diff.Split('-')[1]
 }
 
 $fileVersion = "$versionPrefix.$numberOfCommits"

@@ -2,6 +2,11 @@ $dotnet = Get-Command 'dotnet'
 
 $latestTag = git describe --tags --abbrev=0
 
+if ($latestTag -notmatch '^v\d+\.\d+\.\d+(-.*)?$') {
+    Write-Host "Latest tag doesn't follow semantic version format. The format is [v]major.minor.patch[-suffix]"
+    exit
+}
+
 if ($latestTag.StartsWith('v')) {
     $latestTag = $latestTag.Substring(1)
 }
@@ -28,7 +33,7 @@ $latestTagFull = git describe --tags
 $latestTagShort = git describe --tags --abbrev=0
 
 if ($latestTagFull -ceq $latestTagShort) {
-    $numberOfCommits = 1
+    $numberOfCommits = 0
 } else {
     $diff = $latestTagFull -replace $latestTagShort, ""
     $numberOfCommits = $diff.Split('-')[1]

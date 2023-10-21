@@ -2,7 +2,7 @@ $dotnet = Get-Command 'dotnet'
 
 $latestTag = git describe --tags --abbrev=0
 
-if ($latestTag -notmatch '^v\d+\.\d+\.\d+(-.*)?$') {
+if ($latestTag -notmatch '^(v)?\d+\.\d+\.\d+(-.*)?$') {
     Write-Host "Latest tag doesn't follow semantic version format. The format is [v]major.minor.patch[-suffix]"
     exit
 }

@@ -16,3 +16,6 @@ tsconfig.json
 tslint.json
 *.ps1
 *.sh
+**/*.exe
+**/*.pdb
+global.json

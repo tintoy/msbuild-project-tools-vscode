@@ -27,16 +27,17 @@
                 "isDefault": false
             },
             "dependsOn": [
-                "Build LSP dev"
+                "Publish-LS-dev"
             ],
             "dependsOrder": "sequence"
         },
         {
-            "label": "Build LSP dev",
+            "label": "Publish-LS-dev",
             "type": "shell",
             "command": "powershell",
             "args": [
-                "${workspaceRoot}/Build-LSP-dev.ps1"
+                "${workspaceRoot}/Publish-LanguageServer.ps1",
+                "--dev"
             ]
         }
     ]

@@ -2,7 +2,7 @@
 
 import { exec } from 'child_process';
 import * as vscode from 'vscode';
-import { LanguageClientOptions, ErrorAction, CloseAction, RevealOutputChannelOn } from 'vscode-languageclient';
+import { LanguageClientOptions, ErrorAction, CloseAction, RevealOutputChannelOn, CloseHandlerResult } from 'vscode-languageclient';
 import { LanguageClient, ServerOptions } from 'vscode-languageclient/lib/node/main';
 import { Trace } from 'vscode-jsonrpc/lib/node/main';
 
@@ -70,11 +70,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             await loadConfiguration();
 
             if (languageClient) {
-                if (configuration.logging.trace) {
-                    languageClient.trace = Trace.Verbose;
-                } else {
-                    languageClient.trace = Trace.Off;
-                }
+                const trace = configuration.logging.trace ? Trace.Verbose : Trace.Off;
+                await languageClient.setTrace(trace);
             }
         })
     );
@@ -83,8 +80,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 /**
  * Called when the extension is deactivated.
  */
-export function deactivate(): void {
-    // Nothing to clean up.
+export async function deactivate(): Promise<void> {
+    await languageClient.stop();
 }
 
 /**
@@ -131,7 +128,7 @@ async function createLanguageClient(context: vscode.ExtensionContext, dotnetExec
         errorHandler: {
             error: (error, message, count) => {
                 if (count > 2)  // Don't be annoying
-                    return ErrorAction.Shutdown;
+                    return { action: ErrorAction.Shutdown };
 
                 console.log(message);
                 console.log(error);
@@ -141,9 +138,9 @@ async function createLanguageClient(context: vscode.ExtensionContext, dotnetExec
                 else
                     outputChannel.appendLine(`The MSBuild language server encountered an unexpected error.\n\n${error}`);
 
-                return ErrorAction.Continue;
+                return { action: ErrorAction.Continue };
             },
-            closed: () => CloseAction.DoNotRestart
+            closed: () => { return { action: CloseAction.DoNotRestart } }
         },
         initializationFailedHandler(error: Error) : boolean {
             console.log(error);
@@ -190,32 +187,15 @@ async function createLanguageClient(context: vscode.ExtensionContext, dotnetExec
     };
 
     languageClient = new LanguageClient('MSBuild Language Service', serverOptions, clientOptions);
-    if (configuration.logging.trace) {
-        languageClient.trace = Trace.Verbose;
-    } else {
-        languageClient.trace = Trace.Off;
-    }
+    const trace = configuration.logging.trace ? Trace.Verbose : Trace.Off;
+    await languageClient.setTrace(trace);
 
-    handleBusyNotifications(languageClient, statusBarItem);
-
-    let languageClientDisposal : vscode.Disposable;
     try {
-        languageClientDisposal = languageClient.start();
-        context.subscriptions.push(languageClientDisposal);
+        await languageClient.start();
+        handleBusyNotifications(languageClient, statusBarItem);
     }
     catch (startFailed) {
         outputChannel.appendLine(`Failed to start MSBuild language service.\n\n${startFailed}`);
-        languageClientDisposal.dispose();
-
-        return;
-    }
-
-    try {
-        await languageClient.onReady();
-    } catch (onReadyFailed) {
-        outputChannel.appendLine(`Failed to start MSBuild language server.\n\n${onReadyFailed}`);
-        languageClientDisposal.dispose();
-
         return;
     }
 

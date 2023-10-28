@@ -27,17 +27,15 @@ export namespace NotificationTypes {
  * @param languageClient The MSBuild language client.
  */
 export function handleBusyNotifications(languageClient: LanguageClient, statusBarItem: vscode.StatusBarItem): void {
-    languageClient.onReady().then(() => {
-        languageClient.onNotification(NotificationTypes.busy, notification => {
-            if (notification.isBusy) {
-                statusBarItem.text = '$(watch) MSBuild Project';
-                statusBarItem.tooltip = 'MSBuild Project Tools: ' + notification.message;
-                statusBarItem.show();
-            } else {
-                statusBarItem.text = '$(check) MSBuild Project';
-                statusBarItem.tooltip = 'MSBuild Project Tools';
-                statusBarItem.hide();
-            }
-        });
+    languageClient.onNotification(NotificationTypes.busy, notification => {
+        if (notification.isBusy) {
+            statusBarItem.text = '$(watch) MSBuild Project';
+            statusBarItem.tooltip = 'MSBuild Project Tools: ' + notification.message;
+            statusBarItem.show();
+        } else {
+            statusBarItem.text = '$(check) MSBuild Project';
+            statusBarItem.tooltip = 'MSBuild Project Tools';
+            statusBarItem.hide();
+        }
     });
 }

@@ -12,7 +12,7 @@
     },
     "icon": "images/icon.png",
     "engines": {
-        "vscode": "^1.72.0"
+        "vscode": "^1.82.0"
     },
     "categories": [
         "Programming Languages",
@@ -34,7 +34,6 @@
         "workspaceContains:**/*.*proj",
         "workspaceContains:**/*.props",
         "workspaceContains:**/*.targets",
-        "onLanguage:msbuild",
         "onLanguage:xml"
     ],
     "main": "./out/src/extension/extension",
@@ -226,14 +225,14 @@
         "ms-dotnettools.vscode-dotnet-runtime"
     ],
     "devDependencies": {
-        "@types/node": "^6.0.40",
+        "@types/node": "^18.15.0",
         "@types/object-path": "^0.11.1",
-        "@types/vscode": "^1.72.0",
+        "@types/vscode": "^1.82.0",
         "tslint": "^5.20.0",
         "typescript": "^4.1.6"
     },
     "dependencies": {
         "object-path": "^0.11.8",
-        "vscode-languageclient": "^5.2.1"
+        "vscode-languageclient": "^7.0.0"
     }
 }

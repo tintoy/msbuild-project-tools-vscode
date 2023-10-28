@@ -2,8 +2,9 @@
 
 import { exec } from 'child_process';
 import * as vscode from 'vscode';
-import { LanguageClient, ServerOptions, LanguageClientOptions, ErrorAction, CloseAction, RevealOutputChannelOn } from 'vscode-languageclient';
-import { Trace } from 'vscode-jsonrpc/lib/main';
+import { LanguageClientOptions, ErrorAction, CloseAction, RevealOutputChannelOn } from 'vscode-languageclient';
+import { LanguageClient, ServerOptions } from 'vscode-languageclient/lib/node/main';
+import { Trace } from 'vscode-jsonrpc/lib/node/main';
 
 import * as dotnet from './utils/dotnet';
 import { handleBusyNotifications } from './notifications';

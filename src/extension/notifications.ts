@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { NotificationType } from 'vscode-jsonrpc';
-import { LanguageClient } from 'vscode-languageclient/lib/main';
+import { LanguageClient } from 'vscode-languageclient/lib/node/main';
 
 /**
  * Represents a custom notification indicating that the MSBuild language service is or is not busy.
@@ -18,7 +18,7 @@ export interface BusyNotification {
  */
 export namespace NotificationTypes {
     /** The {@link BusyNotification} type. */
-    export const busy = new NotificationType<BusyNotification, void>('msbuild/busy');
+    export const busy = new NotificationType<BusyNotification>('msbuild/busy');
 }
 
 /**
@@ -27,17 +27,15 @@ export namespace NotificationTypes {
  * @param languageClient The MSBuild language client.
  */
 export function handleBusyNotifications(languageClient: LanguageClient, statusBarItem: vscode.StatusBarItem): void {
-    languageClient.onReady().then(() => {
-        languageClient.onNotification(NotificationTypes.busy, notification => {
-            if (notification.isBusy) {
-                statusBarItem.text = '$(watch) MSBuild Project';
-                statusBarItem.tooltip = 'MSBuild Project Tools: ' + notification.message;
-                statusBarItem.show();
-            } else {
-                statusBarItem.text = '$(check) MSBuild Project';
-                statusBarItem.tooltip = 'MSBuild Project Tools';
-                statusBarItem.hide();
-            }
-        });
+    languageClient.onNotification(NotificationTypes.busy, notification => {
+        if (notification.isBusy) {
+            statusBarItem.text = '$(watch) MSBuild Project';
+            statusBarItem.tooltip = 'MSBuild Project Tools: ' + notification.message;
+            statusBarItem.show();
+        } else {
+            statusBarItem.text = '$(check) MSBuild Project';
+            statusBarItem.tooltip = 'MSBuild Project Tools';
+            statusBarItem.hide();
+        }
     });
 }

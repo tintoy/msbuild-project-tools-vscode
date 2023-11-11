@@ -2,7 +2,7 @@
 .vscode-test/**
 .vs/**
 language-server/MSBuildProjectTools.*.xml
-out/test/**
+out/**
 data/**
 docs/**
 lib/**

@@ -11,12 +11,12 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "npm",
+            "label": "prepare-dev",
             "type": "shell",
             "command": "npm",
             "args": [
                 "run",
-                "compile",
+                "build-dev",
                 "--loglevel",
                 "silent"
             ],

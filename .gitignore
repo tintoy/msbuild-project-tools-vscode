@@ -3,7 +3,7 @@
 
 ## Extension
 out/
-data/
+dist/
 
 # Language server build
 language-server/

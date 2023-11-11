@@ -167,7 +167,7 @@ async function createLanguageClient(context: vscode.ExtensionContext, dotnetExec
         languageServerEnvironment['MSBUILD_PROJECT_TOOLS_VERBOSE_LOGGING'] = '1';
     }
 
-    const serverAssembly = context.asAbsolutePath('out/language-server/MSBuildProjectTools.LanguageServer.Host.dll');
+    const serverAssembly = context.asAbsolutePath('language-server/MSBuildProjectTools.LanguageServer.Host.dll');
     await dotnet.acquireDependencies(dotnetExecutablePath, serverAssembly);
 
     // Probe language server (see if it can start at all).

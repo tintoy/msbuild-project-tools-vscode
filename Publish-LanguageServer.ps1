@@ -44,7 +44,7 @@ $fileVersion = "$versionPrefix.$numberOfCommits"
 Write-Output "Chosen build configuration: $buildConfiguration"
 
 $serverRoot = Join-Path $PSScriptRoot 'lib\server'
-$publishRoot = Join-Path $PSScriptRoot 'out'
+$publishRoot = Join-Path $PSScriptRoot ''
 
 & $dotnet restore "$serverRoot\MSBuildProjectTools.sln"
 & $dotnet publish "$serverRoot\src\LanguageServer\LanguageServer.csproj" -o "$publishRoot\language-server" /p:VersionPrefix="$versionPrefix" /p:VersionSuffix="$versionSuffix" /p:FileVersion="$fileVersion" -c $buildConfiguration

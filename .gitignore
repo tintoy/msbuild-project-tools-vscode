@@ -5,6 +5,9 @@
 out/
 data/
 
+# Language server build
+language-server/
+
 ## NodeJS
 node_modules/
 

@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-    entry: './src/extension/extension.ts',
+    entry: './src/extension.ts',
     target: 'node',
     output: {
         path: path.resolve(__dirname, 'dist'),

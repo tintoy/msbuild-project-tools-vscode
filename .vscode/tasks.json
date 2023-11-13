@@ -6,17 +6,16 @@
 // ${fileExtname}: the current opened file's extension
 // ${cwd}: the current working directory of the spawned process
 
-// A task runner that calls a custom npm script that compiles the extension.
 {
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "npm",
+            "label": "prepare-dev",
             "type": "shell",
             "command": "npm",
             "args": [
                 "run",
-                "compile",
+                "build-dev",
                 "--loglevel",
                 "silent"
             ],

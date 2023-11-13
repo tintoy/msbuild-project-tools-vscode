@@ -3,7 +3,10 @@
 
 ## Extension
 out/
-data/
+dist/
+
+# Language server build
+language-server/
 
 ## NodeJS
 node_modules/

@@ -14,7 +14,9 @@ module.exports = {
         vscode: 'commonjs vscode'
     },
     resolve: {
-        extensions: ['.ts', '.js']
+        extensions: ['.ts', '.js'],
+        conditionNames: ['import', 'require'],
+        mainFields: ['module', 'main']
     },
     module: {
         rules: [

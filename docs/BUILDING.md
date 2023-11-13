@@ -5,7 +5,7 @@ You'll need:
 1. .NET 6.0.0 or newer
 2. NodeJS
 3. VSCE  
-   `npm install -g vsce`
+   `npm install -g @vscode/vsce`
 4. Powershell (already there by default on Windows)
 
 Don't forget to update LSP submodule after pulling the repo:
@@ -20,7 +20,7 @@ To build:
 
 To debug:
 
-1. Open VS Code, and hit F5. Both LSP and extension client will be built automatically
+1. Open VS Code, and hit F5. Both LSP and extension client will be built automatically. A new instance of VS Code will be opened and a debug session will be activated
 
 To create a VSIX package:
 

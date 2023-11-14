@@ -215,6 +215,11 @@
                 ],
                 "configuration": "./language-configuration.json"
             }
+        ],
+        "xmlLanguageParticipants": [
+            {
+                "languageId": "msbuild"
+            }
         ]
     },
     "scripts": {

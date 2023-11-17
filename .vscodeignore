@@ -18,6 +18,5 @@ tslint.json
 *.sh
 **/*.exe
 **/*.pdb
-global.json
 webpack.config.js
 node_modules/**

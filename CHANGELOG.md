@@ -1,5 +1,14 @@
 # Change Log
 
+# v0.5.0
+
+* The .NET runtime, required to run the language server, is now acquired using the `vscode-dotnet-runtime` extension as a dependency (so you don't need to have that specific version of .NET on your machine installed to use the extension)
+* All completion are now shown by default
+* Basic integration with `redhat.vscode-xml` extension is now provided, so you can use its features for `msbuild` language
+* Language server, packed with the extension, is now built in release mode
+* Extension bundle size has been significantly optimized
+* Dependencies have been updaded to address known security vulnerabilities
+
 # v0.4.9
 
 * Wait for redirected STDOUT/STDERR streams to complete when launching dotnet host process (tintoy/msbuild-project-tools-vscode#105, tintoy/msbuild-project-tools-server#28).  

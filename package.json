@@ -226,9 +226,6 @@
         "vscode:prepublish": "powershell ./Publish-LanguageServer.ps1 && webpack --mode production",
         "build-dev": "webpack --mode development"
     },
-    "extensionDependencies": [
-        "ms-dotnettools.vscode-dotnet-runtime"
-    ],
     "devDependencies": {
         "@types/node": "^18.15.0",
         "@types/object-path": "^0.11.1",

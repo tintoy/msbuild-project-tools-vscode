@@ -6,7 +6,7 @@
 
 # v0.5.2
 
-* Unused.
+* Revert usage of the `vscode-dotnet-runtime` extension (tintoy/msbuild-project-tools-vscode#89 - isolated runtimes are problematic if you want to use global SDKs).
 
 # v0.5.1
 

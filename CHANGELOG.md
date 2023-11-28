@@ -1,5 +1,17 @@
 # Change Log
 
+# v0.5.3
+
+*  Improve file-access behaviour for project.assets.json (tintoy/msbuild-project-tools-server#82).
+
+# v0.5.2
+
+* Unused.
+
+# v0.5.1
+
+* Temporary roll-back from v0.5.0 to v0.4.5 (tintoy/msbuild-project-tools-vscode#137). 
+
 # v0.5.0
 
 * The .NET runtime, required to run the language server, is now acquired using the `vscode-dotnet-runtime` extension as a dependency (so you don't need to have that specific version of .NET on your machine installed to use the extension)

@@ -24,4 +24,5 @@ To debug:
 
 To create a VSIX package:
 
-1. `vsce package`
+1. `npm run build-language-server`
+2. `vsce package`

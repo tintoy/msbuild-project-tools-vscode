@@ -6,6 +6,7 @@ import { LanguageClientOptions, ErrorAction, CloseAction, RevealOutputChannelOn,
 import { LanguageClient, ServerOptions } from 'vscode-languageclient/lib/node/main';
 import { Trace } from 'vscode-jsonrpc/lib/node/main';
 
+import * as dotnet from './utils/dotnet';
 import { handleBusyNotifications } from './notifications';
 import { registerCommands } from './commands';
 import { registerInternalCommands } from './internal-commands';
@@ -44,7 +45,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         });
 
         await loadConfiguration();
-        await createLanguageClient(context);
+
+        const dotnetExecutablePath = await dotnet.acquireRuntime(context.extension.id, progress);
+
+        if (dotnetExecutablePath === null) {
+            const baseErrorMessage = 'Cannot enable the MSBuild language service: unable to acquire .NET runtime';
+            outputChannel.appendLine(baseErrorMessage + ". See '.NET Runtime' channel for more info");
+            await vscode.window.showErrorMessage(baseErrorMessage);
+            return;
+        }
+
+        await createLanguageClient(context, dotnetExecutablePath);
 
         context.subscriptions.push(
             handleExpressionAutoClose()
@@ -99,7 +110,7 @@ async function loadConfiguration(): Promise<void> {
  * @param context The current extension context.
  * @returns A promise that resolves to the language client.
  */
-async function createLanguageClient(context: vscode.ExtensionContext): Promise<void> {
+async function createLanguageClient(context: vscode.ExtensionContext, dotnetExecutablePath: string): Promise<void> {
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 50);
     context.subscriptions.push(statusBarItem);
 
@@ -157,9 +168,10 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
     }
 
     const serverAssembly = context.asAbsolutePath('language-server/MSBuildProjectTools.LanguageServer.Host.dll');
+    await dotnet.acquireDependencies(dotnetExecutablePath, serverAssembly);
 
     // Probe language server (see if it can start at all).
-    const serverProbeSuccess: boolean = await probeLanguageServer('dotnet', serverAssembly);
+    const serverProbeSuccess: boolean = await probeLanguageServer(dotnetExecutablePath, serverAssembly);
     if (!serverProbeSuccess) {
         vscode.window.showErrorMessage('Unable to start MSBuild language server (see the output window for details).');
 
@@ -167,7 +179,7 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
     }
 
     const serverOptions: ServerOptions = {
-        command: 'dotnet',
+        command: dotnetExecutablePath,
         args: [serverAssembly],
         options: {
             env: languageServerEnvironment

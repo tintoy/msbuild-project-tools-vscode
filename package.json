@@ -228,6 +228,9 @@
         "build-dev": "webpack --mode development",
         "build-production": "webpack --mode production"
     },
+    "extensionDependencies": [
+        "ms-dotnettools.vscode-dotnet-runtime"
+    ],
     "devDependencies": {
         "@types/node": "^18.15.0",
         "@types/object-path": "^0.11.1",

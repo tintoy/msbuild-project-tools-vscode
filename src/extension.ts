@@ -6,7 +6,7 @@ import { LanguageClientOptions, ErrorAction, CloseAction, RevealOutputChannelOn,
 import { LanguageClient, ServerOptions } from 'vscode-languageclient/lib/node/main';
 import { Trace } from 'vscode-jsonrpc/lib/node/main';
 
-import * as dotnet from './utils/dotnet';
+import * as dotnet from './dotnet';
 import { handleBusyNotifications } from './notifications';
 import { registerCommands } from './commands';
 import { registerInternalCommands } from './internal-commands';

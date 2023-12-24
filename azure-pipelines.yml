@@ -38,7 +38,7 @@ steps:
 
   inputs:
     command: custom
-    customCommand: 'version $(GitVersion.SemVer) --force'
+    customCommand: 'version $(GitVersion.SemVer) --git-tag-version false'
 
 - task: Npm@1
   displayName: 'npm install'
@@ -47,7 +47,7 @@ steps:
     command: ci
     workingDir: $(Build.SourcesDirectory)
 
-# TODO: Check last commit in history for repo @ ./lib/server that is associated with a GitHub release and download the language server artifact from there.
+# TODO: Rather than build language server as part of extension CI, check the last commit in history for repo @ ./lib/server that is associated with a GitHub release and download the appropriate language server artifact from there.
 
 - task: DotNetCoreCLI@2
   displayName: 'Restore packages'

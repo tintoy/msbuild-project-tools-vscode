@@ -38,7 +38,7 @@ steps:
 
   inputs:
     command: custom
-    customCommand: 'version $(GitVersion.SemVer)'
+    customCommand: 'version $(GitVersion.SemVer) --force'
 
 - task: Npm@1
   displayName: 'npm install'

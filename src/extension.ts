@@ -1,6 +1,7 @@
 'use strict';
 
 import { exec } from 'child_process';
+import { realpathSync } from "fs";
 import * as vscode from 'vscode';
 import * as which from 'which';
 import { LanguageClientOptions, ErrorAction, CloseAction, RevealOutputChannelOn } from 'vscode-languageclient';
@@ -171,13 +172,15 @@ async function createLanguageClient(context: vscode.ExtensionContext, dotnetExec
     const serverAssembly = context.asAbsolutePath('language-server/MSBuildProjectTools.LanguageServer.Host.dll');
     await dotnet.acquireDependencies(dotnetExecutablePath, serverAssembly);
 
-    const dotnetHostPath = await which('dotnet', { nothrow: true });
+    let dotnetHostPath = await which('dotnet', { nothrow: true });
+
     if (dotnetHostPath === null) {
         outputChannel.appendLine('"dotnet" command was not found in the PATH. Please make sure "dotnet" is available from the PATH and reload extension since it is required for it to work');
         vscode.window.showErrorMessage('"dotnet" was not found in the PATH (see the output window for details).');
         return;
     }
 
+    dotnetHostPath = realpathSync(dotnetHostPath);
     languageServerEnvironment['DOTNET_HOST_PATH'] = dotnetHostPath;
 
     // Probe language server (see if it can start at all).

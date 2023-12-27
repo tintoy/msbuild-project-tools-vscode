@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-const requiredDotnetRuntimeVersion = '6.0';
+const requiredDotnetRuntimeVersion = '8.0';
 
 interface DotnetAcquireResult {
     dotnetPath: string;
@@ -22,6 +22,5 @@ export async function acquireRuntime(extensionId: string) : Promise<string | nul
 }
 
 export async function acquireDependencies(dotnetExecutablePath : string, dotnetAppPath: string) : Promise<void> {
-    const args = [dotnetAppPath];
-    await vscode.commands.executeCommand('dotnet.ensureDotnetDependencies', { command: dotnetExecutablePath, arguments: args });
+    await vscode.commands.executeCommand('dotnet.ensureDotnetDependencies', { command: dotnetExecutablePath, arguments: [dotnetAppPath] });
 }

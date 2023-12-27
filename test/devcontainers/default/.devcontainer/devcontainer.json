@@ -1,0 +1,12 @@
+{
+    "$schema": "https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainer.schema.json",
+    "name": "msbuild-project-tools-test-default",
+    "image": "mcr.microsoft.com/devcontainers/dotnet:1-8.0-jammy",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "/workspaces/msbuild-project-tools-vscode/test/devcontainers/default/msbuild-project-tools.vsix"
+            ]
+        }
+    }
+}

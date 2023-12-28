@@ -1,11 +1,14 @@
 'use strict';
 
 import { exec } from 'child_process';
+import { realpathSync } from "fs";
 import * as vscode from 'vscode';
-import { LanguageClientOptions, ErrorAction, CloseAction, RevealOutputChannelOn, CloseHandlerResult } from 'vscode-languageclient';
+import * as which from 'which';
+import { LanguageClientOptions, ErrorAction, CloseAction, RevealOutputChannelOn } from 'vscode-languageclient';
 import { LanguageClient, ServerOptions } from 'vscode-languageclient/lib/node/main';
 import { Trace } from 'vscode-jsonrpc/lib/node/main';
 
+import * as dotnet from './dotnet';
 import { handleBusyNotifications } from './notifications';
 import { registerCommands } from './commands';
 import { registerInternalCommands } from './internal-commands';
@@ -44,7 +47,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         });
 
         await loadConfiguration();
-        await createLanguageClient(context);
+
+        const dotnetExecutablePath = await dotnet.acquireRuntime(context.extension.id);
+
+        if (dotnetExecutablePath === null) {
+            const baseErrorMessage = 'Cannot enable the MSBuild language service: unable to acquire .NET runtime';
+            outputChannel.appendLine(baseErrorMessage + ". See '.NET Runtime' channel for more info");
+            await vscode.window.showErrorMessage(baseErrorMessage);
+            return;
+        }
+
+        await createLanguageClient(context, dotnetExecutablePath);
 
         context.subscriptions.push(
             handleExpressionAutoClose()
@@ -99,7 +112,7 @@ async function loadConfiguration(): Promise<void> {
  * @param context The current extension context.
  * @returns A promise that resolves to the language client.
  */
-async function createLanguageClient(context: vscode.ExtensionContext): Promise<void> {
+async function createLanguageClient(context: vscode.ExtensionContext, dotnetExecutablePath: string): Promise<void> {
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 50);
     context.subscriptions.push(statusBarItem);
 
@@ -157,17 +170,28 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
     }
 
     const serverAssembly = context.asAbsolutePath('language-server/MSBuildProjectTools.LanguageServer.Host.dll');
+    await dotnet.acquireDependencies(dotnetExecutablePath, serverAssembly);
+
+    let dotnetHostPath = await which('dotnet', { nothrow: true });
+
+    if (dotnetHostPath === null) {
+        outputChannel.appendLine('"dotnet" command was not found in the PATH. Please make sure "dotnet" is available from the PATH and reload extension since it is required for it to work');
+        vscode.window.showErrorMessage('"dotnet" was not found in the PATH (see the output window for details).');
+        return;
+    }
+
+    dotnetHostPath = realpathSync(dotnetHostPath);
+    languageServerEnvironment['DOTNET_HOST_PATH'] = dotnetHostPath;
 
     // Probe language server (see if it can start at all).
-    const serverProbeSuccess: boolean = await probeLanguageServer('dotnet', serverAssembly);
+    const serverProbeSuccess: boolean = await probeLanguageServer(dotnetExecutablePath, serverAssembly);
     if (!serverProbeSuccess) {
         vscode.window.showErrorMessage('Unable to start MSBuild language server (see the output window for details).');
-
         return;
     }
 
     const serverOptions: ServerOptions = {
-        command: 'dotnet',
+        command: dotnetExecutablePath,
         args: [serverAssembly],
         options: {
             env: languageServerEnvironment
@@ -181,28 +205,27 @@ async function createLanguageClient(context: vscode.ExtensionContext): Promise<v
     try {
         await languageClient.start();
         handleBusyNotifications(languageClient, statusBarItem);
+        outputChannel.appendLine('MSBuild language service is running.');
     }
     catch (startFailed) {
         outputChannel.appendLine(`Failed to start MSBuild language service.\n\n${startFailed}`);
         return;
     }
-
-    outputChannel.appendLine('MSBuild language service is running.');
 }
 
 /**
  * Attempt to start the language server process in probe mode (to see if it can be started at all).
  * 
- * @param dotNetExecutable The full path to the .NET Core host executable ("dotnet" or "dotnet.exe").
+ * @param dotnetExecutable The full path to the .NET host executable ("dotnet" or "dotnet.exe").
  * @param serverAssembly The full path to the language server host assembly.
  */
-function probeLanguageServer(dotNetExecutable: string, serverAssembly: string): Promise<boolean> {
+function probeLanguageServer(dotnetExecutable: string, serverAssembly: string): Promise<boolean> {
     return new Promise(resolve => {
         let serverError: Error;
         let serverStdOut: string;
         let serverStdErr: string;
 
-        const languageServerProcess = exec(`"${dotNetExecutable}" "${serverAssembly}" --probe`, (error, stdout, stderr) => {
+        const languageServerProcess = exec(`"${dotnetExecutable}" "${serverAssembly}" --probe`, { env: languageServerEnvironment }, (error, stdout, stderr) => {
             serverError = error;
             serverStdOut = stdout;
             serverStdErr = stderr;

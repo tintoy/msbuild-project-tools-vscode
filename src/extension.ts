@@ -1,6 +1,6 @@
 'use strict';
 
-import { realpathSync } from "fs";
+import { realpathSync } from 'fs';
 import * as vscode from 'vscode';
 import * as which from 'which';
 import { LanguageClientOptions, ErrorAction, CloseAction, RevealOutputChannelOn } from 'vscode-languageclient';

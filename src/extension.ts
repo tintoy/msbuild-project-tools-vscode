@@ -1,6 +1,5 @@
 'use strict';
 
-import { exec } from 'child_process';
 import { realpathSync } from "fs";
 import * as vscode from 'vscode';
 import * as which from 'which';
@@ -183,13 +182,6 @@ async function createLanguageClient(context: vscode.ExtensionContext, dotnetExec
     dotnetHostPath = realpathSync(dotnetHostPath);
     languageServerEnvironment['DOTNET_HOST_PATH'] = dotnetHostPath;
 
-    // Probe language server (see if it can start at all).
-    const serverProbeSuccess: boolean = await probeLanguageServer(dotnetExecutablePath, serverAssembly);
-    if (!serverProbeSuccess) {
-        vscode.window.showErrorMessage('Unable to start MSBuild language server (see the output window for details).');
-        return;
-    }
-
     const serverOptions: ServerOptions = {
         command: dotnetExecutablePath,
         args: [serverAssembly],
@@ -211,56 +203,6 @@ async function createLanguageClient(context: vscode.ExtensionContext, dotnetExec
         outputChannel.appendLine(`Failed to start MSBuild language service.\n\n${startFailed}`);
         return;
     }
-}
-
-/**
- * Attempt to start the language server process in probe mode (to see if it can be started at all).
- * 
- * @param dotnetExecutable The full path to the .NET host executable ("dotnet" or "dotnet.exe").
- * @param serverAssembly The full path to the language server host assembly.
- */
-function probeLanguageServer(dotnetExecutable: string, serverAssembly: string): Promise<boolean> {
-    return new Promise(resolve => {
-        let serverError: Error;
-        let serverStdOut: string;
-        let serverStdErr: string;
-
-        const languageServerProcess = exec(`"${dotnetExecutable}" "${serverAssembly}" --probe`, { env: languageServerEnvironment }, (error, stdout, stderr) => {
-            serverError = error;
-            serverStdOut = stdout;
-            serverStdErr = stderr;
-        });
-
-        languageServerProcess.on('close', exitCode => {
-            if (!serverError && exitCode === 0) {
-                resolve(true);
-
-                return;
-            }
-
-            console.log("Failed to start language server.");
-            outputChannel.appendLine('Failed to start the MSBuild language server.');
-
-            if (serverError) {
-                console.log(serverError);
-                outputChannel.appendLine(
-                    serverError.toString()
-                );
-            }
-
-            if (serverStdOut) {
-                console.log(serverStdOut);
-                outputChannel.appendLine(serverStdOut);
-            }
-
-            if (serverStdErr) {
-                console.log(serverStdErr);
-                outputChannel.appendLine(serverStdErr);
-            }
-
-            resolve(false);
-        });
-    });
 }
 
 /**

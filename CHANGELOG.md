@@ -1,5 +1,11 @@
 # Change Log
 
+# v0.6.0
+
+* Extension startup time has been improved.
+* The MSBuild language server now runs on .NET 8.
+* Isolated runtime for the language server is back, so users no longer need to have a specific version of .NET to be installed to be able to use the extension.
+
 # v0.5.3
 
 *  Improve file-access behaviour for project.assets.json (tintoy/msbuild-project-tools-server#82).

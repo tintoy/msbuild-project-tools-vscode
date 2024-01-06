@@ -62,7 +62,7 @@ See [architectural overview](docs/architecture/overview.md) for details (this is
 ## Limitations
 
 * The VS Code extension API has changed somewhat since this extension was first created, and some features (such as hyperlinks to files in hover tooltips) are only partially functional at present (broken by VS Code API / behaviour changes).  
-  _This is being worked on :-)_
+  _This is still being worked on :-)_
 * Limited intellisense is available for dynamic `PropertyGroup` / `ItemGroup` declarations (i.e. those appearing inside a `Target` element); these are only evaluated when the project is built and so very little information about them is available to us when statically evaluating the project (see [tintoy/msbuild-project-tools-server#5](https://github.com/tintoy/msbuild-project-tools-server/issues/5#issuecomment-383352512) for details).
 * Support for task completions is experimental; if you find a problem with it, please [create an issue](https://github.com/tintoy/msbuild-project-tools-vscode/issues/new).
 * If you open more than one project at a time (or navigate to imported projects), subsequent projects will be loaded into the same MSBuild project collection as the first project. Once you have closed the last project file, the next project file you open will become the master project. The master project will become selectable in a later release.

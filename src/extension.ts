@@ -47,15 +47,24 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
         await loadConfiguration();
 
-        const hostRuntime = await dotnet.discoverUserRuntime();
+        const hostRuntimeDiscoveryResult = await dotnet.discoverUserRuntime();
 
-        if (hostRuntime === null) {
-            outputChannel.appendLine('"dotnet" command was not found in the PATH. Please make sure "dotnet" is available from the PATH and reload extension since it is required for it to work');
-            vscode.window.showErrorMessage('"dotnet" was not found in the PATH (see the output window for details).');
+        if (!hostRuntimeDiscoveryResult.success) {
+            const failureResult = hostRuntimeDiscoveryResult as { failure: dotnet.RuntimeDiscoveryFailure };
+            switch (failureResult.failure) {
+                case dotnet.RuntimeDiscoveryFailure.DotnetNotFoundInPath:
+                    outputChannel.appendLine('"dotnet" command was not found in the PATH. Please make sure "dotnet" is available from the PATH and reload extension since it is required for it to work');
+                    vscode.window.showErrorMessage('"dotnet" was not found in the PATH (see the output window for details).');
+                    break;
+                case dotnet.RuntimeDiscoveryFailure.ErrorWhileGettingRuntimesList:
+                    outputChannel.appendLine('Error occured while trying to execute "dotnet --list-runtimes" command');
+                    vscode.window.showErrorMessage('Error occured while trying to invoke "dotnet" command (see the output window for details).');
+                    break;
+            }
             return;
         }
 
-        await createLanguageClient(context, hostRuntime);
+        await createLanguageClient(context, hostRuntimeDiscoveryResult);
 
         context.subscriptions.push(
             handleExpressionAutoClose()
@@ -110,7 +119,7 @@ async function loadConfiguration(): Promise<void> {
  * @param context The current extension context.
  * @returns A promise that resolves to the language client.
  */
-async function createLanguageClient(context: vscode.ExtensionContext, dotnetOnHost: dotnet.RuntimeDiscoveryResult): Promise<void> {
+async function createLanguageClient(context: vscode.ExtensionContext, dotnetOnHost: { dotnetExecutablePath: string, canBeUsedForRunningLanguageServer: boolean }): Promise<void> {
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 50);
     context.subscriptions.push(statusBarItem);
 

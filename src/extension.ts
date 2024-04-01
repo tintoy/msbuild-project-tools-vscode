@@ -47,16 +47,24 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
         await loadConfiguration();
 
-        const dotnetExecutablePath = await dotnet.acquireRuntime(context.extension.id);
+        const hostRuntimeDiscoveryResult = await dotnet.discoverUserRuntime();
 
-        if (dotnetExecutablePath === null) {
-            const baseErrorMessage = 'Cannot enable the MSBuild language service: unable to acquire .NET runtime';
-            outputChannel.appendLine(baseErrorMessage + ". See '.NET Runtime' channel for more info");
-            await vscode.window.showErrorMessage(baseErrorMessage);
+        if (!hostRuntimeDiscoveryResult.success) {
+            const failureResult = hostRuntimeDiscoveryResult as { failure: dotnet.RuntimeDiscoveryFailure };
+            switch (failureResult.failure) {
+                case dotnet.RuntimeDiscoveryFailure.DotnetNotFoundInPath:
+                    outputChannel.appendLine('"dotnet" command was not found in the PATH. Please make sure "dotnet" is available from the PATH and reload extension since it is required for it to work');
+                    vscode.window.showErrorMessage('"dotnet" was not found in the PATH (see the output window for details).');
+                    break;
+                case dotnet.RuntimeDiscoveryFailure.ErrorWhileGettingRuntimesList:
+                    outputChannel.appendLine('Error occured while trying to execute "dotnet --list-runtimes" command');
+                    vscode.window.showErrorMessage('Error occured while trying to invoke "dotnet" command (see the output window for details).');
+                    break;
+            }
             return;
         }
 
-        await createLanguageClient(context, dotnetExecutablePath);
+        await createLanguageClient(context, hostRuntimeDiscoveryResult);
 
         context.subscriptions.push(
             handleExpressionAutoClose()
@@ -111,7 +119,7 @@ async function loadConfiguration(): Promise<void> {
  * @param context The current extension context.
  * @returns A promise that resolves to the language client.
  */
-async function createLanguageClient(context: vscode.ExtensionContext, dotnetExecutablePath: string): Promise<void> {
+async function createLanguageClient(context: vscode.ExtensionContext, dotnetOnHost: { dotnetExecutablePath: string, canBeUsedForRunningLanguageServer: boolean }): Promise<void> {
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 50);
     context.subscriptions.push(statusBarItem);
 
@@ -169,21 +177,30 @@ async function createLanguageClient(context: vscode.ExtensionContext, dotnetExec
     }
 
     const serverAssembly = context.asAbsolutePath('language-server/MSBuildProjectTools.LanguageServer.Host.dll');
-    await dotnet.acquireDependencies(dotnetExecutablePath, serverAssembly);
+    let dotnetForLanguageServer = dotnetOnHost.dotnetExecutablePath;
 
-    let dotnetHostPath = await which('dotnet', { nothrow: true });
+    if (!dotnetOnHost.canBeUsedForRunningLanguageServer) {
+        const isolatedDotnet = await dotnet.acquireIsolatedRuntime(context.extension.id);
 
-    if (dotnetHostPath === null) {
-        outputChannel.appendLine('"dotnet" command was not found in the PATH. Please make sure "dotnet" is available from the PATH and reload extension since it is required for it to work');
-        vscode.window.showErrorMessage('"dotnet" was not found in the PATH (see the output window for details).');
-        return;
+        if (isolatedDotnet === null) {
+            const baseErrorMessage = 'Cannot enable the MSBuild language service: unable to acquire isolated .NET runtime';
+            outputChannel.appendLine(baseErrorMessage + ". See '.NET Runtime' channel for more info");
+            await vscode.window.showErrorMessage(baseErrorMessage);
+            return;
+        }
+
+        await dotnet.acquireDependencies(isolatedDotnet, serverAssembly);
+
+        dotnetForLanguageServer = isolatedDotnet;
+        outputChannel.appendLine("Using isolated .NET runtime");
+    } else {
+        outputChannel.appendLine("Using .NET runtime from the host");
     }
 
-    dotnetHostPath = realpathSync(dotnetHostPath);
-    languageServerEnvironment['DOTNET_HOST_PATH'] = dotnetHostPath;
+    languageServerEnvironment['DOTNET_HOST_PATH'] = realpathSync(dotnetOnHost.dotnetExecutablePath);
 
     const serverOptions: ServerOptions = {
-        command: dotnetExecutablePath,
+        command: dotnetForLanguageServer,
         args: [serverAssembly],
         options: {
             env: languageServerEnvironment

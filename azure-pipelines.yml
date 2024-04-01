@@ -85,6 +85,7 @@ steps:
     projects: './lib/server/src/LanguageServer/LanguageServer.csproj'
     arguments: '--configuration "$(buildConfiguration)" -o "./language-server" /p:VersionPrefix="$(GitVersion.MajorMinorPatch)" /p:VersionSuffix="$(GitVersion.PreReleaseTag)"'
     modifyOutputPath: false
+    zipAfterPublish: false
 
 - script: npx vsce package -o "$(Build.ArtifactStagingDirectory)/msbuild-project-tools-vscode-$(GitVersion.SemVer).vsix"
   displayName: 'Build VS Code extension package'

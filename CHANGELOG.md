@@ -1,5 +1,9 @@
 # Change Log
 
+# v0.6.3
+
+* Improve handling of concurrent loads for MSBuild sub-projects (fixes tintoy/msbuild-project-tools-server#100).
+
 # v0.6.0
 
 * Extension startup time has been improved.

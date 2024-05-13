@@ -1,5 +1,9 @@
 # Change Log
 
+# v0.6.4
+
+* Update intellisense help content for Content items and CopyToXXXDirectory global item metadata (tintoy/msbuild-project-tools-vscode#148).
+
 # v0.6.3
 
 * Improve handling of concurrent loads for MSBuild sub-projects (fixes tintoy/msbuild-project-tools-server#100).

@@ -45,9 +45,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             message: 'Initialising MSBuild project tools...'
         });
 
-        await loadConfiguration();
+        const workspaceConfiguration = vscode.workspace.getConfiguration();
+        await loadConfiguration(workspaceConfiguration);
 
-        const hostRuntimeDiscoveryResult = await dotnet.discoverUserRuntime();
+        const useLatestDotnet = workspaceConfiguration.get<boolean>('msbuildProjectTools.host.useLatestDotnet');
+        const hostRuntimeDiscoveryResult = await dotnet.discoverUserRuntime(useLatestDotnet);
 
         if (!hostRuntimeDiscoveryResult.success) {
             const failureResult = hostRuntimeDiscoveryResult as { failure: dotnet.RuntimeDiscoveryFailure };
@@ -64,7 +66,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             return;
         }
 
-        await createLanguageClient(context, hostRuntimeDiscoveryResult);
+        await createLanguageClient(context, hostRuntimeDiscoveryResult, useLatestDotnet);
 
         context.subscriptions.push(
             handleExpressionAutoClose()
@@ -76,7 +78,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(async args => {
-            await loadConfiguration();
+            const workspaceConfiguration = vscode.workspace.getConfiguration();
+            await loadConfiguration(workspaceConfiguration);
 
             if (languageClient) {
                 const trace = configuration.logging.trace ? Trace.Verbose : Trace.Off;
@@ -96,9 +99,7 @@ export async function deactivate(): Promise<void> {
 /**
  * Load extension configuration from the workspace.
  */
-async function loadConfiguration(): Promise<void> {
-    const workspaceConfiguration = vscode.workspace.getConfiguration();
-
+async function loadConfiguration(workspaceConfiguration: vscode.WorkspaceConfiguration): Promise<void> {
     configuration = workspaceConfiguration.get('msbuildProjectTools');
     
     await upgradeConfigurationSchema(configuration);
@@ -119,7 +120,7 @@ async function loadConfiguration(): Promise<void> {
  * @param context The current extension context.
  * @returns A promise that resolves to the language client.
  */
-async function createLanguageClient(context: vscode.ExtensionContext, dotnetOnHost: { dotnetExecutablePath: string, canBeUsedForRunningLanguageServer: boolean }): Promise<void> {
+async function createLanguageClient(context: vscode.ExtensionContext, dotnetOnHost: { dotnetExecutablePath: string, canBeUsedForRunningLanguageServer: boolean }, useLatestDotnet: boolean): Promise<void> {
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 50);
     context.subscriptions.push(statusBarItem);
 
@@ -194,6 +195,11 @@ async function createLanguageClient(context: vscode.ExtensionContext, dotnetOnHo
         dotnetForLanguageServer = isolatedDotnet;
         outputChannel.appendLine("Using isolated .NET runtime");
     } else {
+        if (useLatestDotnet) {
+            languageServerEnvironment['DOTNET_ROLL_FORWARD'] = 'LatestMajor';
+            languageServerEnvironment['DOTNET_ROLL_FORWARD_TO_PRERELEASE'] = '1';
+        }
+
         outputChannel.appendLine("Using .NET runtime from the host");
     }
 

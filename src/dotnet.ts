@@ -11,7 +11,7 @@ export type RuntimeDiscoveryResult =
 
 export const enum RuntimeDiscoveryFailure { DotnetNotFoundInPath, ErrorWhileGettingRuntimesList };
 
-export async function discoverUserRuntime() : Promise<RuntimeDiscoveryResult> {
+export async function discoverUserRuntime(canUseNewerRuntime: boolean) : Promise<RuntimeDiscoveryResult> {
     const dotnetHostPath = await which('dotnet', { nothrow: true });
 
     if (dotnetHostPath === null) {
@@ -43,7 +43,7 @@ export async function discoverUserRuntime() : Promise<RuntimeDiscoveryResult> {
     // Default roll forward policy of .NET is 'minor', so in order to find compatible runtime we need to make sure
     // that we have at least one generic runtime with the same major version as we need
     const requiredMajorVersion = semver.major(`${requiredDotnetRuntimeVersion}.0`);
-    const hasCompatibleRuntime = runtimes.filter(r => r.type === "Microsoft.NETCore.App" && semver.major(r.version) === requiredMajorVersion).length > 0;
+    const hasCompatibleRuntime = runtimes.filter(r => r.type === "Microsoft.NETCore.App" && (canUseNewerRuntime ? semver.major(r.version) >= requiredMajorVersion : semver.major(r.version) === requiredMajorVersion)).length > 0;
 
     return {
         success: true,

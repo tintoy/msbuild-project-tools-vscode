@@ -49,12 +49,6 @@
             "title": "MSBuild project tools",
             "type": "object",
             "properties": {
-                "msbuildProjectTools.host.useLatestDotnet": {
-                    "title": "Use latest .NET version available on the machine for running the language server",
-                    "type": "boolean",
-                    "default": false,
-                    "description": "If true, allows to use the latest .NET available on the machine (including preview versions) for running the language server"
-                },
                 "msbuildProjectTools.logging.level": {
                     "title": "Language service logging level.",
                     "type": "string",

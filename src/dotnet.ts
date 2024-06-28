@@ -44,8 +44,7 @@ export async function discoverUserRuntime() : Promise<RuntimeDiscoveryResult> {
     // since MSBuild might need to load assemblies of newer versions.
     // Therefore we pick runtimes of the same major version or higher
     const requiredMajorVersion = semver.major(`${requiredDotnetRuntimeVersion}.0`);
-    const netAppRuntimes = runtimes.filter(r => r.type === 'Microsoft.NETCore.App');
-    const hasCompatibleRuntime = netAppRuntimes.filter(r => r.type === "Microsoft.NETCore.App" && semver.major(r.version) >= requiredMajorVersion).length > 0;
+    const hasCompatibleRuntime = runtimes.filter(r => r.type === "Microsoft.NETCore.App" && semver.major(r.version) >= requiredMajorVersion).length > 0;
 
     return {
         success: true,

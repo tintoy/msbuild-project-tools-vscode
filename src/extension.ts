@@ -97,9 +97,7 @@ export async function deactivate(): Promise<void> {
  * Load extension configuration from the workspace.
  */
 async function loadConfiguration(): Promise<void> {
-    const workspaceConfiguration = vscode.workspace.getConfiguration();
-
-    configuration = workspaceConfiguration.get('msbuildProjectTools');
+    configuration = vscode.workspace.getConfiguration().get('msbuildProjectTools');
     
     await upgradeConfigurationSchema(configuration);
 
@@ -194,6 +192,9 @@ async function createLanguageClient(context: vscode.ExtensionContext, dotnetOnHo
         dotnetForLanguageServer = isolatedDotnet;
         outputChannel.appendLine("Using isolated .NET runtime");
     } else {
+        languageServerEnvironment['DOTNET_ROLL_FORWARD'] = 'LatestMajor';
+        languageServerEnvironment['DOTNET_ROLL_FORWARD_TO_PRERELEASE'] = '1';
+
         outputChannel.appendLine("Using .NET runtime from the host");
     }
 

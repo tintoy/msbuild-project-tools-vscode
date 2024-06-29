@@ -30,7 +30,7 @@ export async function discoverUserRuntime() : Promise<RuntimeDiscoveryResult> {
 
     const runtimeStringLines = dotnetRuntimeListOutput.match(/[^\r\n]+/g);
     const runtimes = runtimeStringLines.map(line => {
-        const match = line.match(/^(.+?)\s+(\d+\.\d+\.\d+)\s+\[(.+?)\]$/);
+        const match = line.match(/^(.+?)\s+([\d.]+(?:-[\w.]+)?)\s+\[(.+?)\]$/);
         if (match) {
             return {
                 type: match[1],
@@ -40,10 +40,11 @@ export async function discoverUserRuntime() : Promise<RuntimeDiscoveryResult> {
         }
     }).filter(Boolean);
 
-    // Default roll forward policy of .NET is 'minor', so in order to find compatible runtime we need to make sure
-    // that we have at least one generic runtime with the same major version as we need
+    // We will force .NET to use the latest runtime available for running language server
+    // since MSBuild might need to load assemblies of newer versions.
+    // Therefore we pick runtimes of the same major version or higher
     const requiredMajorVersion = semver.major(`${requiredDotnetRuntimeVersion}.0`);
-    const hasCompatibleRuntime = runtimes.filter(r => r.type === "Microsoft.NETCore.App" && semver.major(r.version) === requiredMajorVersion).length > 0;
+    const hasCompatibleRuntime = runtimes.filter(r => r.type === "Microsoft.NETCore.App" && semver.major(r.version) >= requiredMajorVersion).length > 0;
 
     return {
         success: true,

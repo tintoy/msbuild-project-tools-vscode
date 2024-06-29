@@ -1,5 +1,9 @@
 # Change Log
 
+# Upcoming
+
+* Extension now more aggressively forces local user runtime and picks up the latest runtime version available (including previews). This makes it possible to use the extension with preview versions of .NET/MSBuild
+
 # v0.6.4
 
 * Update intellisense help content for Content items and CopyToXXXDirectory global item metadata (tintoy/msbuild-project-tools-vscode#148).
@@ -16,7 +20,7 @@
 
 # v0.5.3
 
-*  Improve file-access behaviour for project.assets.json (tintoy/msbuild-project-tools-server#82).
+* Improve file-access behaviour for project.assets.json (tintoy/msbuild-project-tools-server#82).
 
 # v0.5.2
 

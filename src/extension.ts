@@ -2,14 +2,12 @@
 
 import { realpathSync } from 'fs';
 import * as vscode from 'vscode';
-import * as which from 'which';
 import { LanguageClientOptions, ErrorAction, CloseAction, RevealOutputChannelOn } from 'vscode-languageclient';
 import { LanguageClient, ServerOptions } from 'vscode-languageclient/lib/node/main';
 import { Trace } from 'vscode-jsonrpc/lib/node/main';
 
 import * as dotnet from './dotnet';
 import { handleBusyNotifications } from './notifications';
-import { registerCommands } from './commands';
 import { registerInternalCommands } from './internal-commands';
 import { Settings, upgradeConfigurationSchema, readVSCodeSettings } from './settings';
 
@@ -70,7 +68,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             handleExpressionAutoClose()
         );
 
-        registerCommands(context, statusBarItem);
         registerInternalCommands(context);
     });
 

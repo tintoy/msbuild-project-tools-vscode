@@ -118,11 +118,6 @@ export interface SeqLoggingSettings {
  */
 export interface LanguageSettings {
     /**
-     * Use the classic completion provider instead of the full language service?
-     */
-    useClassicProvider?: boolean;
-
-    /**
      * Disabled language-service features.
      */
     disable: DisabledFeatureSettings;
@@ -190,14 +185,6 @@ export async function upgradeConfigurationSchema(configuration: any): Promise<an
 
     const legacyLanguageConfiguration = configuration.language;
     if (legacyLanguageConfiguration) {
-        if (legacyLanguageConfiguration.useClassicProvider) {
-            await workspaceConfiguration.update('msbuildProjectTools.language.useClassicProvider',
-                legacyLanguageConfiguration.useClassicProvider,
-                true // global
-            );
-
-            modified = true;
-        }
         if (legacyLanguageConfiguration.disableHover) {
             await workspaceConfiguration.update('msbuildProjectTools.language.disableHover',
                 legacyLanguageConfiguration.disableHover,

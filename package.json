@@ -95,12 +95,6 @@
                     "default": false,
                     "description": "Trace all communication between VSCode and the MSBuild language service?"
                 },
-                "msbuildProjectTools.language.useClassicProvider": {
-                    "title": "Use classic completion provider",
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Use the classic completion provider for PackageReferences, instead of the full language service?"
-                },
                 "msbuildProjectTools.language.disable.hover": {
                     "title": "Disable tooltips on hover?",
                     "type": "boolean",

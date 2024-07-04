@@ -38,13 +38,7 @@
     ],
     "main": "./dist/extension",
     "contributes": {
-        "commands": [
-            {
-                "command": "msbuildProjectTools.toggleNuGetPreRelease",
-                "title": "Toggle pre-prelease",
-                "category": "NuGet"
-            }
-        ],
+        "commands": [],
         "configuration": {
             "title": "MSBuild project tools",
             "type": "object",

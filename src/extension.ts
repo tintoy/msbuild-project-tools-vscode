@@ -9,7 +9,7 @@ import { Trace } from 'vscode-jsonrpc/lib/node/main';
 import * as dotnet from './dotnet';
 import { handleBusyNotifications } from './notifications';
 import { registerInternalCommands } from './internal-commands';
-import { Settings, upgradeConfigurationSchema, readVSCodeSettings } from './settings';
+import { Settings, readVSCodeSettings } from './settings';
 
 let configuration: Settings;
 let languageClient: LanguageClient;
@@ -95,8 +95,6 @@ export async function deactivate(): Promise<void> {
  */
 async function loadConfiguration(): Promise<void> {
     configuration = vscode.workspace.getConfiguration().get('msbuildProjectTools');
-    
-    await upgradeConfigurationSchema(configuration);
 
     configuration = readVSCodeSettings(configuration);
 

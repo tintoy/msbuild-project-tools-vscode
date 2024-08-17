@@ -1,8 +1,9 @@
 # Change Log
 
-# Upcoming
+# v0.6.5
 
-* Extension now more aggressively forces local user runtime and picks up the latest runtime version available (including previews). This makes it possible to use the extension with preview versions of .NET/MSBuild
+* Extension now more aggressively forces local user runtime and picks up the latest runtime version available (including previews). This makes it possible to use the extension with preview versions of .NET/MSBuild (tintoy/msbuild-project-tools-vscode#152).
+* Language server now validates `dotnet` host process exit code and can provide more diagnostic information in some scenarios, such as when the SDK configured in `global.json` is not available (tintoy/msbuild-project-tools-server#106).
 
 # v0.6.4
 

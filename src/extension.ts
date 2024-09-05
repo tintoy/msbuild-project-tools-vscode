@@ -16,7 +16,6 @@ let languageClient: LanguageClient;
 let statusBarItem: vscode.StatusBarItem;
 let outputChannel: vscode.OutputChannel;
 
-const featureFlags = new Set<string>();
 const languageServerEnvironment = Object.assign({}, process.env);
 
 const projectDocumentSelector: vscode.DocumentSelector = [
@@ -95,15 +94,7 @@ export async function deactivate(): Promise<void> {
  */
 async function loadConfiguration(): Promise<void> {
     configuration = vscode.workspace.getConfiguration().get('msbuildProjectTools');
-
     configuration = readVSCodeSettings(configuration);
-
-    featureFlags.clear();
-    if (configuration.experimentalFeatures) {
-        configuration.experimentalFeatures.forEach(
-            featureFlag => featureFlags.add(featureFlag)
-        );
-    }
 }
 
 /**
@@ -224,9 +215,6 @@ async function createLanguageClient(context: vscode.ExtensionContext, dotnetOnHo
 function handleExpressionAutoClose(): vscode.Disposable {
     return vscode.workspace.onDidChangeTextDocument(async args => {
         if (!vscode.languages.match(projectDocumentSelector, args.document))
-            return;
-
-        if (!featureFlags.has('expressions'))
             return;
 
         if (args.contentChanges.length !== 1)

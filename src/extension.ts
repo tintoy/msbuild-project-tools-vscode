@@ -9,9 +9,7 @@ import { Trace } from 'vscode-jsonrpc/lib/node/main';
 import * as dotnet from './dotnet';
 import { handleBusyNotifications } from './notifications';
 import { registerInternalCommands } from './internal-commands';
-import { Settings, readVSCodeSettings } from './settings';
 
-let configuration: Settings;
 let languageClient: LanguageClient;
 let statusBarItem: vscode.StatusBarItem;
 let outputChannel: vscode.OutputChannel;
@@ -42,8 +40,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             message: 'Initialising MSBuild project tools...'
         });
 
-        await loadConfiguration();
-
         const hostRuntimeDiscoveryResult = await dotnet.discoverUserRuntime();
 
         if (!hostRuntimeDiscoveryResult.success) {
@@ -72,10 +68,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(async args => {
-            await loadConfiguration();
-
-            if (languageClient) {
-                const trace = configuration.logging.trace ? Trace.Verbose : Trace.Off;
+            if (languageClient && args.affectsConfiguration('msbuildProjectTools.logging.trace')) {
+                const trace = vscode.workspace.getConfiguration('msbuildProjectTools.logging').trace ? Trace.Verbose : Trace.Off;
                 await languageClient.setTrace(trace);
             }
         })
@@ -87,14 +81,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
  */
 export async function deactivate(): Promise<void> {
     await languageClient.stop();
-}
-
-/**
- * Load extension configuration from the workspace.
- */
-async function loadConfiguration(): Promise<void> {
-    configuration = vscode.workspace.getConfiguration().get('msbuildProjectTools');
-    configuration = readVSCodeSettings(configuration);
 }
 
 /**
@@ -146,17 +132,19 @@ async function createLanguageClient(context: vscode.ExtensionContext, dotnetOnHo
         revealOutputChannelOn: RevealOutputChannelOn.Never
     };
 
-    const seqLoggingSettings = configuration.logging.seq;
-    if (seqLoggingSettings && seqLoggingSettings.url) {
+    const loggingConfig = vscode.workspace.getConfiguration('msbuildProjectTools.logging');
+
+    const seqLoggingSettings = loggingConfig.seq;
+    if (seqLoggingSettings?.url) {
         languageServerEnvironment['MSBUILD_PROJECT_TOOLS_SEQ_URL'] = seqLoggingSettings.url;
         languageServerEnvironment['MSBUILD_PROJECT_TOOLS_SEQ_API_KEY'] = seqLoggingSettings.apiKey;
     }
 
-    if (configuration.logging.file) {
-        languageServerEnvironment['MSBUILD_PROJECT_TOOLS_LOG_FILE'] = configuration.logging.file;
+    if (loggingConfig.file) {
+        languageServerEnvironment['MSBUILD_PROJECT_TOOLS_LOG_FILE'] = loggingConfig.file;
     }
 
-    if (configuration.logging.level === 'Verbose') {
+    if (loggingConfig.level === 'Verbose') {
         languageServerEnvironment['MSBUILD_PROJECT_TOOLS_VERBOSE_LOGGING'] = '1';
     }
 
@@ -195,7 +183,7 @@ async function createLanguageClient(context: vscode.ExtensionContext, dotnetOnHo
     };
 
     languageClient = new LanguageClient('MSBuild Language Service', serverOptions, clientOptions);
-    const trace = configuration.logging.trace ? Trace.Verbose : Trace.Off;
+    const trace = loggingConfig.trace ? Trace.Verbose : Trace.Off;
     await languageClient.setTrace(trace);
 
     try {

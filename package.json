@@ -95,28 +95,6 @@
                     "default": false,
                     "description": "Disable tooltips when hovering on XML in MSBuild project files?"
                 },
-                "msbuildProjectTools.language.completionsFromProject": {
-                    "title": "Include completions the current project.",
-                    "type": "array",
-                    "items": {
-                        "type": "string",
-                        "enum": [
-                            "ItemType",
-                            "ItemMetadata",
-                            "Property",
-                            "Target",
-                            "Task"
-                        ]
-                    },
-                    "default": [
-                        "ItemType",
-                        "ItemMetadata",
-                        "Property",
-                        "Target",
-                        "Task"
-                    ],
-                    "description": "Types of objects defined in the current project to include when offering completions."
-                },
                 "msbuildProjectTools.msbuild.extensionsPath": {
                     "type": "string",
                     "default": null,

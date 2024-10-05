@@ -1,5 +1,9 @@
 # Change Log
 
+# v0.6.6
+
+* Correctly handle VSCode/LSP completion behaviour where the last character typed is implicitly part of the current selection, if it triggered completion (tintoy/msbuild-project-tools-vscode#93).
+
 # v0.6.5
 
 * Extension now more aggressively forces local user runtime and picks up the latest runtime version available (including previews). This makes it possible to use the extension with preview versions of .NET/MSBuild (tintoy/msbuild-project-tools-vscode#152).

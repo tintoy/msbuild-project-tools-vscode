@@ -105,6 +105,11 @@
                     "default": null,
                     "description": "Override the MSBuildExtensionsPath32 property."
                 },
+                "msbuildProjectTools.msbuild.globalProperties": {
+                    "type": "object",
+                    "default": {},
+                    "description": "Override the default MSBuild properties used when a project is first loaded."
+                },
                 "msbuildProjectTools.experimentalFeatures": {
                     "type": "array",
                     "items": {

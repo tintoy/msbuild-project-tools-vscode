@@ -14,4 +14,6 @@ variables:
 
 stages:
 - template: ./azure-pipelines-template.yml
-  buildConfiguration: ${{ variables.buildConfiguration }}
+  parameters:
+    buildConfiguration: ${{ variables.buildConfiguration }}
+    publish: false

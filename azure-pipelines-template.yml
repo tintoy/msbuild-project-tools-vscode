@@ -160,11 +160,7 @@ stages:
                 targetType: inline
                 script: |
                   VS_EXTENSION_PACKAGE_DIR="$(Pipeline.Workspace)/vscode-extension"
-
-                  ls -laR $VS_EXTENSION_PACKAGE_DIR
-                  ls -laR "$VS_EXTENSION_PACKAGE_DIR"
                   ls $VS_EXTENSION_PACKAGE_DIR/msbuild-project-tools-vscode*.vsix
-                  ls "$VS_EXTENSION_PACKAGE_DIR/msbuild-project-tools-vscode*.vsix"
 
                   # don't publish, yet:
-                  echo npx vsce publish --pat "$VS_MARKETPLACE_PUBLISHER_TOKEN" --packagePath "$VS_EXTENSION_PACKAGE_DIR/msbuild-project-tools-vscode-*.vsix"
+                  echo npx vsce publish --pat "$VS_MARKETPLACE_PUBLISHER_TOKEN" --packagePath $VS_EXTENSION_PACKAGE_DIR/msbuild-project-tools-vscode-*.vsix

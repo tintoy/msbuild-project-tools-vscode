@@ -1,0 +1,16 @@
+variables:
+  - name: buildConfiguration
+    value: Release
+  - group: vs-marketplace-publisher
+
+trigger:
+  tags:
+    include:
+      - 'v*'
+
+stages:
+- template: ./azure-pipelines-template.yml
+  parameters:
+    buildConfiguration: ${{ variables.buildConfiguration }}
+    publish: true
+    vsMarketplacePublisherToken: ${{ variables.VSMarketPlacePublisherToken }}

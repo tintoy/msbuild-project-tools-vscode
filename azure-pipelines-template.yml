@@ -1,0 +1,168 @@
+parameters:
+  - name: buildConfiguration
+    default: Release
+  - name: publish
+    type: boolean
+    default: false
+  - name: vsMarketplacePublisherToken
+    type: string
+    default: ''
+
+stages:
+- stage: Build
+  displayName: Build
+
+  pool:
+    vmImage: ubuntu-latest
+
+  jobs:
+  - job: Build
+    displayName: Build extension and language server
+
+    steps:
+    - task: gitversion/setup@0
+      displayName: 'Install GitVersion'
+
+      inputs:
+        versionSpec: 5.x
+
+    - task: GitVersion/execute@0
+      displayName: 'Determine build version'
+      name: GitVersion
+
+    - task: Npm@1
+      displayName: 'Install npx'
+      inputs:
+        command: custom
+        customCommand: 'install nx'
+        verbose: false
+
+    - task: Npm@1
+      displayName: 'Update extension package version'
+
+      inputs:
+        command: custom
+        customCommand: 'version $(GitVersion.SemVer) --git-tag-version false'
+
+    - task: Npm@1
+      displayName: 'npm install'
+
+      inputs:
+        command: ci
+        workingDir: $(Build.SourcesDirectory)
+
+    # TODO: Rather than build language server as part of extension CI, check the last commit in history for repo @ ./lib/server that is associated with a GitHub release and download the appropriate language server artifact from there.
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Restore packages'
+      
+      inputs:
+        command: 'restore'
+        projects: './lib/server/MSBuildProjectTools.sln'
+        restoreArguments: '/p:VersionPrefix="$(GitVersion.MajorMinorPatch)" /p:VersionSuffix="$(GitVersion.PreReleaseTag)"'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Build solution'
+      
+      inputs:
+        command: 'build'
+        projects: './lib/server/MSBuildProjectTools.sln'
+        arguments: '--configuration "$(buildConfiguration)" /p:VersionPrefix="$(GitVersion.MajorMinorPatch)" /p:VersionSuffix="$(GitVersion.PreReleaseTag)"'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Run tests'
+      
+      inputs:
+        command: 'test'
+        projects: './lib/server/test/LanguageServer.Engine.Tests/LanguageServer.Engine.Tests.csproj'
+        arguments: '--configuration "$(buildConfiguration)" /p:VersionPrefix="$(GitVersion.MajorMinorPatch)" /p:VersionSuffix="$(GitVersion.PreReleaseTag)"'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Publish language server'
+      
+      inputs:
+        command: 'publish'
+        publishWebProjects: false
+        projects: './lib/server/src/LanguageServer/LanguageServer.csproj'
+        arguments: '--configuration "$(buildConfiguration)" -o "./language-server" /p:VersionPrefix="$(GitVersion.MajorMinorPatch)" /p:VersionSuffix="$(GitVersion.PreReleaseTag)"'
+        modifyOutputPath: false
+        zipAfterPublish: false
+
+    - script: npx vsce package -o "$(Build.ArtifactStagingDirectory)/msbuild-project-tools-vscode-$(GitVersion.SemVer).vsix"
+      displayName: 'Build VS Code extension package'
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish extension package'
+      
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)/msbuild-project-tools-vscode-$(GitVersion.SemVer).vsix'
+        ArtifactName: 'vscode-extension'
+        publishLocation: 'Container'
+
+    - task: GitHubRelease@1
+      displayName: 'Create GitHub release from tag'
+
+      condition: and( and( ${{ parameters.publish }}, succeeded() ), contains( variables['Build.SourceBranch'], 'refs/tags/v' ) )
+
+      inputs:
+        gitHubConnection: 'github.com_tintoy'
+        repositoryName: '$(Build.Repository.Name)'
+        action: 'create'
+        target: '$(Build.SourceVersion)'
+        tagSource: 'gitTag'
+        tagPattern: '^v\d+\.\d+.\d+(-[A-Za-z0-9%\.]+)?$'
+        releaseNotesFilePath: $(Build.SourcesDirectory)/CHANGELOG.md
+        addChangeLog: false
+        assets: '$(Build.ArtifactStagingDirectory)/*.vsix'
+        assetUploadMode: replace
+
+- stage: Publish
+  displayName: Publish
+
+  condition: and( ${{ parameters.publish }}, succeeded() )
+
+  pool:
+    vmImage: ubuntu-latest
+
+  jobs:
+  - deployment: Publish
+    displayName: Publish extension package to VS Marketplace
+
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - task: DownloadPipelineArtifact@2
+              displayName: Download extension package (artifact)
+
+              inputs:
+                buildType: current
+                artifactName: vscode-extension
+
+            - task: Npm@1
+              displayName: 'Install vsce'
+              inputs:
+                command: custom
+                customCommand: 'install vsce'
+                verbose: false
+
+            - task: Npm@1
+              displayName: 'Install npx'
+              inputs:
+                command: custom
+                customCommand: 'install nx'
+                verbose: false
+
+            - task: Bash@3
+              displayName: 'Publish to VS Marketplace'
+              
+              env:
+                VS_MARKETPLACE_PUBLISHER_TOKEN: ${{ parameters.vsMarketplacePublisherToken }}
+
+              inputs:
+                targetType: inline
+                script: |
+                  ls "$(Pipeline.Workspace)/msbuild-project-tools-vscode*.vsix"
+
+                  # don't publish, yet:
+                  echo npx vsce publish --pat "$VS_MARKETPLACE_PUBLISHER_TOKEN" --packagePath "$(Pipeline.Workspace)/msbuild-project-tools-vscode-*.vsix"

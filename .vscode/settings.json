@@ -2,5 +2,8 @@
     "search.exclude": {
         "out": true,
         "dist": true
+    },
+    "yaml.schemas": {
+        "https://raw.githubusercontent.com/microsoft/azure-pipelines-vscode/master/service-schema.json": "file:///d%3A/Development/github/tintoy/msbuild-project-tools-vscode/azure-pipelines-template.yml"
     }
 }

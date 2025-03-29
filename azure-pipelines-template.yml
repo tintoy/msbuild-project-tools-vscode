@@ -137,17 +137,17 @@ stages:
         deploy:
           steps:
             - task: Npm@1
-              displayName: 'Install vsce'
-              inputs:
-                command: custom
-                customCommand: 'install vsce'
-                verbose: false
-
-            - task: Npm@1
               displayName: 'Install npx'
               inputs:
                 command: custom
                 customCommand: 'install nx'
+                verbose: false
+
+            - task: Npm@1
+              displayName: 'Install vsce'
+              inputs:
+                command: custom
+                customCommand: 'install vsce'
                 verbose: false
 
             - task: Bash@3
@@ -160,7 +160,7 @@ stages:
                 targetType: inline
                 script: |
                   VS_EXTENSION_PACKAGE_DIR="$(Pipeline.Workspace)/vscode-extension"
-                  ls $VS_EXTENSION_PACKAGE_DIR/msbuild-project-tools-vscode*.vsix
-
+                  VS_EXTENSION_PACKAGE_FILE=$(ls -1 $VS_EXTENSION_PACKAGE_DIR/msbuild-project-tools-vscode-*.vsix | head -n 1)
+                  
                   # don't publish, yet:
-                  echo npx vsce publish --pat "$VS_MARKETPLACE_PUBLISHER_TOKEN" --packagePath $VS_EXTENSION_PACKAGE_DIR/msbuild-project-tools-vscode-*.vsix
+                  echo npx vsce publish --pat "$VS_MARKETPLACE_PUBLISHER_TOKEN" --packagePath $VS_EXTENSION_PACKAGE_FILE

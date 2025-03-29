@@ -154,13 +154,12 @@ stages:
               displayName: 'Publish to VS Marketplace'
               
               env:
-                VS_MARKETPLACE_PUBLISHER_TOKEN: ${{ parameters.vsMarketplacePublisherToken }}
+                VSCE_PAT: ${{ parameters.vsMarketplacePublisherToken }}
 
               inputs:
                 targetType: inline
                 script: |
                   VS_EXTENSION_PACKAGE_DIR="$(Pipeline.Workspace)/vscode-extension"
                   VS_EXTENSION_PACKAGE_FILE=$(ls -1 $VS_EXTENSION_PACKAGE_DIR/msbuild-project-tools-vscode-*.vsix | head -n 1)
-                  
-                  # don't publish, yet:
-                  echo npx vsce publish --pat "$VS_MARKETPLACE_PUBLISHER_TOKEN" --packagePath $VS_EXTENSION_PACKAGE_FILE
+
+                  npx vsce publish --packagePath $VS_EXTENSION_PACKAGE_FILE

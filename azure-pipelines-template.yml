@@ -130,17 +130,12 @@ stages:
 
     environment: VS Marketplace
 
+    # Artifacts are automatically downloaded for deployment jobs.
+
     strategy:
       runOnce:
         deploy:
           steps:
-            - task: DownloadPipelineArtifact@2
-              displayName: Download extension package (artifact)
-
-              inputs:
-                buildType: current
-                artifactName: vscode-extension
-
             - task: Npm@1
               displayName: 'Install vsce'
               inputs:
@@ -164,7 +159,8 @@ stages:
               inputs:
                 targetType: inline
                 script: |
-                  ls "$(Pipeline.Workspace)/msbuild-project-tools-vscode*.vsix"
+                  ls -laR "$(Pipeline.Workspace)"
+                  ls "$(Pipeline.Workspace)/vscode-extension/msbuild-project-tools-vscode*.vsix"
 
                   # don't publish, yet:
-                  echo npx vsce publish --pat "$VS_MARKETPLACE_PUBLISHER_TOKEN" --packagePath "$(Pipeline.Workspace)/msbuild-project-tools-vscode-*.vsix"
+                  echo npx vsce publish --pat "$VS_MARKETPLACE_PUBLISHER_TOKEN" --packagePath "$(Pipeline.Workspace)/vscode-extension/msbuild-project-tools-vscode-*.vsix"

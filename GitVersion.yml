@@ -9,7 +9,6 @@ branches:
     tag: ''
     increment: Patch
     prevent-increment-of-merged-branch-version: true
-    prevent-increment-when-current-commit-tagged: true
     track-merge-target: false
     regex: ^master$|^main$
     is-mainline: true

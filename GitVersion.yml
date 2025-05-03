@@ -3,8 +3,6 @@ assembly-file-versioning-scheme: MajorMinorPatch
 mode: ContinuousDelivery
 tag-prefix: '[vV]'
 
-version-in-branch-pattern: '(tags\/)?(?<version>[vV]?\\d+(\\.\\d+)?(\\.\\d+)?).*'
-
 branches:
   main:
     mode: ContinuousDelivery
@@ -14,6 +12,17 @@ branches:
     track-merge-target: false
     regex: ^master$|^main$
     is-mainline: true
+
+  tag:
+    mode: ContinuousDelivery
+    regex: ^tags/(?<TagName>.*)$
+    tag: '{TagName}'
+    tag-number-pattern: '[/-.](?<number>\\d+)$'
+    increment: Patch
+    track-merge-target: false
+    is-mainline: false
+    source-branches:
+      - main
 
 ignore:
   sha: []

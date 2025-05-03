@@ -46,8 +46,8 @@ stages:
           echo "##vso[task.setvariable variable=version;isOutput=true]$(GitVersion.MajorMinorPatch)"
           echo "##vso[task.setvariable variable=longVersion;isOutput=true]$(GitVersion.MajorMinorPatch).$(GitVersion.BuildMetaData)"
           echo "##vso[task.setvariable variable=tag;isOutput=true]$(GitVersion.PreReleaseTag)"
-          echo "SemVer.version='$(GitVersion.MajorMinorPatch)$(GitVersion.MajorMinorPatch)'"
-          echo "SemVer.longVersion='$(GitVersion.MajorMinorPatch)$(GitVersion.MajorMinorPatch).$(GitVersion.BuildMetaData)'"
+          echo "SemVer.version='$(GitVersion.MajorMinorPatch)'"
+          echo "SemVer.longVersion='$(GitVersion.MajorMinorPatch).$(GitVersion.BuildMetaData)'"
           echo "SemVer.tag='$(GitVersion.PreReleaseTag)'"
 
     - task: Npm@1

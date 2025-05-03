@@ -26,3 +26,7 @@ To create a VSIX package:
 
 1. `npm run build-language-server`
 2. `vsce package`
+
+## Publishing to VS Gallery
+
+To publish the extension to the VS Gallery, push a tag named `vXXX`, where `XXX` is a SemVer specification. If the version includes a pre-release tag, it will be marked as a pre-release version.

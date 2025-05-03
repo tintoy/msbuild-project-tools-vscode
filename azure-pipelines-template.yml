@@ -37,12 +37,21 @@ stages:
         customCommand: 'install nx'
         verbose: false
 
+    - task: Bash@3
+      name: SemVer
+      displayName: 'Capture SemVer properties'
+      inputs:
+        targetType: inline
+        script: |
+          echo "##vso[task.setvariable variable=version;isOutput=true]$(GitVersion.MajorMinorPatch)"
+          echo "##vso[task.setvariable variable=tag;isOutput=true]$(GitVersion.PreReleaseTag)"
+
     - task: Npm@1
       displayName: 'Update extension package version'
 
       inputs:
         command: custom
-        customCommand: 'version $(GitVersion.SemVer) --git-tag-version false'
+        customCommand: 'version "$(GitVersion.MajorMinorPatch)" --git-tag-version false'
 
     - task: Npm@1
       displayName: 'npm install'
@@ -119,6 +128,8 @@ stages:
 - stage: Publish
   displayName: Publish
 
+  dependsOn: Build
+
   condition: and( ${{ parameters.publish }}, succeeded() )
 
   pool:
@@ -131,6 +142,10 @@ stages:
     environment: VS Marketplace
 
     # Artifacts are automatically downloaded for deployment jobs.
+
+    variables:
+      semVerVersion: $[stageDependencies.Build.Build.outputs['SemVer.version']]
+      semVerTag: $[stageDependencies.Build.Build.outputs['SemVer.tag']]
 
     strategy:
       runOnce:
@@ -151,7 +166,25 @@ stages:
                 verbose: false
 
             - task: Bash@3
+              displayName: 'Publish to VS Marketplace (pre-release)'
+
+              condition: ne( variables.semVerTag, '' )
+              
+              env:
+                VSCE_PAT: ${{ parameters.vsMarketplacePublisherToken }}
+
+              inputs:
+                targetType: inline
+                script: |
+                  VS_EXTENSION_PACKAGE_DIR="$(Pipeline.Workspace)/vscode-extension"
+                  VS_EXTENSION_PACKAGE_FILE=$(ls -1 $VS_EXTENSION_PACKAGE_DIR/msbuild-project-tools-vscode-*.vsix | head -n 1)
+
+                  npx vsce publish --packagePath $VS_EXTENSION_PACKAGE_FILE --pre-release
+
+            - task: Bash@3
               displayName: 'Publish to VS Marketplace'
+
+              condition: eq( variables.semVerTag, '' )
               
               env:
                 VSCE_PAT: ${{ parameters.vsMarketplacePublisherToken }}

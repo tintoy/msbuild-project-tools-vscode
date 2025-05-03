@@ -29,4 +29,5 @@ To create a VSIX package:
 
 ## Publishing to VS Gallery
 
-To publish the extension to the VS Gallery, push a tag named `vXXX`, where `XXX` is a SemVer specification. If the version includes a pre-release tag, it will be marked as a pre-release version.
+To publish the extension to the VS Gallery, push a tag named `vXXX`, where `XXX` is a SemVer-compliant version number.
+If the version includes a pre-release tag, it will be published as a pre-release version in the gallery.

@@ -1,0 +1,23 @@
+assembly-versioning-scheme: MajorMinorPatch
+assembly-file-versioning-scheme: MajorMinorPatch
+mode: ContinuousDelivery
+tag-prefix: '[vV]'
+
+branches:
+  main:
+    mode: ContinuousDelivery
+    tag: ''
+    increment: Patch
+    prevent-increment-of-merged-branch-version: true
+    prevent-increment:
+      when-current-commit-tagged: true
+    track-merge-target: false
+    regex: ^master$|^main$
+    is-mainline: true
+
+ignore:
+  sha: []
+
+increment: Inherit
+commit-date-format: yyyy-MM-dd
+update-build-number: true

@@ -43,7 +43,7 @@ stages:
       inputs:
         targetType: inline
         script: |
-          echo "##vso[task.setvariable variable=version;isOutput=true]$(GitVersion.MajorMinorPatch)"
+          echo "##vso[task.setvariable variable=version;isOutput=true]$(GitVersion.MajorMinorPatch).$(GitVersion.BuildMetaData)"
           echo "##vso[task.setvariable variable=tag;isOutput=true]$(GitVersion.PreReleaseTag)"
 
     - task: Npm@1
@@ -51,7 +51,7 @@ stages:
 
       inputs:
         command: custom
-        customCommand: 'version "$(GitVersion.MajorMinorPatch)" --git-tag-version false'
+        customCommand: 'version "$(GitVersion.MajorMinorPatch).$(GitVersion.BuildMetaData)" --git-tag-version false'
 
     - task: Npm@1
       displayName: 'npm install'
@@ -68,7 +68,7 @@ stages:
       inputs:
         command: 'restore'
         projects: './lib/server/MSBuildProjectTools.sln'
-        restoreArguments: '/p:VersionPrefix="$(GitVersion.MajorMinorPatch)" /p:VersionSuffix="$(GitVersion.PreReleaseTag)"'
+        restoreArguments: '/p:VersionPrefix="$(GitVersion.MajorMinorPatch).$(GitVersion.BuildMetaData)" /p:VersionSuffix="$(GitVersion.PreReleaseTag)"'
 
     - task: DotNetCoreCLI@2
       displayName: 'Build solution'
@@ -76,7 +76,7 @@ stages:
       inputs:
         command: 'build'
         projects: './lib/server/MSBuildProjectTools.sln'
-        arguments: '--configuration "$(buildConfiguration)" /p:VersionPrefix="$(GitVersion.MajorMinorPatch)" /p:VersionSuffix="$(GitVersion.PreReleaseTag)"'
+        arguments: '--configuration "$(buildConfiguration)" /p:VersionPrefix="$(GitVersion.MajorMinorPatch).$(GitVersion.BuildMetaData)" /p:VersionSuffix="$(GitVersion.PreReleaseTag)"'
 
     - task: DotNetCoreCLI@2
       displayName: 'Run tests'
@@ -84,7 +84,7 @@ stages:
       inputs:
         command: 'test'
         projects: './lib/server/test/LanguageServer.Engine.Tests/LanguageServer.Engine.Tests.csproj'
-        arguments: '--configuration "$(buildConfiguration)" /p:VersionPrefix="$(GitVersion.MajorMinorPatch)" /p:VersionSuffix="$(GitVersion.PreReleaseTag)"'
+        arguments: '--configuration "$(buildConfiguration)" /p:VersionPrefix="$(GitVersion.MajorMinorPatch).$(GitVersion.BuildMetaData)" /p:VersionSuffix="$(GitVersion.PreReleaseTag)"'
 
     - task: DotNetCoreCLI@2
       displayName: 'Publish language server'
@@ -93,7 +93,7 @@ stages:
         command: 'publish'
         publishWebProjects: false
         projects: './lib/server/src/LanguageServer/LanguageServer.csproj'
-        arguments: '--configuration "$(buildConfiguration)" -o "./language-server" /p:VersionPrefix="$(GitVersion.MajorMinorPatch)" /p:VersionSuffix="$(GitVersion.PreReleaseTag)"'
+        arguments: '--configuration "$(buildConfiguration)" -o "./language-server" /p:VersionPrefix="$(GitVersion.MajorMinorPatch).$(GitVersion.BuildMetaData)" /p:VersionSuffix="$(GitVersion.PreReleaseTag)"'
         modifyOutputPath: false
         zipAfterPublish: false
 
@@ -104,7 +104,7 @@ stages:
 
       inputs:
         targetType: inline
-        script: npx vsce package --pre-release -o "$(Build.ArtifactStagingDirectory)/msbuild-project-tools-vscode-$(GitVersion.MajorMinorPatch).vsix"
+        script: npx vsce package --pre-release -o "$(Build.ArtifactStagingDirectory)/msbuild-project-tools-vscode-$(GitVersion.MajorMinorPatch).$(GitVersion.BuildMetaData).vsix"
 
     - task: Bash@3
       displayName: 'Build VS Code extension package'
@@ -113,14 +113,14 @@ stages:
 
       inputs:
         targetType: inline
-        script: npx vsce package -o "$(Build.ArtifactStagingDirectory)/msbuild-project-tools-vscode-$(GitVersion.MajorMinorPatch).vsix"
+        script: npx vsce package -o "$(Build.ArtifactStagingDirectory)/msbuild-project-tools-vscode-$(GitVersion.MajorMinorPatch).$(GitVersion.BuildMetaData).vsix"
       
 
     - task: PublishBuildArtifacts@1
       displayName: 'Publish extension package'
       
       inputs:
-        PathtoPublish: '$(Build.ArtifactStagingDirectory)/msbuild-project-tools-vscode-$(GitVersion.MajorMinorPatch).vsix'
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)/msbuild-project-tools-vscode-$(GitVersion.MajorMinorPatch).$(GitVersion.BuildMetaData).vsix'
         ArtifactName: 'vscode-extension'
         publishLocation: 'Container'
 

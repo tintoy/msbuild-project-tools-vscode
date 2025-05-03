@@ -43,7 +43,8 @@ stages:
       inputs:
         targetType: inline
         script: |
-          echo "##vso[task.setvariable variable=version;isOutput=true]$(GitVersion.MajorMinorPatch).$(GitVersion.BuildMetaData)"
+          echo "##vso[task.setvariable variable=version;isOutput=true]$(GitVersion.MajorMinorPatch)"
+          echo "##vso[task.setvariable variable=longVersion;isOutput=true]$(GitVersion.MajorMinorPatch).$(GitVersion.BuildMetaData)"
           echo "##vso[task.setvariable variable=tag;isOutput=true]$(GitVersion.PreReleaseTag)"
 
     - task: Npm@1
@@ -51,7 +52,7 @@ stages:
 
       inputs:
         command: custom
-        customCommand: 'version "$(GitVersion.MajorMinorPatch).$(GitVersion.BuildMetaData)" --git-tag-version false'
+        customCommand: 'version "$(GitVersion.MajorMinorPatch)" --git-tag-version false'
 
     - task: Npm@1
       displayName: 'npm install'
@@ -104,7 +105,7 @@ stages:
 
       inputs:
         targetType: inline
-        script: npx vsce package --pre-release -o "$(Build.ArtifactStagingDirectory)/msbuild-project-tools-vscode-$(GitVersion.MajorMinorPatch).$(GitVersion.BuildMetaData).vsix"
+        script: npx vsce package --pre-release -o "$(Build.ArtifactStagingDirectory)/msbuild-project-tools-vscode-$(GitVersion.MajorMinorPatch).vsix"
 
     - task: Bash@3
       displayName: 'Build VS Code extension package'
@@ -113,14 +114,14 @@ stages:
 
       inputs:
         targetType: inline
-        script: npx vsce package -o "$(Build.ArtifactStagingDirectory)/msbuild-project-tools-vscode-$(GitVersion.MajorMinorPatch).$(GitVersion.BuildMetaData).vsix"
+        script: npx vsce package -o "$(Build.ArtifactStagingDirectory)/msbuild-project-tools-vscode-$(GitVersion.MajorMinorPatch).vsix"
       
 
     - task: PublishBuildArtifacts@1
       displayName: 'Publish extension package'
       
       inputs:
-        PathtoPublish: '$(Build.ArtifactStagingDirectory)/msbuild-project-tools-vscode-$(GitVersion.MajorMinorPatch).$(GitVersion.BuildMetaData).vsix'
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)/msbuild-project-tools-vscode-$(GitVersion.MajorMinorPatch).vsix'
         ArtifactName: 'vscode-extension'
         publishLocation: 'Container'
 

@@ -97,14 +97,30 @@ stages:
         modifyOutputPath: false
         zipAfterPublish: false
 
-    - script: npx vsce package -o "$(Build.ArtifactStagingDirectory)/msbuild-project-tools-vscode-$(GitVersion.SemVer).vsix"
+    - task: Bash@3
+      displayName: 'Build VS Code extension package (pre-release)'
+
+      condition: ne( variables['GitVersion.PreReleaseTag'], '' )
+
+      inputs:
+        targetType: inline
+        script: npx vsce package --pre-release -o "$(Build.ArtifactStagingDirectory)/msbuild-project-tools-vscode-$(GitVersion.MajorMinorPatch).vsix"
+
+    - task: Bash@3
       displayName: 'Build VS Code extension package'
+
+      condition: eq( variables['GitVersion.PreReleaseTag'], '' )
+
+      inputs:
+        targetType: inline
+        script: npx vsce package -o "$(Build.ArtifactStagingDirectory)/msbuild-project-tools-vscode-$(GitVersion.MajorMinorPatch).vsix"
+      
 
     - task: PublishBuildArtifacts@1
       displayName: 'Publish extension package'
       
       inputs:
-        PathtoPublish: '$(Build.ArtifactStagingDirectory)/msbuild-project-tools-vscode-$(GitVersion.SemVer).vsix'
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)/msbuild-project-tools-vscode-$(GitVersion.MajorMinorPatch).vsix'
         ArtifactName: 'vscode-extension'
         publishLocation: 'Container'
 

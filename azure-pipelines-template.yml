@@ -31,7 +31,7 @@ stages:
       name: GitVersion
 
       env:
-        BUILD_SOURCEBRANCH: '{{ iif( startsWith( $(Build.SourceBranch), 'refs/tags/v'), 'refs/heads/master', $(Build.SourceBranch) ) }}'
+        BUILD_SOURCEBRANCH: '{{ iif( startsWith( '$(Build.SourceBranch)', 'refs/tags/v'), 'refs/heads/master', '$(Build.SourceBranch)' ) }}'
 
     - task: Npm@1
       displayName: 'Install npx'

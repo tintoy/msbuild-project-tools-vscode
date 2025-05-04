@@ -26,7 +26,7 @@ stages:
       inputs:
         versionSpec: 5.x
 
-    - task: GitVersion/command@0
+    - task: gitversion/command@3
       displayName: 'Determine build version'
       name: GitVersion
 

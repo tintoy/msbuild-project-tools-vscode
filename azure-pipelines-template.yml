@@ -30,9 +30,6 @@ stages:
       displayName: 'Determine build version'
       name: GitVersion
 
-      env:
-        BUILD_SOURCEBRANCH: '{{ iif( startsWith( '$(Build.SourceBranch)', 'refs/tags/v'), 'refs/heads/master', '$(Build.SourceBranch)' ) }}'
-
     - task: Npm@1
       displayName: 'Install npx'
       inputs:

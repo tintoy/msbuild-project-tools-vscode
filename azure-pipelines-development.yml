@@ -13,6 +13,24 @@ variables:
     value: Release
 
 stages:
+- stage: Diagnostics
+  displayName: Pipeline diagnostics
+
+  jobs:
+    - job: ShowDiagnostics
+      displayName: Show diagnostics
+
+      steps:
+        - task: Bash@3
+
+          env:
+            BUILD_SOURCEBRANCH: 'temp1'
+
+          inputs:
+            targetType: inline
+            script: |
+              echo "BUILD_SOURCEBRANCH = '$BUILD_SOURCEBRANCH'"
+
 - template: ./azure-pipelines-template.yml
   parameters:
     buildConfiguration: ${{ variables.buildConfiguration }}

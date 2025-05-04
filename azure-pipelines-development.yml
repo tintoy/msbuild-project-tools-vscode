@@ -23,13 +23,16 @@ stages:
       steps:
         - task: Bash@3
 
-          env:
-            BUILD_SOURCEBRANCH: 'temp1'
-
           inputs:
             targetType: inline
             script: |
+              echo "TEMP_SOURCEBRANCH = '$TEMP_SOURCEBRANCH'"
               echo "BUILD_SOURCEBRANCH = '$BUILD_SOURCEBRANCH'"
+              BUILD_SOURCEBRANCH=$TEMP_SOURCEBRANCH
+              echo "BUILD_SOURCEBRANCH = '$BUILD_SOURCEBRANCH'"
+
+          env:
+            TEMP_SOURCEBRANCH: ${{ iif( startsWith('$(Build.SourceBranch)', 'refs/tags/v'), 'refs/heads/master', '$(Build.SourceBranch)' ) }}
 
 - template: ./azure-pipelines-template.yml
   parameters:

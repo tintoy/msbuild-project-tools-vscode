@@ -26,12 +26,12 @@ stages:
       inputs:
         versionSpec: 5.x
 
-    - task: gitversion/command@3
+    - task: GitVersion/execute@0
       displayName: 'Determine build version'
       name: GitVersion
 
-      inputs:
-        arguments: -b main
+      env:
+        BUILD_SOURCEBRANCH: '{{ iif( startsWith( variables['Build.SourceBranch'], 'refs/tags/v'), 'refs/heads/master', variables['Build.SourceBranch'] ) }}'
 
     - task: Npm@1
       displayName: 'Install npx'

@@ -13,17 +13,6 @@ branches:
     regex: ^master$|^main$
     is-mainline: true
 
-  tag:
-    mode: ContinuousDelivery
-    regex: ^tags/(?<TagName>.*)$
-    tag: '{TagName}'
-    tag-number-pattern: '[/-.](?<number>\\d+)$'
-    increment: Patch
-    track-merge-target: false
-    is-mainline: false
-    source-branches:
-      - main
-
 ignore:
   sha: []
 

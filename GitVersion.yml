@@ -41,7 +41,7 @@ branches:
     pre-release-weight: 55000
 
   release:
-    mode: ContinuousDeployment
+    mode: ContinuousDelivery
     label: beta
     increment: Patch
     prevent-increment:
@@ -60,13 +60,13 @@ branches:
     pre-release-weight: 30000
 
   feature:
-    mode: ManualDeployment
+    mode: ContinuousDelivery
     label: '{BranchName}'
     increment: Inherit
     prevent-increment:
       when-current-commit-tagged: false
     track-merge-message: true
-    regex: ^features?[\/-](?<BranchName>.+)
+    regex: ^feature/(?<BranchName>.+)
     source-branches:
     - main
     - release

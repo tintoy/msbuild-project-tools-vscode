@@ -13,27 +13,6 @@ variables:
     value: Release
 
 stages:
-- stage: Diagnostics
-  displayName: Pipeline diagnostics
-
-  jobs:
-    - job: ShowDiagnostics
-      displayName: Show diagnostics
-
-      steps:
-        - task: Bash@3
-
-          inputs:
-            targetType: inline
-            script: |
-              echo "TEMP_SOURCEBRANCH = '$TEMP_SOURCEBRANCH'"
-              echo "BUILD_SOURCEBRANCH = '$BUILD_SOURCEBRANCH'"
-              BUILD_SOURCEBRANCH=$TEMP_SOURCEBRANCH
-              echo "BUILD_SOURCEBRANCH = '$BUILD_SOURCEBRANCH'"
-
-          env:
-            TEMP_SOURCEBRANCH: ${{ iif( startsWith('$(Build.SourceBranch)', 'refs/tags/v'), 'refs/heads/master', '$(Build.SourceBranch)' ) }}
-
 - template: ./azure-pipelines-template.yml
   parameters:
     buildConfiguration: ${{ variables.buildConfiguration }}

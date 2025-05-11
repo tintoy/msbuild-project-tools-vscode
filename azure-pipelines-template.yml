@@ -28,7 +28,7 @@ stages:
 
     - task: gitversion/execute@3
       displayName: 'Determine build version'
-      name: GitVersion
+      name: GitVersionInfo
 
     - task: Npm@1
       displayName: 'Install npx'

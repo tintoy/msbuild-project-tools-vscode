@@ -20,13 +20,13 @@ stages:
     displayName: Build extension and language server
 
     steps:
-    - task: gitversion/setup@3.2.1
+    - task: gitversion/setup@3.1.0
       displayName: 'Install GitVersion'
 
       inputs:
         versionSpec: '6.3.x'
 
-    - task: gitversion/execute@3.2.1
+    - task: gitversion/execute@3.1.0
       displayName: 'Determine build version'
       name: GitVersion
 

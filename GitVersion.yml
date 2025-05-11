@@ -25,6 +25,7 @@ strategies:
 
 branches:
   main:
+    mode: ContinuousDeployment
     label: ''
     increment: Patch
     prevent-increment:
@@ -40,7 +41,7 @@ branches:
     pre-release-weight: 55000
 
   release:
-    mode: ManualDeployment
+    mode: ContinuousDeployment
     label: beta
     increment: Patch
     prevent-increment:

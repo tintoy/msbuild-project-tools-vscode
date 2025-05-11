@@ -20,15 +20,22 @@ stages:
     displayName: Build extension and language server
 
     steps:
-    - task: gitversion/setup@0
+    - task: Bash@3
       displayName: 'Install GitVersion'
 
       inputs:
-        versionSpec: 6.3.0
+        targetType: inline
+        script: |
+          dotnet tool restore
 
-    - task: GitVersion/execute@0
+    - task: Bash@3
       displayName: 'Determine build version'
       name: GitVersion
+
+      inputs:
+        targetType: inline
+        script: |
+          dotnet gitversion
 
     - task: Npm@1
       displayName: 'Install npx'

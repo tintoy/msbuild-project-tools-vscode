@@ -24,7 +24,7 @@ stages:
       displayName: 'Install GitVersion'
 
       inputs:
-        versionSpec: 5.x
+        versionSpec: 6.3.0
 
     - task: GitVersion/execute@0
       displayName: 'Determine build version'

@@ -100,6 +100,10 @@ if __name__ == "__main__":
         variable_value = gitversion_variables[variable_name]
         set_variable(variable_name, variable_value, is_output=True)
 
-    full_semver = gitversion_variables['FullSemVer']
+    semver = gitversion_variables["SemVer"]
+    branch_name = gitversion_variables["EscapedBranchName"]
+    commits_since_source_version = int(
+        gitversion_variables.get("CommitsSinceVersionSource", "0")
+    )
 
-    set_build_number(full_semver)
+    set_build_number(f"{semver}+{branch_name}.{commits_since_source_version}")

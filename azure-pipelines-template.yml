@@ -3,225 +3,224 @@ parameters:
     default: Release
   - name: publish
     type: boolean
-    default: false
+    default: "false"
   - name: vsMarketplacePublisherToken
     type: string
-    default: ''
+    default: ""
 
 stages:
-- stage: Build
-  displayName: Build
+  - stage: Versioning
+    displayName: "Determine build version"
 
-  pool:
-    vmImage: ubuntu-latest
+    jobs:
+      - job: BuildVersion
 
-  jobs:
-  - job: Build
-    displayName: Build extension and language server
+        steps:
+          - task: gitversion/setup@3
+            displayName: "Install GitVersion"
 
-    steps:
-    - task: gitversion/setup@3
-      displayName: 'Install GitVersion'
+            inputs:
+              versionSpec: "6.3.x"
 
-      inputs:
-        versionSpec: '6.3.x'
+          - task: PythonScript@0
+            name: SemVer
+            displayName: "Capture SemVer properties"
 
-    - task: gitversion/execute@3
-      displayName: 'Determine build version'
-      name: GitVersionInfo
+            inputs:
+              scriptSource: filePath
+              scriptPath: $(Build.SourcesDirectory)/build/semver.py
+              arguments: $(Build.SourcesDirectory)
 
-    - task: Npm@1
-      displayName: 'Install npx'
-      inputs:
-        command: custom
-        customCommand: 'install nx'
-        verbose: false
+  - stage: Build
+    displayName: Build
 
-    - task: Bash@3
-      name: SemVer
-      displayName: 'Capture SemVer properties'
-      inputs:
-        targetType: inline
-        script: |
-          if [ -z "$(GitVersion.BuildMetaData)" ]; then
-            echo "##vso[task.setvariable variable=VersionPrefix]$(GitVersion.MajorMinorPatch)"
-          else
-            echo "##vso[task.setvariable variable=version]$(GitVersion.MajorMinorPatch).$(GitVersion.BuildMetaData)"
-          fi
+    dependsOn: Versioning
 
-          echo "##vso[task.setvariable variable=VersionSuffix]$(GitVersion.PreReleaseTag)"
+    pool:
+      vmImage: ubuntu-latest
 
-          echo "##vso[task.setvariable variable=version]$(GitVersion.MajorMinorPatch)"
-          echo "##vso[task.setvariable variable=version;isOutput=true]$(GitVersion.MajorMinorPatch)"
-          echo "##vso[task.setvariable variable=longVersion;isOutput=true]$(GitVersion.MajorMinorPatch).$(GitVersion.BuildMetaData)"
-          echo "##vso[task.setvariable variable=tag;isOutput=true]$(GitVersion.PreReleaseTag)"
-          echo "SemVer.version='$(GitVersion.MajorMinorPatch)'"
-          echo "SemVer.longVersion='$(GitVersion.MajorMinorPatch).$(GitVersion.BuildMetaData)'"
-          echo "SemVer.tag='$(GitVersion.PreReleaseTag)'"
+    jobs:
+      - job: Build
+        displayName: Build extension and language server
 
-    - task: Npm@1
-      displayName: 'Update extension package version'
+        variables:
+          ExtensionVersion: $[stageDependencies.Versioning.BuildVersion.outputs['SemVer.MajorMinorPatch']]
+          VersionPrefix: $[stageDependencies.Versioning.BuildVersion.outputs['SemVer.VersionPrefix']]
+          VersionSuffix: $[stageDependencies.Versioning.BuildVersion.outputs['SemVer.VersionSuffix']]
+          IsPreRelease: $[stageDependencies.Versioning.BuildVersion.outputs['SemVer.IsPreRelease']]
 
-      inputs:
-        command: custom
-        customCommand: 'version "$(GitVersion.MajorMinorPatch)" --git-tag-version false'
+        steps:
+          - task: Npm@1
+            displayName: "Install npx"
+            inputs:
+              command: custom
+              customCommand: "install nx"
+              verbose: false
 
-    - task: Npm@1
-      displayName: 'npm install'
+          - task: Npm@1
+            displayName: "Update extension package version"
 
-      inputs:
-        command: ci
-        workingDir: $(Build.SourcesDirectory)
+            inputs:
+              command: custom
+              customCommand: 'version "$(ExtensionVersion)" --git-tag-version false'
 
-    # TODO: Rather than build language server as part of extension CI, check the last commit in history for repo @ ./lib/server that is associated with a GitHub release and download the appropriate language server artifact from there.
+          - task: Npm@1
+            displayName: "npm install"
 
-    - task: DotNetCoreCLI@2
-      displayName: 'Restore packages'
-      
-      inputs:
-        command: 'restore'
-        projects: './lib/server/MSBuildProjectTools.sln'
-        restoreArguments: '/p:VersionPrefix="$(VersionPrefix)" /p:VersionSuffix="$(VersionSuffix)"'
+            inputs:
+              command: ci
+              workingDir: $(Build.SourcesDirectory)
 
-    - task: DotNetCoreCLI@2
-      displayName: 'Build solution'
-      
-      inputs:
-        command: 'build'
-        projects: './lib/server/MSBuildProjectTools.sln'
-        arguments: '--configuration "$(buildConfiguration)" /p:VersionPrefix="$(VersionPrefix)" /p:VersionSuffix="$(VersionSuffix)"'
+          # TODO: Rather than build language server as part of extension CI, check the last commit in history for repo @ ./lib/server that is associated with a GitHub release and download the appropriate language server artifact from there.
 
-    - task: DotNetCoreCLI@2
-      displayName: 'Run tests'
-      
-      inputs:
-        command: 'test'
-        projects: './lib/server/test/LanguageServer.Engine.Tests/LanguageServer.Engine.Tests.csproj'
-        arguments: '--configuration "$(buildConfiguration)" /p:VersionPrefix="$(VersionPrefix)" /p:VersionSuffix="$(VersionSuffix)"'
+          - task: DotNetCoreCLI@2
+            displayName: "Restore packages"
 
-    - task: DotNetCoreCLI@2
-      displayName: 'Publish language server'
-      
-      inputs:
-        command: 'publish'
-        publishWebProjects: false
-        projects: './lib/server/src/LanguageServer/LanguageServer.csproj'
-        arguments: '--configuration "$(buildConfiguration)" -o "./language-server" /p:VersionPrefix="$(VersionPrefix)" /p:VersionSuffix="$(VersionSuffix)"'
-        modifyOutputPath: false
-        zipAfterPublish: false
+            inputs:
+              command: "restore"
+              projects: "./lib/server/MSBuildProjectTools.sln"
+              restoreArguments: '/p:VersionPrefix="$(VersionPrefix)" /p:VersionSuffix="$(VersionSuffix)"'
 
-    - task: Bash@3
-      displayName: 'Build VS Code extension package (pre-release)'
+          - task: DotNetCoreCLI@2
+            displayName: "Build solution"
 
-      condition: ne( variables['GitVersion.PreReleaseTag'], '' )
+            inputs:
+              command: "build"
+              projects: "./lib/server/MSBuildProjectTools.sln"
+              arguments: '--configuration "$(buildConfiguration)" /p:VersionPrefix="$(VersionPrefix)" /p:VersionSuffix="$(VersionSuffix)"'
 
-      inputs:
-        targetType: inline
-        script: npx vsce package --pre-release -o "$(Build.ArtifactStagingDirectory)/msbuild-project-tools-vscode-$(GitVersion.MajorMinorPatch).vsix"
+          - task: DotNetCoreCLI@2
+            displayName: "Run tests"
 
-    - task: Bash@3
-      displayName: 'Build VS Code extension package'
+            inputs:
+              command: "test"
+              projects: "./lib/server/test/LanguageServer.Engine.Tests/LanguageServer.Engine.Tests.csproj"
+              arguments: '--configuration "$(buildConfiguration)" /p:VersionPrefix="$(VersionPrefix)" /p:VersionSuffix="$(VersionSuffix)"'
 
-      condition: eq( variables['GitVersion.PreReleaseTag'], '' )
+          - task: DotNetCoreCLI@2
+            displayName: "Publish language server"
 
-      inputs:
-        targetType: inline
-        script: npx vsce package -o "$(Build.ArtifactStagingDirectory)/msbuild-project-tools-vscode-$(GitVersion.MajorMinorPatch).vsix"
-      
+            inputs:
+              command: "publish"
+              publishWebProjects: false
+              projects: "./lib/server/src/LanguageServer/LanguageServer.csproj"
+              arguments: '--configuration "$(buildConfiguration)" -o "./language-server" /p:VersionPrefix="$(VersionPrefix)" /p:VersionSuffix="$(VersionSuffix)"'
+              modifyOutputPath: false
+              zipAfterPublish: false
 
-    - task: PublishBuildArtifacts@1
-      displayName: 'Publish extension package'
-      
-      inputs:
-        PathtoPublish: '$(Build.ArtifactStagingDirectory)/msbuild-project-tools-vscode-$(GitVersion.MajorMinorPatch).vsix'
-        ArtifactName: 'vscode-extension'
-        publishLocation: 'Container'
+          - task: Bash@3
+            displayName: "Build VS Code extension package (pre-release)"
 
-    - task: GitHubRelease@1
-      displayName: 'Create GitHub release from tag'
+            condition: eq( variables.IsPreRelease, 'true' )
 
-      condition: and( and( ${{ parameters.publish }}, succeeded() ), contains( variables['Build.SourceBranch'], 'refs/tags/v' ) )
+            inputs:
+              targetType: inline
+              script: npx vsce package --pre-release -o "$(Build.ArtifactStagingDirectory)/msbuild-project-tools-vscode-$(ExtensionVersion).vsix"
 
-      inputs:
-        gitHubConnection: 'github.com_tintoy'
-        repositoryName: '$(Build.Repository.Name)'
-        action: 'create'
-        target: '$(Build.SourceVersion)'
-        tagSource: 'gitTag'
-        tagPattern: '^v\d+\.\d+.\d+(-[A-Za-z0-9%\.]+)?$'
-        releaseNotesFilePath: $(Build.SourcesDirectory)/CHANGELOG.md
-        addChangeLog: false
-        assets: '$(Build.ArtifactStagingDirectory)/*.vsix'
-        assetUploadMode: replace
+          - task: Bash@3
+            displayName: "Build VS Code extension package"
 
-- stage: Publish
-  displayName: Publish
+            condition: ne( variables.IsPreRelease, 'true' )
 
-  dependsOn: Build
+            inputs:
+              targetType: inline
+              script: npx vsce package -o "$(Build.ArtifactStagingDirectory)/msbuild-project-tools-vscode-$(ExtensionVersion).vsix"
 
-  condition: and( ${{ parameters.publish }}, succeeded() )
+          - task: PublishBuildArtifacts@1
+            displayName: "Publish extension package"
 
-  pool:
-    vmImage: ubuntu-latest
+            inputs:
+              PathtoPublish: "$(Build.ArtifactStagingDirectory)/msbuild-project-tools-vscode-$(ExtensionVersion).vsix"
+              ArtifactName: "vscode-extension"
+              publishLocation: "Container"
 
-  jobs:
-  - deployment: Publish
-    displayName: Publish extension package to VS Marketplace
+          - task: GitHubRelease@1
+            displayName: "Create GitHub release from tag"
 
-    environment: VS Marketplace
+            condition: and( and( ${{ parameters.publish }}, succeeded() ), contains( variables['Build.SourceBranch'], 'refs/tags/v' ) )
 
-    # Artifacts are automatically downloaded for deployment jobs.
+            inputs:
+              gitHubConnection: "github.com_tintoy"
+              repositoryName: "$(Build.Repository.Name)"
+              action: "create"
+              target: "$(Build.SourceVersion)"
+              tagSource: "gitTag"
+              tagPattern: '^v\d+\.\d+.\d+(-[A-Za-z0-9%\.]+)?$'
+              releaseNotesFilePath: $(Build.SourcesDirectory)/CHANGELOG.md
+              addChangeLog: false
+              assets: "$(Build.ArtifactStagingDirectory)/*.vsix"
+              assetUploadMode: replace
 
-    variables:
-      semVerVersion: $[stageDependencies.Build.Build.outputs['SemVer.version']]
-      semVerTag: $[stageDependencies.Build.Build.outputs['SemVer.tag']]
+  - stage: Publish
+    displayName: Publish
 
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-            - task: Npm@1
-              displayName: 'Install npx'
-              inputs:
-                command: custom
-                customCommand: 'install nx'
-                verbose: false
+    dependsOn:
+      - Versioning
+      - Build
 
-            - task: Npm@1
-              displayName: 'Install vsce'
-              inputs:
-                command: custom
-                customCommand: 'install vsce'
-                verbose: false
+    condition: and( ${{ parameters.publish }}, succeeded() )
 
-            - task: Bash@3
-              displayName: 'Publish to VS Marketplace (pre-release)'
+    pool:
+      vmImage: ubuntu-latest
 
-              condition: ne( variables.semVerTag, '' )
-              
-              env:
-                VSCE_PAT: ${{ parameters.vsMarketplacePublisherToken }}
+    jobs:
+      - deployment: Publish
+        displayName: Publish extension package to VS Marketplace
 
-              inputs:
-                targetType: inline
-                script: |
-                  VS_EXTENSION_PACKAGE_DIR="$(Pipeline.Workspace)/vscode-extension"
-                  VS_EXTENSION_PACKAGE_FILE=$(ls -1 $VS_EXTENSION_PACKAGE_DIR/msbuild-project-tools-vscode-*.vsix | head -n 1)
+        environment: VS Marketplace
 
-                  npx vsce publish --packagePath $VS_EXTENSION_PACKAGE_FILE --pre-release
+        # Artifacts are automatically downloaded for deployment jobs.
 
-            - task: Bash@3
-              displayName: 'Publish to VS Marketplace'
+        variables:
+          ExtensionVersion: $[stageDependencies.Versioning.BuildVersion.outputs['SemVer.MajorMinorPatch']]
+          IsPreRelease: $[stageDependencies.Versioning.BuildVersion.outputs['SemVer.IsPreRelease']]
 
-              condition: eq( variables.semVerTag, '' )
-              
-              env:
-                VSCE_PAT: ${{ parameters.vsMarketplacePublisherToken }}
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: Npm@1
+                  displayName: "Install npx"
+                  inputs:
+                    command: custom
+                    customCommand: "install nx"
+                    verbose: false
 
-              inputs:
-                targetType: inline
-                script: |
-                  VS_EXTENSION_PACKAGE_DIR="$(Pipeline.Workspace)/vscode-extension"
-                  VS_EXTENSION_PACKAGE_FILE=$(ls -1 $VS_EXTENSION_PACKAGE_DIR/msbuild-project-tools-vscode-*.vsix | head -n 1)
+                - task: Npm@1
+                  displayName: "Install vsce"
+                  inputs:
+                    command: custom
+                    customCommand: "install vsce"
+                    verbose: false
 
-                  npx vsce publish --packagePath $VS_EXTENSION_PACKAGE_FILE
+                - task: Bash@3
+                  displayName: "Publish to VS Marketplace (pre-release)"
+
+                  condition: eq( variables.IsPreRelease, 'true' )
+
+                  env:
+                    VSCE_PAT: ${{ parameters.vsMarketplacePublisherToken }}
+
+                  inputs:
+                    targetType: inline
+                    script: |
+                      VS_EXTENSION_PACKAGE_DIR="$(Pipeline.Workspace)/vscode-extension"
+                      VS_EXTENSION_PACKAGE_FILE=$VS_EXTENSION_PACKAGE_DIR/msbuild-project-tools-vscode-$(ExtensionVersion).vsix
+
+                      npx vsce publish --pre-release --packagePath $VS_EXTENSION_PACKAGE_FILE
+
+                - task: Bash@3
+                  displayName: "Publish to VS Marketplace"
+
+                  condition: ne( variables.IsPreRelease, 'true' )
+
+                  env:
+                    VSCE_PAT: ${{ parameters.vsMarketplacePublisherToken }}
+
+                  inputs:
+                    targetType: inline
+                    script: |
+                      VS_EXTENSION_PACKAGE_DIR="$(Pipeline.Workspace)/vscode-extension"
+                      VS_EXTENSION_PACKAGE_FILE=$VS_EXTENSION_PACKAGE_DIR/msbuild-project-tools-vscode-$(ExtensionVersion).vsix
+
+                      npx vsce publish --packagePath $VS_EXTENSION_PACKAGE_FILE

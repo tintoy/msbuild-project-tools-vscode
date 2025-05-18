@@ -100,8 +100,7 @@ if __name__ == "__main__":
 
         exit(2)
 
-    dotnet_executable_path = which('dotnet')
-    print(f"dotnet executable = '{dotnet_executable_path}'")
+    print(f"PATH = '{os.getenv("PATH")}'")
 
     target_dir = args[1]
     gitversion_variables = run_gitversion(args[1])

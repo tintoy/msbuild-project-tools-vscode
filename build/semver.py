@@ -6,6 +6,7 @@ import json
 import os
 import sys
 
+from shutil import which
 from subprocess import run, CompletedProcess
 
 def log(level: str, message: str) -> None:
@@ -98,6 +99,9 @@ if __name__ == "__main__":
         print(f"Usage: {args[0]}")
 
         exit(2)
+
+    dotnet_executable_path = which('dotnet')
+    print(f"dotnet executable = '{dotnet_executable_path}'")
 
     target_dir = args[1]
     gitversion_variables = run_gitversion(args[1])

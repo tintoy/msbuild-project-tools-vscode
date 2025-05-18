@@ -27,7 +27,9 @@ stages:
 
             inputs:
               targetType: inline
-              script: dotnet tool install GitVersion.Tool --version 6.3.0 --global
+              script: |
+                which dotnet
+                dotnet tool install GitVersion.Tool --version 6.3.0 --global
 
           - task: PythonScript@0
             name: SemVer

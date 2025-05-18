@@ -16,11 +16,17 @@ stages:
       - job: BuildVersion
 
         steps:
-          - task: gitversion/setup@3
-            displayName: "Install GitVersion"
-
+          - task: UseDotNet@2
+            displayName: "Use .NET Core SDK from global.json"
             inputs:
-              versionSpec: "6.3.x"
+              packageType: sdk
+              useGlobalJson: true
+
+          - task: DotNetCoreCLI@2
+            displayName: "Install local tools (.NET Core)"
+            inputs:
+              command: custom
+              custom: "tool restore"
 
           - task: PythonScript@0
             name: SemVer
@@ -72,6 +78,18 @@ stages:
               workingDir: $(Build.SourcesDirectory)
 
           # TODO: Rather than build language server as part of extension CI, check the last commit in history for repo @ ./lib/server that is associated with a GitHub release and download the appropriate language server artifact from there.
+
+          - task: UseDotNet@2
+            displayName: "Use .NET Core SDK from global.json"
+            inputs:
+              packageType: sdk
+              useGlobalJson: true
+
+          - task: DotNetCoreCLI@2
+            displayName: "Install local tools (.NET Core)"
+            inputs:
+              command: custom
+              custom: "tool install"
 
           - task: DotNetCoreCLI@2
             displayName: "Restore packages"

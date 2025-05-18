@@ -38,8 +38,11 @@ def get_build_number() -> str | None:
 def set_build_number(build_number: str) -> None:
     print(f"##vso[build.updatebuildnumber]{build_number}")
 
-def run_gitversion(target_directory: str = ".") -> dict:
-    gitversion_process: CompletedProcess = run(["dotnet", "gitversion", target_directory], shell=True, capture_output=True)
+def run_gitversion(target_directory: str) -> dict:
+    gitversion_args = ["dotnet", "gitversion", target_directory]
+    log_debug(f"Launch process: '{" ".join(gitversion_args)}'")
+    
+    gitversion_process: CompletedProcess = run(gitversion_args, shell=True, capture_output=True)
 
     process_stderr: bytes = gitversion_process.stderr
     process_stdout: bytes = gitversion_process.stdout

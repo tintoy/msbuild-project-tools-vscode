@@ -29,7 +29,7 @@ stages:
               targetType: inline
               script: |
                 echo "PATH=$PATH"
-                dotnet tool install GitVersion.Tool --version 6.3.0 --global
+                dotnet tool restore --tool-manifest $(Build.SourcesDirectory)/.config/dotnet-tools.json
 
           - task: PythonScript@0
             name: SemVer

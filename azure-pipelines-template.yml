@@ -23,11 +23,11 @@ stages:
               useGlobalJson: true
 
           - task: Bash@3
-            displayName: "Install local tools (.NET Core)"
+            displayName: "Install GitVersion"
 
             inputs:
               targetType: inline
-              script: dotnet tool restore --tool-manifest $(Build.SourcesDirectory)/.config/dotnet-tools.json
+              script: dotnet tool install GitVersion.Tool --version 6.3.0 --global
 
           - task: PythonScript@0
             name: SemVer

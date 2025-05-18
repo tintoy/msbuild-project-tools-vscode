@@ -4,10 +4,10 @@
 
 import json
 import os
+import subprocess
 import sys
 
 from shutil import which
-from subprocess import run, CompletedProcess
 
 def log(level: str, message: str) -> None:
     for message_line in message.splitlines():
@@ -40,58 +40,27 @@ def set_build_number(build_number: str) -> None:
     print(f"##vso[build.updatebuildnumber]{build_number}")
 
 def run_gitversion(target_directory: str) -> dict:
-    gitversion_args = ["dotnet", "gitversion", target_directory]
-    log_debug(f"Launch process: '{" ".join(gitversion_args)}'")
-    
-    gitversion_process: CompletedProcess = run(gitversion_args, shell=True, capture_output=True)
+    dotnet_executable = which("dotnet")
+    gitversion_commandline = f"{dotnet_executable} gitversion {target_directory}"
+    log_debug(f"Launch process: '{gitversion_commandline}'")
 
-    process_stderr: bytes = gitversion_process.stderr
-    process_stdout: bytes = gitversion_process.stdout
+    (exitCode, output) = subprocess.getstatusoutput(gitversion_commandline)
 
-    if process_stdout:
+    if exitCode == 0:
         log_debug("Process STDOUT:")
-        log_debug(
-            process_stdout.decode("utf-8")
-        )
+        log_debug(output)
 
-    if process_stderr:
-        log_debug("Process STDERR:")
-        log_debug(
-            process_stdout.decode("utf-8")
-        )
-
-    if gitversion_process.returncode == 0:
-        if process_stdout:
-            log_debug("Process STDOUT:")
-            log_debug(
-                process_stdout.decode("utf-8")
-            )
-
-        if process_stderr:
-            log_debug("Process STDERR:")
-            log_debug(
-                process_stdout.decode("utf-8")
-            )
-
-        gitversion_variables: dict  = json.loads(process_stdout)
+        gitversion_variables: dict  = json.loads(output)
 
         return {
             variable_name: (variable_value or '')
             for (variable_name, variable_value) in gitversion_variables.items()
         }
+    else:
+        log_error("Process STDOUT:")
+        log_error(output)
 
-    if gitversion_process.returncode != 0:
-        if (process_stderr):
-            log_error(
-                process_stderr.decode("utf-8")
-            )
-        
-        if (process_stdout):
-            log_error(
-                process_stdout.decode("utf-8")
-            )
-
-        raise Exception(f"'dotnet gitversion': process exit command ({gitversion_process.returncode}) does not indicate success.")
+        raise Exception(f"'dotnet gitversion': process exit command ({exitCode}) does not indicate success.")
 
 if __name__ == "__main__":
     args: list[str] = sys.argv

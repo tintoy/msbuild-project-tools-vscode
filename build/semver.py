@@ -91,7 +91,7 @@ if __name__ == "__main__":
     if build_metadata:
         version_prefix = f"{version_prefix}.{build_metadata}"
     
-    version_suffix = gitversion_variables.get('PreReleaseLabel')
+    version_suffix = gitversion_variables.get('PreReleaseTag')
     
     gitversion_variables["VersionPrefix"] = version_prefix
     gitversion_variables["VersionSuffix"] = version_suffix

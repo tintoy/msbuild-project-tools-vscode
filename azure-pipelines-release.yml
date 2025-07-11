@@ -6,7 +6,6 @@ variables:
 trigger:
   branches:
     include:
-      - master
       - release/*
       - preview/*
 

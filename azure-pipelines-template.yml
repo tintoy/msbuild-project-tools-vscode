@@ -59,6 +59,17 @@ stages:
           IsPreRelease: $[stageDependencies.Versioning.BuildVersion.outputs['SemVer.IsPreRelease']]
 
         steps:
+          - task: Bash@3
+            displayName: Verify version info
+
+            inputs:
+              targetType: inline
+              script: |
+                echo ExtensionVersion = '$(ExtensionVersion)'
+                echo VersionPrefix = '$(VersionPrefix)'
+                echo VersionSuffix = '$(VersionSuffix)'
+                echo IsPreRelease = '$(IsPreRelease)'
+
           - task: Npm@1
             displayName: "Install npx"
             inputs:

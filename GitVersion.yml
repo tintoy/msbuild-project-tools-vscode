@@ -13,6 +13,8 @@ semantic-version-format: Strict
 assembly-versioning-scheme: MajorMinorPatch
 assembly-file-versioning-scheme: MajorMinorPatchTag
 
+version-in-branch-pattern: '(?<version>[vV]?\d+\.\d+\.\d+).*'
+
 update-build-number: true
 
 strategies:

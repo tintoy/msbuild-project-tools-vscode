@@ -4,10 +4,11 @@ variables:
   - group: vs-marketplace-publisher
 
 trigger:
-  include:
-    - master
-    - release/*
-    - preview/*
+  branches:
+    include:
+      - master
+      - release/*
+      - preview/*
 
 stages:
 - template: ./azure-pipelines-template.yml

@@ -233,29 +233,23 @@ stages:
 
                   condition: eq( variables.IsPreRelease, 'true' )
 
-                  env:
-                    VSCE_PAT: ${{ parameters.vsMarketplacePublisherToken }}
-
                   inputs:
                     targetType: inline
                     script: |
                       VS_EXTENSION_PACKAGE_DIR="$(Pipeline.Workspace)/vscode-extension"
                       VS_EXTENSION_PACKAGE_FILE=$VS_EXTENSION_PACKAGE_DIR/msbuild-project-tools-vscode-$(ExtensionVersion).vsix
 
-                      npx vsce publish --pre-release --packagePath $VS_EXTENSION_PACKAGE_FILE
+                      npx vsce publish --pre-release --packagePath $VS_EXTENSION_PACKAGE_FILE --pat ${{ parameters.vsMarketplacePublisherToken }}
 
                 - task: Bash@3
                   displayName: "Publish to VS Marketplace"
 
                   condition: ne( variables.IsPreRelease, 'true' )
 
-                  env:
-                    VSCE_PAT: ${{ parameters.vsMarketplacePublisherToken }}
-
                   inputs:
                     targetType: inline
                     script: |
                       VS_EXTENSION_PACKAGE_DIR="$(Pipeline.Workspace)/vscode-extension"
                       VS_EXTENSION_PACKAGE_FILE=$VS_EXTENSION_PACKAGE_DIR/msbuild-project-tools-vscode-$(ExtensionVersion).vsix
 
-                      npx vsce publish --packagePath $VS_EXTENSION_PACKAGE_FILE
+                      npx vsce publish --packagePath $VS_EXTENSION_PACKAGE_FILE --pat ${{ parameters.vsMarketplacePublisherToken }}

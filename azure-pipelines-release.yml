@@ -14,4 +14,4 @@ stages:
   parameters:
     buildConfiguration: ${{ variables.buildConfiguration }}
     publish: true
-    vsMarketplacePublisherToken: ${{ variables.VSMarketPlacePublisherToken }}
+    vsMarketplacePublisherToken: $(VSMarketPlacePublisherToken)

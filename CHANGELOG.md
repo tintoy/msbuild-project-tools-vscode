@@ -1,5 +1,9 @@
 # Change Log
 
+# v0.6.8
+
+* Support for overriding global MSBuild properties before a project is loaded (tintoy/msbuild-project-tools-vscode#166).
+
 # v0.6.6
 
 * Correctly handle VSCode/LSP completion behaviour where the last character typed is implicitly part of the current selection, if it triggered completion (tintoy/msbuild-project-tools-vscode#93).

@@ -218,6 +218,7 @@
     "dependencies": {
         "semver": "^7.6.0",
         "vscode-languageclient": "^9.0.1",
+        "vscode-variables": "^1.0.1",
         "which": "^4.0.0"
     }
 }

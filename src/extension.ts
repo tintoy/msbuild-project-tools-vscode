@@ -25,6 +25,13 @@ const projectDocumentSelector: vscode.DocumentSelector = [
 ];
 
 /**
+ * Initialisation options for the MSBuild language server.
+ */
+export interface LanguageServerInitializationOptions {
+    expandGlobalPropertiesFromVSCodeVariables?: boolean;
+};
+
+/**
  * Called when the extension is activated.
  * 
  * @param context The extension context.
@@ -99,6 +106,10 @@ async function createLanguageClient(context: vscode.ExtensionContext, dotnetOnHo
 
     outputChannel.appendLine('Starting MSBuild language service...');
 
+    const languageServerInitializationOptions : LanguageServerInitializationOptions = {
+        expandGlobalPropertiesFromVSCodeVariables: true,
+    };
+
     const clientOptions: LanguageClientOptions = {
         synchronize: {
             configurationSection: 'msbuildProjectTools'
@@ -121,6 +132,7 @@ async function createLanguageClient(context: vscode.ExtensionContext, dotnetOnHo
             },
             closed: () => { return { action: CloseAction.DoNotRestart } }
         },
+        initializationOptions: languageServerInitializationOptions,
         initializationFailedHandler(error: Error) : boolean {
             console.log(error);
             

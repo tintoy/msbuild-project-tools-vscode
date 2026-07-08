@@ -1,0 +1,113 @@
+trigger:
+  branches:
+    include:
+      - main
+      - master
+      - release/*
+  tags:
+    include:
+      - v*
+
+pr: none
+
+variables:
+  - group: 'Extension Publishing'
+
+stages:
+  - stage: Build
+    displayName: 'Build Extension'
+    jobs:
+      - job: Build
+        displayName: 'Build and Package'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: NodeTool@0
+            displayName: 'Install Node.js'
+            inputs:
+              versionSpec: '18.x'
+
+          - script: |
+              npm ci
+            displayName: 'Install dependencies'
+
+          - script: |
+              npm run compile
+            displayName: 'Compile extension'
+
+          - script: |
+              npm run lint
+            displayName: 'Run linter'
+
+          - script: |
+              npm run package
+            displayName: 'Package extension'
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish VSIX artifact'
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+              ArtifactName: 'vsix'
+              publishLocation: 'Container'
+
+  - stage: Publish
+    displayName: 'Publish Extension'
+    dependsOn: Build
+    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
+    jobs:
+      - job: PublishVSCodeMarketplace
+        displayName: 'Publish to VS Code Marketplace'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: NodeTool@0
+            displayName: 'Install Node.js'
+            inputs:
+              versionSpec: '18.x'
+
+          - script: |
+              npm ci
+            displayName: 'Install dependencies'
+
+          - task: DownloadBuildArtifacts@0
+            displayName: 'Download VSIX artifact'
+            inputs:
+              buildType: 'current'
+              downloadType: 'single'
+              artifactName: 'vsix'
+              downloadPath: '$(System.ArtifactsDirectory)'
+
+          - script: |
+              npx vsce publish --packagePath $(System.ArtifactsDirectory)/vsix/*.vsix -p $(VSCODE_MARKETPLACE_TOKEN)
+            displayName: 'Publish to VS Code Marketplace'
+            env:
+              VSCODE_MARKETPLACE_TOKEN: $(VSCODE_MARKETPLACE_TOKEN)
+
+      - job: PublishOpenVSX
+        displayName: 'Publish to Open VSX Registry'
+        pool:
+          vmImage: 'ubuntu-latest'
+        condition: ne(variables['OPEN_VSX_TOKEN'], '')
+        steps:
+          - task: NodeTool@0
+            displayName: 'Install Node.js'
+            inputs:
+              versionSpec: '18.x'
+
+          - script: |
+              npm ci
+            displayName: 'Install dependencies'
+
+          - task: DownloadBuildArtifacts@0
+            displayName: 'Download VSIX artifact'
+            inputs:
+              buildType: 'current'
+              downloadType: 'single'
+              artifactName: 'vsix'
+              downloadPath: '$(System.ArtifactsDirectory)'
+
+          - script: |
+              npx ovsx publish $(System.ArtifactsDirectory)/vsix/*.vsix -p $(OPEN_VSX_TOKEN)
+            displayName: 'Publish to Open VSX Registry'
+            env:
+              OPEN_VSX_TOKEN: $(OPEN_VSX_TOKEN)

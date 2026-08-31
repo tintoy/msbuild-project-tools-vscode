@@ -9,6 +9,7 @@ import { Trace } from 'vscode-jsonrpc/lib/node/main';
 import * as dotnet from './dotnet';
 import { handleBusyNotifications } from './notifications';
 import { registerInternalCommands } from './internal-commands';
+import { expandVSCodeVariables, VariableExpansionContext } from './variable-expansion';
 
 let languageClient: LanguageClient;
 let statusBarItem: vscode.StatusBarItem;
@@ -72,8 +73,52 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 const trace = vscode.workspace.getConfiguration('msbuildProjectTools.logging').trace ? Trace.Verbose : Trace.Off;
                 await languageClient.setTrace(trace);
             }
+
+            if (languageClient && args.affectsConfiguration('msbuildProjectTools')) {
+                await languageClient.sendNotification('workspace/didChangeConfiguration', {
+                    settings: getLanguageServerConfiguration()
+                });
+            }
         })
     );
+}
+
+/**
+ * Get the current language-server configuration, expanding variables supported
+ * in MSBuild global-property overrides.
+ */
+function getLanguageServerConfiguration(): any {
+    const settings = vscode.workspace.getConfiguration().get<any>('msbuildProjectTools', {});
+    const variableExpansionContext: VariableExpansionContext = {
+        environment: process.env,
+        userHome: process.env.USERPROFILE || process.env.HOME,
+        workspaceFolders: (vscode.workspace.workspaceFolders || []).map(folder => ({
+            name: folder.name,
+            path: folder.uri.fsPath
+        }))
+    };;
+
+    const globalProperties = settings?.msbuild?.globalProperties;
+    if (!globalProperties || typeof globalProperties !== 'object')
+        return settings; // For now, this function is only interested in modifying msbuildProjectTools.msbuild.globalProperties. If that doesn't exist, just return the original settings.
+
+    const expandedGlobalProperties: { [name: string]: unknown } = {};
+    for (const propertyName of Object.keys(globalProperties)) {
+        const propertyValue = globalProperties[propertyName];
+        expandedGlobalProperties[propertyName] = typeof propertyValue === 'string'
+            ? expandVSCodeVariables(propertyValue, variableExpansionContext)
+            : propertyValue;
+    }
+
+    return {
+        msbuildProjectTools: {
+            ...settings,
+            msbuild: {
+                ...settings.msbuild,
+                globalProperties: expandedGlobalProperties,
+            }
+        }
+    };
 }
 
 /**
@@ -100,9 +145,7 @@ async function createLanguageClient(context: vscode.ExtensionContext, dotnetOnHo
     outputChannel.appendLine('Starting MSBuild language service...');
 
     const clientOptions: LanguageClientOptions = {
-        synchronize: {
-            configurationSection: 'msbuildProjectTools'
-        },
+        initializationOptions: getLanguageServerConfiguration(),
         diagnosticCollectionName: 'MSBuild Project',
         errorHandler: {
             error: (error, message, count) => {

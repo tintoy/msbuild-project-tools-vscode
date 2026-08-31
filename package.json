@@ -108,7 +108,7 @@
                 "msbuildProjectTools.msbuild.globalProperties": {
                     "type": "object",
                     "default": {},
-                    "description": "Override the default MSBuild properties used when a project is first loaded."
+                    "description": "Override the default MSBuild properties used when a project is first loaded. Values support ${workspaceFolder}, ${workspaceFolderBasename}, ${workspaceRoot}, ${workspaceRootFolderName}, ${userHome}, ${pathSeparator}, and ${env:Name}."
                 },
                 "msbuildProjectTools.experimentalFeatures": {
                     "type": "array",
@@ -197,7 +197,8 @@
         "vscode:prepublish": "npm run build-production",
         "build-language-server": "powershell ./Publish-LanguageServer.ps1",
         "build-dev": "webpack --mode development",
-        "build-production": "webpack --mode production"
+        "build-production": "webpack --mode production",
+        "test": "tsc && node --test src/*.test.js"
     },
     "extensionDependencies": [
         "ms-dotnettools.vscode-dotnet-runtime"

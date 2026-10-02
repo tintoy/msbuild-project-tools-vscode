@@ -1,6 +1,8 @@
 parameters:
   - name: buildConfiguration
     default: Release
+  - name: integrationTestSdkVersions
+    type: string
   - name: publish
     type: boolean
     default: "false"
@@ -17,13 +19,13 @@ stages:
 
         steps:
           - task: UseDotNet@2
-            displayName: "Use .NET Core SDK from global.json"
+            displayName: "Use .NET SDK from global.json"
             inputs:
               packageType: sdk
               useGlobalJson: true
 
           - task: Bash@3
-            displayName: "Install local tools (.NET Core)"
+            displayName: "Install local tools (.NET)"
 
             inputs:
               targetType: inline
@@ -93,14 +95,22 @@ stages:
 
           # TODO: Rather than build language server as part of extension CI, check the last commit in history for repo @ ./lib/server that is associated with a GitHub release and download the appropriate language server artifact from there.
 
+          - ${{ each integrationTestSdkVersion in split(parameters.integrationTestSdkVersions, ',') }}:
+            - task: UseDotNet@2
+              displayName: "Install .NET v${{ integrationTestSdkVersion }} SDK (for integration tests)"
+              inputs:
+                packageType: sdk
+                version: "${{ integrationTestSdkVersion }}"
+
+          # The SDK matching global.json *must* be the the last SDK installed.
           - task: UseDotNet@2
-            displayName: "Use .NET Core SDK from global.json"
+            displayName: "Use .NET SDK from global.json"
             inputs:
               packageType: sdk
               useGlobalJson: true
 
           - task: Bash@3
-            displayName: "Install local tools (.NET Core)"
+            displayName: "Install local tools (.NET)"
 
             inputs:
               targetType: inline
@@ -130,7 +140,15 @@ stages:
             inputs:
               command: "test"
               projects: "./lib/server/test/LanguageServer.Engine.Tests/LanguageServer.Engine.Tests.csproj"
-              arguments: '--configuration "$(buildConfiguration)" /p:VersionPrefix="$(VersionPrefix)" /p:VersionSuffix="$(VersionSuffix)"'
+              arguments: '--logger "console;verbosity=detailed" --configuration "$(buildConfiguration)" /p:VersionPrefix="$(VersionPrefix)" /p:VersionSuffix="$(VersionSuffix)"'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'Run integration tests'
+            
+            inputs:
+              command: 'test'
+              projects: './lib/server/test/LanguageServer.IntegrationTests/LanguageServer.IntegrationTests.csproj'
+              arguments: '--logger "console;verbosity=detailed" --configuration "$(buildConfiguration)" /p:VersionPrefix="$(GitVersion.MajorMinorPatch)" /p:VersionSuffix="$(GitVersion.PreReleaseTag)"'
 
           - task: DotNetCoreCLI@2
             displayName: "Publish language server"

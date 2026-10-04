@@ -10,7 +10,7 @@ pr:
 variables:
   - name: buildConfiguration
     value: Release
-  - template: ./lib/server/azure-pipelines-variables-common.yml
+  - template: ./azure-pipelines-variables-common.yml
 
 stages:
 - template: ./azure-pipelines-template.yml

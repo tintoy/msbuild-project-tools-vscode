@@ -1,14 +1,14 @@
-variables:
-  - name: buildConfiguration
-    value: Release
-  - template: ./azure-pipelines-variables-common.yml
-  - group: vs-marketplace-publisher
-
 trigger:
   branches:
     include:
       - release/*
       - preview/*
+
+variables:
+  - name: buildConfiguration
+    value: Release
+  - template: ./lib/server/azure-pipelines-variables-common.yml
+  - group: vs-marketplace-publisher
 
 stages:
 - template: ./azure-pipelines-template.yml

@@ -2,7 +2,6 @@ trigger:
   branches:
     include:
       - master
-
 pr:
   branches:
     include:
@@ -11,7 +10,7 @@ pr:
 variables:
   - name: buildConfiguration
     value: Release
-  - template: ./azure-pipelines-variables-common.yml
+  - template: ./lib/server/azure-pipelines-variables-common.yml
 
 stages:
 - template: ./azure-pipelines-template.yml

@@ -1,2 +1,0 @@
-variables:
-  integrationTestSdkVersions: 8.0.100,9.0.100,10.0.400

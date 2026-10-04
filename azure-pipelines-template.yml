@@ -142,6 +142,7 @@ stages:
               projects: "./lib/server/test/LanguageServer.Engine.Tests/LanguageServer.Engine.Tests.csproj"
               arguments: '--logger "console;verbosity=detailed" --configuration "$(buildConfiguration)" /p:VersionPrefix="$(VersionPrefix)" /p:VersionSuffix="$(VersionSuffix)"'
 
+          # TODO: Run both Windows and Linux jobs (same as the pipeline in ./lib/server/azure-pipelines.yml)
           - task: DotNetCoreCLI@2
             displayName: 'Run integration tests'
             

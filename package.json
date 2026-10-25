@@ -169,6 +169,11 @@
                 "language": "msbuild",
                 "scopeName": "text.xml.msbuild",
                 "path": "./syntaxes/msbuild.json"
+            },
+            {
+                "language": "slnx",
+                "scopeName": "text.xml.slnx",
+                "path": "./syntaxes/slnx.json"
             }
         ],
         "languages": [
@@ -185,11 +190,24 @@
                     "msbuild"
                 ],
                 "configuration": "./language-configuration.json"
+            },
+            {
+                "id": "slnx",
+                "aliases": [
+                    "SLNX"
+                ],
+                "extensions": [
+                    "slnx"
+                ],
+                "configuration": "./language-configuration.json"
             }
         ],
         "xmlLanguageParticipants": [
             {
                 "languageId": "msbuild"
+            },
+            {
+                "languageId": "slnx"
             }
         ]
     },

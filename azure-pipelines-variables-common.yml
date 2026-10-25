@@ -1,0 +1,5 @@
+## NOTE: The values in this file *must* be kept in sync with the ones in ./lib/server (a multi-repo build would introduce unnecessary complextity at this stage).
+
+variables:
+  - name: integrationTestSdkVersions
+    value : 8.0.100,9.0.100,10.0.400
